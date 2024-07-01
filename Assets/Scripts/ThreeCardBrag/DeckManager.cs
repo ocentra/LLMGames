@@ -26,6 +26,9 @@ namespace ThreeCardBrag
 
         [ShowInInspector]
         public Card FloorCard { get; private set; }
+
+        [ShowInInspector]
+        public Card SwapCard { get; private set; }
         public DeckManager()
         {
             InitializeDeck();
@@ -65,12 +68,23 @@ namespace ThreeCardBrag
 
         public void AddToFloorCardList(Card card)
         {
-            FloorCards.Add(card);
+            if (!FloorCards.Contains(card))
+            {
+                FloorCards.Add(card);
+                GameController.Instance.UIController.UpdateFloorCards(card);
+
+            }
+
         }
 
         public void Reset()
         {
             InitializeDeck();
+        }
+
+        public void SetSwapCard(Card card)
+        {
+            SwapCard = card;
         }
     }
 }

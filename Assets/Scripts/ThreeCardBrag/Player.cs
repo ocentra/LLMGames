@@ -27,7 +27,7 @@ namespace ThreeCardBrag
 
         public void TakeAction(PlayerAction action)
         {
-            GameController.Instance.UIController.ShowMessage($"Player {PlayerName} Took Action {action}");
+            GameController.Instance.UIController.ShowMessage($"Player {PlayerName} Took Action {action}", 5f);
             OnActionTaken?.Invoke(action);
         }
 
@@ -67,25 +67,43 @@ namespace ThreeCardBrag
 
         public virtual void PickAndSwap()
         {
+            Card floorCard = DeckManager.FloorCard;
+            Card swapCard = DeckManager.SwapCard;
 
-
-            if (GameController.Instance.UIController.SwapCardIndex >= 0 && GameController.Instance.UIController.SwapCardIndex < Hand.Count)
+            if (floorCard != null && swapCard != null)
             {
-                Card floorCard = DeckManager.FloorCard;
-                if (floorCard != null)
+                DeckManager.AddToFloorCardList(swapCard);
+
+                int swapCardIndex = -1;
+                for (int i = 0; i < Hand.Count; i++)
                 {
-                    DeckManager.AddToFloorCardList(Hand[GameController.Instance.UIController.SwapCardIndex]);
-                    Hand[GameController.Instance.UIController.SwapCardIndex] = floorCard;
-                    DeckManager.SetFloorCard(null);
-                    GameController.Instance.UIController.UpdateGameState();
+                    if (Hand[i] == swapCard)
+                    {
+                        swapCardIndex = i;
+                        break;
+                    }
                 }
+
+                if (swapCardIndex >= 0)
+                {
+                    Hand[swapCardIndex] = floorCard;
+                }
+                else
+                {
+                    Debug.LogError($" no card matches swapCard {swapCard.Suit} of {swapCard.Rank} in hand");
+                    return;
+                }
+
+                DeckManager.SetFloorCard(null);
+                DeckManager.SetSwapCard(null);
+
+
+                GameController.Instance.UIController.UpdateGameState();
             }
         }
 
-        public virtual void Show()
-        {
-            ShowHand();
-        }
+
+
 
         public virtual void BetOnBlind()
         {
@@ -103,7 +121,7 @@ namespace ThreeCardBrag
             return Hand.Max(card => card.GetRankValue());
         }
 
-        public virtual void ShowHand()
+        public virtual void ShowHand(bool isRoundEnd = false)
         {
             foreach (var card in Hand)
             {

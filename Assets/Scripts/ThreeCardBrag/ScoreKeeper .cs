@@ -1,3 +1,4 @@
+using Sirenix.OdinInspector;
 using System.Collections.Generic;
 using UnityEngine;
 
@@ -12,8 +13,8 @@ namespace ThreeCardBrag
         public RoundScore RoundScore = new RoundScore();
 
 
-        
-        
+
+
         public void AddToTotalRoundScores(Player player, int pot)
         {
             RoundScore.Winner = player;

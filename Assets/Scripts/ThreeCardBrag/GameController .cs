@@ -1,5 +1,6 @@
 using System;
 using System.Collections;
+using System.Threading.Tasks;
 using Sirenix.OdinInspector;
 using UnityEngine;
 
@@ -22,6 +23,7 @@ namespace ThreeCardBrag
         public ScoreKeeper ScoreKeeper { get; private set; } = new ScoreKeeper();
 
         public bool IsHumanTurn = true;
+        public float TurnDuration = 15f;
 
         [ShowInInspector, ReadOnly]
         public int Pot { get; private set; } = 0;
@@ -43,6 +45,12 @@ namespace ThreeCardBrag
 
         [ShowInInspector, ReadOnly]
         public DeckManager DeckManager { get; private set; }
+
+
+        [ShowInInspector]
+        public int MaxRounds { get; private set; } = 10;
+
+        public TurnInfo CurrentTurn;
 
         private void Awake()
         {
@@ -76,7 +84,7 @@ namespace ThreeCardBrag
 
             HumanPlayer.OnActionTaken += HandlePlayerAction;
             ComputerPlayer.OnActionTaken += HandlePlayerAction;
-            HumanPlayer.OnCoinsChanged +=  UIController.UpdateCoinsDisplay;
+            HumanPlayer.OnCoinsChanged += UIController.UpdateCoinsDisplay;
             ComputerPlayer.OnCoinsChanged += UIController.UpdateCoinsDisplay;
 
             StartNewGame();
@@ -119,48 +127,54 @@ namespace ThreeCardBrag
         private IEnumerator PlayerTurn()
         {
             Player currentPlayer = IsHumanTurn ? HumanPlayer : ComputerPlayer;
-            float turnDuration = 15f; // duration for each turn
-            UIController.StartTurnCountdown(currentPlayer, turnDuration);
+            UIController.StartTurnCountdown(currentPlayer, TurnDuration);
 
             if (IsHumanTurn)
             {
-                UIController.EnablePlayerActions(true); // Enable actions for the human player
-                float elapsedTime = 0f;
+                UIController.EnablePlayerActions(currentPlayer.HasSeenHand); // Enable actions for the human player
 
-                while (elapsedTime < turnDuration && !UIController.ActionTaken)
+                CurrentTurn = new TurnInfo(currentPlayer)
                 {
-                    elapsedTime += Time.deltaTime;
+                    ElapsedTime = 0f
+                };
+
+                while (CurrentTurn.ElapsedTime < TurnDuration && !UIController.ActionTaken)
+                {
+                    CurrentTurn.ElapsedTime += Time.deltaTime;
                     yield return null;
                 }
+                CurrentTurn.TurnCompletionSource.TrySetResult(true);
 
                 if (!UIController.ActionTaken)
                 {
                     // Player did not take action in time, pass turn to the other player
-                    UIController.ShowMessage($"{currentPlayer.PlayerName} took too long, turn is passed to the opponent!");
+                    UIController.ShowMessage($"{currentPlayer.PlayerName} took too long, turn is passed to the opponent!", 5f);
                 }
             }
             else
             {
-                UIController.EnablePlayerActions(false);
                 ComputerPlayer.MakeDecision(CurrentBet);
-                float elapsedTime = 0f;
-
-                while (elapsedTime < turnDuration && !UIController.ActionTaken)
+                CurrentTurn = new TurnInfo(currentPlayer)
                 {
-                    elapsedTime += Time.deltaTime;
+                    ElapsedTime = 0f
+                };
+
+                while (CurrentTurn.ElapsedTime < TurnDuration && !UIController.ActionTaken)
+                {
+                    CurrentTurn.ElapsedTime += Time.deltaTime;
                     yield return null;
                 }
+                CurrentTurn.TurnCompletionSource.TrySetResult(true);
 
 
                 if (!UIController.ActionTaken)
                 {
                     // Player did not take action in time, pass turn to the other player
-                    UIController.ShowMessage($"{currentPlayer.PlayerName} took too long, turn is passed to the opponent!");
+                    UIController.ShowMessage($"{currentPlayer.PlayerName} took too long, turn is passed to the opponent!", 5f);
                 }
 
             }
             UIController.ActionTaken = false;
-            SwitchTurn();
         }
 
 
@@ -172,10 +186,10 @@ namespace ThreeCardBrag
             {
                 SwitchTurn();
             }
-    
+
         }
 
-        private void ProcessPlayerAction(PlayerAction action)
+        private async void ProcessPlayerAction(PlayerAction action)
         {
             Player currentPlayer = IsHumanTurn ? HumanPlayer : ComputerPlayer;
 
@@ -183,6 +197,7 @@ namespace ThreeCardBrag
             {
                 case PlayerAction.SeeHand:
                     currentPlayer.SeeHand();
+                    await WaitForTurnCompletion(currentPlayer,CurrentTurn);
                     break;
                 case PlayerAction.PlayBlind:
                     PlayBlind(currentPlayer);
@@ -199,6 +214,8 @@ namespace ThreeCardBrag
                     break;
                 case PlayerAction.DrawFromDeck:
                     currentPlayer.DrawFromDeck();
+                    await WaitForTurnCompletion(currentPlayer, CurrentTurn);
+
                     break;
                 case PlayerAction.PickAndSwap:
                     currentPlayer.PickAndSwap();
@@ -213,6 +230,16 @@ namespace ThreeCardBrag
             UIController.UpdateGameState();
         }
 
+        public async Task WaitForTurnCompletion(Player currentPlayer, TurnInfo turnInfo)
+        {
+            if (turnInfo.CurrentPlayer == currentPlayer)
+            {
+                await turnInfo.TurnCompletionSource.Task;
+
+            }
+        }
+        
+
         private void PlayBlind(Player player)
         {
             CurrentBet *= BlindMultiplier;
@@ -224,7 +251,7 @@ namespace ThreeCardBrag
             }
             else
             {
-                UIController.ShowMessage($" not enough {player.Coins} coins  CurrentBet is {CurrentBet} {Environment.NewLine}You Need To Fold!");
+                UIController.ShowMessage($" not enough {player.Coins} coins  CurrentBet is {CurrentBet} {Environment.NewLine}You Need To Fold!", 5f);
             }
         }
 
@@ -238,7 +265,7 @@ namespace ThreeCardBrag
             }
             else
             {
-                UIController.ShowMessage($" not enough {player.Coins} coins  CurrentBet is {CurrentBet} {Environment.NewLine}You Need To Fold!");
+                UIController.ShowMessage($" not enough {player.Coins} coins  CurrentBet is {CurrentBet} {Environment.NewLine}You Need To Fold!", 5f);
             }
         }
 
@@ -251,7 +278,7 @@ namespace ThreeCardBrag
             }
             else
             {
-                UIController.ShowMessage($" not enough {player.Coins} coins  CurrentBet is {CurrentBet} {Environment.NewLine}You Need To Fold!");
+                UIController.ShowMessage($" not enough {player.Coins} coins  CurrentBet is {CurrentBet} {Environment.NewLine}You Need To Fold!", 5f);
             }
         }
 
@@ -261,11 +288,11 @@ namespace ThreeCardBrag
             EndRound(GetOtherPlayer(player));
         }
 
-        
+
         private void Show()
         {
-            HumanPlayer.Show();
-            ComputerPlayer.Show();
+            HumanPlayer.ShowHand(true);
+            ComputerPlayer.ShowHand(true);
             DetermineWinner();
         }
 
@@ -317,24 +344,22 @@ namespace ThreeCardBrag
             EndRound(winner);
         }
 
-        private void EndRound(Player winner)
+        private async void EndRound(Player winner)
         {
             UIController.StopTurnCountdown();
             if (winner == null)
             {
 
-                UIController.ShowMessage("It's a tie! Play Another Round !");
+                UIController.ShowMessage("It's a tie! Play Another Round !", 5f);
             }
             else
             {
                 winner.AdjustCoins(Pot);
                 ScoreKeeper.AddToTotalRoundScores(winner, Pot);
-                UIController.ShowMessage($"{winner.PlayerName} wins the round and {Pot} coins!");
+                UIController.ShowMessage($"{winner.PlayerName} wins the round and {Pot} coins!", 6f);
+                await Utility.Delay(6f);
                 UIController.UpdateRoundDisplay();
             }
-
-            Pot = 0;
-            UIController.UpdateGameState();
 
             if (HumanPlayer.Coins <= 0 || ComputerPlayer.Coins <= 0)
             {
@@ -344,22 +369,37 @@ namespace ThreeCardBrag
             {
                 CheckForContinuation();
             }
+
+            Pot = 0;
+            UIController.UpdateGameState();
+
+
         }
 
-        private void CheckForContinuation()
+        private async void CheckForContinuation()
         {
-            Player trailingPlayer = ScoreKeeper.HumanTotalWins < ScoreKeeper.ComputerTotalWins ? HumanPlayer : ComputerPlayer;
-            Player leadingPlayer = GetOtherPlayer(trailingPlayer);
-
-            if (trailingPlayer.Coins > leadingPlayer.Coins)
+            if (CurrentRound >= MaxRounds)
             {
-                UIController.OfferContinuation();
+                Player trailingPlayer = ScoreKeeper.HumanTotalWins < ScoreKeeper.ComputerTotalWins ? HumanPlayer : ComputerPlayer;
+                Player leadingPlayer = GetOtherPlayer(trailingPlayer);
+
+                if (trailingPlayer.Coins > leadingPlayer.Coins)
+                {
+                    UIController.OfferContinuation(10);
+                    await Utility.Delay(10f);
+
+                }
+                else
+                {
+                    EndGame();
+                }
             }
             else
             {
-                EndGame();
+                StartNewRound();
             }
         }
+
 
         public void ContinueGame(bool playerWantsToContinue)
         {
@@ -373,31 +413,33 @@ namespace ThreeCardBrag
             }
         }
 
-        private void EndGame()
+        private async void EndGame()
         {
             Player winner;
             if (HumanPlayer.Coins <= 0)
             {
-                
+
                 winner = ComputerPlayer;
             }
             else if (ComputerPlayer.Coins <= 0)
             {
                 winner = HumanPlayer;
-                
+
             }
             else if (ScoreKeeper.HumanTotalWins != ScoreKeeper.ComputerTotalWins)
             {
-                
+
                 winner = ScoreKeeper.HumanTotalWins > ScoreKeeper.ComputerTotalWins ? HumanPlayer : ComputerPlayer;
             }
             else
             {
                 winner = HumanPlayer.Coins > ComputerPlayer.Coins ? HumanPlayer : ComputerPlayer;
-                
+
             }
 
-            UIController.ShowMessage($"Game Over! {winner.PlayerName} wins the game!");
+            UIController.ShowMessage($"Game Over! {winner.PlayerName} wins the game!", 6f);
+
+            await Utility.Delay(6f);
             UIController.OfferNewGame();
         }
 

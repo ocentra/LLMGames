@@ -100,7 +100,7 @@ GameObject:
   - component: {fileID: 1364303068357556650}
   - component: {fileID: 895719603948046737}
   m_Layer: 5
-  m_Name: CardHolder
+  m_Name: CardViewPrefab
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0

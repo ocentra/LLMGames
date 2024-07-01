@@ -16,6 +16,7 @@ namespace ThreeCardBrag
         private Transform Parent { get; set; }
         
 
+
         void OnValidate()
         {
             Init();
@@ -51,6 +52,7 @@ namespace ThreeCardBrag
 
         public void UpdateCardView()
         {
+
             if (Card != null && Card.Sprite != null )
             {
                 CardImage.sprite = Card.Sprite;
@@ -66,6 +68,17 @@ namespace ThreeCardBrag
             
             gameObject.SetActive(value);
             Parent.gameObject.SetActive(value);
+        }
+
+        public Card GetCard()
+        {
+            return Card;
+        }
+
+        public void ResetCardView()
+        {
+            Card = null;
+            ShowBackside();
         }
     }
 }

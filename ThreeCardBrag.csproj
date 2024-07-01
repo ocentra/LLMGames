@@ -61,16 +61,18 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Assets\Scripts\ThreeCardBrag\Card.cs" />
+    <Compile Include="Assets\Scripts\ThreeCardBrag\TurnInfo.cs" />
     <Compile Include="Assets\Scripts\ThreeCardBrag\DeckManager.cs" />
     <Compile Include="Assets\Scripts\ThreeCardBrag\TransformExtensions.cs" />
     <Compile Include="Assets\Scripts\ThreeCardBrag\GameController .cs" />
     <Compile Include="Assets\Scripts\ThreeCardBrag\ScoreKeeper .cs" />
     <Compile Include="Assets\Scripts\ThreeCardBrag\PlayerTimer.cs" />
     <Compile Include="Assets\Scripts\ThreeCardBrag\Deck .cs" />
+    <Compile Include="Assets\Scripts\ThreeCardBrag\LeftPanelController.cs" />
+    <Compile Include="Assets\Scripts\ThreeCardBrag\Utility.cs" />
     <Compile Include="Assets\Scripts\ThreeCardBrag\ComputerPlayer.cs" />
     <Compile Include="Assets\Scripts\ThreeCardBrag\CardView.cs" />
     <Compile Include="Assets\Scripts\ThreeCardBrag\PlayerAction.cs" />
-    <Compile Include="Assets\Scripts\ThreeCardBrag\ExpandPanel.cs" />
     <Compile Include="Assets\Scripts\ThreeCardBrag\HumanPlayer.cs" />
     <Compile Include="Assets\Scripts\ThreeCardBrag\Player.cs" />
     <Compile Include="Assets\Scripts\ThreeCardBrag\UIController.cs" />

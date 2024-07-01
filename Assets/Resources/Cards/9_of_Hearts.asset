@@ -12,3 +12,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: cd4b2cffdf356ee4793ad49ba3700792, type: 3}
   m_Name: 9_of_Hearts
   m_EditorClassIdentifier: 
+  Suit: Hearts
+  Rank: 9
+  Sprite: {fileID: 21300000, guid: ed6946caddb8c4140b93976ded0dd889, type: 3}

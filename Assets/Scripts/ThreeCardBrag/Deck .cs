@@ -12,12 +12,10 @@ namespace ThreeCardBrag
     public class Deck : GlobalConfig<Deck>
     {
         [ShowInInspector]
-        public List<Card> CardTemplates  = new List<Card>();
+        public List<Card> CardTemplates = new List<Card>();
 
-        [ShowInInspector, Required] 
+        [ShowInInspector, Required]
         public Card BackCard;
-
-
 
         [Button]
         private void LoadCardsFromResources()
@@ -33,21 +31,15 @@ namespace ThreeCardBrag
                 Debug.LogError("No card assets found in Resources/Cards. Please ensure card assets are in the correct location.");
                 CreateAllCards();
             }
-            else if (!ValidateDeck())
+            else if (ValidateDeck() == false)
             {
                 CreateMissingCards();
-
-            }
-            else
-            {
-                Debug.LogError("Cards Validation Failed Check Resources");
             }
 
-            EditorUtility.SetDirty(this);
-            AssetDatabase.SaveAssets();
-            AssetDatabase.Refresh();
+            SaveChanges();
         }
 
+        [Button]
         private bool ValidateDeck()
         {
             if (CardTemplates.Count != 52) // 52 cards in a standard deck
@@ -97,7 +89,6 @@ namespace ThreeCardBrag
                     if (existingCard == null)
                     {
                         CreateCard(suit, rank);
-                      
                     }
                     else if (existingCard.Sprite == null)
                     {
@@ -106,12 +97,9 @@ namespace ThreeCardBrag
                 }
             }
 
-            EditorUtility.SetDirty(this);
-            AssetDatabase.SaveAssets();
-            AssetDatabase.Refresh();
+            SaveChanges();
         }
 
-        [Button, ShowIf("@!ValidateDeck()")]
         private void CreateAllCards()
         {
             string[] suits = new[] { "Hearts", "Diamonds", "Clubs", "Spades" };
@@ -125,9 +113,7 @@ namespace ThreeCardBrag
                 }
             }
 
-            EditorUtility.SetDirty(this);
-            AssetDatabase.SaveAssets();
-            AssetDatabase.Refresh();
+            SaveChanges();
         }
 
         private void CreateCard(string suit, string rank)
@@ -138,6 +124,21 @@ namespace ThreeCardBrag
             AssetDatabase.CreateAsset(newCard, path);
             CardTemplates.Add(newCard);
             Debug.Log($"Created card: {rank} of {suit} at {path}");
+        }
+
+        private void SaveChanges()
+        {
+            EditorUtility.SetDirty(this);
+            if (BackCard != null)
+            {
+                EditorUtility.SetDirty(BackCard);
+            }
+            foreach (var card in CardTemplates)
+            {
+                EditorUtility.SetDirty(card);
+            }
+            AssetDatabase.SaveAssets();
+            AssetDatabase.Refresh();
         }
     }
 }

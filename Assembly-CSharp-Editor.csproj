@@ -10,7 +10,7 @@
     <ProductVersion>10.0.20506</ProductVersion>
     <SchemaVersion>2.0</SchemaVersion>
     <RootNamespace></RootNamespace>
-    <ProjectGuid>{46DD4D25-F121-E100-2925-62ED1DC469BA}</ProjectGuid>
+    <ProjectGuid>{752D4F60-22E7-1F39-63A9-BB7A500F0E3C}</ProjectGuid>
     <OutputType>Library</OutputType>
     <AppDesignerFolder>Properties</AppDesignerFolder>
     <AssemblyName>Assembly-CSharp-Editor</AssemblyName>
@@ -1214,23 +1214,23 @@
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="Assembly-CSharp-firstpass.csproj">
-      <Project>{AA0F5631-CE8E-7B68-F761-F2A6606501A8}</Project>
+      <Project>{E0A69537-358C-CF54-C55E-B9B2F33A8B3C}</Project>
       <Name>Assembly-CSharp-firstpass</Name>
     </ProjectReference>
     <ProjectReference Include="ThreeCardBrag.csproj">
-      <Project>{07240756-0A5A-B20C-7F2C-80C975CD6E46}</Project>
+      <Project>{E4E59909-AD31-1189-4A23-F9FAB5C2091D}</Project>
       <Name>ThreeCardBrag</Name>
     </ProjectReference>
     <ProjectReference Include="Sirenix.OdinInspector.CompatibilityLayer.csproj">
-      <Project>{79E278F8-E486-8CB5-BADA-722FE856E4A2}</Project>
+      <Project>{EB7B45BE-8318-8DA6-E28B-F19A5DF97A24}</Project>
       <Name>Sirenix.OdinInspector.CompatibilityLayer</Name>
     </ProjectReference>
     <ProjectReference Include="Sirenix.OdinInspector.Modules.UnityMathematics.csproj">
-      <Project>{C5270E2D-E98A-DE95-5884-AD6845E9F734}</Project>
+      <Project>{5A5D7C6B-A0FD-B028-FF06-FE6048E2D415}</Project>
       <Name>Sirenix.OdinInspector.Modules.UnityMathematics</Name>
     </ProjectReference>
     <ProjectReference Include="Sirenix.OdinInspector.CompatibilityLayer.Editor.csproj">
-      <Project>{B4902C4C-48FA-0EFA-6400-3F81BA9D8FFD}</Project>
+      <Project>{4D151CC0-AEDB-66BD-4521-25F06E37E125}</Project>
       <Name>Sirenix.OdinInspector.CompatibilityLayer.Editor</Name>
     </ProjectReference>
   </ItemGroup>

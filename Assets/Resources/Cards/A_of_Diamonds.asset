@@ -12,3 +12,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: cd4b2cffdf356ee4793ad49ba3700792, type: 3}
   m_Name: A_of_Diamonds
   m_EditorClassIdentifier: 
+  Suit: Diamonds
+  Rank: A
+  Sprite: {fileID: 21300000, guid: 85feb593a6c13fd419323de2bb65e3b3, type: 3}

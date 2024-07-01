@@ -12,3 +12,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: cd4b2cffdf356ee4793ad49ba3700792, type: 3}
   m_Name: 9_of_Spades
   m_EditorClassIdentifier: 
+  Suit: Spades
+  Rank: 9
+  Sprite: {fileID: 21300000, guid: b9487e50b6ad4fa418f57d4a9003915e, type: 3}

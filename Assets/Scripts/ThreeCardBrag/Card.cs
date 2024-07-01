@@ -7,14 +7,11 @@ namespace ThreeCardBrag
     [CreateAssetMenu(fileName = nameof(Card), menuName = "ThreeCardBrag/Card")]
     public class Card : ScriptableObject
     {
-        [ShowInInspector]
-        public string Suit { get; private set; }
+        public string Suit;
 
-        [ShowInInspector]
-        public string Rank { get; private set; }
+        public string Rank;
 
-        [ShowInInspector, Required]
-        public Sprite Sprite { get; private set; }
+        [Required] public Sprite Sprite;
 
         public int GetRankValue()
         {
@@ -33,6 +30,7 @@ namespace ThreeCardBrag
             Suit = suit;
             Rank = rank;
             AssignSprite();
+            SaveChanges();
         }
 
         [Button, ShowIf("@this.Sprite == null")]
@@ -47,18 +45,26 @@ namespace ThreeCardBrag
                 _ => Rank
             };
 
-            string path = name == "BackCard" ? $"Assets/Images/Cards/BackCard.png" :$"Assets/Images/Cards/{formattedRank}_of_{Suit}.png";
+            string path = name == "BackCard" ? $"Assets/Images/Cards/BackCard.png" : $"Assets/Images/Cards/{formattedRank}_of_{Suit}.png";
             Sprite sprite = AssetDatabase.LoadAssetAtPath<Sprite>(path);
 
             if (sprite != null)
             {
                 Sprite = sprite;
                 Debug.Log($"Assigned sprite from {path}");
+                SaveChanges();
             }
             else
             {
                 Debug.LogWarning($"Sprite not found at {path}");
             }
+        }
+
+        private void SaveChanges()
+        {
+            EditorUtility.SetDirty(this);
+            AssetDatabase.SaveAssets();
+            AssetDatabase.Refresh();
         }
     }
 }

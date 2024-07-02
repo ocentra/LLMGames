@@ -3,6 +3,7 @@ using UnityEngine.UI;
 using TMPro;
 using Sirenix.OdinInspector;
 using System.Collections.Generic;
+using ThreeCardBrag.Extensions;
 
 namespace ThreeCardBrag.GameScreen
 {

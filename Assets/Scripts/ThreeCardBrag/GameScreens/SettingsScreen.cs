@@ -3,6 +3,8 @@ using UnityEngine.UI;
 using TMPro;
 using Sirenix.OdinInspector;
 using System.Collections.Generic;
+using ThreeCardBrag.Extensions;
+
 
 namespace ThreeCardBrag.GameScreen
 {
@@ -144,12 +146,24 @@ namespace ThreeCardBrag.GameScreen
 
         private void PopulateResolutionDropdown()
         {
-            // todo
+            Resolution[] resolutions = Screen.resolutions;
+            ResolutionDropdown.ClearOptions();
+            List<string> options = new List<string>();
+
+            foreach (Resolution resolution in resolutions)
+            {
+                string option = resolution.width + " x " + resolution.height;
+                options.Add(option);
+            }
+
+            ResolutionDropdown.AddOptions(options);
+            ResolutionDropdown.value = options.IndexOf(Screen.currentResolution.width + " x " + Screen.currentResolution.height);
+            ResolutionDropdown.RefreshShownValue();
         }
+
 
         private void PopulateLLMModelDropdown()
         {
-            // Populate with available LLM models
             LLMModelDropdown.ClearOptions();
             LLMModelDropdown.AddOptions(new List<string> { "GPT-3.5", "GPT-4", "GPT4-O","Claude","Local" });
         }

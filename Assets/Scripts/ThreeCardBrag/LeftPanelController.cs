@@ -3,6 +3,7 @@ using UnityEngine;
 using UnityEngine.UI;
 using Sirenix.OdinInspector;
 using System.Collections;
+using ThreeCardBrag.Extensions;
 
 namespace ThreeCardBrag
 {

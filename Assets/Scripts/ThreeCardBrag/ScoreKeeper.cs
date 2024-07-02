@@ -40,11 +40,4 @@ namespace ThreeCardBrag
             ComputerTotalWins = 0;
         }
     }
-
-    [System.Serializable]
-    public class RoundScore
-    {
-        public Player Winner;
-        public int Pot;
-    }
 }

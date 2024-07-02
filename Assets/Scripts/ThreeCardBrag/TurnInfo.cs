@@ -2,6 +2,7 @@ using System.Threading.Tasks;
 
 namespace ThreeCardBrag
 {
+    [System.Serializable]
     public struct TurnInfo
     {
         public Player CurrentPlayer;

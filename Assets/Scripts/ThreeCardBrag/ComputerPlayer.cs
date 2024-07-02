@@ -10,7 +10,9 @@ namespace ThreeCardBrag
 
         public void MakeDecision(int currentBet)
         {
-            // todo send the hand and all prompt to LLM , make a prompt class and define prompt
+            // string aiInstruction = GameController.Instance.AIHelper.GetAIInstructions();
+
+            // todo send the hand and all prompt to LLM , use AIHelper to get instruction and send it to Chatgpt for now
             // Start the async method to simulate thinking for now
             SimulateThinkingAndMakeDecision();
         }

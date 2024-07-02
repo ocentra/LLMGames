@@ -1,0 +1,94 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 7a729116edabfde4089cba84d9285b8a, type: 3}
+  m_Name: GameInfo
+  m_EditorClassIdentifier: 
+  GameRules: 'Three Card Brag Rules:
+
+    
+
+    1. Each player is dealt 3 cards
+    at the start of each round.
+
+    2. Players can bet blind or see their hand.
+
+    3.
+    Blind betting doubles the current bet.
+
+    4. Players who have seen their hand
+    bet double the current bet.
+
+    5. Players can draw a new card to the floor.
+
+    6.
+    Players can pick and swap a card from the floor.
+
+    7. Players can fold, call,
+    or raise.
+
+    8. Highest hand value wins (Ace high).
+
+    9. In case of a
+    tie, the highest card wins.
+
+    10. The game ends when a player runs out of
+    coins or after a set number of rounds.
+
+    11. The trailing player can continue
+    if they have more coins.
+
+    12. Players start with 1000 coins.
+
+'
+  GameDescription: "Three Card Brag is an exciting card game that combines elements
+    of poker and bluffing.\r\n Players aim to make the best three-card hand while
+    betting and bluffing their way to victory.\r\nMost interesting part is we will
+    be playing against Large language model LLM i.e Chat GPT "
+  StrategyTips: "- Pay attention to your opponents' betting patterns.\r\n Use the
+    blind betting option strategically to bluff or build the pot.\r\n Consider the
+    odds of improving your hand when deciding to draw or swap cards.\r\n Don't be
+    afraid to fold if you have a weak hand and the bets are high.\r\n Manage your
+    coins wisely to stay in the game for multiple rounds."
+  BonusRules:
+  - Description: Sequence of 3 cards of the same color
+    BonusValue: 10
+  - Description: Sequence of 3 cards of different colors
+    BonusValue: 5
+  - Description: Pair in hand
+    BonusValue: 5
+  CardRankings:
+  - CardName: Ace
+    Value: 14
+  - CardName: King
+    Value: 13
+  - CardName: Queen
+    Value: 12
+  - CardName: Jack
+    Value: 11
+  - CardName: 10
+    Value: 10
+  - CardName: 9
+    Value: 9
+  - CardName: 8
+    Value: 8
+  - CardName: 7
+    Value: 7
+  - CardName: 6
+    Value: 6
+  - CardName: 5
+    Value: 5
+  - CardName: 4
+    Value: 4
+  - CardName: 3
+    Value: 3
+  - CardName: 2
+    Value: 2

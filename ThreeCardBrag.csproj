@@ -70,11 +70,18 @@
     <Compile Include="Assets\Scripts\ThreeCardBrag\Deck .cs" />
     <Compile Include="Assets\Scripts\ThreeCardBrag\LeftPanelController.cs" />
     <Compile Include="Assets\Scripts\ThreeCardBrag\Utility.cs" />
+    <Compile Include="Assets\Scripts\ThreeCardBrag\BonusRule.cs" />
     <Compile Include="Assets\Scripts\ThreeCardBrag\ComputerPlayer.cs" />
     <Compile Include="Assets\Scripts\ThreeCardBrag\CardView.cs" />
     <Compile Include="Assets\Scripts\ThreeCardBrag\PlayerAction.cs" />
+    <Compile Include="Assets\Scripts\ThreeCardBrag\GameInfo .cs" />
+    <Compile Include="Assets\Scripts\ThreeCardBrag\PossibleMoves.cs" />
+    <Compile Include="Assets\Scripts\ThreeCardBrag\CardRanking.cs" />
+    <Compile Include="Assets\Scripts\ThreeCardBrag\HandType.cs" />
+    <Compile Include="Assets\Scripts\ThreeCardBrag\DifficultyLevels.cs" />
     <Compile Include="Assets\Scripts\ThreeCardBrag\HumanPlayer.cs" />
     <Compile Include="Assets\Scripts\ThreeCardBrag\Player.cs" />
+    <Compile Include="Assets\Scripts\ThreeCardBrag\AIHelper.cs" />
     <Compile Include="Assets\Scripts\ThreeCardBrag\UIController.cs" />
   </ItemGroup>
   <ItemGroup>

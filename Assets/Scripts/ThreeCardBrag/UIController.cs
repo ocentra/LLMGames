@@ -2,6 +2,7 @@ using Sirenix.OdinInspector;
 using System.Collections;
 using System.Collections.Generic;
 using TMPro;
+using Unity.VisualScripting.YamlDotNet.Core.Tokens;
 using UnityEngine;
 using UnityEngine.UI;
 
@@ -173,8 +174,7 @@ namespace ThreeCardBrag
             foreach (Button button in Discard)
             {
                 CardView cardView = button.GetComponent<CardView>();
-                Card card = cardView.GetCard();
-                button.onClick.AddListener(() => OnDiscardCardClicked(card));
+                button.onClick.AddListener(() => OnDiscardCardClicked(cardView));
             }
 
             if (ContinueRound != null) ContinueRound.onClick.AddListener(() => GameController.Instance.ContinueGame(true));
@@ -192,6 +192,7 @@ namespace ThreeCardBrag
 
         private void OnDrawFromDeck()
         {
+
             TakeAction(PlayerAction.DrawFromDeck);
         }
 
@@ -205,21 +206,24 @@ namespace ThreeCardBrag
             TakeAction(PlayerAction.PlayBlind);
         }
 
-        private void OnDiscardCardClicked(Card card)
+        private void OnDiscardCardClicked(CardView cardView)
         {
-            if (DeckManager != null) DeckManager.SetSwapCard(card);
+            if (DeckManager != null)
+            {
+                Card card = cardView.Card;
+
+                DeckManager.SetSwapCard(card);
+            }
         }
 
         private void OnPickFromFloor()
         {
-            Discard.ForEach(b => b.enabled = true);
             ShowMessage($"Pick A card to discard else Draw new card ", 5f);
             StartCoroutine(WaitForSwapCardIndex());
         }
         private void OnShowPlayerHand()
         {
             ShowPlayerHand.enabled = false;
-            PlayBlind.gameObject.SetActive(false);
             TakeAction(PlayerAction.SeeHand);
         }
 
@@ -262,9 +266,11 @@ namespace ThreeCardBrag
 
 
 
-        private void TakeAction(PlayerAction action)
+        private async void TakeAction(PlayerAction action)
         {
-            GameController.Instance.HandlePlayerAction(action);
+            await GameController.Instance.HandlePlayerAction(action);
+
+
             ActionTaken = true;
         }
 
@@ -275,7 +281,6 @@ namespace ThreeCardBrag
             UpdateCurrentBetDisplay();
             UpdateHumanPlayerHandDisplay();
             UpdateFloorCard();
-
             if (isNewRound)
             {
                 ResetAllCardViews();
@@ -297,19 +302,23 @@ namespace ThreeCardBrag
             LeftPanelController.ResetView();
         }
 
-        public void EnablePlayerActions(bool hasSeen)
+        public void EnablePlayerActions()
         {
-            if (PlayBlind != null) PlayBlind.gameObject.SetActive(!hasSeen);
-            if (RaiseBet != null) RaiseBet.interactable = hasSeen;
-            if (Fold != null) Fold.interactable = hasSeen;
-            if (DrawFromDeck != null) DrawFromDeck.interactable = hasSeen;
-            if (PickFromFloor != null) PickFromFloor.interactable = hasSeen && DeckManager.FloorCard != null;
-            if (ShowCall != null) ShowCall.interactable = true;
+            bool humanPlayerHasSeenHand = GameController.Instance.HumanPlayer.HasSeenHand;
+            bool isCurrentPlayerHuman = GameController.Instance.CurrentTurn.CurrentPlayer == GameController.Instance.HumanPlayer;
 
-            foreach (Button button in Discard)
+            if (PlayBlind != null) PlayBlind.gameObject.SetActive(!humanPlayerHasSeenHand);
+            if (RaiseBet != null) RaiseBet.interactable = isCurrentPlayerHuman;
+            if (Fold != null) Fold.interactable = isCurrentPlayerHuman;
+            if (DrawFromDeck != null)
             {
-                button.interactable = hasSeen;
+                DrawFromDeck.interactable = humanPlayerHasSeenHand && isCurrentPlayerHuman;
             }
+
+            if (PickFromFloor != null) PickFromFloor.interactable = humanPlayerHasSeenHand && DeckManager.FloorCard != null;
+            if (ShowCall != null) ShowCall.interactable = isCurrentPlayerHuman;
+
+
         }
 
         public void UpdateCoinsDisplay()
@@ -338,16 +347,20 @@ namespace ThreeCardBrag
         {
             if (FloorCardView != null)
             {
-                if (DeckManager != null && DeckManager.FloorCard != null)
+                if (DeckManager != null)
                 {
                     FloorCardView.SetCard(DeckManager.FloorCard);
+
                     FloorCardView.UpdateCardView();
-                    FloorCardView.SetActive(true);
+                    bool value = FloorCardView.Card != null;
+                    FloorCardView.SetActive(value);
                 }
                 else
                 {
+
                     FloorCardView.SetActive(false);
                 }
+
             }
         }
 
@@ -428,7 +441,20 @@ namespace ThreeCardBrag
                     HumanPlayerCardViews[i].SetCard(GameController.Instance.HumanPlayer.Hand[i]);
                     HumanPlayerCardViews[i].UpdateCardView();
                 }
+
             }
+
+
+        }
+
+        public void ActivateDiscardCard(bool activate)
+        {
+            Discard.ForEach(button =>
+            {
+                button.enabled = true;
+                button.interactable = activate;
+            });
+
         }
 
         public void UpdateComputerHandDisplay(bool isRoundEnd = false)

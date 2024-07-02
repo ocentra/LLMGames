@@ -1,0 +1,132 @@
+using UnityEngine;
+using System;
+using System.Collections.Generic;
+using Sirenix.OdinInspector;
+using Sirenix.Utilities;
+using UnityEditor;
+
+namespace ThreeCardBrag
+{
+    [CreateAssetMenu(fileName = nameof(GameInfo), menuName = "ThreeCardBrag/GameInfo")]
+    [GlobalConfig("Assets/Resources/")]
+    public class GameInfo : GlobalConfig<GameInfo>
+    {
+        [TextArea(10, 20)]
+        public string GameRules;
+
+        [TextArea(5, 10)]
+        public string GameDescription;
+
+        [TextArea(5, 10)]
+        public string StrategyTips;
+
+        [ShowInInspector] 
+        public Dictionary<PossibleMoves, string> MoveValidityConditions;
+
+        [ShowInInspector] 
+        public Dictionary<DifficultyLevels, string> BluffSettingConditions;
+
+        [ShowInInspector] 
+        public Dictionary<HandType, string> ExampleHandOdds;
+
+        [ShowInInspector]
+        public BonusRule[] BonusRules;
+
+        [ShowInInspector]
+        public CardRanking[] CardRankings;
+
+        
+
+        [Button(ButtonSizes.Small)]
+        public void InitializeGameInfo()
+        {
+
+
+            BonusRules = new BonusRule[]
+            {
+                new BonusRule { Description = $"Sequence of 3 cards of the same color", BonusValue = 10 },
+                new BonusRule { Description = "Sequence of 3 cards of different colors", BonusValue = 5 },
+                new BonusRule { Description = "Pair in hand", BonusValue = 5 }
+            };
+
+            GameRules = $"Three Card Brag Rules:{Environment.NewLine}{Environment.NewLine}" +
+                $"1. Each player is dealt 3 cards at the start of each round.{Environment.NewLine}" +
+                $"2. Players can bet blind or see their hand.{Environment.NewLine}" +
+                $"3. Blind betting doubles the current bet.{Environment.NewLine}" +
+                $"4. Players who have seen their hand bet double the current bet.{Environment.NewLine}" +
+                $"5. Players can draw a new card to the floor.{Environment.NewLine}" +
+                $"6. Players can pick and swap a card from the floor.{Environment.NewLine}" +
+                $"7. Players can fold, call, or raise.{Environment.NewLine}" +
+                $"8. Highest hand value wins (Ace high).{Environment.NewLine}" +
+                $"9. In case of a tie, the highest card wins.{Environment.NewLine}" +
+                $"10. The game ends when a player runs out of coins or after a set number of rounds.{Environment.NewLine}" +
+                $"11. The trailing player can continue if they have more coins.{Environment.NewLine}" +
+                $"12. Players start with 1000 coins.{Environment.NewLine}" 
+                
+                ;
+
+
+            GameDescription = $"Three Card Brag is an exciting card game that combines elements of poker and bluffing.{Environment.NewLine}" +
+                              $" Players aim to make the best three-card hand while betting and bluffing their way to victory.{Environment.NewLine}" +
+                              "Most interesting part is we will be playing against Large language model LLM i.e Chat GPT ";
+
+            StrategyTips = $"- Pay attention to your opponents' betting patterns.{Environment.NewLine}" +
+                $" Use the blind betting option strategically to bluff or build the pot.{Environment.NewLine}" +
+                $" Consider the odds of improving your hand when deciding to draw or swap cards.{Environment.NewLine}" +
+                $" Don't be afraid to fold if you have a weak hand and the bets are high.{Environment.NewLine}" +
+                $" Manage your coins wisely to stay in the game for multiple rounds.";
+
+            CardRankings = new CardRanking[]
+            {
+                new CardRanking { CardName = "Ace", Value = 14 },
+                new CardRanking { CardName = "King", Value = 13 },
+                new CardRanking { CardName = "Queen", Value = 12 },
+                new CardRanking { CardName = "Jack", Value = 11 },
+                new CardRanking { CardName = "10", Value = 10 },
+                new CardRanking { CardName = "9", Value = 9 },
+                new CardRanking { CardName = "8", Value = 8 },
+                new CardRanking { CardName = "7", Value = 7 },
+                new CardRanking { CardName = "6", Value = 6 },
+                new CardRanking { CardName = "5", Value = 5 },
+                new CardRanking { CardName = "4", Value = 4 },
+                new CardRanking { CardName = "3", Value = 3 },
+                new CardRanking { CardName = "2", Value = 2 }
+            };
+
+            MoveValidityConditions = new Dictionary<PossibleMoves, string>
+            {
+                { PossibleMoves.Fold, "Always valid" },
+                { PossibleMoves.Call, "Valid when there's a bet to call" },
+                { PossibleMoves.Raise, "Valid when you have enough coins to raise" },
+                { PossibleMoves.Check, "Valid when there's no bet to call" },
+                { PossibleMoves.BetBlind, "Valid only if you haven't seen your hand" },
+                { PossibleMoves.SeeHand, "Valid only if you haven't seen your hand" },
+                { PossibleMoves.DrawFromDeck, "Valid when there's no floor card" },
+                { PossibleMoves.PickFromFloor, "Valid when there's a floor card" },
+                { PossibleMoves.SwapCard, "Valid after drawing or picking from floor" },
+                { PossibleMoves.ShowHand, "Valid at any time, ends the round" }
+            };
+
+
+            BluffSettingConditions = new Dictionary<DifficultyLevels, string>
+            {
+                { DifficultyLevels.Easy, "Rarely bluff" },
+                { DifficultyLevels.Medium, "Occasionally bluff when the pot odds are favorable" },
+                { DifficultyLevels.Hard, "Frequently bluff and try to read opponent's patterns" },
+            };
+
+            ExampleHandOdds = new Dictionary<HandType, string>
+            {
+                { HandType.StrongHand, "Three of a A  Certain Win, Three of a Kind Good Bluff good odds , or Straight Flush" },
+                { HandType.MediumHand, "Pair or Flush, Sequence of rank i.e AKQ of hearts " },
+                { HandType.WeakHand, "example 485 , 753 ,a63 , something which totals to less point and no bonus possible" }
+            };
+
+            EditorUtility.SetDirty(this);
+            AssetDatabase.SaveAssets();
+            AssetDatabase.Refresh();
+        }
+
+        
+    }
+}

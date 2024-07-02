@@ -19,7 +19,7 @@ namespace ThreeCardBrag
         public GridLayoutGroup FloorCardsGrid;
         [Required]
         public Button ShowAllFloorCards;
-        public List<CardView> FloorCards = new List<CardView>();
+        public List<GameObject> FloorCards = new List<GameObject>();
         public float MinHeight = 700;
         public float MaxHeight = 70000;
         public bool IsExpanded = false;
@@ -53,17 +53,16 @@ namespace ThreeCardBrag
 
         public void AddCard(Card card)
         {
-            if (CardViewPrefab !=null && FloorCardsHolder !=null)
+            if (CardViewPrefab != null && FloorCardsHolder != null)
             {
                 GameObject newCardViewObject = Instantiate(CardViewPrefab, FloorCardsHolder);
-                CardView newCardView = newCardViewObject.GetComponent<CardView>();
+                CardView newCardView = newCardViewObject.GetComponentInChildren<CardView>();
 
                 if (newCardView != null)
                 {
                     newCardView.SetCard(card);
                     newCardView.SetActive(true);
-
-                    FloorCards.Insert(0, newCardView);
+                    newCardView.UpdateCardView();
 
                     for (int i = 0; i < FloorCards.Count; i++)
                     {
@@ -78,10 +77,13 @@ namespace ThreeCardBrag
                         }
                     }
                 }
+
+                FloorCards.Insert(0, newCardViewObject);
+
             }
             else
             {
-                Debug.LogError($" error adding cards CardViewPrefab null ? {CardViewPrefab ==null} FloorCardsHolder null ? {FloorCardsHolder == null}");
+                Debug.LogError($" error adding cards CardViewPrefab null ? {CardViewPrefab == null} FloorCardsHolder null ? {FloorCardsHolder == null}");
             }
 
         }
@@ -121,9 +123,14 @@ namespace ThreeCardBrag
             MiddleLayoutElement.preferredHeight = MaxHeight;
             FloorCardsGrid.cellSize = new Vector2(75, 125);
 
-            foreach (CardView cardView in FloorCards)
+            foreach (GameObject go in FloorCards)
             {
-                cardView.SetActive(true);
+                CardView cardView = go.GetComponent<CardView>();
+                if (cardView != null)
+                {
+                    cardView.SetActive(true);
+
+                }
             }
         }
 
@@ -136,7 +143,9 @@ namespace ThreeCardBrag
             {
                 for (int i = 8; i < FloorCards.Count; i++)
                 {
-                    FloorCards[i].SetActive(false);
+                    GameObject floorCard = FloorCards[i];
+                    CardView cardView = floorCard.GetComponentInChildren<CardView>();
+                    cardView.SetActive(false);
                 }
             }
         }

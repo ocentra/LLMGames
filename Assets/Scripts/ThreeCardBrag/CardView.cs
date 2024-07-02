@@ -10,7 +10,7 @@ namespace ThreeCardBrag
         public Image CardImage { get; private set; }
         
         [ShowInInspector]
-        private Card Card { get;  set; }
+        public Card Card { get; private set; }
         
         [ShowInInspector]
         private Transform Parent { get; set; }
@@ -70,10 +70,7 @@ namespace ThreeCardBrag
             Parent.gameObject.SetActive(value);
         }
 
-        public Card GetCard()
-        {
-            return Card;
-        }
+
 
         public void ResetCardView()
         {

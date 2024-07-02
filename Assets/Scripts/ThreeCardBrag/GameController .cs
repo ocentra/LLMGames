@@ -50,7 +50,10 @@ namespace ThreeCardBrag
         [ShowInInspector]
         public int MaxRounds { get; private set; } = 10;
 
+        [ShowInInspector]
         public TurnInfo CurrentTurn;
+        
+        public AIHelper AIHelper { get; private set; }
 
         private void Awake()
         {
@@ -76,14 +79,17 @@ namespace ThreeCardBrag
             HumanPlayer.SetName(nameof(HumanPlayer));
             ComputerPlayer.SetName(nameof(ComputerPlayer));
             DeckManager = new DeckManager();
+            AIHelper = new AIHelper(GameInfo.Instance, this);
+
         }
 
         private void Start()
         {
             Init();
 
-            HumanPlayer.OnActionTaken += HandlePlayerAction;
-            ComputerPlayer.OnActionTaken += HandlePlayerAction;
+            HumanPlayer.OnActionTaken += async (action) => await HandlePlayerAction(action);
+            ComputerPlayer.OnActionTaken += async (action) => await HandlePlayerAction(action);
+            HumanPlayer.OnCoinsChanged += UIController.UpdateCoinsDisplay;
             HumanPlayer.OnCoinsChanged += UIController.UpdateCoinsDisplay;
             ComputerPlayer.OnCoinsChanged += UIController.UpdateCoinsDisplay;
 
@@ -128,11 +134,10 @@ namespace ThreeCardBrag
         {
             Player currentPlayer = IsHumanTurn ? HumanPlayer : ComputerPlayer;
             UIController.StartTurnCountdown(currentPlayer, TurnDuration);
-
+            UIController.EnablePlayerActions();
             if (IsHumanTurn)
             {
-                UIController.EnablePlayerActions(currentPlayer.HasSeenHand); // Enable actions for the human player
-
+                
                 CurrentTurn = new TurnInfo(currentPlayer)
                 {
                     ElapsedTime = 0f
@@ -153,6 +158,7 @@ namespace ThreeCardBrag
             }
             else
             {
+
                 ComputerPlayer.MakeDecision(CurrentBet);
                 CurrentTurn = new TurnInfo(currentPlayer)
                 {
@@ -178,9 +184,9 @@ namespace ThreeCardBrag
         }
 
 
-        public void HandlePlayerAction(PlayerAction action)
+        public async Task HandlePlayerAction(PlayerAction action)
         {
-            ProcessPlayerAction(action);
+           await ProcessPlayerAction(action);
 
             if (action != PlayerAction.Fold && action != PlayerAction.Show)
             {
@@ -189,7 +195,7 @@ namespace ThreeCardBrag
 
         }
 
-        private async void ProcessPlayerAction(PlayerAction action)
+        private async Task ProcessPlayerAction(PlayerAction action)
         {
             Player currentPlayer = IsHumanTurn ? HumanPlayer : ComputerPlayer;
 
@@ -197,7 +203,11 @@ namespace ThreeCardBrag
             {
                 case PlayerAction.SeeHand:
                     currentPlayer.SeeHand();
+                    UIController.EnablePlayerActions();
+                    UIController.UpdateHumanPlayerHandDisplay();
+                    UIController.ActivateDiscardCard(true);
                     await WaitForTurnCompletion(currentPlayer,CurrentTurn);
+                    UIController.ActivateDiscardCard(false);
                     break;
                 case PlayerAction.PlayBlind:
                     PlayBlind(currentPlayer);

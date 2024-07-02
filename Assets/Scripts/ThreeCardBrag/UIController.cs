@@ -103,9 +103,9 @@ namespace ThreeCardBrag
 
         private void Init()
         {
-            if (GameController.Instance != null)
+            if (GameManager.Instance != null)
             {
-                DeckManager = GameController.Instance.DeckManager;
+                DeckManager = GameManager.Instance.DeckManager;
             }
 
             ComputerHand = transform.FindChildRecursively<Transform>(nameof(ComputerHand));
@@ -177,11 +177,11 @@ namespace ThreeCardBrag
                 button.onClick.AddListener(() => OnDiscardCardClicked(cardView));
             }
 
-            if (ContinueRound != null) ContinueRound.onClick.AddListener(() => GameController.Instance.ContinueGame(true));
-            if (NewGame != null) NewGame.onClick.AddListener(() => GameController.Instance.StartNewGame());
+            if (ContinueRound != null) ContinueRound.onClick.AddListener(() => GameManager.Instance.ContinueGame(true));
+            if (NewGame != null) NewGame.onClick.AddListener(() => GameManager.Instance.StartNewGame());
             if (PurchaseCoins != null)
             {
-                PurchaseCoins.onClick.AddListener(() => GameController.Instance.PurchaseCoins(GameController.Instance.HumanPlayer, 1000));
+                PurchaseCoins.onClick.AddListener(() => GameManager.Instance.PurchaseCoins(GameManager.Instance.HumanPlayer, 1000));
             }
         }
 
@@ -232,18 +232,18 @@ namespace ThreeCardBrag
         {
             if (string.IsNullOrEmpty(RaiseAmount.text))
             {
-                ShowMessage($" Please Set RaiseAmount ! Needs to be higher than CurrentBet {GameController.Instance.CurrentBet}", 5f);
+                ShowMessage($" Please Set RaiseAmount ! Needs to be higher than CurrentBet {GameManager.Instance.CurrentBet}", 5f);
                 return;
             }
 
-            if (int.TryParse(RaiseAmount.text, out int raiseAmount) && raiseAmount > GameController.Instance.CurrentBet)
+            if (int.TryParse(RaiseAmount.text, out int raiseAmount) && raiseAmount > GameManager.Instance.CurrentBet)
             {
-                GameController.Instance.SetCurrentBet(raiseAmount);
+                GameManager.Instance.SetCurrentBet(raiseAmount);
                 TakeAction(PlayerAction.Raise);
             }
             else
             {
-                ShowMessage($" RaiseAmount {raiseAmount} Needs to be higher than CurrentBet {GameController.Instance.CurrentBet}", 5f);
+                ShowMessage($" RaiseAmount {raiseAmount} Needs to be higher than CurrentBet {GameManager.Instance.CurrentBet}", 5f);
             }
         }
         private IEnumerator WaitForSwapCardIndex()
@@ -260,7 +260,7 @@ namespace ThreeCardBrag
         }
         public void SetComputerSeenHand(bool hasSeenHand)
         {
-            string message = GameController.Instance.BlindMultiplier > 1 ? $" Playing Blind {GameController.Instance.BlindMultiplier}" : $" Playing Blind ";
+            string message = GameManager.Instance.BlindMultiplier > 1 ? $" Playing Blind {GameManager.Instance.BlindMultiplier}" : $" Playing Blind ";
             ComputerPlayingBlind.text = hasSeenHand ? "" : message;
         }
 
@@ -268,7 +268,7 @@ namespace ThreeCardBrag
 
         private async void TakeAction(PlayerAction action)
         {
-            await GameController.Instance.HandlePlayerAction(action);
+            await GameManager.Instance.HandlePlayerAction(action);
 
 
             ActionTaken = true;
@@ -304,8 +304,8 @@ namespace ThreeCardBrag
 
         public void EnablePlayerActions()
         {
-            bool humanPlayerHasSeenHand = GameController.Instance.HumanPlayer.HasSeenHand;
-            bool isCurrentPlayerHuman = GameController.Instance.CurrentTurn.CurrentPlayer == GameController.Instance.HumanPlayer;
+            bool humanPlayerHasSeenHand = GameManager.Instance.HumanPlayer.HasSeenHand;
+            bool isCurrentPlayerHuman = GameManager.Instance.CurrentTurn.CurrentPlayer == GameManager.Instance.HumanPlayer;
 
             if (PlayBlind != null) PlayBlind.gameObject.SetActive(!humanPlayerHasSeenHand);
             if (RaiseBet != null) RaiseBet.interactable = isCurrentPlayerHuman;
@@ -323,24 +323,24 @@ namespace ThreeCardBrag
 
         public void UpdateCoinsDisplay()
         {
-            if (HumanPlayersCoins != null) HumanPlayersCoins.text = $"{GameController.Instance.HumanPlayer.Coins}";
-            if (ComputerPlayerCoins != null) ComputerPlayerCoins.text = $"{GameController.Instance.ComputerPlayer.Coins}";
+            if (HumanPlayersCoins != null) HumanPlayersCoins.text = $"{GameManager.Instance.HumanPlayer.Coins}";
+            if (ComputerPlayerCoins != null) ComputerPlayerCoins.text = $"{GameManager.Instance.ComputerPlayer.Coins}";
         }
 
         public void UpdatePotDisplay()
         {
-            if (Pot != null) Pot.text = $"{GameController.Instance.Pot}";
+            if (Pot != null) Pot.text = $"{GameManager.Instance.Pot}";
         }
 
         public void UpdateCurrentBetDisplay()
         {
-            if (CurrentBet != null) CurrentBet.text = $"Current Bet: {GameController.Instance.CurrentBet} ";
+            if (CurrentBet != null) CurrentBet.text = $"Current Bet: {GameManager.Instance.CurrentBet} ";
         }
 
         public void UpdateRoundDisplay()
         {
-            ComputerPlayerWins.text = $"{GameController.Instance.ScoreKeeper.ComputerTotalWins}";
-            HumanPlayersWins.text = $"{GameController.Instance.ScoreKeeper.HumanTotalWins}";
+            ComputerPlayerWins.text = $"{GameManager.Instance.ScoreKeeper.ComputerTotalWins}";
+            HumanPlayersWins.text = $"{GameManager.Instance.ScoreKeeper.HumanTotalWins}";
         }
 
         public void UpdateFloorCard()
@@ -434,11 +434,11 @@ namespace ThreeCardBrag
 
         public void UpdateHumanPlayerHandDisplay(bool isRoundEnd = false)
         {
-            if (GameController.Instance.HumanPlayer.HasSeenHand || isRoundEnd)
+            if (GameManager.Instance.HumanPlayer.HasSeenHand || isRoundEnd)
             {
-                for (int i = 0; i < GameController.Instance.HumanPlayer.Hand.Count; i++)
+                for (int i = 0; i < GameManager.Instance.HumanPlayer.Hand.Count; i++)
                 {
-                    HumanPlayerCardViews[i].SetCard(GameController.Instance.HumanPlayer.Hand[i]);
+                    HumanPlayerCardViews[i].SetCard(GameManager.Instance.HumanPlayer.Hand[i]);
                     HumanPlayerCardViews[i].UpdateCardView();
                 }
 
@@ -459,9 +459,9 @@ namespace ThreeCardBrag
 
         public void UpdateComputerHandDisplay(bool isRoundEnd = false)
         {
-            for (int i = 0; i < GameController.Instance.ComputerPlayer.Hand.Count; i++)
+            for (int i = 0; i < GameManager.Instance.ComputerPlayer.Hand.Count; i++)
             {
-                ComputerPlayerCardViews[i].SetCard(GameController.Instance.ComputerPlayer.Hand[i]);
+                ComputerPlayerCardViews[i].SetCard(GameManager.Instance.ComputerPlayer.Hand[i]);
             }
 
             if (isRoundEnd)

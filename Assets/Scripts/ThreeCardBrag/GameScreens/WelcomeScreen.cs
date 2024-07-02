@@ -96,7 +96,7 @@ namespace ThreeCardBrag.GameScreen
         private IEnumerator StartGameCoroutine()
         {
             yield return StartCoroutine(HideScreenCoroutine());
-            GameController.Instance.StartNewGame();
+            GameManager.Instance.StartNewGame();
         }
 
         public override void QuitGame()

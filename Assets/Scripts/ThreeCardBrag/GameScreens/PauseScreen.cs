@@ -50,7 +50,7 @@ namespace ThreeCardBrag.GameScreen
         private void Resume()
         {
             PlaySelectionSound();
-           // GameController.Instance.ResumeGame();
+           // GameManager.Instance.ResumeGame();
             HideScreen();
         }
 
@@ -63,7 +63,7 @@ namespace ThreeCardBrag.GameScreen
         private void QuitToMainMenu()
         {
             PlaySelectionSound();
-           // GameController.Instance.QuitToMainMenu();
+           // GameManager.Instance.QuitToMainMenu();
             HideScreen();
         }
     }

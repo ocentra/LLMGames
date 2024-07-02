@@ -8,7 +8,7 @@ namespace ThreeCardBrag
 {
     public class Player
     {
-        private DeckManager DeckManager => GameController.Instance.DeckManager;
+        private DeckManager DeckManager => GameManager.Instance.DeckManager;
 
         [ShowInInspector, ReadOnly]
         public string PlayerName { get; private set; }
@@ -27,7 +27,7 @@ namespace ThreeCardBrag
 
         public void TakeAction(PlayerAction action)
         {
-            GameController.Instance.UIController.ShowMessage($"Player {PlayerName} Took Action {action}", 5f);
+            GameManager.Instance.UIController.ShowMessage($"Player {PlayerName} Took Action {action}", 5f);
             OnActionTaken?.Invoke(action);
         }
 
@@ -46,12 +46,12 @@ namespace ThreeCardBrag
 
         public virtual void Bet()
         {
-            AdjustCoins(-GameController.Instance.CurrentBet);
+            AdjustCoins(-GameManager.Instance.CurrentBet);
         }
 
         public virtual void Raise()
         {
-            AdjustCoins(-GameController.Instance.CurrentBet);
+            AdjustCoins(-GameManager.Instance.CurrentBet);
         }
 
         public virtual void Fold()
@@ -62,7 +62,7 @@ namespace ThreeCardBrag
         public virtual void DrawFromDeck()
         {
             DeckManager.SetFloorCard(DeckManager.DrawCard());
-            GameController.Instance.UIController.UpdateFloorCard();
+            GameManager.Instance.UIController.UpdateFloorCard();
         }
 
         public virtual void PickAndSwap()
@@ -98,7 +98,7 @@ namespace ThreeCardBrag
                 DeckManager.SetSwapCard(null);
 
 
-                GameController.Instance.UIController.UpdateGameState();
+                GameManager.Instance.UIController.UpdateGameState();
             }
         }
 
@@ -107,7 +107,7 @@ namespace ThreeCardBrag
 
         public virtual void BetOnBlind()
         {
-            AdjustCoins(-GameController.Instance.CurrentBet);
+            AdjustCoins(-GameManager.Instance.CurrentBet);
             HasBetOnBlind = true;
         }
 

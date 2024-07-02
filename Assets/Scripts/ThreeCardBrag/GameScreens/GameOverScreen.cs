@@ -56,13 +56,13 @@ namespace ThreeCardBrag.GameScreen
         private void UpdateScore()
         {
             // Implement score update logic here
-            ScoreText.text = $"Your Score: {GameController.Instance.ScoreKeeper.HumanTotalWins}";
+            ScoreText.text = $"Your Score: {GameManager.Instance.ScoreKeeper.HumanTotalWins}";
         }
 
         private void PlayAgain()
         {
             PlaySelectionSound();
-            GameController.Instance.StartNewGame();
+            GameManager.Instance.StartNewGame();
             HideScreen();
         }
 

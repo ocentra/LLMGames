@@ -2,13 +2,16 @@ using System;
 using System.Collections;
 using System.Threading.Tasks;
 using Sirenix.OdinInspector;
+using ThreeCardBrag.LLMService;
 using UnityEngine;
 
 namespace ThreeCardBrag
 {
-    public class GameController : MonoBehaviour
+    [RequireComponent(typeof(LLMManager))]
+
+    public class GameManager : MonoBehaviour
     {
-        public static GameController Instance { get; private set; }
+        public static GameManager Instance { get; private set; }
 
         [ShowInInspector]
         public HumanPlayer HumanPlayer { get; private set; } = new HumanPlayer();

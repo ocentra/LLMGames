@@ -64,7 +64,7 @@ namespace ThreeCardBrag.GameScreen
 
         private void UpdateCurrentCoins()
         {
-            CurrentCoinsText.text = $"Current Coins: {GameController.Instance.HumanPlayer.Coins}";
+            CurrentCoinsText.text = $"Current Coins: {GameManager.Instance.HumanPlayer.Coins}";
         }
 
         private void AuthenticateUser()

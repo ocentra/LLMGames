@@ -4,12 +4,12 @@ using UnityEngine;
 
 namespace ThreeCardBrag
 {
-   
-    public class DeckManager
+
+    public class DeckManager 
     {
         [ShowInInspector]
-        public List<Card> DeckCards { get; private set; }= new List<Card>();
-        
+        public List<Card> DeckCards { get; private set; } = new List<Card>();
+
         [ShowInInspector]
         public List<Card> FloorCards { get; private set; } = new List<Card>();
 
@@ -20,7 +20,7 @@ namespace ThreeCardBrag
         public int TotalCards => Deck.Instance.CardTemplates.Count;
         [ShowInInspector]
         public int RemainingCards => DeckCards.Count;
-        
+
         [ShowInInspector]
         public int FloorCardsCount => FloorCards.Count;
 
@@ -34,11 +34,13 @@ namespace ThreeCardBrag
             InitializeDeck();
         }
 
+        
+        
         public void SetFloorCard(Card card)
         {
             FloorCard = card;
         }
-        
+
         public void InitializeDeck()
         {
             DeckCards = new List<Card>(Deck.Instance.CardTemplates);
@@ -71,7 +73,7 @@ namespace ThreeCardBrag
             if (!FloorCards.Contains(card))
             {
                 FloorCards.Add(card);
-                GameController.Instance.UIController.UpdateFloorCards(card);
+                GameManager.Instance.UIController.UpdateFloorCards(card);
 
             }
 

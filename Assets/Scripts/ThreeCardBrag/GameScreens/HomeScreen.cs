@@ -76,7 +76,7 @@ namespace ThreeCardBrag.GameScreen
         private void StartThreeCardBrag()
         {
             PlaySelectionSound();
-            // GameController.Instance.StartThreeCardBrag();
+            // GameManager.Instance.StartThreeCardBrag();
         }
 
         private void OpenSettings()

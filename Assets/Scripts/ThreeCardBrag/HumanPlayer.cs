@@ -9,13 +9,13 @@ namespace ThreeCardBrag
         public override void SeeHand()
         {
             base.SeeHand();
-            GameController.Instance.UIController.UpdateHumanPlayerHandDisplay();
+            GameManager.Instance.UIController.UpdateHumanPlayerHandDisplay();
         }
 
         public override void ShowHand(bool isRoundEnd=false)
         {
             base.ShowHand(isRoundEnd);
-            GameController.Instance.UIController.UpdateHumanPlayerHandDisplay(isRoundEnd);
+            GameManager.Instance.UIController.UpdateHumanPlayerHandDisplay(isRoundEnd);
         }
         
     }

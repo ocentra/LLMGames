@@ -6,11 +6,11 @@ namespace ThreeCardBrag
 {
     public class ComputerPlayer : Player
     {
-        private Card FloorCard => GameController.Instance.DeckManager.FloorCard;
+        private Card FloorCard => GameManager.Instance.DeckManager.FloorCard;
 
         public void MakeDecision(int currentBet)
         {
-            // string aiInstruction = GameController.Instance.AIHelper.GetAIInstructions();
+            // string aiInstruction = GameManager.Instance.AIHelper.GetAIInstructions();
 
             // todo send the hand and all prompt to LLM , use AIHelper to get instruction and send it to Chatgpt for now
             // Start the async method to simulate thinking for now
@@ -49,16 +49,16 @@ namespace ThreeCardBrag
                     if (FloorCard != null)
                     {
                         int worstCardIndex = FindWorstCardIndex();
-                        GameController.Instance.DeckManager.SetSwapCard(Hand[worstCardIndex]);
+                        GameManager.Instance.DeckManager.SetSwapCard(Hand[worstCardIndex]);
                         TakeAction(PlayerAction.PickAndSwap);
                     }
                 }
             }
 
-            GameController.Instance.UIController.SetComputerSeenHand(HasSeenHand);
+            GameManager.Instance.UIController.SetComputerSeenHand(HasSeenHand);
 
 
-            GameController.Instance.UIController.ActionTaken = true;
+            GameManager.Instance.UIController.ActionTaken = true;
         }
 
         private int FindWorstCardIndex()
@@ -75,7 +75,7 @@ namespace ThreeCardBrag
         public override void ShowHand(bool isRoundEnd = false)
         {
             base.ShowHand(isRoundEnd);
-            GameController.Instance.UIController.UpdateComputerHandDisplay(isRoundEnd);
+            GameManager.Instance.UIController.UpdateComputerHandDisplay(isRoundEnd);
         }
     }
 }

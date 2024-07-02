@@ -62,17 +62,26 @@
   <ItemGroup>
     <Compile Include="Assets\Scripts\ThreeCardBrag\Card.cs" />
     <Compile Include="Assets\Scripts\ThreeCardBrag\TurnInfo.cs" />
+    <Compile Include="Assets\Scripts\ThreeCardBrag\GameScreens\GameOverScreen.cs" />
     <Compile Include="Assets\Scripts\ThreeCardBrag\DeckManager.cs" />
     <Compile Include="Assets\Scripts\ThreeCardBrag\TransformExtensions.cs" />
     <Compile Include="Assets\Scripts\ThreeCardBrag\GameController .cs" />
     <Compile Include="Assets\Scripts\ThreeCardBrag\ScoreKeeper .cs" />
+    <Compile Include="Assets\Scripts\ThreeCardBrag\GameScreens\LoginScreen.cs" />
     <Compile Include="Assets\Scripts\ThreeCardBrag\PlayerTimer.cs" />
     <Compile Include="Assets\Scripts\ThreeCardBrag\Deck .cs" />
+    <Compile Include="Assets\Scripts\ThreeCardBrag\GameScreens\BragScreen.cs" />
+    <Compile Include="Assets\Scripts\ThreeCardBrag\GameScreens\SettingsScreen.cs" />
+    <Compile Include="Assets\Scripts\ThreeCardBrag\GameScreens\PauseScreen.cs" />
     <Compile Include="Assets\Scripts\ThreeCardBrag\LeftPanelController.cs" />
+    <Compile Include="Assets\Scripts\ThreeCardBrag\GameScreens\RulesScreen.cs" />
+    <Compile Include="Assets\Scripts\ThreeCardBrag\GameScreens\WelcomeScreen.cs" />
     <Compile Include="Assets\Scripts\ThreeCardBrag\Utility.cs" />
+    <Compile Include="Assets\Scripts\ThreeCardBrag\GameScreens\PurchaseScreen.cs" />
     <Compile Include="Assets\Scripts\ThreeCardBrag\BonusRule.cs" />
     <Compile Include="Assets\Scripts\ThreeCardBrag\ComputerPlayer.cs" />
     <Compile Include="Assets\Scripts\ThreeCardBrag\CardView.cs" />
+    <Compile Include="Assets\Scripts\ThreeCardBrag\GameScreens\HomeScreen.cs" />
     <Compile Include="Assets\Scripts\ThreeCardBrag\PlayerAction.cs" />
     <Compile Include="Assets\Scripts\ThreeCardBrag\GameInfo .cs" />
     <Compile Include="Assets\Scripts\ThreeCardBrag\PossibleMoves.cs" />
@@ -80,6 +89,7 @@
     <Compile Include="Assets\Scripts\ThreeCardBrag\HandType.cs" />
     <Compile Include="Assets\Scripts\ThreeCardBrag\DifficultyLevels.cs" />
     <Compile Include="Assets\Scripts\ThreeCardBrag\HumanPlayer.cs" />
+    <Compile Include="Assets\Scripts\ThreeCardBrag\BragSelectable.cs" />
     <Compile Include="Assets\Scripts\ThreeCardBrag\Player.cs" />
     <Compile Include="Assets\Scripts\ThreeCardBrag\AIHelper.cs" />
     <Compile Include="Assets\Scripts\ThreeCardBrag\UIController.cs" />

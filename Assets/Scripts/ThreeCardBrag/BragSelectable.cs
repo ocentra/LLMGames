@@ -3,6 +3,7 @@ using UnityEngine.Events;
 using UnityEngine.EventSystems;
 using UnityEngine.UI;
 using Sirenix.OdinInspector;
+using ThreeCardBrag.GameScreen;
 
 namespace ThreeCardBrag.UI
 {

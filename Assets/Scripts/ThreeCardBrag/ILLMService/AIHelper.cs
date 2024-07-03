@@ -7,40 +7,49 @@ namespace ThreeCardBrag
     public class AIHelper
     {
         private GameInfo GameInfo { get; set; }
-        GameManager GameManager { get; set; }
+        private GameManager GameManager { get; set; }
+
         public AIHelper(GameInfo gameInfo, GameManager gameManager)
         {
             GameInfo = gameInfo;
             GameManager = gameManager;
         }
 
-        public string GetAIInstructions()
+        public string GetSystemMessage()
         {
-            return $"As an AI player in Three Card Brag GameDescription : {GameInfo.GameDescription} {Environment.NewLine}" +
-                   $"1. Evaluate the strength of your hand {GetHandDetails(GameManager)} based on card rankings {GameInfo.CardRankings}.{Environment.NewLine}" +
-                   $"Also Keep in mind of GameRules {GameInfo.GameRules} and onusRules {GetBonusRules(GameInfo.BonusRules)}{Environment.NewLine}" +
-                   $"2. Consider the current bet {GameManager.CurrentBet} and pot size {GameManager.Pot} when making decisions.{Environment.NewLine}" +
-                   $"3. Use probability to estimate the likelihood of improving your hand when drawing or swapping use StrategyTips {GameInfo.StrategyTips} {Environment.NewLine}" +
-                   $"4. Implement bluffing strategies based on the {GetDifficultyLevel()}, especially when playing blind.{Environment.NewLine}" +
-                   $"4.5 you Can use this as guide of BluffSettingConditions: {BluffSetting(GameInfo.BluffSettingConditions)} {Environment.NewLine}" +
-                   $"5. Adapt your strategy based on the human player's behavior and betting patterns. use Current game state: {GetGameStateDetails(GameManager)} {Environment.NewLine}" +
-                   $"6. Manage your coins {GameManager.ComputerPlayer.Coins} to ensure you can play multiple rounds. {Environment.NewLine}" +
-                   $" Game is in Round {GameManager.ScoreKeeper.ComputerTotalWins + GameManager.ScoreKeeper.HumanTotalWins} of {GameManager.MaxRounds}.{Environment.NewLine}" +
-                   $" You have won {GameManager.ScoreKeeper.ComputerTotalWins} Opponent have own {GameManager.ScoreKeeper.HumanTotalWins} you have {GameManager.ComputerPlayer.Coins} and He's got {GameManager.HumanPlayer.Coins}" +
-                   $"7. Calculate pot odds to make informed betting decisions Example Hand odd {GetExampleHandDescriptions(GameInfo.ExampleHandOdds)}.{Environment.NewLine}" +
-                   $"8. You Need to understand and evaluate all possibilities {GetPossibleMoves(GameInfo.MoveValidityConditions)}and then ONLY ONLY IMPORTANT reply with one of the move word, {GetMoveWord()}";
+            return $"You are an expert AI player in a Three Card Brag game. " +
+                   $"Your goal is to make the best betting decisions based on the strength of your hand, the game rules, and the behavior of the human player. " +
+                   $"Game Rules: {GameInfo.GameRules}. " +
+                   $"Card Rankings: {GameInfo.CardRankings}. " +
+                   $"Bonus Rules: {GetBonusRules(GameInfo.BonusRules)}. " +
+                   $"Strategy Tips: {GameInfo.StrategyTips}. " +
+                   $"Bluffing Strategies: {BluffSetting(GameInfo.BluffSettingConditions)}. " +
+                   $"Example Hand Descriptions: {GetExampleHandDescriptions(GameInfo.ExampleHandOdds)}. " +
+                   $"Possible Moves: {GetPossibleMoves(GameInfo.MoveValidityConditions)}. " +
+                   $"Difficulty Levels: {GetDifficultyLevel()}";
         }
 
-        private string GetBonusRules(BonusRule[] rules)
+        public string GetUserPrompt()
+        {
+            return $"Current Hand: {GetHandDetails(GameManager)}. " +
+                   $"Current Hand Value: {GameManager.ComputerPlayer.CalculateHandValue()}. " +
+                   $"Current Bet: {GameManager.CurrentBet}, Pot Size: {GameManager.Pot}. " +
+                   $"Your Coins: {GameManager.ComputerPlayer.Coins}, Opponent's Coins: {GameManager.HumanPlayer.Coins}. " +
+                   $"Current Game State: {GetGameStateDetails(GameManager)}. " +
+                   $"Move Options: {GetMoveWord()}";
+        }
+
+        private string GetBonusRules(BaseBonusRule[] rules)
         {
             string bonusRules = $"BonusRule {Environment.NewLine}";
-            for (var index = 0; index < rules.Length; index++)
+            for (int index = 0; index < rules.Length; index++)
             {
-                var bonusRule = rules[index];
+                BaseBonusRule bonusRule = rules[index];
                 bonusRules += $"bonusRule {index + 1}: {bonusRule.Description} Points {bonusRule.BonusValue} {Environment.NewLine}";
             }
             return bonusRules;
         }
+
         private string GetExampleHandDescriptions(Dictionary<HandType, string> exampleHandOdds)
         {
             return string.Join(Environment.NewLine, exampleHandOdds.Select(hd => $"{hd.Key}: {hd.Value}"));
@@ -63,7 +72,7 @@ namespace ThreeCardBrag
 
         private string GetDifficultyLevel()
         {
-            return string.Join(" or ", Enum.GetNames(typeof(PossibleMoves)));
+            return string.Join(" or ", Enum.GetNames(typeof(DifficultyLevels)));
         }
 
         private static string GetHandDetails(GameManager gameManager)
@@ -102,6 +111,14 @@ namespace ThreeCardBrag
         {
             return $"Human: {gameManager.HumanPlayer.Coins} coins, Computer: {gameManager.ComputerPlayer.Coins} coins, " +
                    $"Human playing blind: {!gameManager.HumanPlayer.HasSeenHand}, Computer playing blind: {!gameManager.ComputerPlayer.HasSeenHand}";
+        }
+
+
+        public (string systemMessage, string userPrompt) GetAIInstructions()
+        {
+            string systemMessage = GetSystemMessage();
+            string userPrompt = GetUserPrompt();
+            return (systemMessage, userPrompt);
         }
 
     }

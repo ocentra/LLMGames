@@ -51,15 +51,16 @@ namespace ThreeCardBrag.LLMService
             return true;
         }
 
-        public async Task<string> GetLLMResponse(string prompt)
+        public async Task<string> GetLLMResponse()
         {
+            var (systemMessage, userPrompt) = GameManager.Instance.AIHelper.GetAIInstructions();
             if (CurrentLLMService == null)
             {
                 Debug.LogError("LLM Service is not initialized!");
                 return null;
             }
 
-            return await CurrentLLMService.GetResponseAsync(prompt);
+            return await CurrentLLMService.GetResponseAsync(systemMessage, userPrompt);
         }
     }
 }

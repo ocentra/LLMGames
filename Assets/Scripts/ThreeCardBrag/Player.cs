@@ -113,7 +113,18 @@ namespace ThreeCardBrag
 
         public int CalculateHandValue()
         {
-            return Hand.Sum(card => card.GetRankValue());
+            int handValue = Hand.Sum(card => card.GetRankValue());
+            var bonusRules = GameInfo.Instance.BonusRules;
+
+            foreach (var rule in bonusRules)
+            {
+                if (rule.Evaluate(Hand))
+                {
+                    handValue += rule.BonusValue;
+                }
+            }
+
+            return handValue;
         }
 
         public int GetHighestCardValue()

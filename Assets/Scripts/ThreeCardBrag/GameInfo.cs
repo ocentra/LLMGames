@@ -30,7 +30,7 @@ namespace ThreeCardBrag
         public Dictionary<HandType, string> ExampleHandOdds;
 
         [ShowInInspector]
-        public BonusRule[] BonusRules;
+        public BaseBonusRule[] BonusRules;
 
         [ShowInInspector]
         public CardRanking[] CardRankings;
@@ -42,12 +42,13 @@ namespace ThreeCardBrag
         {
 
 
-            BonusRules = new BonusRule[]
+            BonusRules = new BaseBonusRule[]
             {
-                new BonusRule { Description = $"Sequence of 3 cards of the same color", BonusValue = 10 },
-                new BonusRule { Description = "Sequence of 3 cards of different colors", BonusValue = 5 },
-                new BonusRule { Description = "Pair in hand", BonusValue = 5 }
+                new SameColorSequenceRule(),
+                new DifferentColorsSequenceRule(),
+                new PairInHandRule()
             };
+
 
             GameRules = $"Three Card Brag Rules:{Environment.NewLine}{Environment.NewLine}" +
                 $"1. Each player is dealt 3 cards at the start of each round.{Environment.NewLine}" +

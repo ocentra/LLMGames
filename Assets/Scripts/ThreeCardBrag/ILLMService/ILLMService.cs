@@ -4,6 +4,6 @@ namespace ThreeCardBrag.LLMService
 {
     public interface ILLMService
     {
-        Task<string> GetResponseAsync(string prompt);
+        Task<string> GetResponseAsync(string systemMessage, string userPrompt);
     }
 }

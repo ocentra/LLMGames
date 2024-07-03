@@ -13,7 +13,6 @@ namespace ThreeCardBrag.GameScreen
 {
     public class LoginScreen : BragScreen<LoginScreen>
     {
-        [ShowInInspector, Required] public GameObject PressAnyButton { get; private set; }
         [ShowInInspector, Required] public GameObject AuthenticationUI { get; private set; }
         [ShowInInspector, Required] public GameObject UserAndEmailRegistrationUI { get; private set; }
 
@@ -60,7 +59,6 @@ namespace ThreeCardBrag.GameScreen
 
         private void InitReferences()
         {
-            PressAnyButton = transform.RecursiveFindChildGameObject(nameof(PressAnyButton));
             AuthenticationUI = transform.RecursiveFindChildGameObject(nameof(AuthenticationUI));
             UserAndEmailRegistrationUI = transform.RecursiveFindChildGameObject(nameof(UserAndEmailRegistrationUI));
 
@@ -83,6 +81,8 @@ namespace ThreeCardBrag.GameScreen
             ErrorMessage = transform.FindChildRecursively<TextMeshProUGUI>(nameof(ErrorMessage));
             FieldValidator = transform.FindChildRecursively<TextMeshProUGUI>(nameof(FieldValidator));
             ErrorPanel = transform.RecursiveFindChildGameObject(nameof(ErrorPanel));
+
+            OkButton = transform.FindChildRecursively<Button>(nameof(OkButton));
         }
 
         public override void OnShowScreen(bool first)
@@ -340,10 +340,7 @@ namespace ThreeCardBrag.GameScreen
         }
         public void OnAuthenticationCompleted()
         {
-            if (PressAnyButton != null)
-            {
-                PressAnyButton.SetActive(true);
-            }
+
 
             if (AuthenticationUI != null)
             {

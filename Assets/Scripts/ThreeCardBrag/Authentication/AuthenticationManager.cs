@@ -10,6 +10,7 @@ using UnityEngine;
 
 namespace ThreeCardBrag.Authentication
 {
+    [RequireComponent(typeof(UnityServicesManager))]
     public class AuthenticationManager : MonoBehaviour
     {
         public static AuthenticationManager Instance { get; private set; }

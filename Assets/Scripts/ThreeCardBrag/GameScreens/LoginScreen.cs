@@ -127,12 +127,23 @@ namespace ThreeCardBrag.GameScreen
             Create.onClick.AddListener(async () => await AuthenticationManager.Instance.PerformAuthenticationAsync(AuthenticationService.Instance.SignUpWithUsernamePasswordAsync, UserNameInputField.text, PasswordInputField.text, ShowErrorMessage));
             SignInWithUnity.onClick.AddListener(async () => await AuthenticationManager.Instance.StartSignInAsync(ShowErrorMessage));
             OkButton.onClick.AddListener(() => { ErrorMessage.text = string.Empty; ErrorPanel.SetActive(false); });
-            HidePassword.onClick.AddListener(() => { PasswordInputField.inputType = TMP_InputField.InputType.Password; });
-            ShowPassword.onClick.AddListener(() => { PasswordInputField.inputType = TMP_InputField.InputType.Standard; });
-            HideVerifyPassword.onClick.AddListener(() => { PasswordInputField.inputType = TMP_InputField.InputType.Password; PasswordInputVerifyField.inputType = TMP_InputField.InputType.Password; });
-            ShowVerifyPassword.onClick.AddListener(() => { PasswordInputField.inputType = TMP_InputField.InputType.Standard; PasswordInputVerifyField.inputType = TMP_InputField.InputType.Standard; });
+
+            HidePassword.onClick.AddListener(() => SwitchInputType(TMP_InputField.ContentType.Password));
+            ShowPassword.onClick.AddListener(() => SwitchInputType(TMP_InputField.ContentType.Standard));
+            HideVerifyPassword.onClick.AddListener(() => SwitchInputType(TMP_InputField.ContentType.Password));
+            ShowVerifyPassword.onClick.AddListener(() => SwitchInputType(TMP_InputField.ContentType.Standard));
 
             ErrorPanel.SetActive(false);
+        }
+
+
+
+        private void SwitchInputType(TMP_InputField.ContentType inputType)
+        {
+            PasswordInputField.contentType = inputType;
+            PasswordInputVerifyField.contentType = inputType;
+            PasswordInputField.ForceLabelUpdate();
+            PasswordInputVerifyField.ForceLabelUpdate();
         }
 
         private void UserNameChanged(string _, TMP_InputField userNameInputField)

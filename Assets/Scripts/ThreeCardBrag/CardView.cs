@@ -1,4 +1,5 @@
 using Sirenix.OdinInspector;
+using ThreeCardBrag.ScriptableSingletons;
 using UnityEngine;
 using UnityEngine.UI;
 

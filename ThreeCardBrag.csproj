@@ -65,11 +65,14 @@
     <Compile Include="Assets\Scripts\ThreeCardBrag\ILLMService\ClaudeService.cs" />
     <Compile Include="Assets\Scripts\ThreeCardBrag\ILLMService\AIHelper.cs" />
     <Compile Include="Assets\Scripts\ThreeCardBrag\Card.cs" />
+    <Compile Include="Assets\Scripts\ThreeCardBrag\Utilities\ICustomGlobalConfigEvents.cs" />
     <Compile Include="Assets\Scripts\ThreeCardBrag\TurnInfo.cs" />
     <Compile Include="Assets\Scripts\ThreeCardBrag\GameScreens\GameOverScreen.cs" />
+    <Compile Include="Assets\Scripts\ThreeCardBrag\ScriptableSingletons\GameInfo.cs" />
     <Compile Include="Assets\Scripts\ThreeCardBrag\GameManager.cs" />
     <Compile Include="Assets\Scripts\ThreeCardBrag\DeckManager.cs" />
     <Compile Include="Assets\Scripts\ThreeCardBrag\ILLMService\LLMServiceFactory.cs" />
+    <Compile Include="Assets\Scripts\ThreeCardBrag\Draggable.cs" />
     <Compile Include="Assets\Scripts\ThreeCardBrag\TransformExtensions.cs" />
     <Compile Include="Assets\Scripts\ThreeCardBrag\ILLMService\LLMConfig.cs" />
     <Compile Include="Assets\Scripts\ThreeCardBrag\ILLMService\LLMManager.cs" />
@@ -79,15 +82,18 @@
     <Compile Include="Assets\Scripts\ThreeCardBrag\GameScreens\SettingsScreen.cs" />
     <Compile Include="Assets\Scripts\ThreeCardBrag\GameScreens\PauseScreen.cs" />
     <Compile Include="Assets\Scripts\ThreeCardBrag\LeftPanelController.cs" />
+    <Compile Include="Assets\Scripts\ThreeCardBrag\DropZone.cs" />
+    <Compile Include="Assets\Scripts\ThreeCardBrag\ScriptableSingletons\Deck.cs" />
     <Compile Include="Assets\Scripts\ThreeCardBrag\GameScreens\RulesScreen.cs" />
+    <Compile Include="Assets\Scripts\ThreeCardBrag\Utilities\CustomGlobalConfig.cs" />
     <Compile Include="Assets\Scripts\ThreeCardBrag\GameScreens\WelcomeScreen.cs" />
     <Compile Include="Assets\Scripts\ThreeCardBrag\ILLMService\OpenAIService.cs" />
     <Compile Include="Assets\Scripts\ThreeCardBrag\Authentication\UnityServicesManager.cs" />
-    <Compile Include="Assets\Scripts\ThreeCardBrag\Utility.cs" />
-    <Compile Include="Assets\Scripts\ThreeCardBrag\GameInfo.cs" />
     <Compile Include="Assets\Scripts\ThreeCardBrag\GameScreens\PurchaseScreen.cs" />
+    <Compile Include="Assets\Scripts\ThreeCardBrag\Utilities\Utility.cs" />
     <Compile Include="Assets\Scripts\ThreeCardBrag\ILLMService\ILLMService.cs" />
     <Compile Include="Assets\Scripts\ThreeCardBrag\Authentication\PlayerData.cs" />
+    <Compile Include="Assets\Scripts\ThreeCardBrag\Utilities\CustomGlobalConfigAttribute.cs" />
     <Compile Include="Assets\Scripts\ThreeCardBrag\BonusRule.cs" />
     <Compile Include="Assets\Scripts\ThreeCardBrag\ComputerPlayer.cs" />
     <Compile Include="Assets\Scripts\ThreeCardBrag\CardView.cs" />
@@ -103,11 +109,11 @@
     <Compile Include="Assets\Scripts\ThreeCardBrag\DifficultyLevels.cs" />
     <Compile Include="Assets\Scripts\ThreeCardBrag\HumanPlayer.cs" />
     <Compile Include="Assets\Scripts\ThreeCardBrag\BragSelectable.cs" />
+    <Compile Include="Assets\Scripts\ThreeCardBrag\Utilities\CustomGlobalConfigUtility.cs" />
     <Compile Include="Assets\Scripts\ThreeCardBrag\Player.cs" />
     <Compile Include="Assets\Scripts\ThreeCardBrag\Authentication\AuthenticationManager.cs" />
     <Compile Include="Assets\Scripts\ThreeCardBrag\ScoreKeeper.cs" />
     <Compile Include="Assets\Scripts\ThreeCardBrag\UIController.cs" />
-    <Compile Include="Assets\Scripts\ThreeCardBrag\Deck.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="Assets\Scripts\ThreeCardBrag\ThreeCardBrag.asmdef" />

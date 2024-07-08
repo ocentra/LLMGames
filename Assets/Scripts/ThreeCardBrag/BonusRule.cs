@@ -4,7 +4,7 @@ using System.Linq;
 
 namespace ThreeCardBrag
 {
-    
+    [Serializable]
     public abstract class BaseBonusRule
     {
         public string Description;
@@ -19,6 +19,7 @@ namespace ThreeCardBrag
         public abstract bool Evaluate(List<Card> hand);
     }
 
+    [Serializable]
     public class SameColorSequenceRule : BaseBonusRule
     {
         public SameColorSequenceRule() : base("Sequence of 3 cards of the same color", 10) { }
@@ -29,7 +30,7 @@ namespace ThreeCardBrag
         }
     }
 
-
+    [Serializable]
     public class DifferentColorsSequenceRule : BaseBonusRule
     {
         public DifferentColorsSequenceRule() : base("Sequence of 3 cards of different colors", 5) { }
@@ -40,6 +41,7 @@ namespace ThreeCardBrag
         }
     }
 
+    [Serializable]
     public class PairInHandRule : BaseBonusRule
     {
         public PairInHandRule() : base("Pair in hand", 5) { }

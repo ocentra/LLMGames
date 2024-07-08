@@ -4,6 +4,7 @@ using TMPro;
 using System.Collections;
 using ThreeCardBrag.Extensions;
 using Sirenix.OdinInspector;
+using ThreeCardBrag.ScriptableSingletons;
 
 namespace ThreeCardBrag.GameScreen
 {

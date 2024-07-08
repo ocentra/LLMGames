@@ -1,15 +1,15 @@
-using Sirenix.Utilities;
+using Sirenix.OdinInspector;
 using System.Collections.Generic;
 using System.Linq;
-using Sirenix.OdinInspector;
+using ThreeCardBrag.Utilities;
 using UnityEditor;
 using UnityEngine;
 
-namespace ThreeCardBrag
+namespace ThreeCardBrag.ScriptableSingletons
 {
     [CreateAssetMenu(fileName = nameof(Deck), menuName = "ThreeCardBrag/Deck")]
-    [GlobalConfig("Assets/Resources/")]
-    public class Deck : GlobalConfig<Deck>
+    [CustomGlobalConfig("Assets/Resources/")]
+    public class Deck : CustomGlobalConfig<Deck>
     {
         [ShowInInspector]
         public List<Card> CardTemplates = new List<Card>();
@@ -128,6 +128,8 @@ namespace ThreeCardBrag
 
         private void SaveChanges()
         {
+#if UNITY_EDITOR
+
             EditorUtility.SetDirty(this);
             if (BackCard != null)
             {
@@ -139,6 +141,7 @@ namespace ThreeCardBrag
             }
             AssetDatabase.SaveAssets();
             AssetDatabase.Refresh();
+#endif
         }
     }
 }

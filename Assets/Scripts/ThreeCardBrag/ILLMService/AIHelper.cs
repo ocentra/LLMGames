@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using ThreeCardBrag.ScriptableSingletons;
 
 namespace ThreeCardBrag
 {
@@ -23,9 +24,9 @@ namespace ThreeCardBrag
                    $"Card Rankings: {GameInfo.CardRankings}. " +
                    $"Bonus Rules: {GetBonusRules(GameInfo.BonusRules)}. " +
                    $"Strategy Tips: {GameInfo.StrategyTips}. " +
-                   $"Bluffing Strategies: {BluffSetting(GameInfo.BluffSettingConditions)}. " +
-                   $"Example Hand Descriptions: {GetExampleHandDescriptions(GameInfo.ExampleHandOdds)}. " +
-                   $"Possible Moves: {GetPossibleMoves(GameInfo.MoveValidityConditions)}. " +
+                   $"Bluffing Strategies: {BluffSetting(GameInfo.GetBluffSettingConditions())}. " +
+                   $"Example Hand Descriptions: {GetExampleHandDescriptions(GameInfo.GetExampleHandOdds())}. " +
+                   $"Possible Moves: {GetPossibleMoves(GameInfo.GetMoveValidityConditions())}. " +
                    $"Difficulty Levels: {GetDifficultyLevel()}";
         }
 

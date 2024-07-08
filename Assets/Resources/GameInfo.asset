@@ -12,6 +12,333 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 7a729116edabfde4089cba84d9285b8a, type: 3}
   m_Name: GameInfo
   m_EditorClassIdentifier: 
+  serializationData:
+    SerializedFormat: 2
+    SerializedBytes: 
+    ReferencedUnityObjects: []
+    SerializedBytesString: 
+    Prefab: {fileID: 0}
+    PrefabModificationsReferencedUnityObjects: []
+    PrefabModifications: []
+    SerializationNodes:
+    - Name: moveValidityConditions
+      Entry: 7
+      Data: 0|System.Collections.Generic.Dictionary`2[[ThreeCardBrag.PossibleMoves,
+        ThreeCardBrag],[System.String, mscorlib]], mscorlib
+    - Name: comparer
+      Entry: 7
+      Data: 1|System.Collections.Generic.EnumEqualityComparer`1[[ThreeCardBrag.PossibleMoves,
+        ThreeCardBrag]], mscorlib
+    - Name: 
+      Entry: 12
+      Data: 0
+    - Name: 
+      Entry: 13
+      Data: 
+    - Name: 
+      Entry: 8
+      Data: 
+    - Name: 
+      Entry: 12
+      Data: 10
+    - Name: 
+      Entry: 7
+      Data: 
+    - Name: $k
+      Entry: 3
+      Data: 0
+    - Name: $v
+      Entry: 1
+      Data: Always valid
+    - Name: 
+      Entry: 8
+      Data: 
+    - Name: 
+      Entry: 7
+      Data: 
+    - Name: $k
+      Entry: 3
+      Data: 1
+    - Name: $v
+      Entry: 1
+      Data: Valid when there's a bet to call
+    - Name: 
+      Entry: 8
+      Data: 
+    - Name: 
+      Entry: 7
+      Data: 
+    - Name: $k
+      Entry: 3
+      Data: 2
+    - Name: $v
+      Entry: 1
+      Data: Valid when you have enough coins to raise
+    - Name: 
+      Entry: 8
+      Data: 
+    - Name: 
+      Entry: 7
+      Data: 
+    - Name: $k
+      Entry: 3
+      Data: 3
+    - Name: $v
+      Entry: 1
+      Data: Valid when there's no bet to call
+    - Name: 
+      Entry: 8
+      Data: 
+    - Name: 
+      Entry: 7
+      Data: 
+    - Name: $k
+      Entry: 3
+      Data: 4
+    - Name: $v
+      Entry: 1
+      Data: Valid only if you haven't seen your hand
+    - Name: 
+      Entry: 8
+      Data: 
+    - Name: 
+      Entry: 7
+      Data: 
+    - Name: $k
+      Entry: 3
+      Data: 5
+    - Name: $v
+      Entry: 1
+      Data: Valid only if you haven't seen your hand
+    - Name: 
+      Entry: 8
+      Data: 
+    - Name: 
+      Entry: 7
+      Data: 
+    - Name: $k
+      Entry: 3
+      Data: 6
+    - Name: $v
+      Entry: 1
+      Data: Valid when there's no floor card
+    - Name: 
+      Entry: 8
+      Data: 
+    - Name: 
+      Entry: 7
+      Data: 
+    - Name: $k
+      Entry: 3
+      Data: 7
+    - Name: $v
+      Entry: 1
+      Data: Valid when there's a floor card
+    - Name: 
+      Entry: 8
+      Data: 
+    - Name: 
+      Entry: 7
+      Data: 
+    - Name: $k
+      Entry: 3
+      Data: 8
+    - Name: $v
+      Entry: 1
+      Data: Valid after drawing or picking from floor
+    - Name: 
+      Entry: 8
+      Data: 
+    - Name: 
+      Entry: 7
+      Data: 
+    - Name: $k
+      Entry: 3
+      Data: 9
+    - Name: $v
+      Entry: 1
+      Data: Valid at any time, ends the round
+    - Name: 
+      Entry: 8
+      Data: 
+    - Name: 
+      Entry: 13
+      Data: 
+    - Name: 
+      Entry: 8
+      Data: 
+    - Name: bluffSettingConditions
+      Entry: 7
+      Data: 2|System.Collections.Generic.Dictionary`2[[ThreeCardBrag.DifficultyLevels,
+        ThreeCardBrag],[System.String, mscorlib]], mscorlib
+    - Name: comparer
+      Entry: 7
+      Data: 3|System.Collections.Generic.EnumEqualityComparer`1[[ThreeCardBrag.DifficultyLevels,
+        ThreeCardBrag]], mscorlib
+    - Name: 
+      Entry: 12
+      Data: 0
+    - Name: 
+      Entry: 13
+      Data: 
+    - Name: 
+      Entry: 8
+      Data: 
+    - Name: 
+      Entry: 12
+      Data: 3
+    - Name: 
+      Entry: 7
+      Data: 
+    - Name: $k
+      Entry: 3
+      Data: 0
+    - Name: $v
+      Entry: 1
+      Data: Rarely bluff
+    - Name: 
+      Entry: 8
+      Data: 
+    - Name: 
+      Entry: 7
+      Data: 
+    - Name: $k
+      Entry: 3
+      Data: 1
+    - Name: $v
+      Entry: 1
+      Data: Occasionally bluff when the pot odds are favorable
+    - Name: 
+      Entry: 8
+      Data: 
+    - Name: 
+      Entry: 7
+      Data: 
+    - Name: $k
+      Entry: 3
+      Data: 2
+    - Name: $v
+      Entry: 1
+      Data: Frequently bluff and try to read opponent's patterns
+    - Name: 
+      Entry: 8
+      Data: 
+    - Name: 
+      Entry: 13
+      Data: 
+    - Name: 
+      Entry: 8
+      Data: 
+    - Name: exampleHandOdds
+      Entry: 7
+      Data: 4|System.Collections.Generic.Dictionary`2[[ThreeCardBrag.HandType, ThreeCardBrag],[System.String,
+        mscorlib]], mscorlib
+    - Name: comparer
+      Entry: 7
+      Data: 5|System.Collections.Generic.EnumEqualityComparer`1[[ThreeCardBrag.HandType,
+        ThreeCardBrag]], mscorlib
+    - Name: 
+      Entry: 12
+      Data: 0
+    - Name: 
+      Entry: 13
+      Data: 
+    - Name: 
+      Entry: 8
+      Data: 
+    - Name: 
+      Entry: 12
+      Data: 3
+    - Name: 
+      Entry: 7
+      Data: 
+    - Name: $k
+      Entry: 3
+      Data: 0
+    - Name: $v
+      Entry: 1
+      Data: Three of a Kind, Straight Flush
+    - Name: 
+      Entry: 8
+      Data: 
+    - Name: 
+      Entry: 7
+      Data: 
+    - Name: $k
+      Entry: 3
+      Data: 1
+    - Name: $v
+      Entry: 1
+      Data: Pair or Flush
+    - Name: 
+      Entry: 8
+      Data: 
+    - Name: 
+      Entry: 7
+      Data: 
+    - Name: $k
+      Entry: 3
+      Data: 2
+    - Name: $v
+      Entry: 1
+      Data: High Card or No Bonus
+    - Name: 
+      Entry: 8
+      Data: 
+    - Name: 
+      Entry: 13
+      Data: 
+    - Name: 
+      Entry: 8
+      Data: 
+    - Name: BonusRules
+      Entry: 7
+      Data: 6|ThreeCardBrag.BaseBonusRule[], ThreeCardBrag
+    - Name: 
+      Entry: 12
+      Data: 3
+    - Name: 
+      Entry: 7
+      Data: 7|ThreeCardBrag.SameColorSequenceRule, ThreeCardBrag
+    - Name: Description
+      Entry: 1
+      Data: Sequence of 3 cards of the same color
+    - Name: BonusValue
+      Entry: 3
+      Data: 10
+    - Name: 
+      Entry: 8
+      Data: 
+    - Name: 
+      Entry: 7
+      Data: 8|ThreeCardBrag.DifferentColorsSequenceRule, ThreeCardBrag
+    - Name: Description
+      Entry: 1
+      Data: Sequence of 3 cards of different colors
+    - Name: BonusValue
+      Entry: 3
+      Data: 5
+    - Name: 
+      Entry: 8
+      Data: 
+    - Name: 
+      Entry: 7
+      Data: 9|ThreeCardBrag.PairInHandRule, ThreeCardBrag
+    - Name: Description
+      Entry: 1
+      Data: Pair in hand
+    - Name: BonusValue
+      Entry: 3
+      Data: 5
+    - Name: 
+      Entry: 8
+      Data: 
+    - Name: 
+      Entry: 13
+      Data: 
+    - Name: 
+      Entry: 8
+      Data: 
   GameRules: 'Three Card Brag Rules:
 
     
@@ -49,15 +376,27 @@ MonoBehaviour:
     12. Players start with 1000 coins.
 
 '
-  GameDescription: "Three Card Brag is an exciting card game that combines elements
-    of poker and bluffing.\r\n Players aim to make the best three-card hand while
-    betting and bluffing their way to victory.\r\nMost interesting part is we will
-    be playing against Large language model LLM i.e Chat GPT "
-  StrategyTips: "- Pay attention to your opponents' betting patterns.\r\n Use the
-    blind betting option strategically to bluff or build the pot.\r\n Consider the
-    odds of improving your hand when deciding to draw or swap cards.\r\n Don't be
-    afraid to fold if you have a weak hand and the bets are high.\r\n Manage your
-    coins wisely to stay in the game for multiple rounds."
+  GameDescription: 'Three Card Brag is an exciting card game that combines elements
+    of poker and bluffing.
+
+    Players aim to make the best three-card hand while
+    betting and bluffing their way to victory.
+
+    Most interesting part is we
+    will be playing against Large language model LLM i.e Chat GPT '
+  StrategyTips: '- Pay attention to your opponents'' betting patterns.
+
+    Use
+    the blind betting option strategically to bluff or build the pot.
+
+    Consider
+    the odds of improving your hand when deciding to draw or swap cards.
+
+    Don''t
+    be afraid to fold if you have a weak hand and the bets are high.
+
+    Manage
+    your coins wisely to stay in the game for multiple rounds.'
   CardRankings:
   - CardName: Ace
     Value: 14

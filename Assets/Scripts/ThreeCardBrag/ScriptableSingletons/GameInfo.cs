@@ -2,14 +2,18 @@ using UnityEngine;
 using System;
 using System.Collections.Generic;
 using Sirenix.OdinInspector;
-using Sirenix.Utilities;
-using UnityEditor;
+using Sirenix.Serialization;
+using ThreeCardBrag.Utilities;
 
-namespace ThreeCardBrag
+#if UNITY_EDITOR
+using UnityEditor;
+#endif
+
+namespace ThreeCardBrag.ScriptableSingletons
 {
     [CreateAssetMenu(fileName = nameof(GameInfo), menuName = "ThreeCardBrag/GameInfo")]
-    [GlobalConfig("Assets/Resources/")]
-    public class GameInfo : GlobalConfig<GameInfo>
+    [CustomGlobalConfig("Assets/Resources/")]
+    public class GameInfo : CustomGlobalConfig<GameInfo>
     {
         [TextArea(10, 20)]
         public string GameRules;
@@ -20,36 +24,47 @@ namespace ThreeCardBrag
         [TextArea(5, 10)]
         public string StrategyTips;
 
-        [ShowInInspector] 
-        public Dictionary<PossibleMoves, string> MoveValidityConditions;
+        [OdinSerialize, ShowInInspector]
+        private Dictionary<PossibleMoves, string> moveValidityConditions = new Dictionary<PossibleMoves, string>();
 
-        [ShowInInspector] 
-        public Dictionary<DifficultyLevels, string> BluffSettingConditions;
+        [OdinSerialize, ShowInInspector]
+        private Dictionary<DifficultyLevels, string> bluffSettingConditions = new Dictionary<DifficultyLevels, string>();
 
-        [ShowInInspector] 
-        public Dictionary<HandType, string> ExampleHandOdds;
+        [OdinSerialize, ShowInInspector]
+        private Dictionary<HandType, string> exampleHandOdds = new Dictionary<HandType, string>();
 
-        [ShowInInspector]
+        [OdinSerialize, ShowInInspector]
         public BaseBonusRule[] BonusRules;
 
         [ShowInInspector]
         public CardRanking[] CardRankings;
 
-        
-
         [Button(ButtonSizes.Small)]
         public void InitializeGameInfo()
         {
+            InitializeBonusRules();
+            InitializeGameRules();
+            InitializeGameDescription();
+            InitializeStrategyTips();
+            InitializeCardRankings();
+            InitializeMoveValidityConditions();
+            InitializeBluffSettingConditions();
+            InitializeExampleHandOdds();
+            SaveChanges();
+        }
 
-
+        private void InitializeBonusRules()
+        {
             BonusRules = new BaseBonusRule[]
             {
                 new SameColorSequenceRule(),
                 new DifferentColorsSequenceRule(),
                 new PairInHandRule()
             };
+        }
 
-
+        private void InitializeGameRules()
+        {
             GameRules = $"Three Card Brag Rules:{Environment.NewLine}{Environment.NewLine}" +
                 $"1. Each player is dealt 3 cards at the start of each round.{Environment.NewLine}" +
                 $"2. Players can bet blind or see their hand.{Environment.NewLine}" +
@@ -62,21 +77,27 @@ namespace ThreeCardBrag
                 $"9. In case of a tie, the highest card wins.{Environment.NewLine}" +
                 $"10. The game ends when a player runs out of coins or after a set number of rounds.{Environment.NewLine}" +
                 $"11. The trailing player can continue if they have more coins.{Environment.NewLine}" +
-                $"12. Players start with 1000 coins.{Environment.NewLine}" 
-                
-                ;
+                $"12. Players start with 1000 coins.{Environment.NewLine}";
+        }
 
-
+        private void InitializeGameDescription()
+        {
             GameDescription = $"Three Card Brag is an exciting card game that combines elements of poker and bluffing.{Environment.NewLine}" +
-                              $" Players aim to make the best three-card hand while betting and bluffing their way to victory.{Environment.NewLine}" +
+                              $"Players aim to make the best three-card hand while betting and bluffing their way to victory.{Environment.NewLine}" +
                               "Most interesting part is we will be playing against Large language model LLM i.e Chat GPT ";
+        }
 
+        private void InitializeStrategyTips()
+        {
             StrategyTips = $"- Pay attention to your opponents' betting patterns.{Environment.NewLine}" +
-                $" Use the blind betting option strategically to bluff or build the pot.{Environment.NewLine}" +
-                $" Consider the odds of improving your hand when deciding to draw or swap cards.{Environment.NewLine}" +
-                $" Don't be afraid to fold if you have a weak hand and the bets are high.{Environment.NewLine}" +
-                $" Manage your coins wisely to stay in the game for multiple rounds.";
+                $"Use the blind betting option strategically to bluff or build the pot.{Environment.NewLine}" +
+                $"Consider the odds of improving your hand when deciding to draw or swap cards.{Environment.NewLine}" +
+                $"Don't be afraid to fold if you have a weak hand and the bets are high.{Environment.NewLine}" +
+                $"Manage your coins wisely to stay in the game for multiple rounds.";
+        }
 
+        private void InitializeCardRankings()
+        {
             CardRankings = new CardRanking[]
             {
                 new CardRanking { CardName = "Ace", Value = 14 },
@@ -93,8 +114,11 @@ namespace ThreeCardBrag
                 new CardRanking { CardName = "3", Value = 3 },
                 new CardRanking { CardName = "2", Value = 2 }
             };
+        }
 
-            MoveValidityConditions = new Dictionary<PossibleMoves, string>
+        private void InitializeMoveValidityConditions()
+        {
+            moveValidityConditions = new Dictionary<PossibleMoves, string>
             {
                 { PossibleMoves.Fold, "Always valid" },
                 { PossibleMoves.Call, "Valid when there's a bet to call" },
@@ -107,27 +131,51 @@ namespace ThreeCardBrag
                 { PossibleMoves.SwapCard, "Valid after drawing or picking from floor" },
                 { PossibleMoves.ShowHand, "Valid at any time, ends the round" }
             };
+        }
 
-
-            BluffSettingConditions = new Dictionary<DifficultyLevels, string>
+        private void InitializeBluffSettingConditions()
+        {
+            bluffSettingConditions = new Dictionary<DifficultyLevels, string>
             {
                 { DifficultyLevels.Easy, "Rarely bluff" },
                 { DifficultyLevels.Medium, "Occasionally bluff when the pot odds are favorable" },
                 { DifficultyLevels.Hard, "Frequently bluff and try to read opponent's patterns" },
             };
+        }
 
-            ExampleHandOdds = new Dictionary<HandType, string>
+        private void InitializeExampleHandOdds()
+        {
+            exampleHandOdds = new Dictionary<HandType, string>
             {
-                { HandType.StrongHand, "Three of a A  Certain Win, Three of a Kind Good Bluff good odds , or Straight Flush" },
-                { HandType.MediumHand, "Pair or Flush, Sequence of rank i.e AKQ of hearts " },
-                { HandType.WeakHand, "example 485 , 753 ,a63 , something which totals to less point and no bonus possible" }
+                { HandType.StrongHand, "Three of a Kind, Straight Flush" },
+                { HandType.MediumHand, "Pair or Flush" },
+                { HandType.WeakHand, "High Card or No Bonus" }
             };
+        }
 
+        public Dictionary<DifficultyLevels, string> GetBluffSettingConditions()
+        {
+            return bluffSettingConditions;
+        }
+
+        public Dictionary<HandType, string> GetExampleHandOdds()
+        {
+            return exampleHandOdds;
+        }
+
+        public Dictionary<PossibleMoves, string> GetMoveValidityConditions()
+        {
+            return moveValidityConditions;
+        }
+
+        private void SaveChanges()
+        {
+#if UNITY_EDITOR
             EditorUtility.SetDirty(this);
             AssetDatabase.SaveAssets();
             AssetDatabase.Refresh();
-        }
+#endif
 
-        
+        }
     }
 }

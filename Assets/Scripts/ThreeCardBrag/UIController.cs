@@ -32,8 +32,8 @@ namespace ThreeCardBrag
         [Required, ShowInInspector]
         private Button ShowCall { get; set; }
 
-        [Required, ShowInInspector]
-        private List<Button> Discard { get; set; } = new List<Button>();
+        //[Required, ShowInInspector]
+        //private List<Button> Discard { get; set; } = new List<Button>();
 
         [Required, ShowInInspector]
         private Button ContinueRound { get; set; }
@@ -146,15 +146,15 @@ namespace ThreeCardBrag
             if (ContinueRound != null) ContinueRound.gameObject.SetActive(false);
             if (MessageHolder != null) MessageHolder.gameObject.SetActive(false);
 
-            foreach (CardView cardView in HumanPlayerCardViews)
-            {
-                Button component = cardView.GetComponent<Button>();
-                component.enabled = false;
-                if (!Discard.Contains(component))
-                {
-                    Discard.Add(component);
-                }
-            }
+            //foreach (CardView cardView in HumanPlayerCardViews)
+            //{
+            //    Button component = cardView.GetComponent<Button>();
+            //    component.enabled = false;
+            //    if (!Discard.Contains(component))
+            //    {
+            //        Discard.Add(component);
+            //    }
+            //}
 
             LeftPanelController = FindObjectOfType<LeftPanelController>();
         }
@@ -168,14 +168,14 @@ namespace ThreeCardBrag
             if (RaiseBet != null) RaiseBet.onClick.AddListener(OnRaiseBet);
             if (Fold != null) Fold.onClick.AddListener(OnFold);
             if (DrawFromDeck != null) DrawFromDeck.onClick.AddListener(OnDrawFromDeck);
-            if (PickFromFloor != null) PickFromFloor.onClick.AddListener(OnPickFromFloor);
+            //if (PickFromFloor != null) PickFromFloor.onClick.AddListener(OnPickFromFloor);
             if (ShowCall != null) ShowCall.onClick.AddListener(OnShowCall);
 
-            foreach (Button button in Discard)
-            {
-                CardView cardView = button.GetComponent<CardView>();
-                button.onClick.AddListener(() => OnDiscardCardClicked(cardView));
-            }
+            //foreach (Button button in Discard)
+            //{
+            //    CardView cardView = button.GetComponent<CardView>();
+            //    button.onClick.AddListener(() => OnDiscardCardSet(cardView));
+            //}
 
             if (ContinueRound != null) ContinueRound.onClick.AddListener(() => GameManager.Instance.ContinueGame(true));
             if (NewGame != null) NewGame.onClick.AddListener(() => GameManager.Instance.StartNewGame());
@@ -206,7 +206,7 @@ namespace ThreeCardBrag
             TakeAction(PlayerAction.PlayBlind);
         }
 
-        private void OnDiscardCardClicked(CardView cardView)
+        public void OnDiscardCardSet(CardView cardView)
         {
             if (DeckManager != null)
             {
@@ -216,9 +216,9 @@ namespace ThreeCardBrag
             }
         }
 
-        private void OnPickFromFloor()
+        public void OnPickFromFloor()
         {
-            ShowMessage($"Pick A card to discard else Draw new card ", 5f);
+            ShowMessage($"Drop the Card to Hand Card to discard, else Draw new card ", 5f);
             StartCoroutine(WaitForSwapCardIndex());
         }
         private void OnShowPlayerHand()
@@ -315,7 +315,7 @@ namespace ThreeCardBrag
                 DrawFromDeck.interactable = humanPlayerHasSeenHand && isCurrentPlayerHuman;
             }
 
-            if (PickFromFloor != null) PickFromFloor.interactable = humanPlayerHasSeenHand && DeckManager.FloorCard != null;
+            //if (PickFromFloor != null) PickFromFloor.interactable = humanPlayerHasSeenHand && DeckManager.FloorCard != null;
             if (ShowCall != null) ShowCall.interactable = isCurrentPlayerHuman;
 
 
@@ -449,11 +449,11 @@ namespace ThreeCardBrag
 
         public void ActivateDiscardCard(bool activate)
         {
-            Discard.ForEach(button =>
-            {
-                button.enabled = true;
-                button.interactable = activate;
-            });
+            //Discard.ForEach(button =>
+            //{
+            //    button.enabled = true;
+            //    button.interactable = activate;
+            //});
 
         }
 

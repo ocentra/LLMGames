@@ -1,5 +1,6 @@
 using System.Collections.Generic;
 using Sirenix.OdinInspector;
+using ThreeCardBrag.ScriptableSingletons;
 using UnityEngine;
 
 namespace ThreeCardBrag

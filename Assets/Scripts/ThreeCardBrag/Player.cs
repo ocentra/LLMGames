@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using Sirenix.OdinInspector;
+using ThreeCardBrag.ScriptableSingletons;
 using UnityEngine;
 
 namespace ThreeCardBrag
@@ -136,9 +137,9 @@ namespace ThreeCardBrag
         {
             foreach (var card in Hand)
             {
-                Debug.Log($"{PlayerName}'s card: {card.Rank} of {card.Suit}");
+               // Debug.Log($"{PlayerName}'s card: {card.Rank} of {card.Suit}");
             }
-            Debug.Log($"{PlayerName}'s hand value: {CalculateHandValue()}");
+            //Debug.Log($"{PlayerName}'s hand value: {CalculateHandValue()}");
         }
 
         public void ResetForNewRound()

@@ -3,6 +3,7 @@ using System.Collections;
 using System.Threading.Tasks;
 using Sirenix.OdinInspector;
 using ThreeCardBrag.LLMService;
+using ThreeCardBrag.ScriptableSingletons;
 using UnityEngine;
 
 namespace ThreeCardBrag

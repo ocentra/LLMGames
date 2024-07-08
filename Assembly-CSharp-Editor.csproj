@@ -1281,9 +1281,9 @@
       <Project>{E0A69537-358C-CF54-C55E-B9B2F33A8B3C}</Project>
       <Name>Assembly-CSharp-firstpass</Name>
     </ProjectReference>
-    <ProjectReference Include="ThreeCardBrag.csproj">
-      <Project>{E4E59909-AD31-1189-4A23-F9FAB5C2091D}</Project>
-      <Name>ThreeCardBrag</Name>
+    <ProjectReference Include="OcentraAI.csproj">
+      <Project>{00001856-984E-E1CD-69C9-BE687A488F55}</Project>
+      <Name>OcentraAI</Name>
     </ProjectReference>
     <ProjectReference Include="Sirenix.OdinInspector.CompatibilityLayer.csproj">
       <Project>{EB7B45BE-8318-8DA6-E28B-F19A5DF97A24}</Project>

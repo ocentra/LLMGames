@@ -10,7 +10,7 @@
     <ProductVersion>10.0.20506</ProductVersion>
     <SchemaVersion>2.0</SchemaVersion>
     <RootNamespace></RootNamespace>
-    <ProjectGuid>{025819A6-6AC3-24B7-8B1D-B0ECE2B5A1C7}</ProjectGuid>
+    <ProjectGuid>{36824AEA-0EFB-7A04-CE81-6CED00498C02}</ProjectGuid>
     <OutputType>Library</OutputType>
     <AppDesignerFolder>Properties</AppDesignerFolder>
     <AssemblyName>Assembly-CSharp</AssemblyName>
@@ -60,8 +60,69 @@
     <Analyzer Include="C:\Program Files\Unity\Hub\Editor\2022.3.27f1\Editor\Data\Tools\Unity.SourceGenerators\Unity.Properties.SourceGenerator.dll" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="Assets\GolemiteGames\TimersMadeEasyLite\Scripts\Timer.cs" />
-    <Compile Include="Assets\GolemiteGames\TimersMadeEasyLite\Scripts\DemoFunctionsForEvents.cs" />
+    <Compile Include="Assets\Scripts\ThreeCardBrag\LLMServices\SameColorSequenceRule.cs" />
+    <Compile Include="Assets\Scripts\ThreeCardBrag\Card.cs" />
+    <Compile Include="Assets\Scripts\ThreeCardBrag\Utilities\ICustomGlobalConfigEvents.cs" />
+    <Compile Include="Assets\Scripts\ThreeCardBrag\TurnInfo.cs" />
+    <Compile Include="Assets\Scripts\ThreeCardBrag\GameScreens\GameOverScreen.cs" />
+    <Compile Include="Assets\Scripts\ThreeCardBrag\ScriptableSingletons\GameInfo.cs" />
+    <Compile Include="Assets\Scripts\ThreeCardBrag\GameManager.cs" />
+    <Compile Include="Assets\Scripts\ThreeCardBrag\DeckManager.cs" />
+    <Compile Include="Assets\Scripts\ThreeCardBrag\LLMServices\BaseLLMService.cs" />
+    <Compile Include="Assets\Scripts\ThreeCardBrag\LLMServices\LLMProviderConfig.cs" />
+    <Compile Include="Assets\Scripts\ThreeCardBrag\LLMServices\LLMConfig.cs" />
+    <Compile Include="Assets\Scripts\ThreeCardBrag\Draggable.cs" />
+    <Compile Include="Assets\Scripts\ThreeCardBrag\LLMServices\LocalLLMResponse.cs" />
+    <Compile Include="Assets\Scripts\ThreeCardBrag\TransformExtensions.cs" />
+    <Compile Include="Assets\Scripts\ThreeCardBrag\LLMServices\LLMManager.cs" />
+    <Compile Include="Assets\Scripts\ThreeCardBrag\GameScreens\LoginScreen.cs" />
+    <Compile Include="Assets\Scripts\ThreeCardBrag\PlayerTimer.cs" />
+    <Compile Include="Assets\Scripts\ThreeCardBrag\GameScreens\BragScreen.cs" />
+    <Compile Include="Assets\Scripts\ThreeCardBrag\LLMServices\ILLMService.cs" />
+    <Compile Include="Assets\Scripts\ThreeCardBrag\GameScreens\SettingsScreen.cs" />
+    <Compile Include="Assets\Scripts\ThreeCardBrag\GameScreens\PauseScreen.cs" />
+    <Compile Include="Assets\Scripts\ThreeCardBrag\LeftPanelController.cs" />
+    <Compile Include="Assets\Scripts\ThreeCardBrag\LLMServices\LLMServiceFactory.cs" />
+    <Compile Include="Assets\Scripts\ThreeCardBrag\DropZone.cs" />
+    <Compile Include="Assets\Scripts\ThreeCardBrag\ScriptableSingletons\Deck.cs" />
+    <Compile Include="Assets\Scripts\ThreeCardBrag\LLMServices\BaseBonusRule.cs" />
+    <Compile Include="Assets\Scripts\ThreeCardBrag\LLMServices\ClaudeResponse.cs" />
+    <Compile Include="Assets\Scripts\ThreeCardBrag\GameScreens\RulesScreen.cs" />
+    <Compile Include="Assets\Scripts\ThreeCardBrag\LLMServices\PairInHandRule.cs" />
+    <Compile Include="Assets\Scripts\ThreeCardBrag\Utilities\CustomGlobalConfig.cs" />
+    <Compile Include="Assets\Scripts\ThreeCardBrag\GameScreens\WelcomeScreen.cs" />
+    <Compile Include="Assets\Scripts\ThreeCardBrag\Authentication\UnityServicesManager.cs" />
+    <Compile Include="Assets\Scripts\ThreeCardBrag\GameScreens\PurchaseScreen.cs" />
+    <Compile Include="Assets\Scripts\ThreeCardBrag\LLMServices\LLMProvider.cs" />
+    <Compile Include="Assets\Scripts\ThreeCardBrag\Utilities\Utility.cs" />
+    <Compile Include="Assets\Scripts\ThreeCardBrag\LLMServices\AzureOpenAIService.cs" />
+    <Compile Include="Assets\Scripts\ThreeCardBrag\Authentication\PlayerData.cs" />
+    <Compile Include="Assets\Scripts\ThreeCardBrag\Utilities\CustomGlobalConfigAttribute.cs" />
+    <Compile Include="Assets\Scripts\ThreeCardBrag\ComputerPlayer.cs" />
+    <Compile Include="Assets\Scripts\ThreeCardBrag\CardView.cs" />
+    <Compile Include="Assets\Scripts\ThreeCardBrag\GameScreens\HomeScreen.cs" />
+    <Compile Include="Assets\Scripts\ThreeCardBrag\PlayerAction.cs" />
+    <Compile Include="Assets\Scripts\ThreeCardBrag\RoundScore.cs" />
+    <Compile Include="Assets\Scripts\ThreeCardBrag\PossibleMoves.cs" />
+    <Compile Include="Assets\Scripts\ThreeCardBrag\LLMServices\Choice.cs" />
+    <Compile Include="Assets\Scripts\ThreeCardBrag\LLMServices\OpenAIService.cs" />
+    <Compile Include="Assets\Scripts\ThreeCardBrag\LLMServices\Result.cs" />
+    <Compile Include="Assets\Scripts\ThreeCardBrag\LLMServices\LocalLLMService.cs" />
+    <Compile Include="Assets\Scripts\ThreeCardBrag\CardRanking.cs" />
+    <Compile Include="Assets\Scripts\ThreeCardBrag\HandType.cs" />
+    <Compile Include="Assets\Scripts\ThreeCardBrag\Authentication\ConfigManager.cs" />
+    <Compile Include="Assets\Scripts\ThreeCardBrag\DifficultyLevels.cs" />
+    <Compile Include="Assets\Scripts\ThreeCardBrag\LLMServices\DifferentColorsSequenceRule.cs" />
+    <Compile Include="Assets\Scripts\ThreeCardBrag\HumanPlayer.cs" />
+    <Compile Include="Assets\Scripts\ThreeCardBrag\BragSelectable.cs" />
+    <Compile Include="Assets\Scripts\ThreeCardBrag\Utilities\CustomGlobalConfigUtility.cs" />
+    <Compile Include="Assets\Scripts\ThreeCardBrag\Player.cs" />
+    <Compile Include="Assets\Scripts\ThreeCardBrag\LLMServices\AIHelper.cs" />
+    <Compile Include="Assets\Scripts\ThreeCardBrag\LLMServices\ClaudeService.cs" />
+    <Compile Include="Assets\Scripts\ThreeCardBrag\Authentication\AuthenticationManager.cs" />
+    <Compile Include="Assets\Scripts\ThreeCardBrag\ScoreKeeper.cs" />
+    <Compile Include="Assets\Scripts\ThreeCardBrag\UIController.cs" />
+    <Compile Include="Assets\Scripts\ThreeCardBrag\LLMServices\OpenAIResponse.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="Assets\TextMesh Pro\Shaders\TMPro.cginc" />
@@ -80,7 +141,6 @@
     <None Include="Assets\TextMesh Pro\Shaders\TMPro_Surface.cginc" />
     <None Include="Assets\TextMesh Pro\Resources\LineBreaking Following Characters.txt" />
     <None Include="Assets\TextMesh Pro\Shaders\TMP_SDF-Mobile Masking.shader" />
-    <None Include="Assets\GolemiteGames\TimersMadeEasyLite\ReadMe.txt" />
     <None Include="Assets\TextMesh Pro\Shaders\TMP_SDF Overlay.shader" />
     <None Include="Assets\TextMesh Pro\Shaders\TMP_Bitmap-Mobile.shader" />
     <None Include="Assets\TextMesh Pro\Fonts\LiberationSans - OFL.txt" />
@@ -420,6 +480,10 @@
       <HintPath>C:\Program Files\Unity\Hub\Editor\2022.3.27f1\Editor\Data\Managed\UnityEngine\UnityEditor.UnityConnectModule.dll</HintPath>
       <Private>False</Private>
     </Reference>
+    <Reference Include="websocket-sharp">
+      <HintPath>Library\PackageCache\com.unity.services.wire@1.2.3\Plugins\websocket-sharp.dll</HintPath>
+      <Private>False</Private>
+    </Reference>
     <Reference Include="Sirenix.Reflection.Editor">
       <HintPath>Assets\Plugins\Sirenix\Assemblies\Sirenix.Reflection.Editor.dll</HintPath>
       <Private>False</Private>
@@ -454,6 +518,10 @@
     </Reference>
     <Reference Include="Sirenix.Utilities.Editor">
       <HintPath>Assets\Plugins\Sirenix\Assemblies\Sirenix.Utilities.Editor.dll</HintPath>
+      <Private>False</Private>
+    </Reference>
+    <Reference Include="Newtonsoft.Json">
+      <HintPath>Library\PackageCache\com.unity.nuget.newtonsoft-json@3.2.1\Runtime\Newtonsoft.Json.dll</HintPath>
       <Private>False</Private>
     </Reference>
     <Reference Include="Sirenix.OdinValidator.Editor">
@@ -948,6 +1016,10 @@
       <HintPath>C:\Program Files\Unity\Hub\Editor\2022.3.27f1\Editor\Data\NetStandard\compat\2.1.0\shims\netfx\System.Xml.Serialization.dll</HintPath>
       <Private>False</Private>
     </Reference>
+    <Reference Include="Unity.Services.Analytics.Editor">
+      <HintPath>Library\ScriptAssemblies\Unity.Services.Analytics.Editor.dll</HintPath>
+      <Private>False</Private>
+    </Reference>
     <Reference Include="Unity.2D.IK.Runtime">
       <HintPath>Library\ScriptAssemblies\Unity.2D.IK.Runtime.dll</HintPath>
       <Private>False</Private>
@@ -962,6 +1034,14 @@
     </Reference>
     <Reference Include="Unity.2D.Common.Path.Editor">
       <HintPath>Library\ScriptAssemblies\Unity.2D.Common.Path.Editor.dll</HintPath>
+      <Private>False</Private>
+    </Reference>
+    <Reference Include="Unity.Services.Core">
+      <HintPath>Library\ScriptAssemblies\Unity.Services.Core.dll</HintPath>
+      <Private>False</Private>
+    </Reference>
+    <Reference Include="Unity.RemoteConfig.Editor">
+      <HintPath>Library\ScriptAssemblies\Unity.RemoteConfig.Editor.dll</HintPath>
       <Private>False</Private>
     </Reference>
     <Reference Include="Unity.2D.PixelPerfect.Editor">
@@ -1000,6 +1080,10 @@
       <HintPath>Library\ScriptAssemblies\Unity.2D.Tilemap.Extras.Editor.dll</HintPath>
       <Private>False</Private>
     </Reference>
+    <Reference Include="Unity.Services.Core.Environments">
+      <HintPath>Library\ScriptAssemblies\Unity.Services.Core.Environments.dll</HintPath>
+      <Private>False</Private>
+    </Reference>
     <Reference Include="Unity.RenderPipelines.Core.ShaderLibrary">
       <HintPath>Library\ScriptAssemblies\Unity.RenderPipelines.Core.ShaderLibrary.dll</HintPath>
       <Private>False</Private>
@@ -1010,6 +1094,10 @@
     </Reference>
     <Reference Include="Unity.2D.SpriteShape.Runtime">
       <HintPath>Library\ScriptAssemblies\Unity.2D.SpriteShape.Runtime.dll</HintPath>
+      <Private>False</Private>
+    </Reference>
+    <Reference Include="Unity.RemoteConfig.Editor.Core">
+      <HintPath>Library\ScriptAssemblies\Unity.RemoteConfig.Editor.Core.dll</HintPath>
       <Private>False</Private>
     </Reference>
     <Reference Include="Unity.2D.PixelPerfect">
@@ -1026,6 +1114,10 @@
     </Reference>
     <Reference Include="Unity.2D.Aseprite.Editor">
       <HintPath>Library\ScriptAssemblies\Unity.2D.Aseprite.Editor.dll</HintPath>
+      <Private>False</Private>
+    </Reference>
+    <Reference Include="Unity.Services.Core.Analytics">
+      <HintPath>Library\ScriptAssemblies\Unity.Services.Core.Analytics.dll</HintPath>
       <Private>False</Private>
     </Reference>
     <Reference Include="Unity.RenderPipelines.Universal.Editor">
@@ -1050,6 +1142,10 @@
     </Reference>
     <Reference Include="Unity.Burst">
       <HintPath>Library\ScriptAssemblies\Unity.Burst.dll</HintPath>
+      <Private>False</Private>
+    </Reference>
+    <Reference Include="Unity.Services.Authentication.Editor.Shared">
+      <HintPath>Library\ScriptAssemblies\Unity.Services.Authentication.Editor.Shared.dll</HintPath>
       <Private>False</Private>
     </Reference>
     <Reference Include="Unity.Timeline.Editor">
@@ -1080,12 +1176,20 @@
       <HintPath>Library\ScriptAssemblies\Unity.2D.Animation.Runtime.dll</HintPath>
       <Private>False</Private>
     </Reference>
+    <Reference Include="Unity.VisualScripting.Core.Editor">
+      <HintPath>Library\ScriptAssemblies\Unity.VisualScripting.Core.Editor.dll</HintPath>
+      <Private>False</Private>
+    </Reference>
+    <Reference Include="Unity.Services.CloudSave.Editor">
+      <HintPath>Library\ScriptAssemblies\Unity.Services.CloudSave.Editor.dll</HintPath>
+      <Private>False</Private>
+    </Reference>
     <Reference Include="Unity.2D.Tilemap.Extras">
       <HintPath>Library\ScriptAssemblies\Unity.2D.Tilemap.Extras.dll</HintPath>
       <Private>False</Private>
     </Reference>
-    <Reference Include="Unity.VisualScripting.Core.Editor">
-      <HintPath>Library\ScriptAssemblies\Unity.VisualScripting.Core.Editor.dll</HintPath>
+    <Reference Include="Unity.Services.CloudCode">
+      <HintPath>Library\ScriptAssemblies\Unity.Services.CloudCode.dll</HintPath>
       <Private>False</Private>
     </Reference>
     <Reference Include="UnityEngine.UI">
@@ -1116,6 +1220,10 @@
       <HintPath>Library\ScriptAssemblies\Unity.VisualScripting.SettingsProvider.Editor.dll</HintPath>
       <Private>False</Private>
     </Reference>
+    <Reference Include="Unity.Services.Analytics">
+      <HintPath>Library\ScriptAssemblies\Unity.Services.Analytics.dll</HintPath>
+      <Private>False</Private>
+    </Reference>
     <Reference Include="Unity.InternalAPIEditorBridge.001">
       <HintPath>Library\ScriptAssemblies\Unity.InternalAPIEditorBridge.001.dll</HintPath>
       <Private>False</Private>
@@ -1128,12 +1236,24 @@
       <HintPath>Library\ScriptAssemblies\Unity.VisualScripting.State.Editor.dll</HintPath>
       <Private>False</Private>
     </Reference>
+    <Reference Include="Unity.Services.Authentication">
+      <HintPath>Library\ScriptAssemblies\Unity.Services.Authentication.dll</HintPath>
+      <Private>False</Private>
+    </Reference>
+    <Reference Include="Unity.Services.Authentication.PlayerAccounts">
+      <HintPath>Library\ScriptAssemblies\Unity.Services.Authentication.PlayerAccounts.dll</HintPath>
+      <Private>False</Private>
+    </Reference>
     <Reference Include="Unity.Mathematics">
       <HintPath>Library\ScriptAssemblies\Unity.Mathematics.dll</HintPath>
       <Private>False</Private>
     </Reference>
     <Reference Include="Unity.2D.Common.Editor">
       <HintPath>Library\ScriptAssemblies\Unity.2D.Common.Editor.dll</HintPath>
+      <Private>False</Private>
+    </Reference>
+    <Reference Include="Unity.Services.RemoteConfig">
+      <HintPath>Library\ScriptAssemblies\Unity.Services.RemoteConfig.dll</HintPath>
       <Private>False</Private>
     </Reference>
     <Reference Include="Unity.RenderPipelines.Universal.Shaders">
@@ -1148,6 +1268,10 @@
       <HintPath>Library\ScriptAssemblies\Unity.Searcher.Editor.dll</HintPath>
       <Private>False</Private>
     </Reference>
+    <Reference Include="Unity.Services.CloudSave">
+      <HintPath>Library\ScriptAssemblies\Unity.Services.CloudSave.dll</HintPath>
+      <Private>False</Private>
+    </Reference>
     <Reference Include="Unity.VisualScripting.State">
       <HintPath>Library\ScriptAssemblies\Unity.VisualScripting.State.dll</HintPath>
       <Private>False</Private>
@@ -1160,34 +1284,30 @@
       <HintPath>Library\ScriptAssemblies\Unity.2D.Tilemap.Editor.dll</HintPath>
       <Private>False</Private>
     </Reference>
-    <Reference Include="Unity.2D.Animation.Editor">
-      <HintPath>Library\ScriptAssemblies\Unity.2D.Animation.Editor.dll</HintPath>
-      <Private>False</Private>
-    </Reference>
     <Reference Include="Unity.2D.IK.Editor">
       <HintPath>Library\ScriptAssemblies\Unity.2D.IK.Editor.dll</HintPath>
+      <Private>False</Private>
+    </Reference>
+    <Reference Include="Unity.2D.Animation.Editor">
+      <HintPath>Library\ScriptAssemblies\Unity.2D.Animation.Editor.dll</HintPath>
       <Private>False</Private>
     </Reference>
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="Assembly-CSharp-firstpass.csproj">
-      <Project>{AA0F5631-CE8E-7B68-F761-F2A6606501A8}</Project>
+      <Project>{E0A69537-358C-CF54-C55E-B9B2F33A8B3C}</Project>
       <Name>Assembly-CSharp-firstpass</Name>
     </ProjectReference>
-    <ProjectReference Include="ThreeCardBrag.csproj">
-      <Project>{07240756-0A5A-B20C-7F2C-80C975CD6E46}</Project>
-      <Name>ThreeCardBrag</Name>
-    </ProjectReference>
     <ProjectReference Include="Sirenix.OdinInspector.CompatibilityLayer.csproj">
-      <Project>{79E278F8-E486-8CB5-BADA-722FE856E4A2}</Project>
+      <Project>{EB7B45BE-8318-8DA6-E28B-F19A5DF97A24}</Project>
       <Name>Sirenix.OdinInspector.CompatibilityLayer</Name>
     </ProjectReference>
     <ProjectReference Include="Sirenix.OdinInspector.Modules.UnityMathematics.csproj">
-      <Project>{C5270E2D-E98A-DE95-5884-AD6845E9F734}</Project>
+      <Project>{5A5D7C6B-A0FD-B028-FF06-FE6048E2D415}</Project>
       <Name>Sirenix.OdinInspector.Modules.UnityMathematics</Name>
     </ProjectReference>
     <ProjectReference Include="Sirenix.OdinInspector.CompatibilityLayer.Editor.csproj">
-      <Project>{B4902C4C-48FA-0EFA-6400-3F81BA9D8FFD}</Project>
+      <Project>{4D151CC0-AEDB-66BD-4521-25F06E37E125}</Project>
       <Name>Sirenix.OdinInspector.CompatibilityLayer.Editor</Name>
     </ProjectReference>
   </ItemGroup>

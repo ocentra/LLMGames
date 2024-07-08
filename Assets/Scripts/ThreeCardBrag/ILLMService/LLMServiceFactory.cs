@@ -1,29 +1,28 @@
 using System;
+using UnityEngine;
 
 namespace ThreeCardBrag.LLMService
 {
     public static class LLMServiceFactory
     {
-        public static ILLMService CreateLLMService(LLMConfiguration config, LLMProvider provider)
+        public static ILLMService CreateLLMService(LLMConfig config)
         {
-            LLMConfig llmConfig = config.GetConfig(provider);
-            if (llmConfig == null)
-            {
-                throw new ArgumentException($"Configuration for provider {provider} not found.");
-            }
-
-            switch (provider)
+            
+            switch (LLMManager.Instance.CurrentProvider)
             {
                 case LLMProvider.AzureOpenAI:
-                    return new AzureOpenAIService(llmConfig);
+                    return new AzureOpenAIService(config);
                 case LLMProvider.OpenAI:
-                    return new OpenAIService(llmConfig);
+                    return new OpenAIService(config);
                 case LLMProvider.Claude:
-                    return new ClaudeService(llmConfig);
+                    return new ClaudeService(config);
                 case LLMProvider.LocalLLM:
-                    return new LocalLLMService(llmConfig);
+                    return new LocalLLMService(config);
                 default:
-                    throw new ArgumentException("Invalid LLM provider");
+                    Debug.LogError("Invalid LLM provider");
+                    return new AzureOpenAIService(config);
+                
+                
             }
         }
     }

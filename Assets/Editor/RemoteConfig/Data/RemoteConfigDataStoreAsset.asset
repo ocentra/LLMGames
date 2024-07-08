@@ -1,0 +1,35 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 469c24fdb3bd6431b92cc1465bd9166b, type: 3}
+  m_Name: RemoteConfigDataStoreAsset
+  m_EditorClassIdentifier: 
+  _rsKeyList: "[\r\n  {\r\n    \"metadata\": {\r\n      \"entityId\": \"cccb19ee-e38a-4e58-bcab-e4fb87467095\"\r\n   
+    },\r\n    \"rs\": {\r\n      \"key\": \"AzureOpenAI\",\r\n      \"type\": \"json\",\r\n     
+    \"schemaId\": \"llm-config\",\r\n      \"value\": {\r\n        \"Endpoint\":
+    \"https://llmgames.openai.azure.com/\",\r\n        \"ApiKey\": \"fa169b419f7642b685362dc15bfa2047\",\r\n       
+    \"ApiUrl\": \"v1/chat/completions\",\r\n        \"Model\": \"gpt-4-omni\",\r\n       
+    \"MaxTokens\": 150000,\r\n        \"Temperature\": 0.5,\r\n        \"Stream\":
+    false\r\n      }\r\n    }\r\n  }\r\n]"
+  _rsLastCachedKeyList: "[\r\n  {\r\n    \"metadata\": {\r\n      \"entityId\": \"cccb19ee-e38a-4e58-bcab-e4fb87467095\"\r\n   
+    },\r\n    \"rs\": {\r\n      \"key\": \"AzureOpenAI\",\r\n      \"type\": \"json\",\r\n     
+    \"schemaId\": \"llm-config\",\r\n      \"value\": {\r\n        \"Endpoint\":
+    \"https://llmgames.openai.azure.com/\",\r\n        \"ApiKey\": \"fa169b419f7642b685362dc15bfa2047\",\r\n       
+    \"ApiUrl\": \"v1/chat/completions\",\r\n        \"Model\": \"gpt-4-omni\",\r\n       
+    \"MaxTokens\": 150000,\r\n        \"Temperature\": 0.5,\r\n        \"Stream\":
+    false\r\n      }\r\n    }\r\n  }\r\n]"
+  _environments: "[\r\n  {\r\n    \"projectId\": \"9fc455d2-4895-48b9-ac3b-e0fbbf63ffb8\",\r\n   
+    \"name\": \"production\",\r\n    \"id\": \"30af4ea3-6e64-48eb-a013-faf050a8a2e7\",\r\n   
+    \"isDefault\": true,\r\n    \"createdAt\": \"2024-06-27T22:12:58Z\",\r\n    \"updatedAt\":
+    \"2024-06-27T22:12:58Z\"\r\n  },\r\n  {\r\n    \"projectId\": \"9fc455d2-4895-48b9-ac3b-e0fbbf63ffb8\",\r\n   
+    \"name\": \"development\",\r\n    \"id\": \"64f6deed-8c38-4723-bebb-dfbc40297d23\",\r\n   
+    \"isDefault\": false,\r\n    \"createdAt\": \"2024-07-02T16:15:39Z\",\r\n   
+    \"updatedAt\": \"2024-07-02T16:15:39Z\"\r\n  }\r\n]"

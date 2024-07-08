@@ -99,8 +99,8 @@
     <Compile Include="Assets\Scripts\ThreeCardBrag\ILLMService\BaseLLMService.cs" />
     <Compile Include="Assets\Scripts\ThreeCardBrag\CardRanking.cs" />
     <Compile Include="Assets\Scripts\ThreeCardBrag\HandType.cs" />
+    <Compile Include="Assets\Scripts\ThreeCardBrag\Authentication\ConfigManager.cs" />
     <Compile Include="Assets\Scripts\ThreeCardBrag\DifficultyLevels.cs" />
-    <Compile Include="Assets\Scripts\ThreeCardBrag\ILLMService\LLMConfiguration.cs" />
     <Compile Include="Assets\Scripts\ThreeCardBrag\HumanPlayer.cs" />
     <Compile Include="Assets\Scripts\ThreeCardBrag\BragSelectable.cs" />
     <Compile Include="Assets\Scripts\ThreeCardBrag\Player.cs" />
@@ -1047,6 +1047,10 @@
     </Reference>
     <Reference Include="Unity.Services.Authentication.PlayerAccounts">
       <HintPath>Library\ScriptAssemblies\Unity.Services.Authentication.PlayerAccounts.dll</HintPath>
+      <Private>False</Private>
+    </Reference>
+    <Reference Include="Unity.Services.RemoteConfig">
+      <HintPath>Library\ScriptAssemblies\Unity.Services.RemoteConfig.dll</HintPath>
       <Private>False</Private>
     </Reference>
     <Reference Include="UnityEditor.UI">

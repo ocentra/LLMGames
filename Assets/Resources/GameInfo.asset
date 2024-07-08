@@ -58,13 +58,6 @@ MonoBehaviour:
     odds of improving your hand when deciding to draw or swap cards.\r\n Don't be
     afraid to fold if you have a weak hand and the bets are high.\r\n Manage your
     coins wisely to stay in the game for multiple rounds."
-  BonusRules:
-  - Description: Sequence of 3 cards of the same color
-    BonusValue: 10
-  - Description: Sequence of 3 cards of different colors
-    BonusValue: 5
-  - Description: Pair in hand
-    BonusValue: 5
   CardRankings:
   - CardName: Ace
     Value: 14

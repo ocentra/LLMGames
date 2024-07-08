@@ -358,7 +358,7 @@ namespace ThreeCardBrag.GameScreen
                 AuthenticationUI.SetActive(false);
             }
 
-            AuthenticationManager.Instance.IsLoggedIn = true;
+            AuthenticationManager.Instance.OnAuthenticationCompleted();
         }
     }
 }

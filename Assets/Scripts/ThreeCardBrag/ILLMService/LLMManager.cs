@@ -1,4 +1,7 @@
+using System.Collections.Generic;
+using System;
 using System.Threading.Tasks;
+using ThreeCardBrag.Authentication;
 using UnityEngine;
 
 namespace ThreeCardBrag.LLMService
@@ -8,47 +11,101 @@ namespace ThreeCardBrag.LLMService
         public static LLMManager Instance { get; private set; }
 
         public LLMProvider CurrentProvider = LLMProvider.AzureOpenAI;
-        private ILLMService CurrentLLMService { get;  set; }
+        private ILLMService CurrentLLMService { get; set; }
 
-        private void Awake()
+        async void Awake()
         {
-            if (Instance == null)
-            {
-                Instance = this;
-                DontDestroyOnLoad(gameObject);  
-            }
-            else
+            if (Instance != null && Instance != this)
             {
                 Destroy(gameObject);
             }
+            else
+            {
+                Instance = this;
+                DontDestroyOnLoad(gameObject);
+            }
 
-            SetLLMProvider(CurrentProvider);  
+            await WaitForInitialization();
+        }
+
+        private async Task WaitForInitialization()
+        {
+            if (UnityServicesManager.Instance != null)
+            {
+                while (!UnityServicesManager.Instance.IsInitialized)
+                {
+                    await Task.Delay(100);
+                }
+
+                SetLLMProvider(CurrentProvider);
+            }
+            else
+            {
+                Debug.Log($"UnityServicesManager is missing!");
+            }
         }
 
         public void SetLLMProvider(LLMProvider provider)
         {
             CurrentProvider = provider;
-            LLMConfig config = LLMConfiguration.Instance.GetConfig(provider);
-            if (config != null && ValidateConfig(config))
+            SetLLMProvider(provider.ToString());
+        }
+
+        public void SetLLMProvider(string provider)
+        {
+            if (UnityServicesManager.Instance.ConfigManager.TryGetConfigForProvider(provider, out LLMConfig config)
+                && ValidateConfig(config))
             {
-                CurrentLLMService = LLMServiceFactory.CreateLLMService(LLMConfiguration.Instance, provider);
+                CurrentLLMService = LLMServiceFactory.CreateLLMService(config);
                 Debug.Log($"LLM Service initialized for provider {provider}");
             }
             else
             {
-                Debug.LogError($"Configuration for provider {provider} not found!");
+                Debug.LogError($"Configuration for provider {provider} not found or is invalid!");
             }
         }
 
-        private bool ValidateConfig(LLMConfig config)
+        public void SetLLMProvider(LLMConfig config)
         {
-            if (string.IsNullOrEmpty(config.Endpoint) || string.IsNullOrEmpty(config.ApiKey) ||
-                string.IsNullOrEmpty(config.ApiUrl) || string.IsNullOrEmpty(config.Model))
+            if (ValidateConfig(config))
             {
-                Debug.LogError("LLMConfig contains null or empty fields!");
-                return false;
+                CurrentLLMService = LLMServiceFactory.CreateLLMService(config);
+                Debug.Log($"LLM Service initialized with direct config");
             }
-            return true;
+        }
+
+        public bool ValidateConfig(LLMConfig config)
+        {
+            bool isValid = true;
+            string errorMessage = "LLMConfig contains null or empty fields: ";
+
+            if (string.IsNullOrEmpty(config.Endpoint))
+            {
+                errorMessage += "Endpoint ";
+                isValid = false;
+            }
+            if (string.IsNullOrEmpty(config.ApiKey))
+            {
+                errorMessage += "ApiKey ";
+                isValid = false;
+            }
+            if (string.IsNullOrEmpty(config.ApiUrl))
+            {
+                errorMessage += "ApiUrl ";
+                isValid = false;
+            }
+            if (string.IsNullOrEmpty(config.Model))
+            {
+                errorMessage += "Model ";
+                isValid = false;
+            }
+
+            if (!isValid)
+            {
+                Debug.LogError(errorMessage);
+            }
+
+            return isValid;
         }
 
         public async Task<string> GetLLMResponse()

@@ -2,6 +2,7 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Threading.Tasks;
+using Sirenix.OdinInspector;
 using Unity.Services.Analytics;
 using Unity.Services.Authentication;
 using Unity.Services.CloudSave;
@@ -16,6 +17,10 @@ namespace ThreeCardBrag.Authentication
         public ICloudSaveService CloudSaveService => Unity.Services.CloudSave.CloudSaveService.Instance;
         public static UnityServicesManager Instance { get; private set; }
 
+        [ShowInInspector]
+        public ConfigManager ConfigManager { get; private set; }
+
+        public bool IsInitialized { get; private set; } = false;
 
         async void Awake()
         {
@@ -26,21 +31,28 @@ namespace ThreeCardBrag.Authentication
             else
             {
                 Instance = this;
+                DontDestroyOnLoad(gameObject);
+                await InitializeUnityServices();
             }
+        }
 
+
+        private async Task InitializeUnityServices()
+        {
             try
             {
                 InitializationOptions options = new InitializationOptions();
-                options.SetOption("com.unity.services.core.environment-name", "testing");
+                options.SetOption("com.unity.services.core.environment-name", "production");
                 await UnityServices.InitializeAsync(options);
-
                 AnalyticsService.StartDataCollection();
+                ConfigManager = new ConfigManager();
+                await ConfigManager.FetchConfig();
+                IsInitialized = true;
             }
             catch (Exception e)
             {
                 Debug.LogException(e);
             }
-
         }
 
         public async Task SavePlayerDataToCloud(string key, PlayerData playerData)
@@ -120,46 +132,33 @@ namespace ThreeCardBrag.Authentication
             return (false, null);
         }
 
-        //public async Task<(bool, string)> TryGetPlayerEmail(string key)
-        //{
-        //    try
-        //    {
-        //        (bool success, PlayerData playerData) = await TryGetPlayerDataFromCloud(key);
-        //        if (success)
-        //        {
-        //            if (string.IsNullOrEmpty(playerData.Email))
-        //            {
-        //                return (true, playerData.PlayerName);
-        //            }
-        //        }
-        //    }
-        //    catch (Exception e)
-        //    {
-        //        Debug.LogError($"Error Getting player Email: {e.Message}");
-        //    }
+        public async Task<(bool, string)> TryGetPlayerEmail(string key)
+        {
+            try
+            {
+                (bool success, PlayerData playerData) = await TryGetPlayerDataFromCloud(key);
+                if (success)
+                {
+                    if (string.IsNullOrEmpty(playerData.Email))
+                    {
+                        return (true, playerData.PlayerName);
+                    }
+                }
+            }
+            catch (Exception e)
+            {
+                Debug.LogError($"Error Getting player Email: {e.Message}");
+            }
 
 
-        //    return (false, null);
-        //}
+            return (false, null);
+        }
 
         public IEnumerator UpdatePlayerDataOnQuit(PlayerData playerData)
         {
             if (playerData != null)
             {
-                //foreach (LoggedInInfo info in playerData.LoggedInInfos)
-                //{
-                //    if (info.IsLoggedIn)
-                //    {
-                //        info.LogOutTime = DateTime.Now.ToString(CultureInfo.InvariantCulture);
 
-                //        if (DateTime.TryParse(info.LogOutTime, out var loginDateTime) &&
-                //            DateTime.TryParse(info.LoginTime, out var logoutDateTime))
-                //        {
-                //            info.LogDuration = (loginDateTime - logoutDateTime).ToString();
-                //        }
-                //        info.IsLoggedIn = false;
-                //    }
-                //}
 
                 Task saveTask = SavePlayerDataToCloud(playerData);
 

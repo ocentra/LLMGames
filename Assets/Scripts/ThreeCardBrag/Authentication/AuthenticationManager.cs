@@ -25,6 +25,8 @@ namespace ThreeCardBrag.Authentication
 
         public event Action AuthenticationCompleted;
 
+        public bool UseAnonymousSignIn  = false;
+
         async void Awake()
         {
             if (Instance != null && Instance != this)
@@ -41,7 +43,7 @@ namespace ThreeCardBrag.Authentication
         }
 
 
-        void Start()
+        async void Start()
         {
             try
             {
@@ -53,19 +55,36 @@ namespace ThreeCardBrag.Authentication
                 Debug.LogException(e);
             }
 
-            AuthenticationCompleted += LoginScreen.Instance.OnAuthenticationCompleted;
+            if (LoginScreen.Instance !=null)
+            {
+                AuthenticationCompleted += LoginScreen.Instance.OnAuthenticationCompleted;
+
+            }
+            else
+            {
+                AuthenticationCompleted += OnAuthenticationCompleted;
+            }
+            
             PlayerAccountService.Instance.SignedIn += SignInWithUnityAsync;
+
+            if (UseAnonymousSignIn)
+            {
+               await SignInAnonymouslyAsync();
+            }
         }
 
+        public void OnAuthenticationCompleted()
+        {
+            
+           IsLoggedIn = true;
+        }
 
         private void SetAuthenticationEvents()
         {
             AuthenticationService.Instance.SignedIn += async () =>
             {
-
-                Debug.Log($"PlayerID: {AuthenticationService.Instance.PlayerId}");
-                Debug.Log($"Access Token: {AuthenticationService.Instance.AccessToken}");
-
+                //Debug.Log($"PlayerID: {AuthenticationService.Instance.PlayerId}");
+                //Debug.Log($"Access Token: {AuthenticationService.Instance.AccessToken}");
 
                 (bool success, PlayerData playerData) = await GetOrCreatePlayerDataAndUpdate();
 
@@ -81,43 +100,72 @@ namespace ThreeCardBrag.Authentication
                     }
                     else
                     {
-                        LoginScreen.Instance.ShowErrorMessage($"PlayerName is Null or empty");
+                        if (LoginScreen.Instance != null)
+                        {
+                            LoginScreen.Instance.ShowErrorMessage("PlayerName is Null or empty");
+                        }
+                        else
+                        {
+                            Debug.LogError("PlayerName is Null or empty");
+                        }
                     }
                 }
                 else
                 {
-                    LoginScreen.Instance.ShowErrorMessage($"PlayerData could not be");
+                    if (LoginScreen.Instance != null)
+                    {
+                        LoginScreen.Instance.ShowErrorMessage("PlayerData could not be retrieved");
+                    }
+                    else
+                    {
+                        Debug.LogError("PlayerData could not be retrieved");
+                    }
                 }
 
                 // Invoke the event for main thread to respond
                 AuthenticationCompleted?.Invoke();
-
             };
 
             AuthenticationService.Instance.SignInFailed += (err) =>
             {
                 IsLoggedIn = false;
                 PlayerData = null;
-                // Debug.LogError(err.Message);
-                LoginScreen.Instance.ShowErrorMessage($"{err.ErrorCode} \n {err.Message}");
+                if (LoginScreen.Instance != null)
+                {
+                    LoginScreen.Instance.ShowErrorMessage($"{err.ErrorCode} \n {err.Message}");
+                }
+                else
+                {
+                    Debug.LogError($"{err.ErrorCode} \n {err.Message}");
+                }
             };
 
             AuthenticationService.Instance.SignedOut += () =>
             {
                 IsLoggedIn = false;
                 PlayerData = null;
-                // Debug.Log("Player signed out.");
-                LoginScreen.Instance.ShowErrorMessage("Player signed out. ");
+                if (LoginScreen.Instance != null)
+                {
+                    LoginScreen.Instance.ShowErrorMessage("Player signed out.");
+                }
+                else
+                {
+                    Debug.LogError("Player signed out.");
+                }
             };
 
             AuthenticationService.Instance.Expired += () =>
             {
                 IsLoggedIn = false;
                 PlayerData = null;
-                // Debug.Log("Player session could not be refreshed and expired.");
-                LoginScreen.Instance.ShowErrorMessage("Player session could not be refreshed and expired. ");
-
-
+                if (LoginScreen.Instance != null)
+                {
+                    LoginScreen.Instance.ShowErrorMessage("Player session could not be refreshed and expired.");
+                }
+                else
+                {
+                    Debug.LogError("Player session could not be refreshed and expired.");
+                }
             };
         }
 
@@ -197,92 +245,140 @@ namespace ThreeCardBrag.Authentication
             if (IsSigningIn) return;
 
             IsSigningIn = true;
-            LoginScreen.Instance.UpdateButtonInteractability(false);
+            if (LoginScreen.Instance != null)
+            {
+                LoginScreen.Instance.UpdateButtonInteractability(false);
+            }
 
             try
             {
                 await AuthenticationService.Instance.SignInWithUnityAsync(PlayerAccountService.Instance.AccessToken);
-                // Debug.Log("SignIn is successful.");
+                Debug.Log("SignIn is successful.");
             }
             catch (AuthenticationException ex)
             {
-
-                // Debug.LogException(ex);
-                LoginScreen.Instance.ShowErrorMessage($"SignInWithUnityAsync: AuthenticationException :  \n   {ex.ErrorCode} \n {ex.Message}");
+                var message = $"SignInWithUnityAsync: AuthenticationException :  \n   {ex.ErrorCode} \n {ex.Message}";
+                if (LoginScreen.Instance != null)
+                {
+                    LoginScreen.Instance.ShowErrorMessage(message);
+                }
+                else
+                {
+                    Debug.LogException(ex);
+                }
             }
             catch (RequestFailedException ex)
             {
-                // Debug.LogException(ex);
-                LoginScreen.Instance.ShowErrorMessage($"SignInWithUnityAsync: RequestFailedException :  \n  {ex.ErrorCode} \n {ex.Message}");
+                var message = $"SignInWithUnityAsync: RequestFailedException :  \n  {ex.ErrorCode} \n {ex.Message}";
+                if (LoginScreen.Instance != null)
+                {
+                    LoginScreen.Instance.ShowErrorMessage(message);
+                }
+                else
+                {
+                    Debug.LogException(ex);
+                }
             }
             finally
             {
                 IsSigningIn = false;
-                LoginScreen.Instance.UpdateButtonInteractability(true);
+                if (LoginScreen.Instance != null)
+                {
+                    LoginScreen.Instance.UpdateButtonInteractability(true);
+                }
             }
         }
+
 
         private async Task<bool> LinkWithUnityAsync()
         {
             try
             {
                 await AuthenticationService.Instance.LinkWithUnityAsync(PlayerAccountService.Instance.AccessToken);
-                // Debug.Log("Link is successful.");
+                Debug.Log("Link is successful.");
                 return true;
             }
             catch (AuthenticationException ex) when (ex.ErrorCode == AuthenticationErrorCodes.AccountAlreadyLinked)
             {
-                // Debug.LogError("This user is already linked with another account. Log in instead.");
-                LoginScreen.Instance.ShowErrorMessage($"LinkWithUnityAsync: AccountAlreadyLinked :  \n   {ex.ErrorCode} \n {ex.Message}");
+                var message = $"LinkWithUnityAsync: AccountAlreadyLinked :  \n   {ex.ErrorCode} \n {ex.Message}";
+                if (LoginScreen.Instance != null)
+                {
+                    LoginScreen.Instance.ShowErrorMessage(message);
+                }
+                else
+                {
+                    Debug.LogError("This user is already linked with another account. Log in instead.");
+                }
                 return false;
             }
-
             catch (AuthenticationException ex)
             {
-
-                // Debug.LogException(ex);
-                LoginScreen.Instance.ShowErrorMessage($"LinkWithUnityAsync: AuthenticationException :  \n   {ex.ErrorCode} \n {ex.Message}");
+                var message = $"LinkWithUnityAsync: AuthenticationException :  \n   {ex.ErrorCode} \n {ex.Message}";
+                if (LoginScreen.Instance != null)
+                {
+                    LoginScreen.Instance.ShowErrorMessage(message);
+                }
+                else
+                {
+                    Debug.LogException(ex);
+                }
                 return false;
             }
             catch (RequestFailedException ex)
             {
-
-                // Debug.LogException(ex);
-                LoginScreen.Instance.ShowErrorMessage($"LinkWithUnityAsync: RequestFailedException :  \n  {ex.ErrorCode} \n {ex.Message}");
+                var message = $"LinkWithUnityAsync: RequestFailedException :  \n  {ex.ErrorCode} \n {ex.Message}";
+                if (LoginScreen.Instance != null)
+                {
+                    LoginScreen.Instance.ShowErrorMessage(message);
+                }
+                else
+                {
+                    Debug.LogException(ex);
+                }
                 return false;
             }
         }
 
+
         private async Task SignInAnonymouslyAsync()
         {
-            // todo should we create or not an annon account ? having account does gives analitics but would be hard to track annon user
             try
             {
                 SignInOptions signInOptions = new SignInOptions
                 {
-                    CreateAccount = false
+                    CreateAccount = true
                 };
 
                 await AuthenticationService.Instance.SignInAnonymouslyAsync(signInOptions);
-                // Debug.Log("Sign in anonymously succeeded!");
-
-                // Debug.Log($"PlayerID: {AuthenticationService.Instance.PlayerId}");
-
-                await AddUsernamePasswordAsync("annon", "password");
-
-
+                //Debug.Log("Sign in anonymously succeeded!");
+                //Debug.Log($"PlayerID: {AuthenticationService.Instance.PlayerId}");
             }
             catch (AuthenticationException ex)
             {
-                // Debug.LogException(ex);
-                LoginScreen.Instance.ShowErrorMessage($"SignInAnonymouslyAsync: AuthenticationException :  \n    {ex.ErrorCode} \n {ex.Message}");
+                var message = $"SignInAnonymouslyAsync: AuthenticationException :  \n    {ex.ErrorCode} \n {ex.Message}";
+                if (LoginScreen.Instance != null)
+                {
+                    LoginScreen.Instance.ShowErrorMessage(message);
+                }
+                else
+                {
+                    Debug.LogException(ex);
+                }
             }
             catch (RequestFailedException ex)
             {
-                // Debug.LogException(ex);
-                LoginScreen.Instance.ShowErrorMessage($"SignInAnonymouslyAsync: RequestFailedException :  \n  {ex.ErrorCode} \n {ex.Message}");
+                var message = $"SignInAnonymouslyAsync: RequestFailedException :  \n  {ex.ErrorCode} \n {ex.Message}";
+                if (LoginScreen.Instance != null)
+                {
+                    LoginScreen.Instance.ShowErrorMessage(message);
+                }
+                else
+                {
+                    Debug.LogException(ex);
+                }
             }
         }
+
 
         private async Task AddUsernamePasswordAsync(string username, string password)
         {
@@ -293,13 +389,30 @@ namespace ThreeCardBrag.Authentication
             }
             catch (AuthenticationException ex)
             {
-                // Debug.LogException(ex);
-                LoginScreen.Instance.ShowErrorMessage($"AddUsernamePasswordAsync: AuthenticationException :  \n {ex.ErrorCode} \n {ex.Message}");
+                if (LoginScreen.Instance != null)
+                {
+                    LoginScreen.Instance.ShowErrorMessage($"AddUsernamePasswordAsync: AuthenticationException :  \n {ex.ErrorCode} \n {ex.Message}");
+
+                }
+                else
+                {
+                    Debug.LogException(ex);
+
+                }
             }
             catch (RequestFailedException ex)
             {
-                // Debug.LogException(ex);
-                LoginScreen.Instance.ShowErrorMessage($"AddUsernamePasswordAsync: RequestFailedException :  \n {ex.ErrorCode} \n {ex.Message}");
+                if (LoginScreen.Instance != null)
+                {
+                    LoginScreen.Instance.ShowErrorMessage($"AddUsernamePasswordAsync: RequestFailedException :  \n {ex.ErrorCode} \n {ex.Message}");
+
+                }
+                else
+                {
+                    Debug.LogException(ex);
+
+                }
+
             }
         }
 
@@ -346,7 +459,6 @@ namespace ThreeCardBrag.Authentication
 
         private async Task SignInCachedUserAsync()
         {
-            //todo need work on this 
             if (!AuthenticationService.Instance.SessionTokenExists)
             {
                 return;
@@ -357,10 +469,9 @@ namespace ThreeCardBrag.Authentication
                 string accessToken = AuthenticationService.Instance.AccessToken;
                 if (accessToken != null)
                 {
-
                     if (!await LinkWithUnityAsync())
                     {
-                        if (LoginScreen.Instance.ValidateUserAndPassword())
+                        if (LoginScreen.Instance != null && LoginScreen.Instance.ValidateUserAndPassword())
                         {
                             await AddUsernamePasswordAsync(LoginScreen.Instance.UserNameInputField.text, LoginScreen.Instance.PasswordInputField.text);
                         }
@@ -372,25 +483,35 @@ namespace ThreeCardBrag.Authentication
                             };
 
                             await AuthenticationService.Instance.SignInAnonymouslyAsync(signInOptions);
-                            Debug.Log("Sign in anonymously succeeded!");
-
-                            Debug.Log($"PlayerID: {AuthenticationService.Instance.PlayerId}");
-
+                            //Debug.Log("Sign in anonymously succeeded!");
+                            //Debug.Log($"PlayerID: {AuthenticationService.Instance.PlayerId}");
                         }
-
                     }
                 }
-
             }
             catch (AuthenticationException ex)
             {
-                // Debug.LogException(ex);
-                LoginScreen.Instance.ShowErrorMessage($"SignInCachedUserAsync: AuthenticationException :  \n    {ex.ErrorCode} \n {ex.Message}");
+                var message = $"SignInCachedUserAsync: AuthenticationException :  \n    {ex.ErrorCode} \n {ex.Message}";
+                if (LoginScreen.Instance != null)
+                {
+                    LoginScreen.Instance.ShowErrorMessage(message);
+                }
+                else
+                {
+                    Debug.LogException(ex);
+                }
             }
             catch (RequestFailedException ex)
             {
-                // Debug.LogException(ex);
-                LoginScreen.Instance.ShowErrorMessage($"SignInCachedUserAsync: RequestFailedException :  \n {ex.ErrorCode} \n {ex.Message}");
+                var message = $"SignInCachedUserAsync: RequestFailedException :  \n {ex.ErrorCode} \n {ex.Message}";
+                if (LoginScreen.Instance != null)
+                {
+                    LoginScreen.Instance.ShowErrorMessage(message);
+                }
+                else
+                {
+                    Debug.LogException(ex);
+                }
             }
         }
 
@@ -436,19 +557,34 @@ namespace ThreeCardBrag.Authentication
             try
             {
                 await AuthenticationService.Instance.UpdatePlayerNameAsync(username);
-                // Debug.Log("Username  added.");
+                //Debug.Log("Username added.");
             }
             catch (AuthenticationException ex)
             {
-                // Debug.LogException(ex);
-                LoginScreen.Instance.ShowErrorMessage($"UpdatePlayerNameAsync: AuthenticationException :  \n {ex.ErrorCode} \n {ex.Message}");
+                var message = $"UpdatePlayerNameAsync: AuthenticationException :  \n {ex.ErrorCode} \n {ex.Message}";
+                if (LoginScreen.Instance != null)
+                {
+                    LoginScreen.Instance.ShowErrorMessage(message);
+                }
+                else
+                {
+                    Debug.LogException(ex);
+                }
             }
             catch (RequestFailedException ex)
             {
-                // Debug.LogException(ex);
-                LoginScreen.Instance.ShowErrorMessage($"UpdatePlayerNameAsync: RequestFailedException :  \n {ex.ErrorCode} \n {ex.Message}");
+                var message = $"UpdatePlayerNameAsync: RequestFailedException :  \n {ex.ErrorCode} \n {ex.Message}";
+                if (LoginScreen.Instance != null)
+                {
+                    LoginScreen.Instance.ShowErrorMessage(message);
+                }
+                else
+                {
+                    Debug.LogException(ex);
+                }
             }
         }
+
 
         private bool OnApplicationWantsToQuit()
         {

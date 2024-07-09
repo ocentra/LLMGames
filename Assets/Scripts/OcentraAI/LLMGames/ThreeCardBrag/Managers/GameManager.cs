@@ -1,12 +1,15 @@
+using OcentraAI.LLMGames.LLMServices;
+using OcentraAI.LLMGames.Scriptable.ScriptableSingletons;
+using OcentraAI.LLMGames.ThreeCardBrag.Players;
+using OcentraAI.LLMGames.ThreeCardBrag.Scores;
+using OcentraAI.LLMGames.ThreeCardBrag.UI.Controllers;
+using Sirenix.OdinInspector;
 using System;
 using System.Collections;
 using System.Threading.Tasks;
-using OcentraAI.LLMGames.LLMServices;
-using OcentraAI.LLMGames.ScriptableSingletons;
-using Sirenix.OdinInspector;
 using UnityEngine;
 
-namespace OcentraAI.LLMGames
+namespace OcentraAI.LLMGames.ThreeCardBrag.Manager
 {
     [RequireComponent(typeof(LLMManager))]
 
@@ -15,16 +18,16 @@ namespace OcentraAI.LLMGames
         public static GameManager Instance { get; private set; }
 
         [ShowInInspector]
-        public HumanPlayer HumanPlayer { get; private set; } = new HumanPlayer();
+        public HumanPlayer HumanPlayer { get; private set; } 
 
         [ShowInInspector]
-        public ComputerPlayer ComputerPlayer { get; private set; } = new ComputerPlayer();
+        public ComputerPlayer ComputerPlayer { get; private set; }
 
         [ShowInInspector]
         public UIController UIController { get; private set; }
 
         [ShowInInspector, ReadOnly]
-        public ScoreKeeper ScoreKeeper { get; private set; } = new ScoreKeeper();
+        public ScoreKeeper ScoreKeeper { get; private set; } 
 
         public bool IsHumanTurn = true;
         public float TurnDuration = 15f;
@@ -48,7 +51,7 @@ namespace OcentraAI.LLMGames
         private int CurrentRound { get; set; } = 0;
 
         [ShowInInspector, ReadOnly]
-        public DeckManager DeckManager { get; private set; }
+        public DeckManager DeckManager { get; private set; } 
 
 
         [ShowInInspector]
@@ -80,9 +83,16 @@ namespace OcentraAI.LLMGames
         private void Init()
         {
             UIController = FindObjectOfType<UIController>();
+
+            HumanPlayer = new HumanPlayer();
             HumanPlayer.SetName(nameof(HumanPlayer));
+
+            ComputerPlayer = new ComputerPlayer();
             ComputerPlayer.SetName(nameof(ComputerPlayer));
+
+            ScoreKeeper = new ScoreKeeper();
             DeckManager = new DeckManager();
+
             AIHelper = new AIHelper(GameInfo.Instance, this);
 
         }
@@ -98,6 +108,7 @@ namespace OcentraAI.LLMGames
             ComputerPlayer.OnCoinsChanged += UIController.UpdateCoinsDisplay;
 
             StartNewGame();
+
         }
 
         public void StartNewGame()
@@ -106,6 +117,7 @@ namespace OcentraAI.LLMGames
             HumanPlayer.AdjustCoins(InitialCoins);
             ComputerPlayer.AdjustCoins(InitialCoins);
             StartNewRound();
+            DeckManager.ResetForNewGame();
         }
 
         public void SetCurrentBet(int bet)
@@ -123,12 +135,13 @@ namespace OcentraAI.LLMGames
             BlindMultiplier = 1;
             IsHumanTurn = true;
 
-            // Deal initial hands
             for (int i = 0; i < 3; i++)
             {
                 HumanPlayer.Hand.Add(DeckManager.DrawCard());
                 ComputerPlayer.Hand.Add(DeckManager.DrawCard());
             }
+
+            DeckManager.SetRandomTrumpCard();
 
             UIController.UpdateGameState();
             StartCoroutine(PlayerTurn());

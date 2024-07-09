@@ -1,14 +1,15 @@
+using OcentraAI.LLMGames.Extensions;
+using OcentraAI.LLMGames.Scriptable.ScriptableSingletons;
+using OcentraAI.LLMGames.ThreeCardBrag.Manager;
+using Sirenix.OdinInspector;
+using System.Collections;
+using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
-using TMPro;
-using System.Collections;
-using OcentraAI.LLMGames.ScriptableSingletons;
-using OcentraAI.LLMGames.Extensions;
-using Sirenix.OdinInspector;
 
-namespace OcentraAI.LLMGames.GameScreen
+namespace OcentraAI.LLMGames.Screens
 {
-    public class WelcomeScreen : BragScreen<WelcomeScreen>
+    public class WelcomeScreen : UIScreen<WelcomeScreen>
     {
         [ShowInInspector,Required]
         public GameObject RulesPanel { get; private set; }
@@ -39,7 +40,7 @@ namespace OcentraAI.LLMGames.GameScreen
         protected override void Awake()
         {
             base.Awake();
-            GameInfo = ScriptableSingletons.GameInfo.Instance;
+            GameInfo = GameInfo.Instance;
             InitReferences();
         }
 

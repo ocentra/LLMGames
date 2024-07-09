@@ -1,8 +1,7 @@
-using Sirenix.OdinInspector;
+using OcentraAI.LLMGames.ThreeCardBrag.Players;
 using System.Collections.Generic;
-using UnityEngine;
 
-namespace OcentraAI.LLMGames
+namespace OcentraAI.LLMGames.ThreeCardBrag.Scores
 {
     public class ScoreKeeper 
     {

@@ -2,7 +2,7 @@ using Sirenix.OdinInspector;
 using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
-using OcentraAI.LLMGames.GameScreen;
+using OcentraAI.LLMGames.Screens;
 using Unity.Services.Authentication;
 using Unity.Services.Authentication.PlayerAccounts;
 using Unity.Services.Core;

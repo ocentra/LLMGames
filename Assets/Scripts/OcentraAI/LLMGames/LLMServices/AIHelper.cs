@@ -1,7 +1,8 @@
+using OcentraAI.LLMGames.Scriptable.ScriptableSingletons;
+using OcentraAI.LLMGames.ThreeCardBrag.Manager;
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using OcentraAI.LLMGames.ScriptableSingletons;
 
 namespace OcentraAI.LLMGames.LLMServices
 {

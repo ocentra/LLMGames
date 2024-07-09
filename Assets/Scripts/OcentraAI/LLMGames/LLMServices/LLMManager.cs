@@ -2,6 +2,7 @@ using System.Collections.Generic;
 using System;
 using System.Threading.Tasks;
 using OcentraAI.LLMGames.Authentication;
+using OcentraAI.LLMGames.ThreeCardBrag.Manager;
 using UnityEngine;
 
 namespace OcentraAI.LLMGames.LLMServices

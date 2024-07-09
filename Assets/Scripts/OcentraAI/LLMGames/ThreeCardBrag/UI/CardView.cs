@@ -1,9 +1,10 @@
-using OcentraAI.LLMGames.ScriptableSingletons;
+using OcentraAI.LLMGames.Scriptable;
+using OcentraAI.LLMGames.Scriptable.ScriptableSingletons;
 using Sirenix.OdinInspector;
 using UnityEngine;
 using UnityEngine.UI;
 
-namespace OcentraAI.LLMGames
+namespace OcentraAI.LLMGames.ThreeCardBrag.UI
 {
     public class CardView : MonoBehaviour
     {

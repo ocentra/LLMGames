@@ -1,11 +1,13 @@
+using OcentraAI.LLMGames.Scriptable;
+using OcentraAI.LLMGames.Scriptable.ScriptableSingletons;
+using OcentraAI.LLMGames.ThreeCardBrag.Manager;
+using Sirenix.OdinInspector;
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using OcentraAI.LLMGames.ScriptableSingletons;
-using Sirenix.OdinInspector;
 using UnityEngine;
 
-namespace OcentraAI.LLMGames
+namespace OcentraAI.LLMGames.ThreeCardBrag.Players
 {
     public class Player
     {

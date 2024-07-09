@@ -3,9 +3,9 @@ using UnityEngine;
 using UnityEngine.UI;
 using Sirenix.OdinInspector;
 
-namespace OcentraAI.LLMGames.GameScreen
+namespace OcentraAI.LLMGames.Screens
 {
-    public class PauseScreen : BragScreen<PauseScreen>
+    public class PauseScreen : UIScreen<PauseScreen>
     {
         [ShowInInspector, Required]
         public Button ResumeButton { get; private set; }

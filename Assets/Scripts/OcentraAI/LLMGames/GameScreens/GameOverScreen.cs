@@ -4,10 +4,11 @@ using UnityEngine.UI;
 using TMPro;
 using Sirenix.OdinInspector;
 using OcentraAI.LLMGames.Extensions;
+using OcentraAI.LLMGames.ThreeCardBrag.Manager;
 
-namespace OcentraAI.LLMGames.GameScreen
+namespace OcentraAI.LLMGames.Screens
 {
-    public class GameOverScreen : BragScreen<GameOverScreen>
+    public class GameOverScreen : UIScreen<GameOverScreen>
     {
         [ShowInInspector, Required]
         public TextMeshProUGUI GameOverText { get; private set; }
@@ -69,7 +70,7 @@ namespace OcentraAI.LLMGames.GameScreen
         private void ReturnToMainMenu()
         {
             PlaySelectionSound();
-            BragScreen<WelcomeScreen>.ShowScreen();
+            UIScreen<WelcomeScreen>.ShowScreen();
             HideScreen();
         }
     }

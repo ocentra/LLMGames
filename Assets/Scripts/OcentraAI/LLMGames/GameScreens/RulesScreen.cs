@@ -1,13 +1,12 @@
-using OcentraAI.LLMGames.ScriptableSingletons;
 using OcentraAI.LLMGames.Extensions;
-using UnityEngine;
-using UnityEngine.UI;
-using TMPro;
+using OcentraAI.LLMGames.Scriptable.ScriptableSingletons;
 using Sirenix.OdinInspector;
+using TMPro;
+using UnityEngine.UI;
 
-namespace OcentraAI.LLMGames.GameScreen
+namespace OcentraAI.LLMGames.Screens
 {
-    public class RulesScreen : BragScreen<RulesScreen>
+    public class RulesScreen : UIScreen<RulesScreen>
     {
         [ShowInInspector, Required]
         public TextMeshProUGUI RulesText { get; private set; }
@@ -20,7 +19,7 @@ namespace OcentraAI.LLMGames.GameScreen
         protected override void Awake()
         {
             base.Awake();
-            GameInfo = ScriptableSingletons.GameInfo.Instance;
+            GameInfo = GameInfo.Instance;
             InitReferences();
         }
 

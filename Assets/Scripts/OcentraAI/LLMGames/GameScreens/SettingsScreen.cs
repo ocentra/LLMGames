@@ -6,9 +6,9 @@ using System.Collections.Generic;
 using OcentraAI.LLMGames.Extensions;
 
 
-namespace OcentraAI.LLMGames.GameScreen
+namespace OcentraAI.LLMGames.Screens
 {
-    public class SettingsScreen : BragScreen<SettingsScreen>
+    public class SettingsScreen : UIScreen<SettingsScreen>
     {
         private  string MusicVolume =>"MusicVolume";
         private string SFXVolume => "SFXVolume";

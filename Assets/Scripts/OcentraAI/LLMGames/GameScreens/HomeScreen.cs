@@ -5,9 +5,9 @@ using Sirenix.OdinInspector;
 using System.Collections.Generic;
 using OcentraAI.LLMGames.Extensions;
 
-namespace OcentraAI.LLMGames.GameScreen
+namespace OcentraAI.LLMGames.Screens
 {
-    public class HomeScreen : BragScreen<HomeScreen>
+    public class HomeScreen : UIScreen<HomeScreen>
     {
         [ShowInInspector, Required]
         public TextMeshProUGUI TitleText { get; private set; }
@@ -82,7 +82,7 @@ namespace OcentraAI.LLMGames.GameScreen
         private void OpenSettings()
         {
             PlaySelectionSound();
-            BragScreen<SettingsScreen>.ShowScreen();
+            UIScreen<SettingsScreen>.ShowScreen();
         }
 
         public override void QuitGame()

@@ -1,11 +1,12 @@
-using OcentraAI.LLMGames.GameScreen;
+using OcentraAI.LLMGames.Screens;
 using UnityEngine;
 using UnityEngine.Events;
 using UnityEngine.EventSystems;
 using UnityEngine.UI;
 using Sirenix.OdinInspector;
 
-namespace OcentraAI.LLMGames.UI
+namespace OcentraAI.LLMGames.ThreeCardBrag.UI
+
 {
     public class BragSelectable : Selectable, ISubmitHandler, ICancelHandler, IPointerClickHandler
     {
@@ -22,7 +23,7 @@ namespace OcentraAI.LLMGames.UI
         public UnityEvent OnBragCancel;
 
         [ReadOnly]
-        public BragScreen ParentScreen;
+        public UIScreen ParentScreen;
 
         protected override void Awake()
         {

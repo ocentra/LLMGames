@@ -1,6 +1,6 @@
-using UnityEngine;
+using OcentraAI.LLMGames.ThreeCardBrag.Manager;
 
-namespace OcentraAI.LLMGames
+namespace OcentraAI.LLMGames.ThreeCardBrag.Players
 {
     public class HumanPlayer : Player
     {

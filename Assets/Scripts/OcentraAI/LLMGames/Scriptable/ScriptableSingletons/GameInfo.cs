@@ -2,15 +2,18 @@ using UnityEngine;
 using System;
 using System.Collections.Generic;
 using OcentraAI.LLMGames.LLMServices;
+using OcentraAI.LLMGames.LLMServices.Rules;
 using OcentraAI.LLMGames.Utilities;
 using Sirenix.OdinInspector;
 using Sirenix.Serialization;
+using System.Linq;
+
 
 #if UNITY_EDITOR
 using UnityEditor;
 #endif
 
-namespace OcentraAI.LLMGames.ScriptableSingletons
+namespace OcentraAI.LLMGames.Scriptable.ScriptableSingletons
 {
     [CreateAssetMenu(fileName = nameof(GameInfo), menuName = "ThreeCardBrag/GameInfo")]
     [CustomGlobalConfig("Assets/Resources/")]
@@ -40,6 +43,9 @@ namespace OcentraAI.LLMGames.ScriptableSingletons
         [ShowInInspector]
         public CardRanking[] CardRankings;
 
+        [ShowInInspector]
+        public BonusValues CommonBonuses;
+
         [Button(ButtonSizes.Small)]
         public void InitializeGameInfo()
         {
@@ -54,15 +60,34 @@ namespace OcentraAI.LLMGames.ScriptableSingletons
             SaveChanges();
         }
 
-        private void InitializeBonusRules()
+        private void InitializeCommonBonuses()
         {
-            BonusRules = new BaseBonusRule[]
+            CommonBonuses = new BonusValues
             {
-                new SameColorSequenceRule(),
-                new DifferentColorsSequenceRule(),
-                new PairInHandRule()
+                TrumpCardBonus = 5,
+                SameColorBonus = 5,
+                WildCardBonus = 5,
+                RankAdjacentBonus = 5
             };
         }
+
+        private void InitializeBonusRules()
+        {
+            InitializeCommonBonuses();
+
+            BonusRules = new BaseBonusRule[]
+            {
+                new StraightFlushRule(),
+                new DifferentColorsSequenceRule(),
+                new PairInHandRule(),
+                new ThreeConsecutiveSameSuitRule(),
+                new ThreeOfAKindRule(),
+                new SameColorsSequenceRule(),
+                
+            };
+        }
+
+
 
         private void InitializeGameRules()
         {
@@ -169,6 +194,11 @@ namespace OcentraAI.LLMGames.ScriptableSingletons
             return moveValidityConditions;
         }
 
+        public T GetBonusRule<T>() where T : BaseBonusRule
+        {
+            return BonusRules.OfType<T>().FirstOrDefault();
+        }
+
         private void SaveChanges()
         {
 #if UNITY_EDITOR
@@ -178,5 +208,14 @@ namespace OcentraAI.LLMGames.ScriptableSingletons
 #endif
 
         }
+    }
+
+    [Serializable]
+    public struct BonusValues
+    {
+        public int TrumpCardBonus;
+        public int SameColorBonus;
+        public int WildCardBonus;
+        public int RankAdjacentBonus;
     }
 }

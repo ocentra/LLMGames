@@ -5,7 +5,7 @@ using UnityEngine.UI;
 using System.Collections;
 using OcentraAI.LLMGames.Extensions;
 
-namespace OcentraAI.LLMGames
+namespace OcentraAI.LLMGames.ThreeCardBrag.Players
 {
     public class PlayerTimer : MonoBehaviour
     {

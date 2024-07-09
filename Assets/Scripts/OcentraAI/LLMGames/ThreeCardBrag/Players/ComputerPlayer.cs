@@ -1,8 +1,10 @@
+using OcentraAI.LLMGames.Scriptable;
+using OcentraAI.LLMGames.ThreeCardBrag.Manager;
 using System.Linq;
 using System.Threading.Tasks;
 using UnityEngine;
 
-namespace OcentraAI.LLMGames
+namespace OcentraAI.LLMGames.ThreeCardBrag.Players
 {
     public class ComputerPlayer : Player
     {

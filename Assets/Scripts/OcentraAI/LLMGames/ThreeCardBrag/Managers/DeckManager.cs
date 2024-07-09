@@ -1,12 +1,13 @@
-using System.Collections.Generic;
-using OcentraAI.LLMGames.ScriptableSingletons;
+using OcentraAI.LLMGames.Scriptable;
+using OcentraAI.LLMGames.Scriptable.ScriptableSingletons;
 using Sirenix.OdinInspector;
+using System.Collections.Generic;
 using UnityEngine;
 
-namespace OcentraAI.LLMGames
+namespace OcentraAI.LLMGames.ThreeCardBrag.Manager
 {
 
-    public class DeckManager 
+    public class DeckManager
     {
         [ShowInInspector]
         public List<Card> DeckCards { get; private set; } = new List<Card>();
@@ -30,13 +31,19 @@ namespace OcentraAI.LLMGames
 
         [ShowInInspector]
         public Card SwapCard { get; private set; }
+
+        [ShowInInspector]
+        public Card TrumpCard { get; private set; }
+
+        [ShowInInspector]
+        private Queue<Card> LastDrawnTrumpCards { get; set; } = new Queue<Card>();
         public DeckManager()
         {
             InitializeDeck();
         }
 
-        
-        
+
+
         public void SetFloorCard(Card card)
         {
             FloorCard = card;
@@ -80,9 +87,46 @@ namespace OcentraAI.LLMGames
 
         }
 
+        public void SetRandomTrumpCard()
+        {
+            List<Card> cards = new List<Card>(Deck.Instance.CardTemplates);
+
+            if (cards.Count == 0) return;
+
+            Card trumpCard = null;
+            bool validCardFound = false;
+            while (!validCardFound)
+            {
+                int randomIndex = Random.Range(0, cards.Count);
+                trumpCard = cards[randomIndex];
+
+                if (!LastDrawnTrumpCards.Contains(trumpCard))
+                {
+                    validCardFound = true;
+                    TrumpCard = trumpCard;
+                }
+            }
+
+            LastDrawnTrumpCards.Enqueue(trumpCard);
+
+            if (LastDrawnTrumpCards.Count > 10)
+            {
+                LastDrawnTrumpCards.Dequeue();
+            }
+        }
+
+
+        public void ResetForNewGame()
+        {
+            Reset();
+            LastDrawnTrumpCards = new Queue<Card>();
+
+        }
+
         public void Reset()
         {
             InitializeDeck();
+
         }
 
         public void SetSwapCard(Card card)

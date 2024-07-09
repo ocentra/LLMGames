@@ -1,11 +1,12 @@
 using OcentraAI.LLMGames.Extensions;
+using OcentraAI.LLMGames.ThreeCardBrag.Manager;
 using Sirenix.OdinInspector;
 using TMPro;
 using UnityEngine.UI;
 
-namespace OcentraAI.LLMGames.GameScreen
+namespace OcentraAI.LLMGames.Screens
 {
-    public class PurchaseScreen : BragScreen<PurchaseScreen>
+    public class PurchaseScreen : UIScreen<PurchaseScreen>
     {
         [ShowInInspector, Required]
         public Button AuthenticateButton { get; private set; }

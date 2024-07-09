@@ -1,8 +1,9 @@
+using OcentraAI.LLMGames.ThreeCardBrag.UI.Controllers;
 using Sirenix.OdinInspector;
 using UnityEngine;
 using UnityEngine.EventSystems;
 
-namespace OcentraAI.LLMGames.UI
+namespace OcentraAI.LLMGames.ThreeCardBrag.UI
 {
     public class Draggable : MonoBehaviour, IBeginDragHandler, IDragHandler, IEndDragHandler
     {

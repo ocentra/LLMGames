@@ -9,9 +9,9 @@ using Unity.Services.Authentication;
 using System.Threading.Tasks;
 using OcentraAI.LLMGames.Authentication;
 
-namespace OcentraAI.LLMGames.GameScreen
+namespace OcentraAI.LLMGames.Screens
 {
-    public class LoginScreen : BragScreen<LoginScreen>
+    public class LoginScreen : UIScreen<LoginScreen>
     {
         [ShowInInspector, Required] public GameObject AuthenticationUI { get; private set; }
         [ShowInInspector, Required] public GameObject UserAndEmailRegistrationUI { get; private set; }

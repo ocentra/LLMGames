@@ -1,6 +1,6 @@
 using System.Threading.Tasks;
 
-namespace OcentraAI.LLMGames
+namespace OcentraAI.LLMGames.ThreeCardBrag.Players
 {
     [System.Serializable]
     public struct TurnInfo

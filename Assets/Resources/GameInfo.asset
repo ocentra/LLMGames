@@ -23,12 +23,12 @@ MonoBehaviour:
     SerializationNodes:
     - Name: moveValidityConditions
       Entry: 7
-      Data: 0|System.Collections.Generic.Dictionary`2[[ThreeCardBrag.PossibleMoves,
-        ThreeCardBrag],[System.String, mscorlib]], mscorlib
+      Data: 0|System.Collections.Generic.Dictionary`2[[OcentraAI.LLMGames.PossibleMoves,
+        LLMGames],[System.String, mscorlib]], mscorlib
     - Name: comparer
       Entry: 7
-      Data: 1|System.Collections.Generic.EnumEqualityComparer`1[[ThreeCardBrag.PossibleMoves,
-        ThreeCardBrag]], mscorlib
+      Data: 1|System.Collections.Generic.EnumEqualityComparer`1[[OcentraAI.LLMGames.PossibleMoves,
+        LLMGames]], mscorlib
     - Name: 
       Entry: 12
       Data: 0
@@ -169,12 +169,12 @@ MonoBehaviour:
       Data: 
     - Name: bluffSettingConditions
       Entry: 7
-      Data: 2|System.Collections.Generic.Dictionary`2[[ThreeCardBrag.DifficultyLevels,
-        ThreeCardBrag],[System.String, mscorlib]], mscorlib
+      Data: 2|System.Collections.Generic.Dictionary`2[[OcentraAI.LLMGames.DifficultyLevels,
+        LLMGames],[System.String, mscorlib]], mscorlib
     - Name: comparer
       Entry: 7
-      Data: 3|System.Collections.Generic.EnumEqualityComparer`1[[ThreeCardBrag.DifficultyLevels,
-        ThreeCardBrag]], mscorlib
+      Data: 3|System.Collections.Generic.EnumEqualityComparer`1[[OcentraAI.LLMGames.DifficultyLevels,
+        LLMGames]], mscorlib
     - Name: 
       Entry: 12
       Data: 0
@@ -231,12 +231,12 @@ MonoBehaviour:
       Data: 
     - Name: exampleHandOdds
       Entry: 7
-      Data: 4|System.Collections.Generic.Dictionary`2[[ThreeCardBrag.HandType, ThreeCardBrag],[System.String,
-        mscorlib]], mscorlib
+      Data: 4|System.Collections.Generic.Dictionary`2[[OcentraAI.LLMGames.HandType,
+        LLMGames],[System.String, mscorlib]], mscorlib
     - Name: comparer
       Entry: 7
-      Data: 5|System.Collections.Generic.EnumEqualityComparer`1[[ThreeCardBrag.HandType,
-        ThreeCardBrag]], mscorlib
+      Data: 5|System.Collections.Generic.EnumEqualityComparer`1[[OcentraAI.LLMGames.HandType,
+        LLMGames]], mscorlib
     - Name: 
       Entry: 12
       Data: 0
@@ -293,43 +293,102 @@ MonoBehaviour:
       Data: 
     - Name: BonusRules
       Entry: 7
-      Data: 6|ThreeCardBrag.BaseBonusRule[], ThreeCardBrag
+      Data: 6|OcentraAI.LLMGames.LLMServices.BaseBonusRule[], LLMGames
     - Name: 
       Entry: 12
-      Data: 3
+      Data: 6
     - Name: 
       Entry: 7
-      Data: 7|ThreeCardBrag.SameColorSequenceRule, ThreeCardBrag
+      Data: 7|OcentraAI.LLMGames.LLMServices.Rules.StraightFlushRule, LLMGames
     - Name: Description
       Entry: 1
-      Data: Sequence of 3 cards of the same color
+      Data: 'Straight Flush with Trump Wild Card. Example: 9, 10, J of Spades'
+    - Name: BonusValue
+      Entry: 3
+      Data: 12
+    - Name: TrumpCard
+      Entry: 6
+      Data: 
+    - Name: 
+      Entry: 8
+      Data: 
+    - Name: 
+      Entry: 7
+      Data: 8|OcentraAI.LLMGames.LLMServices.Rules.DifferentColorsSequenceRule, LLMGames
+    - Name: Description
+      Entry: 1
+      Data: 'Sequence of 3 cards of different colors with Trump Wild Card. Example:
+        4 of Hearts, 5 of Spades, 6 of Diamonds'
+    - Name: BonusValue
+      Entry: 3
+      Data: 5
+    - Name: TrumpCard
+      Entry: 6
+      Data: 
+    - Name: 
+      Entry: 8
+      Data: 
+    - Name: 
+      Entry: 7
+      Data: 9|OcentraAI.LLMGames.LLMServices.Rules.PairInHandRule, LLMGames
+    - Name: Description
+      Entry: 1
+      Data: 'Pair in hand with bonuses for trump card and same color. Example: 5
+        of Hearts, 5 of Spades, and any card'
+    - Name: BonusValue
+      Entry: 3
+      Data: 5
+    - Name: TrumpCard
+      Entry: 6
+      Data: 
+    - Name: 
+      Entry: 8
+      Data: 
+    - Name: 
+      Entry: 7
+      Data: 10|OcentraAI.LLMGames.LLMServices.Rules.ThreeConsecutiveSameSuitRule,
+        LLMGames
+    - Name: Description
+      Entry: 1
+      Data: 'Sequence of 3 cards of the same suit with Trump Wild Card. Example:
+        4, 5, 6 of Hearts'
     - Name: BonusValue
       Entry: 3
       Data: 10
+    - Name: TrumpCard
+      Entry: 6
+      Data: 
     - Name: 
       Entry: 8
       Data: 
     - Name: 
       Entry: 7
-      Data: 8|ThreeCardBrag.DifferentColorsSequenceRule, ThreeCardBrag
+      Data: 11|OcentraAI.LLMGames.LLMServices.Rules.ThreeOfAKindRule, LLMGames
     - Name: Description
       Entry: 1
-      Data: Sequence of 3 cards of different colors
+      Data: 'Three of a Kind with Trump Wild Card. Example: AAA or KKK'
     - Name: BonusValue
       Entry: 3
-      Data: 5
+      Data: 15
+    - Name: TrumpCard
+      Entry: 6
+      Data: 
     - Name: 
       Entry: 8
       Data: 
     - Name: 
       Entry: 7
-      Data: 9|ThreeCardBrag.PairInHandRule, ThreeCardBrag
+      Data: 12|OcentraAI.LLMGames.LLMServices.Rules.SameColorsSequenceRule, LLMGames
     - Name: Description
       Entry: 1
-      Data: Pair in hand
+      Data: 'Sequence of 3 cards of the same color with Trump Wild Card. Example:
+        7 of Hearts, 8 of Diamonds, 9 of Hearts'
     - Name: BonusValue
       Entry: 3
-      Data: 5
+      Data: 10
+    - Name: TrumpCard
+      Entry: 6
+      Data: 
     - Name: 
       Entry: 8
       Data: 
@@ -424,3 +483,8 @@ MonoBehaviour:
     Value: 3
   - CardName: 2
     Value: 2
+  CommonBonuses:
+    TrumpCardBonus: 5
+    SameColorBonus: 5
+    WildCardBonus: 5
+    RankAdjacentBonus: 5

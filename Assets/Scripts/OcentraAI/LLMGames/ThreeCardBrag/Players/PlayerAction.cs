@@ -1,4 +1,4 @@
-namespace OcentraAI.LLMGames
+namespace OcentraAI.LLMGames.ThreeCardBrag.Players
 {
     public enum PlayerAction
     {

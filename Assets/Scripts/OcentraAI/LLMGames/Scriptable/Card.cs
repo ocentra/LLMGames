@@ -1,31 +1,38 @@
 using Sirenix.OdinInspector;
+using System;
 using UnityEditor;
 using UnityEngine;
 
-namespace OcentraAI.LLMGames
+namespace OcentraAI.LLMGames.Scriptable
 {
     [CreateAssetMenu(fileName = nameof(Card), menuName = "ThreeCardBrag/Card")]
     public class Card : ScriptableObject
     {
-        public string Suit;
+        public Suit Suit;
 
-        public string Rank;
+        public Rank Rank;
 
         [Required] public Sprite Sprite;
 
         public int GetRankValue()
         {
-            return Rank switch
+            return (int)Rank;
+        }
+
+        public string GetColor()
+        {
+            return Suit switch
             {
-                "A" => 14,
-                "K" => 13,
-                "Q" => 12,
-                "J" => 11,
-                _ => int.TryParse(Rank, out int result) ? result : 0
+                Suit.Hearts => "Red",
+                Suit.Diamonds => "Red",
+                Suit.Clubs => "Black",
+                Suit.Spades => "Black",
+
+                _ => throw new ArgumentOutOfRangeException()
             };
         }
 
-        public void Init(string suit, string rank)
+        public void Init(Suit suit, Rank rank)
         {
             Suit = suit;
             Rank = rank;
@@ -38,11 +45,11 @@ namespace OcentraAI.LLMGames
         {
             string formattedRank = Rank switch
             {
-                "A" => "Ace",
-                "K" => "King",
-                "Q" => "Queen",
-                "J" => "Jack",
-                _ => Rank
+                Rank.A => "Ace",
+                Rank.K => "King",
+                Rank.Q => "Queen",
+                Rank.J => "Jack",
+                _ => ((int)Rank).ToString()
             };
 
             string path = name == "BackCard" ? $"Assets/Images/Cards/BackCard.png" : $"Assets/Images/Cards/{formattedRank}_of_{Suit}.png";

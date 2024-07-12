@@ -9,13 +9,13 @@ namespace OcentraAI.LLMGames.ThreeCardBrag.UI
     {
         [ShowInInspector, Required]
 
-        private CanvasGroup CanvasGroup { get;  set; }
+        private CanvasGroup CanvasGroup { get; set; }
 
         [ShowInInspector, Required]
 
         private Vector2 OriginalPosition { get; set; }
 
-        [ShowInInspector,Required]
+        [ShowInInspector, Required]
         private RectTransform RectTransform { get; set; }
 
         [ShowInInspector, Required]
@@ -41,11 +41,11 @@ namespace OcentraAI.LLMGames.ThreeCardBrag.UI
         }
 
 
-        public void OnBeginDrag(PointerEventData eventData)
+        public async void OnBeginDrag(PointerEventData eventData)
         {
             OriginalPosition = RectTransform.anchoredPosition;
             CanvasGroup.blocksRaycasts = false;
-            UIController.OnPickFromFloor();
+            await UIController.OnPickFromFloor();
         }
 
         public void OnDrag(PointerEventData eventData)
@@ -61,7 +61,7 @@ namespace OcentraAI.LLMGames.ThreeCardBrag.UI
                 RectTransform.anchoredPosition = OriginalPosition;
             }
 
-          //  UIController.OnEndPickFromFloor();
+            //  UIController.OnEndPickFromFloor();
         }
     }
 }

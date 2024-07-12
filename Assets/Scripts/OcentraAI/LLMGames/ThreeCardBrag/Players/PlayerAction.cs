@@ -5,7 +5,6 @@ namespace OcentraAI.LLMGames.ThreeCardBrag.Players
         SeeHand,
         PlayBlind,
         Bet,
-        Call,
         Raise,
         Fold,
         DrawFromDeck,

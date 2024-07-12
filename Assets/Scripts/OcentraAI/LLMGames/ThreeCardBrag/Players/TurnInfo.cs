@@ -3,7 +3,7 @@ using System.Threading.Tasks;
 namespace OcentraAI.LLMGames.ThreeCardBrag.Players
 {
     [System.Serializable]
-    public struct TurnInfo
+    public class TurnInfo
     {
         public Player CurrentPlayer;
         public float ElapsedTime;

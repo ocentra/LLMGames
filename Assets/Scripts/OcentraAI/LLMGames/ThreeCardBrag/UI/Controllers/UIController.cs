@@ -3,7 +3,7 @@ using OcentraAI.LLMGames.Scriptable;
 using OcentraAI.LLMGames.ThreeCardBrag.Manager;
 using OcentraAI.LLMGames.ThreeCardBrag.Players;
 using Sirenix.OdinInspector;
-using System.Collections;
+using System.Threading.Tasks;
 using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
@@ -26,16 +26,13 @@ namespace OcentraAI.LLMGames.ThreeCardBrag.UI.Controllers
         private Button Fold { get; set; }
 
         [Required, ShowInInspector]
-        private Button DrawFromDeck { get; set; }
+        private Button Bet { get; set; }
 
         [Required, ShowInInspector]
-        private Button PickFromFloor { get; set; }
-
+        private Button DrawFromDeck { get; set; }
+        
         [Required, ShowInInspector]
         private Button ShowCall { get; set; }
-
-        //[Required, ShowInInspector]
-        //private List<Button> Discard { get; set; } = new List<Button>();
 
         [Required, ShowInInspector]
         private Button ContinueRound { get; set; }
@@ -85,6 +82,9 @@ namespace OcentraAI.LLMGames.ThreeCardBrag.UI.Controllers
         private PlayerTimer ComputerPlayerTimer { get; set; }
 
         [Required, ShowInInspector]
+        public PlayerTimer CurrentPlayerTimer { get; set; }
+
+        [Required, ShowInInspector]
         private CardView[] HumanPlayerCardViews { get; set; }
 
         [Required, ShowInInspector]
@@ -93,7 +93,7 @@ namespace OcentraAI.LLMGames.ThreeCardBrag.UI.Controllers
         [Required, ShowInInspector]
         private CardView[] ComputerPlayerCardViews { get; set; }
 
-        public bool ActionTaken { get; set; }
+        public TaskCompletionSource<bool> ActionCompletionSource { get; private set; }
 
         [Required, ShowInInspector]
         public LeftPanelController LeftPanelController { get; set; }
@@ -117,8 +117,8 @@ namespace OcentraAI.LLMGames.ThreeCardBrag.UI.Controllers
             PlayBlind = transform.FindChildRecursively<Button>(nameof(PlayBlind));
             RaiseBet = transform.FindChildRecursively<Button>(nameof(RaiseBet));
             Fold = transform.FindChildRecursively<Button>(nameof(Fold));
+            Bet = transform.FindChildRecursively<Button>(nameof(Bet));
             DrawFromDeck = transform.FindChildRecursively<Button>(nameof(DrawFromDeck));
-            PickFromFloor = transform.FindChildRecursively<Button>(nameof(PickFromFloor));
             ShowCall = transform.FindChildRecursively<Button>(nameof(ShowCall));
             ContinueRound = transform.FindChildRecursively<Button>(nameof(ContinueRound));
             NewGame = transform.FindChildRecursively<Button>(nameof(NewGame));
@@ -141,22 +141,11 @@ namespace OcentraAI.LLMGames.ThreeCardBrag.UI.Controllers
 
             HumanPlayerTimer = transform.parent.FindChildRecursively<PlayerTimer>(nameof(HumanPlayerTimer));
             ComputerPlayerTimer = transform.parent.FindChildRecursively<PlayerTimer>(nameof(ComputerPlayerTimer));
-            StopTurnCountdown();
 
             RaiseAmount = transform.FindChildRecursively<TMP_InputField>(nameof(RaiseAmount));
             if (NewGame != null) NewGame.gameObject.SetActive(false);
             if (ContinueRound != null) ContinueRound.gameObject.SetActive(false);
             if (MessageHolder != null) MessageHolder.gameObject.SetActive(false);
-
-            //foreach (CardView cardView in HumanPlayerCardViews)
-            //{
-            //    Button component = cardView.GetComponent<Button>();
-            //    component.enabled = false;
-            //    if (!Discard.Contains(component))
-            //    {
-            //        Discard.Add(component);
-            //    }
-            //}
 
             LeftPanelController = FindObjectOfType<LeftPanelController>();
         }
@@ -165,47 +154,53 @@ namespace OcentraAI.LLMGames.ThreeCardBrag.UI.Controllers
         {
             Init();
 
-            if (ShowPlayerHand != null) ShowPlayerHand.onClick.AddListener(OnShowPlayerHand);
-            if (PlayBlind != null) PlayBlind.onClick.AddListener(OnPlayBlind);
-            if (RaiseBet != null) RaiseBet.onClick.AddListener(OnRaiseBet);
-            if (Fold != null) Fold.onClick.AddListener(OnFold);
-            if (DrawFromDeck != null) DrawFromDeck.onClick.AddListener(OnDrawFromDeck);
-            //if (PickFromFloor != null) PickFromFloor.onClick.AddListener(OnPickFromFloor);
-            if (ShowCall != null) ShowCall.onClick.AddListener(OnShowCall);
+            if (ShowPlayerHand != null) ShowPlayerHand.onClick.AddListener(async () => await OnShowPlayerHand());
+            if (PlayBlind != null) PlayBlind.onClick.AddListener(async () => await OnPlayBlind());
+            if (RaiseBet != null) RaiseBet.onClick.AddListener(async () => await OnRaiseBet());
+            if (Fold != null) Fold.onClick.AddListener(async () => await OnFold());
+            if (Bet != null) Bet.onClick.AddListener(async () => await OnBet());
+            if (DrawFromDeck != null) DrawFromDeck.onClick.AddListener(async () => await OnDrawFromDeck());
+            if (ShowCall != null) ShowCall.onClick.AddListener(async () => await OnShowCall());
 
-            //foreach (Button button in Discard)
-            //{
-            //    CardView cardView = button.GetComponent<CardView>();
-            //    button.onClick.AddListener(() => OnDiscardCardSet(cardView));
-            //}
-
-            if (ContinueRound != null) ContinueRound.onClick.AddListener(() => GameManager.Instance.ContinueGame(true));
-            if (NewGame != null) NewGame.onClick.AddListener(() => GameManager.Instance.StartNewGame());
+            if (ContinueRound != null) ContinueRound.onClick.AddListener(async () => await GameManager.Instance.ContinueGame(true));
+            if (NewGame != null) NewGame.onClick.AddListener(async () => await GameManager.Instance.StartNewGameAsync());
             if (PurchaseCoins != null)
             {
                 PurchaseCoins.onClick.AddListener(() => GameManager.Instance.PurchaseCoins(GameManager.Instance.HumanPlayer, 1000));
             }
         }
 
-        private void OnShowCall()
+
+
+        public Task InitializePlayers()
         {
-            TakeAction(PlayerAction.Show);
+            HumanPlayerTimer.SetPlayer(GameManager.Instance.HumanPlayer);
+            HumanPlayerTimer.Show(false, nameof(Start));
+
+            ComputerPlayerTimer.SetPlayer(GameManager.Instance.ComputerPlayer);
+            ComputerPlayerTimer.Show(false, nameof(Start));
+
+            return Task.CompletedTask;
         }
 
-        private void OnDrawFromDeck()
+        private async Task OnShowCall()
         {
-
-            TakeAction(PlayerAction.DrawFromDeck);
+            await TakeActionAsync(PlayerAction.Show);
         }
 
-        private void OnFold()
+        private async Task OnDrawFromDeck()
         {
-            TakeAction(PlayerAction.Fold);
+            await TakeActionAsync(PlayerAction.DrawFromDeck);
         }
 
-        private void OnPlayBlind()
+        private async Task OnFold()
         {
-            TakeAction(PlayerAction.PlayBlind);
+            await TakeActionAsync(PlayerAction.Fold);
+        }
+
+        private async Task OnPlayBlind()
+        {
+            await TakeActionAsync(PlayerAction.PlayBlind);
         }
 
         public void OnDiscardCardSet(CardView cardView)
@@ -213,67 +208,75 @@ namespace OcentraAI.LLMGames.ThreeCardBrag.UI.Controllers
             if (DeckManager != null)
             {
                 Card card = cardView.Card;
-
                 DeckManager.SetSwapCard(card);
             }
         }
 
-        public void OnPickFromFloor()
+        public async Task OnPickFromFloor()
         {
-            ShowMessage($"Drop the Card to Hand Card to discard, else Draw new card ", 5f);
-            StartCoroutine(WaitForSwapCardIndex());
+            ShowMessage($"Drop the Card to Hand Card to discard, else Draw new card", 5f);
+            await WaitForSwapCardIndexAsync();
         }
-        private void OnShowPlayerHand()
+
+        private async Task OnShowPlayerHand()
         {
             ShowPlayerHand.enabled = false;
-            TakeAction(PlayerAction.SeeHand);
+            await TakeActionAsync(PlayerAction.SeeHand);
         }
 
+        private async Task OnBet()
+        {
+            await TakeActionAsync(PlayerAction.Bet);
+        }
 
-        private void OnRaiseBet()
+        private async Task OnRaiseBet()
         {
             if (string.IsNullOrEmpty(RaiseAmount.text))
             {
-                ShowMessage($" Please Set RaiseAmount ! Needs to be higher than CurrentBet {GameManager.Instance.CurrentBet}", 5f);
+                ShowMessage($" Please Set RaiseAmount! Needs to be higher than CurrentBet {GameManager.Instance.CurrentBet}", 5f);
                 return;
             }
 
             if (int.TryParse(RaiseAmount.text, out int raiseAmount) && raiseAmount > GameManager.Instance.CurrentBet)
             {
                 GameManager.Instance.SetCurrentBet(raiseAmount);
-                TakeAction(PlayerAction.Raise);
+                await TakeActionAsync(PlayerAction.Raise);
             }
             else
             {
                 ShowMessage($" RaiseAmount {raiseAmount} Needs to be higher than CurrentBet {GameManager.Instance.CurrentBet}", 5f);
             }
         }
-        private IEnumerator WaitForSwapCardIndex()
+
+        private async Task WaitForSwapCardIndexAsync()
         {
             if (DeckManager != null)
             {
-                yield return new WaitUntil(() => DeckManager.SwapCard != null);
-                TakeAction(PlayerAction.PickAndSwap);
+                await Task.Run(async () =>
+                {
+                    while (DeckManager.SwapCard == null)
+                    {
+                        await Task.Delay(100); // Check every 100ms
+                    }
+                });
+                await TakeActionAsync(PlayerAction.PickAndSwap);
             }
             else
             {
                 Debug.LogError($"DeckManager is null!");
             }
         }
+
         public void SetComputerSeenHand(bool hasSeenHand)
         {
             string message = GameManager.Instance.BlindMultiplier > 1 ? $" Playing Blind {GameManager.Instance.BlindMultiplier}" : $" Playing Blind ";
             ComputerPlayingBlind.text = hasSeenHand ? "" : message;
         }
 
-
-
-        private async void TakeAction(PlayerAction action)
+        private async Task TakeActionAsync(PlayerAction action)
         {
             await GameManager.Instance.HandlePlayerAction(action);
-
-
-            ActionTaken = true;
+            ActionCompletionSource?.TrySetResult(true);
         }
 
         public void UpdateGameState(bool isNewRound = false)
@@ -309,18 +312,41 @@ namespace OcentraAI.LLMGames.ThreeCardBrag.UI.Controllers
             bool humanPlayerHasSeenHand = GameManager.Instance.HumanPlayer.HasSeenHand;
             bool isCurrentPlayerHuman = GameManager.Instance.CurrentTurn.CurrentPlayer == GameManager.Instance.HumanPlayer;
 
-            if (PlayBlind != null) PlayBlind.gameObject.SetActive(!humanPlayerHasSeenHand);
-            if (RaiseBet != null) RaiseBet.interactable = isCurrentPlayerHuman;
-            if (Fold != null) Fold.interactable = isCurrentPlayerHuman;
+            if (PurchaseCoins !=null)
+            {
+                PurchaseCoins.gameObject.SetActive(GameManager.Instance.HumanPlayer.Coins <=100);
+            }
+
+            if (PlayBlind != null)
+            {
+                PlayBlind.gameObject.SetActive(!humanPlayerHasSeenHand);
+            }
+
+            if (RaiseBet != null)
+            {
+                RaiseBet.gameObject.transform.parent.gameObject.SetActive(humanPlayerHasSeenHand);
+            }
+            if (Fold != null)
+            {
+                Fold.gameObject.SetActive(isCurrentPlayerHuman && humanPlayerHasSeenHand);
+
+            }
+
+            if (Bet != null)
+            {
+                Bet.gameObject.SetActive(isCurrentPlayerHuman && humanPlayerHasSeenHand);
+            }
+
+
             if (DrawFromDeck != null)
             {
                 DrawFromDeck.interactable = humanPlayerHasSeenHand && isCurrentPlayerHuman;
             }
 
-            //if (PickFromFloor != null) PickFromFloor.interactable = humanPlayerHasSeenHand && DeckManager.FloorCard != null;
-            if (ShowCall != null) ShowCall.interactable = isCurrentPlayerHuman;
-
-
+            if (ShowCall != null)
+            {
+                ShowCall.gameObject.SetActive(humanPlayerHasSeenHand && isCurrentPlayerHuman);
+            }
         }
 
         public void UpdateCoinsDisplay()
@@ -352,17 +378,14 @@ namespace OcentraAI.LLMGames.ThreeCardBrag.UI.Controllers
                 if (DeckManager != null)
                 {
                     FloorCardView.SetCard(DeckManager.FloorCard);
-
                     FloorCardView.UpdateCardView();
                     bool value = FloorCardView.Card != null;
                     FloorCardView.SetActive(value);
                 }
                 else
                 {
-
                     FloorCardView.SetActive(false);
                 }
-
             }
         }
 
@@ -371,7 +394,7 @@ namespace OcentraAI.LLMGames.ThreeCardBrag.UI.Controllers
             LeftPanelController.AddCard(card);
         }
 
-        public void ShowMessage(string message, float delay = 5f)
+        public async void ShowMessage(string message, float delay = 5f)
         {
             if (MessageHolder != null)
             {
@@ -381,17 +404,13 @@ namespace OcentraAI.LLMGames.ThreeCardBrag.UI.Controllers
                     Message.text = message;
                 }
 
-                // Check if the object is still valid before starting the coroutine
-                if (this != null)
-                {
-                    StartCoroutine(HideMessageAfterDelay(delay));
-                }
+                await HideMessageAfterDelay(delay);
             }
         }
 
-        private IEnumerator HideMessageAfterDelay(float delay)
+        private async Task HideMessageAfterDelay(float delay)
         {
-            yield return new WaitForSeconds(delay);
+            await Utility.Delay(delay);
 
             if (MessageHolder != null)
             {
@@ -401,37 +420,35 @@ namespace OcentraAI.LLMGames.ThreeCardBrag.UI.Controllers
 
         public void OfferContinuation(float delay)
         {
-            ShowMessage($" Do you Want to ContinueRound playing One More Round?", delay);
+            ShowMessage($"Do you want to continue playing one more round?", delay);
             if (ContinueRound != null) ContinueRound.gameObject.SetActive(true);
         }
 
         public void OfferNewGame()
         {
-            ShowMessage($"Do you want to Play New Round ?", 15f);
-
+            ShowMessage($"Do you want to play a new game?", 15f);
             if (NewGame != null) NewGame.gameObject.SetActive(true);
         }
 
-        public void StartTurnCountdown(Player player, float duration)
+        public async void StartTurnCountdown()
         {
-            if (player is HumanPlayer)
+            ActionCompletionSource = new TaskCompletionSource<bool>();
+            if (GameManager.Instance.CurrentTurn.CurrentPlayer is HumanPlayer)
             {
-                HumanPlayerTimer.StartTimer(duration);
-                HumanPlayerTimer.Show(true);
-                ComputerPlayerTimer.Show(false);
+                CurrentPlayerTimer = HumanPlayerTimer;
+                await HumanPlayerTimer.StartTimer();
             }
-            else
+            else if (GameManager.Instance.CurrentTurn.CurrentPlayer is ComputerPlayer)
             {
-                ComputerPlayerTimer.StartTimer(duration);
-                HumanPlayerTimer.Show(false);
-                ComputerPlayerTimer.Show(true);
+                CurrentPlayerTimer = ComputerPlayerTimer;
+                await ComputerPlayerTimer.StartTimer();
             }
         }
 
         public void StopTurnCountdown()
         {
-            HumanPlayerTimer.Show(false);
-            ComputerPlayerTimer.Show(false);
+            HumanPlayerTimer.Show(false, nameof(StopTurnCountdown));
+            ComputerPlayerTimer.Show(false, nameof(StopTurnCountdown));
         }
 
         public void UpdateHumanPlayerHandDisplay(bool isRoundEnd = false)
@@ -443,20 +460,18 @@ namespace OcentraAI.LLMGames.ThreeCardBrag.UI.Controllers
                     HumanPlayerCardViews[i].SetCard(GameManager.Instance.HumanPlayer.Hand[i]);
                     HumanPlayerCardViews[i].UpdateCardView();
                 }
-
             }
+        }
 
-
+        public Task WaitForActionAsync()
+        {
+            ActionCompletionSource = new TaskCompletionSource<bool>();
+            return ActionCompletionSource.Task;
         }
 
         public void ActivateDiscardCard(bool activate)
         {
-            //Discard.ForEach(button =>
-            //{
-            //    button.enabled = true;
-            //    button.interactable = activate;
-            //});
-
+            // Discard buttons or functionality
         }
 
         public void UpdateComputerHandDisplay(bool isRoundEnd = false)

@@ -98,7 +98,7 @@ namespace OcentraAI.LLMGames.Screens
         private IEnumerator StartGameCoroutine()
         {
             yield return StartCoroutine(HideScreenCoroutine());
-            GameManager.Instance.StartNewGame();
+            //await GameManager.Instance.StartNewGameAsync();
         }
 
         public override void QuitGame()

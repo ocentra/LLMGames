@@ -60,10 +60,10 @@ namespace OcentraAI.LLMGames.Screens
             ScoreText.text = $"Your Score: {GameManager.Instance.ScoreKeeper.HumanTotalWins}";
         }
 
-        private void PlayAgain()
+        private async void PlayAgain()
         {
             PlaySelectionSound();
-            GameManager.Instance.StartNewGame();
+            await GameManager.Instance.StartNewGameAsync();
             HideScreen();
         }
 

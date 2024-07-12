@@ -1,9 +1,11 @@
+using OcentraAI.LLMGames.Extensions;
+using OcentraAI.LLMGames.ThreeCardBrag.Manager;
 using Sirenix.OdinInspector;
+using System.Threading;
+using System.Threading.Tasks;
 using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
-using System.Collections;
-using OcentraAI.LLMGames.Extensions;
 
 namespace OcentraAI.LLMGames.ThreeCardBrag.Players
 {
@@ -21,7 +23,11 @@ namespace OcentraAI.LLMGames.ThreeCardBrag.Players
         [Required, ShowInInspector]
         private Image Image { get; set; }
 
-        private Coroutine timerCoroutine;
+        private Player Player { get; set; }
+        private float Duration => GameManager.Instance.TurnDuration;
+        private float RemainingTime { get; set; }
+        private TaskCompletionSource<bool> TimerCompletionSource { get; set; }
+        private CancellationTokenSource cancellationTokenSource;
 
         private void OnValidate()
         {
@@ -32,6 +38,7 @@ namespace OcentraAI.LLMGames.ThreeCardBrag.Players
         {
             Init();
         }
+
         private void Init()
         {
             Image = GetComponent<Image>();
@@ -40,40 +47,66 @@ namespace OcentraAI.LLMGames.ThreeCardBrag.Players
             BackgroundImage = transform.FindChildRecursively<Image>(nameof(BackgroundImage));
         }
 
-        public void StartTimer(float duration)
+        public void SetPlayer(Player player)
         {
-            if (timerCoroutine != null)
-            {
-                StopCoroutine(timerCoroutine);
-            }
-            timerCoroutine = StartCoroutine(TimerCoroutine(duration));
+            Player = player;
         }
 
-        private IEnumerator TimerCoroutine(float duration)
+        public async Task StartTimer()
         {
-            float elapsedTime = 0f;
+            Show(true, nameof(StartTimer));
+            RemainingTime = Duration;
+            TimerCompletionSource = new TaskCompletionSource<bool>();
+            cancellationTokenSource = new CancellationTokenSource();
 
-            while (elapsedTime < duration)
+            try
             {
-                float remainingTime = duration - elapsedTime;
-                if (TurnCountdownText != null) TurnCountdownText.text = $"{remainingTime}";
-                if (CircleImage != null) CircleImage.fillAmount = remainingTime / duration;
+                while (RemainingTime > 0)
+                {
+                    UpdateDisplay();
+                    await Task.Yield(); 
+                    RemainingTime = Mathf.Max(0, RemainingTime - Time.deltaTime);
+                }
 
-                elapsedTime += Time.deltaTime;
-                yield return null;
+                UpdateDisplay();
+                TimerCompletionSource.TrySetResult(true);
             }
-
-            if (TurnCountdownText != null) TurnCountdownText.text = "0";
-            if (CircleImage != null) CircleImage.fillAmount = 0f;
-
-            timerCoroutine = null;
+            catch (TaskCanceledException)
+            {
+                // Handle cancellation
+            }
         }
 
-        public void Show(bool show)
+        public void StopTimer()
         {
-            if (TurnCountdownText != null) TurnCountdownText.gameObject.SetActive(show);
-            if (CircleImage != null) CircleImage.gameObject.SetActive(show);
-            if (BackgroundImage != null) BackgroundImage.gameObject.SetActive(show);
+            Show(false, nameof(StopTimer));
+            cancellationTokenSource.Cancel();
+            TimerCompletionSource?.TrySetResult(false);
+            ResetTimer();
+        }
+
+        public Task<bool> WaitForCompletion()
+        {
+            return TimerCompletionSource?.Task ?? Task.FromResult(true);
+        }
+
+        private void UpdateDisplay()
+        {
+            if (TurnCountdownText != null) TurnCountdownText.text = $"{RemainingTime:F1}";
+            if (CircleImage != null) CircleImage.fillAmount = RemainingTime / Duration;
+        }
+
+        private void ResetTimer()
+        {
+            RemainingTime = Duration;
+            UpdateDisplay();
+        }
+
+        public void Show(bool show, string fromMethod)
+        {
+            if (TurnCountdownText != null) TurnCountdownText.enabled = show;
+            if (CircleImage != null) CircleImage.enabled = show;
+            if (BackgroundImage != null) BackgroundImage.enabled = show;
             if (Image != null) Image.enabled = show;
         }
     }

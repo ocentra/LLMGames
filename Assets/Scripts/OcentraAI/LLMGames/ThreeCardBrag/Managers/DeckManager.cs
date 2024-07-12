@@ -126,7 +126,8 @@ namespace OcentraAI.LLMGames.ThreeCardBrag.Manager
         public void Reset()
         {
             InitializeDeck();
-
+            SwapCard = null;
+            TrumpCard = null;
         }
 
         public void SetSwapCard(Card card)

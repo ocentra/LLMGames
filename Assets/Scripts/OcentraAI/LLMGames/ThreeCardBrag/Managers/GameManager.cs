@@ -201,7 +201,7 @@ namespace OcentraAI.LLMGames.ThreeCardBrag.Manager
         private async Task PlayerTurnAsync(Player currentPlayer)
         {
             CurrentTurn = new TurnInfo(currentPlayer);
-            Debug.Log($"PlayerTurnAsync started for: {currentPlayer.PlayerName}");
+          //  Debug.Log($"PlayerTurnAsync started for: {currentPlayer.PlayerName}");
 
             RaiseGameEvent($"{CurrentTurn.CurrentPlayer.PlayerName}'s turn started", GameState.WaitingForPlayerAction);
 

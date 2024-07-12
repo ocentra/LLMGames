@@ -203,14 +203,7 @@ namespace OcentraAI.LLMGames.ThreeCardBrag.UI.Controllers
             await TakeActionAsync(PlayerAction.PlayBlind);
         }
 
-        public void OnDiscardCardSet(CardView cardView)
-        {
-            if (DeckManager != null)
-            {
-                Card card = cardView.Card;
-                DeckManager.SetSwapCard(card);
-            }
-        }
+
 
         public async Task OnPickFromFloor()
         {
@@ -469,10 +462,7 @@ namespace OcentraAI.LLMGames.ThreeCardBrag.UI.Controllers
             return ActionCompletionSource.Task;
         }
 
-        public void ActivateDiscardCard(bool activate)
-        {
-            // Discard buttons or functionality
-        }
+
 
         public void UpdateComputerHandDisplay(bool isRoundEnd = false)
         {

@@ -1,3 +1,5 @@
+using OcentraAI.LLMGames.ThreeCardBrag.Manager;
+using OcentraAI.LLMGames.ThreeCardBrag.Players;
 using OcentraAI.LLMGames.ThreeCardBrag.UI.Controllers;
 using Sirenix.OdinInspector;
 using UnityEngine;
@@ -12,6 +14,9 @@ namespace OcentraAI.LLMGames.ThreeCardBrag.UI
 
         [ShowInInspector, Required]
         private UIController UIController { get; set; }
+
+
+
         void OnValidate()
         {
             Init();
@@ -26,15 +31,15 @@ namespace OcentraAI.LLMGames.ThreeCardBrag.UI
         {
             CardView = GetComponent<CardView>();
             UIController = FindObjectOfType<UIController>();
-
         }
 
         public void OnDrop(PointerEventData eventData)
         {
-            CardView cardView = eventData.pointerDrag.GetComponent<CardView>();
-            if (cardView != null)
+            Draggable draggable = eventData.pointerDrag.GetComponent<Draggable>();
+            if (draggable != null)
             {
-                UIController.OnDiscardCardSet(cardView);
+                GameManager.Instance.DeckManager.SetSwapCard(CardView.Card);
+
             }
         }
     }

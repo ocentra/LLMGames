@@ -48,7 +48,7 @@ namespace OcentraAI.LLMGames.ThreeCardBrag.UI.Controllers
             FloorCardsHolder = transform.FindChildRecursively<Transform>(nameof(FloorCardsHolder));
             FloorCardsGrid = FloorCardsHolder.GetComponent<GridLayoutGroup>();
             ShowAllFloorCards = transform.FindChildRecursively<Button>(nameof(ShowAllFloorCards));
-
+            FloorCards = new List<GameObject>();
             CardViewPrefab = Resources.Load<GameObject>($"Prefabs/{nameof(CardViewPrefab)}");
             CollapsePanel();
         }
@@ -66,10 +66,9 @@ namespace OcentraAI.LLMGames.ThreeCardBrag.UI.Controllers
                     newCardView.SetActive(true);
                     newCardView.UpdateCardView();
 
-                    for (int i = 0; i < FloorCards.Count; i++)
-                    {
-                        FloorCards[i].transform.SetSiblingIndex(i);
-                    }
+                    FloorCards.Insert(0, newCardViewObject);
+
+                    newCardViewObject.transform.SetSiblingIndex(0);
 
                     if (!IsExpanded && FloorCards.Count > 8)
                     {
@@ -79,15 +78,16 @@ namespace OcentraAI.LLMGames.ThreeCardBrag.UI.Controllers
                         }
                     }
                 }
-
-                FloorCards.Insert(0, newCardViewObject);
-
+                else
+                {
+                    Destroy(newCardViewObject);
+                    Debug.LogError("Failed to find CardView component in the instantiated prefab.");
+                }
             }
             else
             {
-                Debug.LogError($" error adding cards CardViewPrefab null ? {CardViewPrefab == null} FloorCardsHolder null ? {FloorCardsHolder == null}");
+                Debug.LogError($"Error adding cards. CardViewPrefab null? {CardViewPrefab == null} FloorCardsHolder null? {FloorCardsHolder == null}");
             }
-
         }
 
         [Button]

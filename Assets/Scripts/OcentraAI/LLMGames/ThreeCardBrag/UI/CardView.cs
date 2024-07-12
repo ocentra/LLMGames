@@ -8,15 +8,15 @@ namespace OcentraAI.LLMGames.ThreeCardBrag.UI
 {
     public class CardView : MonoBehaviour
     {
-        [ShowInInspector] 
+        [ShowInInspector]
         public Image CardImage { get; private set; }
-        
+
         [ShowInInspector]
         public Card Card { get; private set; }
-        
+
         [ShowInInspector]
         private Transform Parent { get; set; }
-        
+
 
 
         void OnValidate()
@@ -29,9 +29,10 @@ namespace OcentraAI.LLMGames.ThreeCardBrag.UI
             Init();
         }
 
-        private void Init()
+        public void Init()
         {
-            if (CardImage == null )
+
+            if (CardImage == null)
             {
                 CardImage = GetComponent<Image>();
             }
@@ -54,8 +55,12 @@ namespace OcentraAI.LLMGames.ThreeCardBrag.UI
 
         public void UpdateCardView()
         {
+            if (CardImage == null)
+            {
+                CardImage = GetComponent<Image>();
+            }
 
-            if (Card != null && Card.Sprite != null )
+            if (Card != null && Card.Sprite != null && CardImage != null)
             {
                 CardImage.sprite = Card.Sprite;
             }
@@ -67,9 +72,13 @@ namespace OcentraAI.LLMGames.ThreeCardBrag.UI
 
         public void SetActive(bool value)
         {
-            
+
             gameObject.SetActive(value);
-            Parent.gameObject.SetActive(value);
+            if (Parent != null)
+            {
+                Parent.gameObject.SetActive(value);
+
+            }
         }
 
 

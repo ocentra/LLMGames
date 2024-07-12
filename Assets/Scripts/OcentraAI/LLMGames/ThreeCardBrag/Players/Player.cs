@@ -1,3 +1,4 @@
+using OcentraAI.LLMGames.LLMServices;
 using OcentraAI.LLMGames.Scriptable;
 using OcentraAI.LLMGames.Scriptable.ScriptableSingletons;
 using OcentraAI.LLMGames.ThreeCardBrag.Manager;
@@ -76,31 +77,10 @@ namespace OcentraAI.LLMGames.ThreeCardBrag.Players
             if (floorCard != null && swapCard != null)
             {
                 DeckManager.AddToFloorCardList(swapCard);
-
-                int swapCardIndex = -1;
-                for (int i = 0; i < Hand.Count; i++)
-                {
-                    if (Hand[i] == swapCard)
-                    {
-                        swapCardIndex = i;
-                        break;
-                    }
-                }
-
-                if (swapCardIndex >= 0)
-                {
-                    Hand[swapCardIndex] = floorCard;
-                }
-                else
-                {
-                    Debug.LogError($" no card matches swapCard {swapCard.Suit} of {swapCard.Rank} in hand");
-                    return;
-                }
-
+                SetSwapCard(swapCard, floorCard);
                 DeckManager.SetFloorCard(null);
                 DeckManager.SetSwapCard(null);
-
-
+                
                 GameManager.Instance.UIController.UpdateGameState();
             }
         }
@@ -117,9 +97,9 @@ namespace OcentraAI.LLMGames.ThreeCardBrag.Players
         public int CalculateHandValue()
         {
             int handValue = Hand.Sum(card => card.GetRankValue());
-            var bonusRules = GameInfo.Instance.BonusRules;
+            BaseBonusRule[] bonusRules = GameInfo.Instance.BonusRules;
 
-            foreach (var rule in bonusRules)
+            foreach (BaseBonusRule rule in bonusRules)
             {
                 if (rule.Evaluate(Hand))
                 {
@@ -137,7 +117,7 @@ namespace OcentraAI.LLMGames.ThreeCardBrag.Players
 
         public virtual void ShowHand(bool isRoundEnd = false)
         {
-            foreach (var card in Hand)
+            foreach (Card card in Hand)
             {
                // Debug.Log($"{PlayerName}'s card: {card.Rank} of {card.Suit}");
             }
@@ -155,6 +135,18 @@ namespace OcentraAI.LLMGames.ThreeCardBrag.Players
         {
             Coins += amount;
             OnCoinsChanged?.Invoke();
+        }
+
+        public void SetSwapCard(Card swapCard,Card floorCard)
+        {
+            for (int index = 0; index < Hand.Count; index++)
+            {
+                Card cardInHand = Hand[index];
+                if (cardInHand.Suit == swapCard.Suit && cardInHand.Rank == swapCard.Rank)
+                {
+                    Hand[index] = floorCard;
+                }
+            }
         }
     }
 }

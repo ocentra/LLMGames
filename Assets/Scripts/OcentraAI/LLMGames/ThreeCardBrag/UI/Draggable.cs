@@ -1,3 +1,4 @@
+using OcentraAI.LLMGames.ThreeCardBrag.Manager;
 using OcentraAI.LLMGames.ThreeCardBrag.UI.Controllers;
 using Sirenix.OdinInspector;
 using UnityEngine;
@@ -5,14 +6,13 @@ using UnityEngine.EventSystems;
 
 namespace OcentraAI.LLMGames.ThreeCardBrag.UI
 {
+    [RequireComponent(typeof(CanvasGroup))]
     public class Draggable : MonoBehaviour, IBeginDragHandler, IDragHandler, IEndDragHandler
     {
         [ShowInInspector, Required]
-
         private CanvasGroup CanvasGroup { get; set; }
 
         [ShowInInspector, Required]
-
         private Vector2 OriginalPosition { get; set; }
 
         [ShowInInspector, Required]
@@ -21,6 +21,8 @@ namespace OcentraAI.LLMGames.ThreeCardBrag.UI
         [ShowInInspector, Required]
         private UIController UIController { get; set; }
 
+        [ShowInInspector, Required]
+        public CardView CardView { get; set; }
 
         void OnValidate()
         {
@@ -34,12 +36,20 @@ namespace OcentraAI.LLMGames.ThreeCardBrag.UI
 
         private void Init()
         {
-            CanvasGroup = FindObjectOfType<CanvasGroup>();
-            RectTransform = GetComponent<RectTransform>();
-            UIController = FindObjectOfType<UIController>();
+            if (RectTransform == null)
+                RectTransform = GetComponent<RectTransform>();
 
+            if (CanvasGroup == null)
+                CanvasGroup = GetComponent<CanvasGroup>();
+
+            if (UIController == null)
+                UIController = FindObjectOfType<UIController>();
+
+            if (CardView == null)
+            {
+                CardView = GetComponentInChildren<CardView>();
+            }
         }
-
 
         public async void OnBeginDrag(PointerEventData eventData)
         {
@@ -50,18 +60,15 @@ namespace OcentraAI.LLMGames.ThreeCardBrag.UI
 
         public void OnDrag(PointerEventData eventData)
         {
-            RectTransform.anchoredPosition += eventData.delta / RectTransform.localScale;
+            RectTransform.anchoredPosition += eventData.delta / RectTransform.localScale.x;
         }
 
         public void OnEndDrag(PointerEventData eventData)
         {
             CanvasGroup.blocksRaycasts = true;
-            if (eventData.pointerEnter == null || eventData.pointerEnter.GetComponent<DropZone>() == null)
-            {
-                RectTransform.anchoredPosition = OriginalPosition;
-            }
+            RectTransform.anchoredPosition = OriginalPosition;
 
-            //  UIController.OnEndPickFromFloor();
+
         }
     }
 }

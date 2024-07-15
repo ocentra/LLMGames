@@ -118,6 +118,7 @@
     <Compile Include="Assets\Scripts\OcentraAI\LLMGames\ThreeCardBrag\UI\Draggable.cs" />
     <Compile Include="Assets\Scripts\OcentraAI\LLMGames\Extensions\TransformExtensions.cs" />
     <Compile Include="Assets\Scripts\OcentraAI\LLMGames\GameScreens\UIScreen.cs" />
+    <Compile Include="Assets\Scripts\OcentraAI\LLMGames\ThreeCardBrag\Scores\NewGameEventArgs.cs" />
     <Compile Include="Assets\Scripts\OcentraAI\LLMGames\ThreeCardBrag\Players\ComputerPlayer.cs" />
     <Compile Include="Assets\Scripts\OcentraAI\LLMGames\Utilities\CustomGlobalConfigUtility.cs" />
     <Compile Include="Assets\Scripts\OcentraAI\LLMGames\LLMServices\ILLMService.cs" />
@@ -126,6 +127,7 @@
     <Compile Include="Assets\Scripts\OcentraAI\LLMGames\LLMServices\Result.cs" />
     <Compile Include="Assets\Scripts\OcentraAI\LLMGames\Authentication\UnityServicesManager.cs" />
     <Compile Include="Assets\Scripts\OcentraAI\LLMGames\ThreeCardBrag\UI\BragSelectable.cs" />
+    <Compile Include="Assets\Scripts\OcentraAI\LLMGames\Utilities\EventBus.cs" />
     <Compile Include="Assets\Scripts\OcentraAI\LLMGames\Utilities\CustomGlobalConfigAttribute.cs" />
   </ItemGroup>
   <ItemGroup>

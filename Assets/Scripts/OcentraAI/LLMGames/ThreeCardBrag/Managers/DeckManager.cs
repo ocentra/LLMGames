@@ -1,5 +1,7 @@
 using OcentraAI.LLMGames.Scriptable;
 using OcentraAI.LLMGames.Scriptable.ScriptableSingletons;
+using OcentraAI.LLMGames.ThreeCardBrag.Events;
+using OcentraAI.LLMGames.Utilities;
 using Sirenix.OdinInspector;
 using System.Collections.Generic;
 using UnityEngine;
@@ -27,10 +29,7 @@ namespace OcentraAI.LLMGames.ThreeCardBrag.Manager
         public int FloorCardsCount => FloorCards.Count;
 
         [ShowInInspector]
-        public Card FloorCard { get; private set; }
-
-        [ShowInInspector]
-        public Card SwapCard { get; private set; }
+        public Card FloorCard { get; set; }
 
         [ShowInInspector]
         public Card TrumpCard { get; private set; }
@@ -44,10 +43,12 @@ namespace OcentraAI.LLMGames.ThreeCardBrag.Manager
 
 
 
-        public void SetFloorCard(Card card)
+        public void OnSetFloorCard(SetFloorCard e)
         {
-            FloorCard = card;
+            FloorCard = e.SetNull ? null : DrawCard();
+            EventBus.Publish(new UpdateFloorCard(FloorCard));
         }
+
 
         public void InitializeDeck()
         {
@@ -76,16 +77,15 @@ namespace OcentraAI.LLMGames.ThreeCardBrag.Manager
             return card;
         }
 
-        public void AddToFloorCardList(Card card)
+        public void OnSetFloorCardList(AddToFloorCardList e)
         {
-            if (!FloorCards.Contains(card))
+            if (!FloorCards.Contains(e.Card))
             {
-                FloorCards.Add(card);
-                GameManager.Instance.UIController.UpdateFloorCards(card);
-
+                FloorCards.Add(e.Card);
+                EventBus.Publish(new UpdateFloorCardList(e.Card));
             }
-
         }
+
 
         public void SetRandomTrumpCard()
         {
@@ -126,13 +126,11 @@ namespace OcentraAI.LLMGames.ThreeCardBrag.Manager
         public void Reset()
         {
             InitializeDeck();
-            SwapCard = null;
             TrumpCard = null;
         }
 
-        public void SetSwapCard(Card card)
-        {
-            SwapCard = card;
-        }
+
+
+
     }
 }

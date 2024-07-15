@@ -1,22 +1,30 @@
-using OcentraAI.LLMGames.ThreeCardBrag.Manager;
+using OcentraAI.LLMGames.Scriptable;
+using OcentraAI.LLMGames.ThreeCardBrag.Events;
+using OcentraAI.LLMGames.Utilities;
 
 namespace OcentraAI.LLMGames.ThreeCardBrag.Players
 {
     public class HumanPlayer : Player
     {
-
-
         public override void SeeHand()
         {
             base.SeeHand();
-            GameManager.Instance.UIController.UpdateHumanPlayerHandDisplay();
+            EventBus.Publish(new UpdatePlayerHandDisplay(this));
+            ShowHand();
         }
 
         public override void ShowHand(bool isRoundEnd=false)
         {
             base.ShowHand(isRoundEnd);
-            GameManager.Instance.UIController.UpdateHumanPlayerHandDisplay(isRoundEnd);
+            EventBus.Publish(new UpdatePlayerHandDisplay(this));
         }
-        
+
+        public override void PickAndSwap(Card floorCard, Card swapCard)
+        {
+            base.PickAndSwap(floorCard, swapCard);
+            EventBus.Publish(new UpdatePlayerHandDisplay(this));
+
+        }
+
     }
 }

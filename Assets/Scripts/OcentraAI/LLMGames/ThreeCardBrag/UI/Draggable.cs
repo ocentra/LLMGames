@@ -51,11 +51,11 @@ namespace OcentraAI.LLMGames.ThreeCardBrag.UI
             }
         }
 
-        public async void OnBeginDrag(PointerEventData eventData)
+        public void OnBeginDrag(PointerEventData eventData)
         {
             OriginalPosition = RectTransform.anchoredPosition;
             CanvasGroup.blocksRaycasts = false;
-            await UIController.OnPickFromFloor();
+            UIController.OnPickFromFloor();
         }
 
         public void OnDrag(PointerEventData eventData)

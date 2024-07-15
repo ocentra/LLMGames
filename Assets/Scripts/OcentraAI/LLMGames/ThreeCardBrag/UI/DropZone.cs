@@ -1,6 +1,9 @@
+using OcentraAI.LLMGames.Scriptable;
+using OcentraAI.LLMGames.ThreeCardBrag.Events;
 using OcentraAI.LLMGames.ThreeCardBrag.Manager;
 using OcentraAI.LLMGames.ThreeCardBrag.Players;
 using OcentraAI.LLMGames.ThreeCardBrag.UI.Controllers;
+using OcentraAI.LLMGames.Utilities;
 using Sirenix.OdinInspector;
 using UnityEngine;
 using UnityEngine.EventSystems;
@@ -36,9 +39,10 @@ namespace OcentraAI.LLMGames.ThreeCardBrag.UI
         public void OnDrop(PointerEventData eventData)
         {
             Draggable draggable = eventData.pointerDrag.GetComponent<Draggable>();
+
             if (draggable != null)
             {
-                GameManager.Instance.DeckManager.SetSwapCard(CardView.Card);
+                EventBus.Publish(new PlayerActionPickAndSwap(typeof(HumanPlayer), pickCard: draggable.CardView.Card,swapCard: CardView.Card));
 
             }
         }

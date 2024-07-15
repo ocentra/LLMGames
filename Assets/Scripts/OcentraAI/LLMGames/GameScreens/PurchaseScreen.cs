@@ -65,7 +65,7 @@ namespace OcentraAI.LLMGames.Screens
 
         private void UpdateCurrentCoins()
         {
-            CurrentCoinsText.text = $"Current Coins: {GameManager.Instance.HumanPlayer.Coins}";
+           // CurrentCoinsText.text = $"Current Coins: {GameManager.Instance.HumanPlayer.Coins}";
         }
 
         private void AuthenticateUser()

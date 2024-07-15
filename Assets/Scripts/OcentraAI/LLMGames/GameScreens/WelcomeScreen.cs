@@ -1,6 +1,5 @@
 using OcentraAI.LLMGames.Extensions;
 using OcentraAI.LLMGames.Scriptable.ScriptableSingletons;
-using OcentraAI.LLMGames.ThreeCardBrag.Manager;
 using Sirenix.OdinInspector;
 using System.Collections;
 using TMPro;

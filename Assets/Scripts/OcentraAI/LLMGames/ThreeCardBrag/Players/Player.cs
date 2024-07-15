@@ -1,18 +1,17 @@
 using OcentraAI.LLMGames.LLMServices;
 using OcentraAI.LLMGames.Scriptable;
 using OcentraAI.LLMGames.Scriptable.ScriptableSingletons;
-using OcentraAI.LLMGames.ThreeCardBrag.Manager;
+using OcentraAI.LLMGames.ThreeCardBrag.Events;
+using OcentraAI.LLMGames.Utilities;
 using Sirenix.OdinInspector;
-using System;
 using System.Collections.Generic;
 using System.Linq;
-using UnityEngine;
 
 namespace OcentraAI.LLMGames.ThreeCardBrag.Players
 {
     public class Player
     {
-        private DeckManager DeckManager => GameManager.Instance.DeckManager;
+
 
         [ShowInInspector, ReadOnly]
         public string PlayerName { get; private set; }
@@ -26,14 +25,7 @@ namespace OcentraAI.LLMGames.ThreeCardBrag.Players
         [ShowInInspector, ReadOnly]
         public bool HasBetOnBlind { get; private set; } = true;
 
-        public event Action<PlayerAction> OnActionTaken;
-        public event Action OnCoinsChanged;
-
-        public void TakeAction(PlayerAction action)
-        {
-            GameManager.Instance.UIController.ShowMessage($"Player {PlayerName} Took Action {action}", 5f);
-            OnActionTaken?.Invoke(action);
-        }
+        protected Card FloorCard { get;  set; } 
 
         public virtual void SetName(string playerName)
         {
@@ -45,17 +37,17 @@ namespace OcentraAI.LLMGames.ThreeCardBrag.Players
         public virtual void SeeHand()
         {
             HasSeenHand = true;
-            ShowHand();
         }
 
-        public virtual void Bet()
+        public virtual void Bet(int amount)
         {
-            AdjustCoins(-GameManager.Instance.CurrentBet);
+            AdjustCoins(-amount);
+
         }
 
-        public virtual void Raise()
+        public virtual void Raise(int amount)
         {
-            AdjustCoins(-GameManager.Instance.CurrentBet);
+            AdjustCoins(-amount);
         }
 
         public virtual void Fold()
@@ -65,33 +57,30 @@ namespace OcentraAI.LLMGames.ThreeCardBrag.Players
 
         public virtual void DrawFromDeck()
         {
-            DeckManager.SetFloorCard(DeckManager.DrawCard());
-            GameManager.Instance.UIController.UpdateFloorCard();
+            EventBus.Publish(new SetFloorCard());
         }
 
-        public virtual void PickAndSwap()
+        public virtual void PickAndSwap(Card floorCard, Card swapCard)
         {
-            Card floorCard = DeckManager.FloorCard;
-            Card swapCard = DeckManager.SwapCard;
-
             if (floorCard != null && swapCard != null)
             {
-                DeckManager.AddToFloorCardList(swapCard);
-                SetSwapCard(swapCard, floorCard);
-                DeckManager.SetFloorCard(null);
-                DeckManager.SetSwapCard(null);
-                
-                GameManager.Instance.UIController.UpdateGameState();
+                EventBus.Publish(new AddToFloorCardList(swapCard));
+
+                SwapCard(swapCard, floorCard);
+
+                EventBus.Publish(new SetFloorCard(true));
             }
         }
 
 
 
 
-        public virtual void BetOnBlind()
+        public virtual void BetOnBlind(int amount)
         {
-            AdjustCoins(-GameManager.Instance.CurrentBet);
+            AdjustCoins(-amount);
             HasBetOnBlind = true;
+            EventBus.Publish(new ActionCompletedEventArgs(false));
+
         }
 
         public int CalculateHandValue()
@@ -119,9 +108,12 @@ namespace OcentraAI.LLMGames.ThreeCardBrag.Players
         {
             foreach (Card card in Hand)
             {
-               // Debug.Log($"{PlayerName}'s card: {card.Rank} of {card.Suit}");
+                // Debug.Log($"{PlayerName}'s card: {card.Rank} of {card.Suit}");
             }
             //Debug.Log($"{PlayerName}'s hand value: {CalculateHandValue()}");
+
+            EventBus.Publish(new ActionCompletedEventArgs(false));
+
         }
 
         public void ResetForNewRound()
@@ -134,10 +126,12 @@ namespace OcentraAI.LLMGames.ThreeCardBrag.Players
         public void AdjustCoins(int amount)
         {
             Coins += amount;
-            OnCoinsChanged?.Invoke();
+
+            EventBus.Publish(new ActionCompletedEventArgs(false));
+
         }
 
-        public void SetSwapCard(Card swapCard,Card floorCard)
+        public void SwapCard(Card swapCard, Card floorCard)
         {
             for (int index = 0; index < Hand.Count; index++)
             {
@@ -147,6 +141,9 @@ namespace OcentraAI.LLMGames.ThreeCardBrag.Players
                     Hand[index] = floorCard;
                 }
             }
+
+            EventBus.Publish(new ActionCompletedEventArgs(false));
+
         }
     }
 }

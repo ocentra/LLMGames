@@ -1,6 +1,6 @@
 using OcentraAI.LLMGames.Scriptable;
-using OcentraAI.LLMGames.ThreeCardBrag.Manager;
-using OcentraAI.LLMGames.ThreeCardBrag.UI.Controllers;
+using OcentraAI.LLMGames.ThreeCardBrag.Events;
+using OcentraAI.LLMGames.Utilities;
 using System.Linq;
 using System.Threading.Tasks;
 using UnityEngine;
@@ -9,7 +9,6 @@ namespace OcentraAI.LLMGames.ThreeCardBrag.Players
 {
     public class ComputerPlayer : Player
     {
-        private Card FloorCard => GameManager.Instance.DeckManager.FloorCard;
 
         public async void MakeDecision(int currentBet)
         {
@@ -26,14 +25,13 @@ namespace OcentraAI.LLMGames.ThreeCardBrag.Players
             {
                 if (Random.value > 0.5f)
                 {
-                    TakeAction(PlayerAction.SeeHand);
+                    EventBus.Publish(new PlayerActionEvent(GetType(), PlayerAction.SeeHand));
+
                     await SimulateThinkingAndMakeDecision();
-                    GameManager.Instance.UIController.SetComputerSeenHand(true);
                 }
                 else
                 {
-                    TakeAction(PlayerAction.PlayBlind);
-                    GameManager.Instance.UIController.ActionCompletionSource.SetResult(true);
+                    EventBus.Publish(new PlayerActionEvent(GetType(), PlayerAction.PlayBlind));
                 }
                 return;
             }
@@ -42,11 +40,21 @@ namespace OcentraAI.LLMGames.ThreeCardBrag.Players
 
             if (handValue >= 50)
             {
-                TakeAction(PlayerAction.Show);
+                EventBus.Publish(new PlayerActionEvent(GetType(), PlayerAction.Show));
+
             }
             else if (handValue >= 25)
             {
-                TakeAction(Random.value > 0.5f ? PlayerAction.Bet : PlayerAction.Raise);
+                if (Random.value > 0.5f)
+                {
+                    EventBus.Publish(new PlayerActionEvent(GetType(), PlayerAction.Bet));
+
+                }
+                else
+                {
+                    EventBus.Publish(new PlayerActionRaiseBet(typeof(HumanPlayer), (-1).ToString()));
+                }
+
             }
             else
             {
@@ -58,21 +66,22 @@ namespace OcentraAI.LLMGames.ThreeCardBrag.Players
 
                     if (floorCardValue > worstCardValue)
                     {
-                        GameManager.Instance.DeckManager.SetSwapCard(Hand[worstCardIndex]);
-                        TakeAction(PlayerAction.PickAndSwap);
+                        EventBus.Publish(new PlayerActionPickAndSwap(GetType(), FloorCard, Hand[worstCardIndex]));
+
                     }
                     else
                     {
-                        TakeAction(PlayerAction.DrawFromDeck);
+                        EventBus.Publish(new PlayerActionEvent(GetType(), PlayerAction.DrawFromDeck));
+
                     }
                 }
                 else
                 {
-                    TakeAction(PlayerAction.DrawFromDeck);
+                    EventBus.Publish(new PlayerActionEvent(GetType(), PlayerAction.DrawFromDeck));
+
                 }
             }
 
-            GameManager.Instance.UIController.ActionCompletionSource.SetResult(true);
         }
 
         private int FindWorstCardIndex()
@@ -80,26 +89,27 @@ namespace OcentraAI.LLMGames.ThreeCardBrag.Players
             return Hand.FindIndex(c => c.GetRankValue() == Hand.Min(card => card.GetRankValue()));
         }
 
-        public override void Raise()
-        {
-            float randomMultiplier = Random.Range(0.25f, 3f);
-            // because raise have to be double + if just doubble its normal bet!
-            int newBet = (int)(GameManager.Instance.CurrentBet * 2 + GameManager.Instance.CurrentBet * randomMultiplier);
 
-            GameManager.Instance.SetCurrentBet(newBet);
-            base.Raise();
-        }
 
         public override void SeeHand()
         {
             base.SeeHand();
-            // Don't trigger UI update for computer's hand
+            EventBus.Publish(new UpdatePlayerHandDisplay(this));
+
         }
 
         public override void ShowHand(bool isRoundEnd = false)
         {
             base.ShowHand(isRoundEnd);
-            GameManager.Instance.UIController.UpdateComputerHandDisplay(isRoundEnd);
+            EventBus.Publish(new UpdatePlayerHandDisplay(this));
+
+        }
+
+        public override void PickAndSwap(Card floorCard, Card swapCard)
+        {
+            base.PickAndSwap(floorCard, swapCard);
+            EventBus.Publish(new UpdatePlayerHandDisplay(this));
+
         }
     }
 }

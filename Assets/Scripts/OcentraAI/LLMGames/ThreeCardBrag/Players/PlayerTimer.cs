@@ -1,6 +1,7 @@
 using OcentraAI.LLMGames.Extensions;
 using OcentraAI.LLMGames.ThreeCardBrag.Manager;
 using Sirenix.OdinInspector;
+using System;
 using System.Threading;
 using System.Threading.Tasks;
 using TMPro;
@@ -24,10 +25,10 @@ namespace OcentraAI.LLMGames.ThreeCardBrag.Players
         private Image Image { get; set; }
 
         private Player Player { get; set; }
-        private float Duration => GameManager.Instance.TurnDuration;
+        private float Duration { get; set; }
         private float RemainingTime { get; set; }
-        private TaskCompletionSource<bool> TimerCompletionSource { get; set; }
-        private CancellationTokenSource cancellationTokenSource;
+
+
 
         private void OnValidate()
         {
@@ -52,43 +53,52 @@ namespace OcentraAI.LLMGames.ThreeCardBrag.Players
             Player = player;
         }
 
-        public async Task StartTimer()
+
+
+        public async Task<bool> StartTimer(TaskCompletionSource<bool> actionCompletionSource, TaskCompletionSource<bool> timerCompletionSource, float duration)
         {
-            Show(true, nameof(StartTimer));
+            Show(true);
+            Duration = duration;
             RemainingTime = Duration;
-            TimerCompletionSource = new TaskCompletionSource<bool>();
-            cancellationTokenSource = new CancellationTokenSource();
+
 
             try
             {
                 while (RemainingTime > 0)
                 {
+                    if (timerCompletionSource.Task.IsCanceled || actionCompletionSource.Task.IsCompleted)
+                    {
+                        StopTimer();
+                        return false;
+                    }
+
                     UpdateDisplay();
-                    await Task.Yield(); 
+                    await Task.Yield();
                     RemainingTime = Mathf.Max(0, RemainingTime - Time.deltaTime);
                 }
 
-                UpdateDisplay();
-                TimerCompletionSource.TrySetResult(true);
+                StopTimer();
+                timerCompletionSource.TrySetResult(true);
+                return true;
             }
-            catch (TaskCanceledException)
+            catch (Exception ex)
             {
-                // Handle cancellation
+                timerCompletionSource.TrySetException(ex);
+                return false;
+            }
+            finally
+            {
+                StopTimer();
             }
         }
 
         public void StopTimer()
         {
-            Show(false, nameof(StopTimer));
-            cancellationTokenSource.Cancel();
-            TimerCompletionSource?.TrySetResult(false);
+            Show(false);
             ResetTimer();
         }
 
-        public Task<bool> WaitForCompletion()
-        {
-            return TimerCompletionSource?.Task ?? Task.FromResult(true);
-        }
+ 
 
         private void UpdateDisplay()
         {
@@ -102,12 +112,14 @@ namespace OcentraAI.LLMGames.ThreeCardBrag.Players
             UpdateDisplay();
         }
 
-        public void Show(bool show, string fromMethod)
+        public void Show(bool show, string fromMethod = "")
         {
             if (TurnCountdownText != null) TurnCountdownText.enabled = show;
             if (CircleImage != null) CircleImage.enabled = show;
             if (BackgroundImage != null) BackgroundImage.enabled = show;
             if (Image != null) Image.enabled = show;
         }
+
+
     }
 }

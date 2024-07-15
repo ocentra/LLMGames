@@ -1,10 +1,9 @@
-
-using UnityEngine;
-using UnityEngine.UI;
-using TMPro;
-using Sirenix.OdinInspector;
 using OcentraAI.LLMGames.Extensions;
-using OcentraAI.LLMGames.ThreeCardBrag.Manager;
+using OcentraAI.LLMGames.ThreeCardBrag.Events;
+using OcentraAI.LLMGames.Utilities;
+using Sirenix.OdinInspector;
+using TMPro;
+using Button = UnityEngine.UI.Button;
 
 namespace OcentraAI.LLMGames.Screens
 {
@@ -57,13 +56,13 @@ namespace OcentraAI.LLMGames.Screens
         private void UpdateScore()
         {
             // Implement score update logic here
-            ScoreText.text = $"Your Score: {GameManager.Instance.ScoreKeeper.HumanTotalWins}";
+            // ScoreText.text = $"Your Score: {GameManager.Instance.ScoreKeeper.HumanTotalWins}";
         }
 
-        private async void PlayAgain()
+        private void PlayAgain()
         {
             PlaySelectionSound();
-            await GameManager.Instance.StartNewGameAsync();
+            EventBus.Publish(new StartNewGame());
             HideScreen();
         }
 

@@ -8603,15 +8603,7 @@ MonoBehaviour:
   FloorCardsHolder: {fileID: 661500533}
   FloorCardsGrid: {fileID: 661500534}
   ShowAllFloorCards: {fileID: 1712479966}
-  FloorCards:
-  - {fileID: 0}
-  - {fileID: 0}
-  - {fileID: 0}
-  - {fileID: 0}
-  - {fileID: 0}
-  - {fileID: 0}
-  - {fileID: 0}
-  - {fileID: 0}
+  FloorCards: []
   MinHeight: 700
   MaxHeight: 50000
   IsExpanded: 0

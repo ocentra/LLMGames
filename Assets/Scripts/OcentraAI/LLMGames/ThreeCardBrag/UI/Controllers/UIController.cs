@@ -1,7 +1,6 @@
 using OcentraAI.LLMGames.Extensions;
 using OcentraAI.LLMGames.Scriptable;
 using OcentraAI.LLMGames.ThreeCardBrag.Events;
-using OcentraAI.LLMGames.ThreeCardBrag.Manager;
 using OcentraAI.LLMGames.ThreeCardBrag.Players;
 using OcentraAI.LLMGames.Utilities;
 using Sirenix.OdinInspector;
@@ -94,8 +93,13 @@ namespace OcentraAI.LLMGames.ThreeCardBrag.UI.Controllers
         private CardView[] HumanPlayerCardViews { get; set; }
 
         [Required, ShowInInspector]
+        private Image[] HumanPlayerCardHighlight { get; set; }
+
+        [Required, ShowInInspector]
         private CardView[] ComputerPlayerCardViews { get; set; }
 
+        [Required, ShowInInspector]
+        private Image[] ComputerPlayerCardHighlight { get; set; }
 
         [Required, ShowInInspector]
         public LeftPanelController LeftPanelController { get; set; }
@@ -123,7 +127,25 @@ namespace OcentraAI.LLMGames.ThreeCardBrag.UI.Controllers
             PurchaseCoins = transform.FindChildRecursively<Button>(nameof(PurchaseCoins));
 
             HumanPlayerCardViews = ShowPlayerHand.GetComponentsInChildren<CardView>();
+            HumanPlayerCardHighlight = new Image[HumanPlayerCardViews.Length];
+
+            for (int index = 0; index < HumanPlayerCardViews.Length; index++)
+            {
+                CardView cardView = HumanPlayerCardViews[index];
+                Image image = cardView.transform.FindChildRecursively<Image>();
+                HumanPlayerCardHighlight[index] = image;
+            }
+
             ComputerPlayerCardViews = ComputerHand.GetComponentsInChildren<CardView>();
+            ComputerPlayerCardHighlight = new Image[ComputerPlayerCardViews.Length];
+
+            for (int index = 0; index < ComputerPlayerCardViews.Length; index++)
+            {
+                CardView cardView = ComputerPlayerCardViews[index];
+                Image image = cardView.transform.FindChildRecursively<Image>();
+                ComputerPlayerCardHighlight[index] = image;
+            }
+
 
             FloorCardView = transform.FindChildRecursively<CardView>(nameof(FloorCardView));
             Message = transform.FindChildRecursively<TextMeshProUGUI>(nameof(Message));
@@ -260,10 +282,30 @@ namespace OcentraAI.LLMGames.ThreeCardBrag.UI.Controllers
             if (e.TurnInfo.CurrentPlayer is HumanPlayer)
             {
                 CurrentPlayerTimer = HumanPlayerTimer;
+
+                foreach (Image image in HumanPlayerCardHighlight)
+                {
+                    image.enabled = true;
+                }
+
+                foreach (Image image in ComputerPlayerCardHighlight)
+                {
+                    image.enabled = false;
+                }
             }
             else if (e.TurnInfo.CurrentPlayer is ComputerPlayer)
             {
                 CurrentPlayerTimer = ComputerPlayerTimer;
+
+                foreach (Image image in HumanPlayerCardHighlight)
+                {
+                    image.enabled = false;
+                }
+
+                foreach (Image image in ComputerPlayerCardHighlight)
+                {
+                    image.enabled = true;
+                }
             }
 
             CurrentPlayerTimer.StartTimer(e.TurnInfo);
@@ -353,12 +395,7 @@ namespace OcentraAI.LLMGames.ThreeCardBrag.UI.Controllers
             TakeActionAsync(PlayerAction.PlayBlind);
         }
 
-
-        public void OnPickFromFloor()
-        {
-            ShowMessage($"Drop the Card to Hand Card to discard, else Draw new card", 5f);
-        }
-
+        
         private void OnPlayerSeeHand()
         {
             ShowPlayerHand.enabled = false;

@@ -1,21 +1,3 @@
-// File: ContinueGame.cs
-
-using System;
-
-namespace OcentraAI.LLMGames.ThreeCardBrag.Events
-{
-    public class ContinueGame : EventArgs
-    {
-        public bool ShouldContinue { get; }
-        public ContinueGame(bool continueGame)
-        {
-            ShouldContinue = continueGame;
-        }
-    }
-}
-
-// ---
-
 // File: EventBus.cs
 
 using System;
@@ -143,6 +125,24 @@ namespace OcentraAI.LLMGames.ThreeCardBrag.Events
 
 // ---
 
+// File: PlayerActionContinueGame.cs
+
+using System;
+
+namespace OcentraAI.LLMGames.ThreeCardBrag.Events
+{
+    public class PlayerActionContinueGame : EventArgs
+    {
+        public bool ShouldContinue { get; }
+        public PlayerActionContinueGame(bool continueGame)
+        {
+            ShouldContinue = continueGame;
+        }
+    }
+}
+
+// ---
+
 // File: PlayerActionEvent.cs
 
 using OcentraAI.LLMGames.ThreeCardBrag.Players;
@@ -201,6 +201,24 @@ namespace OcentraAI.LLMGames.ThreeCardBrag.Events
         {
             CurrentPlayerType = currentPlayerType;
             Amount = amount;
+        }
+    }
+}
+
+// ---
+
+// File: PlayerActionStartNewGame.cs
+
+using System;
+
+namespace OcentraAI.LLMGames.ThreeCardBrag.Events
+{
+    public class PlayerActionStartNewGame : EventArgs
+    {
+
+        public PlayerActionStartNewGame()
+        {
+
         }
     }
 }
@@ -279,41 +297,6 @@ namespace OcentraAI.LLMGames.ThreeCardBrag.Events
         {
             SetNull = setNull;
         }
-    }
-}
-
-// ---
-
-// File: StartNewGame.cs
-
-using System;
-
-namespace OcentraAI.LLMGames.ThreeCardBrag.Events
-{
-    public class StartNewGame : EventArgs
-    {
-
-        public StartNewGame()
-        {
-
-        }
-    }
-}
-
-// ---
-
-// File: StopTurnCountdown.cs
-
-using System;
-
-namespace OcentraAI.LLMGames.ThreeCardBrag.Events
-{
-    public class StopTurnCountdown : EventArgs
-    {
-        public StopTurnCountdown()
-        {
-        }
-        
     }
 }
 
@@ -685,8 +668,8 @@ namespace OcentraAI.LLMGames.ThreeCardBrag.Manager
             globalCancellationTokenSource = new CancellationTokenSource();
             UnityEditor.EditorApplication.playModeStateChanged += OnPlayModeStateChanged;
 
-            EventBus.Subscribe<StartNewGame>(OnStartNewGame);
-            EventBus.Subscribe<ContinueGame>(OnContinueGame);
+            EventBus.Subscribe<PlayerActionStartNewGame>(OnPlayerActionStartNewGame);
+            EventBus.Subscribe<PlayerActionContinueGame>(OnPlayerActionContinueGame);
 
             EventBus.Subscribe<PlayerActionEvent>(OnPlayerAction);
             EventBus.Subscribe<PlayerActionRaiseBet>(OnPlayerActionRaiseBet);
@@ -703,8 +686,8 @@ namespace OcentraAI.LLMGames.ThreeCardBrag.Manager
             globalCancellationTokenSource?.Dispose();
             UnityEditor.EditorApplication.playModeStateChanged -= OnPlayModeStateChanged;
 
-            EventBus.Unsubscribe<StartNewGame>(OnStartNewGame);
-            EventBus.Unsubscribe<ContinueGame>(OnContinueGame);
+            EventBus.Unsubscribe<PlayerActionStartNewGame>(OnPlayerActionStartNewGame);
+            EventBus.Unsubscribe<PlayerActionContinueGame>(OnPlayerActionContinueGame);
 
             EventBus.Unsubscribe<PlayerActionEvent>(OnPlayerAction);
             EventBus.Unsubscribe<PlayerActionRaiseBet>(OnPlayerActionRaiseBet);
@@ -722,11 +705,11 @@ namespace OcentraAI.LLMGames.ThreeCardBrag.Manager
             await InitializeGameAsync();
         }
 
-        private async void OnStartNewGame(StartNewGame obj)
+        private async void OnPlayerActionStartNewGame(PlayerActionStartNewGame obj)
         {
             await StartNewGameAsync();
         }
-        private async void OnContinueGame(ContinueGame e)
+        private async void OnPlayerActionContinueGame(PlayerActionContinueGame e)
         {
 
             if (e.ShouldContinue)
@@ -735,7 +718,7 @@ namespace OcentraAI.LLMGames.ThreeCardBrag.Manager
             }
             else
             {
-                await EndGame();
+                await StartNewGameAsync();
             }
         }
 
@@ -775,6 +758,8 @@ namespace OcentraAI.LLMGames.ThreeCardBrag.Manager
                         SetCurrentBet(newBet);
                         CurrentTurn.CurrentPlayer.Raise(CurrentBet);
                         Pot += CurrentBet;
+                        CurrentTurn.ActionCompletionSource.TrySetResult(true);
+
                     }
                     else
                     {
@@ -936,7 +921,7 @@ namespace OcentraAI.LLMGames.ThreeCardBrag.Manager
 
             if (completedTask == CurrentTurn.ActionCompletionSource.Task)
             {
-                CurrentTurn.StopTurn(CurrentTurn.CurrentPlayer);
+                CurrentTurn.StopTurn();
             }
             else if (completedTask == CurrentTurn.TimerCompletionSource.Task)
             {
@@ -993,7 +978,7 @@ namespace OcentraAI.LLMGames.ThreeCardBrag.Manager
             }
 
            
-            CurrentTurn.StopTurn(CurrentTurn.CurrentPlayer);
+            CurrentTurn.StopTurn();
             EventBus.Publish(new UpdateGameState(this));
 
             SwitchTurn();
@@ -1043,7 +1028,7 @@ namespace OcentraAI.LLMGames.ThreeCardBrag.Manager
         private async Task Fold()
         {
             CurrentTurn.CurrentPlayer.Fold();
-            await EndRound(GetOtherPlayer(CurrentTurn.CurrentPlayer));
+            await EndRound(GetOtherPlayer(CurrentTurn.CurrentPlayer), false);
         }
 
         private async Task Show()
@@ -1100,16 +1085,17 @@ namespace OcentraAI.LLMGames.ThreeCardBrag.Manager
                 }
             }
 
-            await EndRound(winner);
+            await EndRound(winner, true);
         }
 
-        private async Task EndRound(Player winner)
+        private async Task EndRound(Player winner, bool showHand)
         {
-            EventBus.Publish(new StopTurnCountdown());
+           CurrentTurn.StopTurn();
             if (winner == null)
             {
-
-                ShowMessage("It's a tie! Play another round!", 5f);
+                HumanPlayer.ShowHand(true);
+                ComputerPlayer.ShowHand(true);
+                ShowMessage("It's a tie!", 5f);
             }
             else
             {
@@ -1122,11 +1108,11 @@ namespace OcentraAI.LLMGames.ThreeCardBrag.Manager
 
             if (HumanPlayer.Coins <= 0 || ComputerPlayer.Coins <= 0)
             {
-                await EndGame();
+                await EndGame(true);
             }
             else
             {
-                await CheckForContinuation();
+                await CheckForContinuation(showHand);
             }
 
 
@@ -1137,7 +1123,7 @@ namespace OcentraAI.LLMGames.ThreeCardBrag.Manager
             EventBus.Publish(new UIMessage(message, f));
         }
 
-        private async Task CheckForContinuation()
+        private async Task CheckForContinuation(bool showHand )
         {
             if (CurrentRound >= MaxRounds)
             {
@@ -1146,26 +1132,29 @@ namespace OcentraAI.LLMGames.ThreeCardBrag.Manager
 
                 if (trailingPlayer.Coins > leadingPlayer.Coins)
                 {
-                    EventBus.Publish(new StopTurnCountdown());
+                   CurrentTurn.StopTurn();
                     EventBus.Publish(new OfferContinuation(10));
-                    await Task.Delay(10000, globalCancellationTokenSource.Token);
-                    await EndGame();
+                    HumanPlayer.ShowHand(showHand);
+                    ComputerPlayer.ShowHand(showHand);
                 }
                 else
                 {
-                    await EndGame();
+                    await EndGame(showHand);
                 }
             }
             else
             {
-                EventBus.Publish(new OfferNewGame(10));
-
+                CurrentTurn.StopTurn();
+                EventBus.Publish(new OfferContinuation(10));
+                HumanPlayer.ShowHand(showHand);
+                ComputerPlayer.ShowHand(showHand);
             }
+  
         }
 
 
 
-        private async Task EndGame()
+        private async Task EndGame(bool showHand)
         {
             Player winner;
             if (HumanPlayer.Coins <= 0)
@@ -1186,7 +1175,8 @@ namespace OcentraAI.LLMGames.ThreeCardBrag.Manager
             }
 
             ShowMessage($"Game Over! {winner.PlayerName} wins the game!", 6f);
-
+            HumanPlayer.ShowHand(showHand);
+            ComputerPlayer.ShowHand(showHand);
 
             await Task.Delay(6000, globalCancellationTokenSource.Token);
 
@@ -1214,6 +1204,7 @@ namespace OcentraAI.LLMGames.ThreeCardBrag.Manager
 using OcentraAI.LLMGames.ThreeCardBrag.Events;
 using OcentraAI.LLMGames.Utilities;
 using System;
+using System.Threading;
 using System.Threading.Tasks;
 using UnityEngine;
 
@@ -1228,6 +1219,7 @@ namespace OcentraAI.LLMGames.ThreeCardBrag.Players
         public TaskCompletionSource<bool> TimerCompletionSource { get; set; }
         public float Duration { get; private set; }
         public float RemainingTime { get; private set; }
+        private CancellationTokenSource CancellationTokenSource { get; set; }
 
         public TurnInfo(Player currentPlayer, float duration)
         {
@@ -1237,17 +1229,16 @@ namespace OcentraAI.LLMGames.ThreeCardBrag.Players
             RemainingTime = Duration;
             ActionCompletionSource = new TaskCompletionSource<bool>();
             TimerCompletionSource = new TaskCompletionSource<bool>();
+            CancellationTokenSource = new CancellationTokenSource();
         }
 
         public void StartTurn()
         {
-
-
             ActionCompletionSource = new TaskCompletionSource<bool>();
             TimerCompletionSource = new TaskCompletionSource<bool>();
+            CancellationTokenSource = new CancellationTokenSource();
 
             StartTimer(CurrentPlayer);
-
         }
 
         public async void StartTimer(Player currentPlayer)
@@ -1259,14 +1250,13 @@ namespace OcentraAI.LLMGames.ThreeCardBrag.Players
             {
                 while (RemainingTime > 0)
                 {
-                    if (TimerCompletionSource.Task.IsCanceled || ActionCompletionSource.Task.IsCompleted)
+                    if (CancellationTokenSource.Token.IsCancellationRequested)
                     {
                         return;
                     }
                     await Task.Yield();
                     EventBus.Publish(playerStartCountDown);
                     RemainingTime = Mathf.Max(0, RemainingTime - Time.deltaTime);
-
                 }
                 TimerCompletionSource.TrySetResult(true);
             }
@@ -1276,15 +1266,16 @@ namespace OcentraAI.LLMGames.ThreeCardBrag.Players
             }
             finally
             {
-                StopTurn(currentPlayer);
+                StopTurn();
             }
         }
 
-        public void StopTurn(Player currentPlayer)
+        public void StopTurn()
         {
+            CancellationTokenSource.Cancel();
             ElapsedTime = 0f;
             RemainingTime = Duration;
-            EventBus.Publish(new PlayerStopCountDown(currentPlayer));
+            EventBus.Publish(new PlayerStopCountDown(CurrentPlayer));
         }
     }
 }
@@ -1304,25 +1295,23 @@ namespace OcentraAI.LLMGames.ThreeCardBrag.Players
 {
     public class ComputerPlayer : Player
     {
-
         public async Task MakeDecision(int currentBet)
         {
-            await SimulateThinkingAndMakeDecision();
+            await SimulateThinkingAndMakeDecision(currentBet);
         }
 
-        private async Task SimulateThinkingAndMakeDecision()
+        private async Task SimulateThinkingAndMakeDecision(int currentBet)
         {
             // Simulate thinking time
-            float thinkingTime = Random.Range(5f, 10f); // Random thinking time between 5 and 10 seconds
+            float thinkingTime = Random.Range(2f, 5f);
             await Task.Delay((int)(thinkingTime * 1000));
 
             if (!HasSeenHand)
             {
-                if (Random.value > 0.5f)
+                if (Random.value > 0.3f)
                 {
                     EventBus.Publish(new PlayerActionEvent(GetType(), PlayerAction.SeeHand));
-
-                    await SimulateThinkingAndMakeDecision();
+                    await SimulateThinkingAndMakeDecision(currentBet);
                 }
                 else
                 {
@@ -1335,80 +1324,121 @@ namespace OcentraAI.LLMGames.ThreeCardBrag.Players
 
             if (handValue >= 50)
             {
-                EventBus.Publish(new PlayerActionEvent(GetType(), PlayerAction.Show));
-
-            }
-            else if (handValue >= 25)
-            {
-                if (Random.value > 0.5f)
+                if (Random.value > 0.7f)
                 {
-                    EventBus.Publish(new PlayerActionEvent(GetType(), PlayerAction.Bet));
-
+                    EventBus.Publish(new PlayerActionEvent(GetType(), PlayerAction.Show));
                 }
                 else
                 {
-                    EventBus.Publish(new PlayerActionRaiseBet(typeof(HumanPlayer), (-1).ToString()));
+                    DecideOnBetOrRaise(currentBet, 0.8f);
                 }
-
             }
-            else
+            else if (handValue >= 25)
             {
-                if (FloorCard != null)
+                if (FloorCard != null && ShouldSwapCard())
                 {
-                    int worstCardIndex = FindWorstCardIndex();
-                    int worstCardValue = Hand[worstCardIndex].GetRankValue();
-                    int floorCardValue = FloorCard.GetRankValue();
-
-                    if (floorCardValue > worstCardValue)
-                    {
-                        EventBus.Publish(new PlayerActionPickAndSwap(GetType(), FloorCard, Hand[worstCardIndex]));
-
-                    }
-                    else
-                    {
-                        EventBus.Publish(new PlayerActionEvent(GetType(), PlayerAction.DrawFromDeck));
-
-                    }
+                    SwapWithFloorCard();
+                }
+                else if (Random.value > 0.4f)
+                {
+                    DecideOnBetOrRaise(currentBet, 0.6f);
                 }
                 else
                 {
                     EventBus.Publish(new PlayerActionEvent(GetType(), PlayerAction.DrawFromDeck));
-
+                    await HandleDrawnCard(currentBet);
                 }
             }
-
+            else
+            {
+                if (FloorCard != null && ShouldSwapCard())
+                {
+                    SwapWithFloorCard();
+                }
+                else if (FloorCard == null || Random.value > 0.7f)
+                {
+                    EventBus.Publish(new PlayerActionEvent(GetType(), PlayerAction.DrawFromDeck));
+                    await HandleDrawnCard(currentBet);
+                }
+                else
+                {
+                    EventBus.Publish(new PlayerActionEvent(GetType(), PlayerAction.Fold));
+                }
+            }
         }
 
-        private int FindWorstCardIndex()
+        private void DecideOnBetOrRaise(int currentBet, float raiseChance)
         {
-            return Hand.FindIndex(c => c.GetRankValue() == Hand.Min(card => card.GetRankValue()));
+            if (Random.value < raiseChance)
+            {
+                int raiseAmount = (int)(currentBet * Random.Range(1.5f, 3f));
+                EventBus.Publish(new PlayerActionRaiseBet(GetType(), raiseAmount.ToString()));
+            }
+            else
+            {
+                EventBus.Publish(new PlayerActionEvent(GetType(), PlayerAction.Bet));
+            }
         }
 
+        private bool ShouldSwapCard()
+        {
+            if (FloorCard == null) return false;
+            int worstCardValue = Hand.Min(card => card.GetRankValue());
+            return FloorCard.GetRankValue() > worstCardValue;
+        }
 
+        private void SwapWithFloorCard()
+        {
+            if (FloorCard == null) return;
+            int worstCardIndex = Hand.FindIndex(c => c.GetRankValue() == Hand.Min(card => card.GetRankValue()));
+            EventBus.Publish(new PlayerActionPickAndSwap(GetType(), FloorCard, Hand[worstCardIndex]));
+        }
+
+        private async Task HandleDrawnCard(int currentBet)
+        {
+            // Simulate thinking about the drawn card
+            await Task.Delay(Random.Range(1000, 3000));
+
+            if (FloorCard != null && ShouldSwapCard())
+            {
+                SwapWithFloorCard();
+            }
+
+            // Make a decision after drawing/swapping
+            int handValue = CalculateHandValue();
+            if (handValue >= 40)
+            {
+                DecideOnBetOrRaise(currentBet, 0.7f);
+            }
+            else if (handValue >= 20)
+            {
+                EventBus.Publish(new PlayerActionEvent(GetType(), PlayerAction.Bet));
+            }
+            else
+            {
+                EventBus.Publish(new PlayerActionEvent(GetType(), PlayerAction.Fold));
+            }
+        }
 
         public override void SeeHand()
         {
             base.SeeHand();
             EventBus.Publish(new UpdatePlayerHandDisplay(this));
-
         }
 
         public override void ShowHand(bool isRoundEnd = false)
         {
             base.ShowHand(isRoundEnd);
             EventBus.Publish(new UpdatePlayerHandDisplay(this));
-
         }
 
         public override void PickAndSwap(Card floorCard, Card swapCard)
         {
             base.PickAndSwap(floorCard, swapCard);
             EventBus.Publish(new UpdatePlayerHandDisplay(this));
-
         }
     }
 }
-
 
 // ---
 
@@ -2498,8 +2528,7 @@ namespace OcentraAI.LLMGames.ThreeCardBrag.UI.Controllers
             EventBus.Subscribe<UpdateGameState>(OnUpdateGameState);
             EventBus.Subscribe<UIMessage>(OnMessage);
             EventBus.Subscribe<PlayerStartCountDown>(OnPlayerStartCountDown);
-            EventBus.Subscribe<PlayerStopCountDown>(OnTimerStop);
-            EventBus.Subscribe<StopTurnCountdown>(OnStopTurnCountdown);
+            EventBus.Subscribe<PlayerStopCountDown>(OnPlayerStopCountDown);
             EventBus.Subscribe<OfferContinuation>(OnOfferContinuation);
             EventBus.Subscribe<UpdateRoundDisplay>(OnUpdateRoundDisplay);
             EventBus.Subscribe<OfferNewGame>(OnOfferNewGame);
@@ -2524,8 +2553,7 @@ namespace OcentraAI.LLMGames.ThreeCardBrag.UI.Controllers
             EventBus.Unsubscribe<UpdateGameState>(OnUpdateGameState);
             EventBus.Unsubscribe<UIMessage>(OnMessage);
             EventBus.Unsubscribe<PlayerStartCountDown>(OnPlayerStartCountDown);
-            EventBus.Unsubscribe<PlayerStopCountDown>(OnTimerStop);
-            EventBus.Unsubscribe<StopTurnCountdown>(OnStopTurnCountdown);
+            EventBus.Unsubscribe<PlayerStopCountDown>(OnPlayerStopCountDown);
             EventBus.Unsubscribe<OfferContinuation>(OnOfferContinuation);
             EventBus.Unsubscribe<UpdateRoundDisplay>(OnUpdateRoundDisplay);
             EventBus.Unsubscribe<OfferNewGame>(OnOfferNewGame);
@@ -2583,16 +2611,11 @@ namespace OcentraAI.LLMGames.ThreeCardBrag.UI.Controllers
         private void OnOfferContinuation(OfferContinuation e)
         {
 
-            ShowMessage($"Do you want to continue playing one more round?", e.Delay);
             if (ContinueRound != null) ContinueRound.gameObject.SetActive(true);
 
         }
 
-        private void OnStopTurnCountdown(StopTurnCountdown e)
-        {
-            HumanPlayerTimer.Show(false, nameof(OnStopTurnCountdown));
-            ComputerPlayerTimer.Show(false, nameof(OnStopTurnCountdown));
-        }
+
 
         private void OnMessage(UIMessage e)
         {
@@ -2617,8 +2640,16 @@ namespace OcentraAI.LLMGames.ThreeCardBrag.UI.Controllers
 
         }
 
-        private void OnTimerStop(PlayerStopCountDown e)
+        private void OnPlayerStopCountDown(PlayerStopCountDown e)
         {
+            if (e.CurrentPlayer is HumanPlayer)
+            {
+                CurrentPlayerTimer = HumanPlayerTimer;
+            }
+            else if (e.CurrentPlayer is ComputerPlayer)
+            {
+                CurrentPlayerTimer = ComputerPlayerTimer;
+            }
             CurrentPlayerTimer.StopTimer();
 
         }
@@ -2650,12 +2681,12 @@ namespace OcentraAI.LLMGames.ThreeCardBrag.UI.Controllers
 
             if (ContinueRound != null) ContinueRound.onClick.AddListener(() =>
             {
-                EventBus.Publish(new ContinueGame(true));
+                EventBus.Publish(new PlayerActionContinueGame(true));
             });
 
             if (NewGame != null) NewGame.onClick.AddListener(() =>
             {
-                EventBus.Publish(new StartNewGame());
+                EventBus.Publish(new PlayerActionStartNewGame());
 
             });
 

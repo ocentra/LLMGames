@@ -64,8 +64,6 @@ namespace OcentraAI.LLMGames.ThreeCardBrag.Players
         {
             if (floorCard != null && swapCard != null)
             {
-                EventBus.Publish(new AddToFloorCardList(swapCard));
-
                 SwapCard(swapCard, floorCard);
 
                 EventBus.Publish(new SetFloorCard(true));
@@ -79,7 +77,6 @@ namespace OcentraAI.LLMGames.ThreeCardBrag.Players
         {
             AdjustCoins(-amount);
             HasBetOnBlind = true;
-            EventBus.Publish(new ActionCompletedEventArgs(false));
 
         }
 
@@ -112,7 +109,6 @@ namespace OcentraAI.LLMGames.ThreeCardBrag.Players
             }
             //Debug.Log($"{PlayerName}'s hand value: {CalculateHandValue()}");
 
-            EventBus.Publish(new ActionCompletedEventArgs(false));
 
         }
 
@@ -127,7 +123,6 @@ namespace OcentraAI.LLMGames.ThreeCardBrag.Players
         {
             Coins += amount;
 
-            EventBus.Publish(new ActionCompletedEventArgs(false));
 
         }
 
@@ -142,7 +137,6 @@ namespace OcentraAI.LLMGames.ThreeCardBrag.Players
                 }
             }
 
-            EventBus.Publish(new ActionCompletedEventArgs(false));
 
         }
     }

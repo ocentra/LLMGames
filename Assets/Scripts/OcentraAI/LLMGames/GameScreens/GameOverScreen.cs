@@ -62,7 +62,7 @@ namespace OcentraAI.LLMGames.Screens
         private void PlayAgain()
         {
             PlaySelectionSound();
-            EventBus.Publish(new StartNewGame());
+            EventBus.Publish(new PlayerActionStartNewGame());
             HideScreen();
         }
 

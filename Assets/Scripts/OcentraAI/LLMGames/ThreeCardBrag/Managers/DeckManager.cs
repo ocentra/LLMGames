@@ -45,7 +45,20 @@ namespace OcentraAI.LLMGames.ThreeCardBrag.Manager
 
         public void OnSetFloorCard(SetFloorCard e)
         {
-            FloorCard = e.SetNull ? null : DrawCard();
+            if (e.SetNull)
+            {
+                OnSetFloorCardList();
+                FloorCard = null;
+            }
+            else
+            {
+                if (FloorCard != null)
+                {
+                   OnSetFloorCardList();
+                }
+                FloorCard = DrawCard();
+            }
+
             EventBus.Publish(new UpdateFloorCard(FloorCard));
         }
 
@@ -77,12 +90,12 @@ namespace OcentraAI.LLMGames.ThreeCardBrag.Manager
             return card;
         }
 
-        public void OnSetFloorCardList(AddToFloorCardList e)
+        public void OnSetFloorCardList()
         {
-            if (!FloorCards.Contains(e.Card))
+            if (!FloorCards.Contains(FloorCard))
             {
-                FloorCards.Add(e.Card);
-                EventBus.Publish(new UpdateFloorCardList(e.Card));
+                FloorCards.Add(FloorCard);
+                EventBus.Publish(new UpdateFloorCardList(FloorCard));
             }
         }
 

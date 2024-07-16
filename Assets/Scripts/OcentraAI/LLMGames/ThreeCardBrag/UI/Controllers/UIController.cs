@@ -14,7 +14,7 @@ namespace OcentraAI.LLMGames.ThreeCardBrag.UI.Controllers
 {
     public class UIController : MonoBehaviour
     {
-        
+
         [Required, ShowInInspector]
         private Button ShowPlayerHand { get; set; }
         [Required, ShowInInspector]
@@ -48,7 +48,7 @@ namespace OcentraAI.LLMGames.ThreeCardBrag.UI.Controllers
         [Required, ShowInInspector]
         private Transform MessageHolder { get; set; }
 
- 
+
         [Required, ShowInInspector]
         private TMP_InputField RaiseAmount { get; set; }
 
@@ -82,7 +82,7 @@ namespace OcentraAI.LLMGames.ThreeCardBrag.UI.Controllers
         [Required, ShowInInspector]
         private PlayerTimer ComputerPlayerTimer { get; set; }
 
-        [Required, ShowInInspector]
+        [ShowInInspector]
         public PlayerTimer CurrentPlayerTimer { get; set; }
 
 
@@ -107,7 +107,7 @@ namespace OcentraAI.LLMGames.ThreeCardBrag.UI.Controllers
 
         private void Init()
         {
-       
+
             ComputerHand = transform.FindChildRecursively<Transform>(nameof(ComputerHand));
             MessageHolder = transform.FindChildRecursively<Transform>(nameof(MessageHolder));
 
@@ -159,8 +159,7 @@ namespace OcentraAI.LLMGames.ThreeCardBrag.UI.Controllers
             EventBus.Subscribe<UpdateGameState>(OnUpdateGameState);
             EventBus.Subscribe<UIMessage>(OnMessage);
             EventBus.Subscribe<PlayerStartCountDown>(OnPlayerStartCountDown);
-            EventBus.Subscribe<TimerStopEventArgs>(OnTimerStop);
-            EventBus.Subscribe<StopTurnCountdown>(OnStopTurnCountdown);
+            EventBus.Subscribe<PlayerStopCountDown>(OnPlayerStopCountDown);
             EventBus.Subscribe<OfferContinuation>(OnOfferContinuation);
             EventBus.Subscribe<UpdateRoundDisplay>(OnUpdateRoundDisplay);
             EventBus.Subscribe<OfferNewGame>(OnOfferNewGame);
@@ -185,8 +184,7 @@ namespace OcentraAI.LLMGames.ThreeCardBrag.UI.Controllers
             EventBus.Unsubscribe<UpdateGameState>(OnUpdateGameState);
             EventBus.Unsubscribe<UIMessage>(OnMessage);
             EventBus.Unsubscribe<PlayerStartCountDown>(OnPlayerStartCountDown);
-            EventBus.Unsubscribe<TimerStopEventArgs>(OnTimerStop);
-            EventBus.Unsubscribe<StopTurnCountdown>(OnStopTurnCountdown);
+            EventBus.Unsubscribe<PlayerStopCountDown>(OnPlayerStopCountDown);
             EventBus.Unsubscribe<OfferContinuation>(OnOfferContinuation);
             EventBus.Unsubscribe<UpdateRoundDisplay>(OnUpdateRoundDisplay);
             EventBus.Unsubscribe<OfferNewGame>(OnOfferNewGame);
@@ -215,10 +213,10 @@ namespace OcentraAI.LLMGames.ThreeCardBrag.UI.Controllers
         public void OnInitializeUIPlayers(InitializeUIPlayers e)
         {
             HumanPlayerTimer.SetPlayer(e.GameManager.HumanPlayer);
-            HumanPlayerTimer.Show(false, nameof(Start));
+            HumanPlayerTimer.Show(false);
 
             ComputerPlayerTimer.SetPlayer(e.GameManager.ComputerPlayer);
-            ComputerPlayerTimer.Show(false, nameof(Start));
+            ComputerPlayerTimer.Show(false);
 
             FloorCardView.gameObject.SetActive(false);
             FloorCardView.transform.parent.gameObject.SetActive(false);
@@ -244,57 +242,47 @@ namespace OcentraAI.LLMGames.ThreeCardBrag.UI.Controllers
         private void OnOfferContinuation(OfferContinuation e)
         {
 
-            ShowMessage($"Do you want to continue playing one more round?", e.Delay);
             if (ContinueRound != null) ContinueRound.gameObject.SetActive(true);
 
         }
 
-        private void OnStopTurnCountdown(StopTurnCountdown e)
-        {
-            HumanPlayerTimer.Show(false, nameof(OnStopTurnCountdown));
-            ComputerPlayerTimer.Show(false, nameof(OnStopTurnCountdown));
-        }
+
 
         private void OnMessage(UIMessage e)
         {
             ShowMessage(e.Message, e.Delay);
         }
-        private async void OnPlayerStartCountDown(PlayerStartCountDown e)
+        private void OnPlayerStartCountDown(PlayerStartCountDown e)
         {
-            EnablePlayerActions(e.CurrentPlayer);
+            EnablePlayerActions(e.TurnInfo.CurrentPlayer);
 
-            bool timerCompleted = false;
 
-            if (e.CurrentPlayer is HumanPlayer )
+            if (e.TurnInfo.CurrentPlayer is HumanPlayer)
             {
                 CurrentPlayerTimer = HumanPlayerTimer;
-                timerCompleted = await HumanPlayerTimer.StartTimer(e.ActionCompletionSource,e.TimerCompletionSource,e.Duration);
+            }
+            else if (e.TurnInfo.CurrentPlayer is ComputerPlayer)
+            {
+                CurrentPlayerTimer = ComputerPlayerTimer;
+            }
+
+            CurrentPlayerTimer.StartTimer(e.TurnInfo);
+
+
+        }
+
+        private void OnPlayerStopCountDown(PlayerStopCountDown e)
+        {
+            if (e.CurrentPlayer is HumanPlayer)
+            {
+                CurrentPlayerTimer = HumanPlayerTimer;
             }
             else if (e.CurrentPlayer is ComputerPlayer)
             {
                 CurrentPlayerTimer = ComputerPlayerTimer;
-                timerCompleted = await ComputerPlayerTimer.StartTimer(e.ActionCompletionSource, e.TimerCompletionSource,e.Duration);
             }
-
-            if (timerCompleted)
-            {
-                e.TimerCompletionSource.TrySetResult(true);
-            }
-            else
-            {
-                e.TimerCompletionSource.TrySetCanceled();
-            }
-        }
-
-        private void OnTimerStop(TimerStopEventArgs e)
-        {
             CurrentPlayerTimer.StopTimer();
-            EventBus.Publish(new ActionCompletedEventArgs(true));
-            if (!e.IsActionTaken)
-            {
-                EventBus.Publish(new TimerCompletedEventArgs());
 
-            }
         }
         private void OnNewGame(NewGameEventArgs e)
         {
@@ -324,12 +312,12 @@ namespace OcentraAI.LLMGames.ThreeCardBrag.UI.Controllers
 
             if (ContinueRound != null) ContinueRound.onClick.AddListener(() =>
             {
-                EventBus.Publish(new ContinueGame(true));
+                EventBus.Publish(new PlayerActionContinueGame(true));
             });
 
             if (NewGame != null) NewGame.onClick.AddListener(() =>
             {
-                EventBus.Publish(new StartNewGame());
+                EventBus.Publish(new PlayerActionStartNewGame());
 
             });
 
@@ -387,12 +375,12 @@ namespace OcentraAI.LLMGames.ThreeCardBrag.UI.Controllers
             EventBus.Publish(new PlayerActionRaiseBet(typeof(HumanPlayer), RaiseAmount.text));
         }
 
-        
+
 
         public void TakeActionAsync(PlayerAction action)
         {
             EventBus.Publish(new PlayerActionEvent(typeof(HumanPlayer), action));
-            
+
         }
 
 
@@ -432,7 +420,7 @@ namespace OcentraAI.LLMGames.ThreeCardBrag.UI.Controllers
         public void EnablePlayerActions(Player currentPlayer)
         {
             bool humanPlayerHasSeenHand = false;
-            bool isCurrentPlayerHuman = currentPlayer is HumanPlayer ;
+            bool isCurrentPlayerHuman = currentPlayer is HumanPlayer;
             int humanPlayerCoins = 0;
 
             if (currentPlayer is HumanPlayer humanPlayer)
@@ -441,7 +429,7 @@ namespace OcentraAI.LLMGames.ThreeCardBrag.UI.Controllers
                 humanPlayerCoins = humanPlayer.Coins;
             }
 
-            if (PurchaseCoins != null )
+            if (PurchaseCoins != null)
             {
                 PurchaseCoins.gameObject.SetActive(humanPlayerCoins <= 100 && isCurrentPlayerHuman);
             }
@@ -541,7 +529,7 @@ namespace OcentraAI.LLMGames.ThreeCardBrag.UI.Controllers
             }
         }
 
-        
+
         public void UpdateComputerHandDisplay(Player player, bool isRoundEnd = false)
         {
             ComputerPlayingBlind.text = player.HasSeenHand ? "" : $" Playing Blind ";
@@ -577,7 +565,7 @@ namespace OcentraAI.LLMGames.ThreeCardBrag.UI.Controllers
                     Message.text = message;
                 }
 
-                await HideMessageAfterDelay(delay);
+              //  await HideMessageAfterDelay(delay);
             }
         }
 

@@ -1,9 +1,5 @@
 using OcentraAI.LLMGames.Extensions;
-using OcentraAI.LLMGames.ThreeCardBrag.Manager;
 using Sirenix.OdinInspector;
-using System;
-using System.Threading;
-using System.Threading.Tasks;
 using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
@@ -24,7 +20,7 @@ namespace OcentraAI.LLMGames.ThreeCardBrag.Players
         [Required, ShowInInspector]
         private Image Image { get; set; }
 
-        private Player Player { get; set; }
+        private Player  Player { get; set; }
         private float Duration { get; set; }
         private float RemainingTime { get; set; }
 
@@ -54,48 +50,24 @@ namespace OcentraAI.LLMGames.ThreeCardBrag.Players
         }
 
 
-
-        public async Task<bool> StartTimer(TaskCompletionSource<bool> actionCompletionSource, TaskCompletionSource<bool> timerCompletionSource, float duration)
+        public void StartTimer(TurnInfo turnInfo)
         {
+            if (Player != turnInfo.CurrentPlayer)
+            {
+                StopTimer();
+                return;
+            }
+            Duration = turnInfo.Duration;
             Show(true);
-            Duration = duration;
-            RemainingTime = Duration;
-
-
-            try
-            {
-                while (RemainingTime > 0)
-                {
-                    if (timerCompletionSource.Task.IsCanceled || actionCompletionSource.Task.IsCompleted)
-                    {
-                        StopTimer();
-                        return false;
-                    }
-
-                    UpdateDisplay();
-                    await Task.Yield();
-                    RemainingTime = Mathf.Max(0, RemainingTime - Time.deltaTime);
-                }
-
-                StopTimer();
-                timerCompletionSource.TrySetResult(true);
-                return true;
-            }
-            catch (Exception ex)
-            {
-                timerCompletionSource.TrySetException(ex);
-                return false;
-            }
-            finally
-            {
-                StopTimer();
-            }
+            RemainingTime = turnInfo.RemainingTime;
+           
         }
+
 
         public void StopTimer()
         {
             Show(false);
-            ResetTimer();
+           
         }
 
  
@@ -106,14 +78,11 @@ namespace OcentraAI.LLMGames.ThreeCardBrag.Players
             if (CircleImage != null) CircleImage.fillAmount = RemainingTime / Duration;
         }
 
-        private void ResetTimer()
-        {
-            RemainingTime = Duration;
-            UpdateDisplay();
-        }
+
 
         public void Show(bool show, string fromMethod = "")
         {
+            UpdateDisplay();
             if (TurnCountdownText != null) TurnCountdownText.enabled = show;
             if (CircleImage != null) CircleImage.enabled = show;
             if (BackgroundImage != null) BackgroundImage.enabled = show;

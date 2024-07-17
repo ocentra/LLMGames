@@ -105,7 +105,7 @@ namespace OcentraAI.LLMGames.ThreeCardBrag.Players
         {
             if (FloorCard == null) return;
             int worstCardIndex = Hand.FindIndex(c => c.GetRankValue() == Hand.Min(card => card.GetRankValue()));
-            EventBus.Publish(new PlayerActionPickAndSwap(GetType(), FloorCard, Hand[worstCardIndex]));
+            EventBus.Publish(new PlayerActionPickAndSwap(GetType(), floorCard:FloorCard, swapCard:Hand[worstCardIndex]));
         }
 
         private async Task HandleDrawnCard(int currentBet)

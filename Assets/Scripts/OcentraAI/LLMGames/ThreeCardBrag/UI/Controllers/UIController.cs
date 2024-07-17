@@ -4,114 +4,91 @@ using OcentraAI.LLMGames.ThreeCardBrag.Events;
 using OcentraAI.LLMGames.ThreeCardBrag.Players;
 using OcentraAI.LLMGames.Utilities;
 using Sirenix.OdinInspector;
+using System.Collections;
 using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
-using Task = System.Threading.Tasks.Task;
 
 namespace OcentraAI.LLMGames.ThreeCardBrag.UI.Controllers
 {
     public class UIController : MonoBehaviour
     {
 
-        [Required, ShowInInspector]
-        private Button ShowPlayerHand { get; set; }
-        [Required, ShowInInspector]
-        private Button PlayBlind { get; set; }
-        [Required, ShowInInspector]
-        private Button RaiseBet { get; set; }
+        #region UI Elements
+        [Required, ShowInInspector] private Button ShowPlayerHand { get; set; }
+        [Required, ShowInInspector] private Button PlayBlind { get; set; }
+        [Required, ShowInInspector] private Button RaiseBet { get; set; }
+        [Required, ShowInInspector] private Button Fold { get; set; }
+        [Required, ShowInInspector] private Button Bet { get; set; }
+        [Required, ShowInInspector] private Button DrawFromDeck { get; set; }
+        [Required, ShowInInspector] private Button ShowCall { get; set; }
+        [Required, ShowInInspector] private Button ContinueRound { get; set; }
+        [Required, ShowInInspector] private Button NewGame { get; set; }
+        [Required, ShowInInspector] private Button PurchaseCoins { get; set; }
 
-        [Required, ShowInInspector]
-        private Button Fold { get; set; }
+        [Required, ShowInInspector] private Transform ComputerHand { get; set; }
+        [Required, ShowInInspector] private Transform MessageHolder { get; set; }
 
-        [Required, ShowInInspector]
-        private Button Bet { get; set; }
+        [Required, ShowInInspector] private TMP_InputField RaiseAmount { get; set; }
+        [Required, ShowInInspector] private TextMeshProUGUI Message { get; set; }
+        [Required, ShowInInspector] private TextMeshProUGUI HumanPlayersCoins { get; set; }
+        [Required, ShowInInspector] private TextMeshProUGUI ComputerPlayerCoins { get; set; }
+        [Required, ShowInInspector] private TextMeshProUGUI HumanPlayersWins { get; set; }
+        [Required, ShowInInspector] private TextMeshProUGUI ComputerPlayerWins { get; set; }
+        [Required, ShowInInspector] private TextMeshProUGUI Pot { get; set; }
+        [Required, ShowInInspector] private TextMeshProUGUI CurrentBet { get; set; }
+        [Required, ShowInInspector] private TextMeshProUGUI ComputerPlayingBlind { get; set; }
 
-        [Required, ShowInInspector]
-        private Button DrawFromDeck { get; set; }
+        [Required, ShowInInspector] private PlayerTimer HumanPlayerTimer { get; set; }
+        [Required, ShowInInspector] private PlayerTimer ComputerPlayerTimer { get; set; }
+        [ShowInInspector] public PlayerTimer CurrentPlayerTimer { get; set; }
 
-        [Required, ShowInInspector]
-        private Button ShowCall { get; set; }
+        [ShowInInspector] public Player CurrentPlayer { get; set; }
 
-        [Required, ShowInInspector]
-        private Button ContinueRound { get; set; }
-
-        [Required, ShowInInspector]
-        private Button NewGame { get; set; }
-        [Required, ShowInInspector]
-        private Button PurchaseCoins { get; set; }
-
-        [Required, ShowInInspector]
-        private Transform ComputerHand { get; set; }
-
-        [Required, ShowInInspector]
-        private Transform MessageHolder { get; set; }
-
-
-        [Required, ShowInInspector]
-        private TMP_InputField RaiseAmount { get; set; }
-
-        [Required, ShowInInspector]
-        private TextMeshProUGUI Message { get; set; }
-
-        [Required, ShowInInspector]
-        private TextMeshProUGUI HumanPlayersCoins { get; set; }
-
-        [Required, ShowInInspector]
-        private TextMeshProUGUI ComputerPlayerCoins { get; set; }
-
-        [Required, ShowInInspector]
-        private TextMeshProUGUI HumanPlayersWins { get; set; }
-
-        [Required, ShowInInspector]
-        private TextMeshProUGUI ComputerPlayerWins { get; set; }
-
-        [Required, ShowInInspector]
-        private TextMeshProUGUI Pot { get; set; }
-
-        [Required, ShowInInspector]
-        private TextMeshProUGUI CurrentBet { get; set; }
-
-        [Required, ShowInInspector]
-        private TextMeshProUGUI ComputerPlayingBlind { get; set; }
-
-        [Required, ShowInInspector]
-        private PlayerTimer HumanPlayerTimer { get; set; }
-
-        [Required, ShowInInspector]
-        private PlayerTimer ComputerPlayerTimer { get; set; }
+        [Required, ShowInInspector] private CardView FloorCardView { get; set; }
+        [Required, ShowInInspector] private CardView[] HumanPlayerCardViews { get; set; }
+        [Required, ShowInInspector] private Image[] HumanPlayerCardHighlight { get; set; }
+        [Required, ShowInInspector] private CardView[] ComputerPlayerCardViews { get; set; }
+        [Required, ShowInInspector] private Image[] ComputerPlayerCardHighlight { get; set; }
+        [Required, ShowInInspector] public LeftPanelController LeftPanelController { get; set; }
 
         [ShowInInspector]
-        public PlayerTimer CurrentPlayerTimer { get; set; }
+        public ButtonState ButtonState { get; private set; } = ButtonState.TakeAction;
 
+        #endregion
 
-
-        [Required, ShowInInspector]
-        private CardView FloorCardView { get; set; }
-
-        [Required, ShowInInspector]
-        private CardView[] HumanPlayerCardViews { get; set; }
-
-        [Required, ShowInInspector]
-        private Image[] HumanPlayerCardHighlight { get; set; }
-
-        [Required, ShowInInspector]
-        private CardView[] ComputerPlayerCardViews { get; set; }
-
-        [Required, ShowInInspector]
-        private Image[] ComputerPlayerCardHighlight { get; set; }
-
-        [Required, ShowInInspector]
-        public LeftPanelController LeftPanelController { get; set; }
-
-        void OnValidate()
+        #region Unity Lifecycle Methods
+        private void OnValidate()
         {
             Init();
         }
 
+        private void OnEnable()
+        {
+            SubscribeToEvents();
+        }
+
+        private void OnDisable()
+        {
+            UnsubscribeFromEvents();
+        }
+
+        private void Start()
+        {
+            Init();
+            SetupButtonListeners();
+        }
+        #endregion
+
+        #region Initialization
         private void Init()
         {
+            FindUIComponents();
+            SetupInitialUIState();
+        }
 
+        private void FindUIComponents()
+        {
             ComputerHand = transform.FindChildRecursively<Transform>(nameof(ComputerHand));
             MessageHolder = transform.FindChildRecursively<Transform>(nameof(MessageHolder));
 
@@ -126,6 +103,29 @@ namespace OcentraAI.LLMGames.ThreeCardBrag.UI.Controllers
             NewGame = transform.FindChildRecursively<Button>(nameof(NewGame));
             PurchaseCoins = transform.FindChildRecursively<Button>(nameof(PurchaseCoins));
 
+            SetupCardViews();
+
+            FloorCardView = transform.FindChildRecursively<CardView>(nameof(FloorCardView));
+            Message = transform.FindChildRecursively<TextMeshProUGUI>(nameof(Message));
+            HumanPlayersCoins = transform.FindChildRecursively<TextMeshProUGUI>(nameof(HumanPlayersCoins));
+            ComputerPlayerCoins = transform.FindChildRecursively<TextMeshProUGUI>(nameof(ComputerPlayerCoins));
+            Pot = transform.FindChildRecursively<TextMeshProUGUI>(nameof(Pot));
+            CurrentBet = transform.FindChildRecursively<TextMeshProUGUI>(nameof(CurrentBet));
+            ComputerPlayingBlind = transform.FindChildRecursively<TextMeshProUGUI>(nameof(ComputerPlayingBlind));
+
+            ComputerPlayerWins = transform.FindChildRecursively<TextMeshProUGUI>(nameof(ComputerPlayerWins));
+            HumanPlayersWins = transform.FindChildRecursively<TextMeshProUGUI>(nameof(HumanPlayersWins));
+
+            HumanPlayerTimer = transform.parent.FindChildRecursively<PlayerTimer>(nameof(HumanPlayerTimer));
+            ComputerPlayerTimer = transform.parent.FindChildRecursively<PlayerTimer>(nameof(ComputerPlayerTimer));
+
+            RaiseAmount = transform.FindChildRecursively<TMP_InputField>(nameof(RaiseAmount));
+
+            LeftPanelController = FindObjectOfType<LeftPanelController>();
+        }
+
+        private void SetupCardViews()
+        {
             HumanPlayerCardViews = ShowPlayerHand.GetComponentsInChildren<CardView>();
             HumanPlayerCardHighlight = new Image[HumanPlayerCardViews.Length];
 
@@ -145,94 +145,123 @@ namespace OcentraAI.LLMGames.ThreeCardBrag.UI.Controllers
                 Image image = cardView.transform.FindChildRecursively<Image>();
                 ComputerPlayerCardHighlight[index] = image;
             }
+        }
 
-
-            FloorCardView = transform.FindChildRecursively<CardView>(nameof(FloorCardView));
-            Message = transform.FindChildRecursively<TextMeshProUGUI>(nameof(Message));
-            HumanPlayersCoins = transform.FindChildRecursively<TextMeshProUGUI>(nameof(HumanPlayersCoins));
-            ComputerPlayerCoins = transform.FindChildRecursively<TextMeshProUGUI>(nameof(ComputerPlayerCoins));
-            Pot = transform.FindChildRecursively<TextMeshProUGUI>(nameof(Pot));
-            CurrentBet = transform.FindChildRecursively<TextMeshProUGUI>(nameof(CurrentBet));
-            ComputerPlayingBlind = transform.FindChildRecursively<TextMeshProUGUI>(nameof(ComputerPlayingBlind));
-
-            ComputerPlayerWins = transform.FindChildRecursively<TextMeshProUGUI>(nameof(ComputerPlayerWins));
-            HumanPlayersWins = transform.FindChildRecursively<TextMeshProUGUI>(nameof(HumanPlayersWins));
-
-            HumanPlayerTimer = transform.parent.FindChildRecursively<PlayerTimer>(nameof(HumanPlayerTimer));
-            ComputerPlayerTimer = transform.parent.FindChildRecursively<PlayerTimer>(nameof(ComputerPlayerTimer));
-
-            RaiseAmount = transform.FindChildRecursively<TMP_InputField>(nameof(RaiseAmount));
+        private void SetupInitialUIState()
+        {
             if (NewGame != null) NewGame.gameObject.SetActive(false);
             if (ContinueRound != null) ContinueRound.gameObject.SetActive(false);
             if (MessageHolder != null) MessageHolder.gameObject.SetActive(false);
-
-            LeftPanelController = FindObjectOfType<LeftPanelController>();
         }
 
-
-        private void OnEnable()
+        private void SetupButtonListeners()
         {
+            if (ShowPlayerHand != null) ShowPlayerHand.onClick.AddListener(OnPlayerSeeHand);
+            if (PlayBlind != null) PlayBlind.onClick.AddListener(OnPlayBlind);
+            if (RaiseBet != null) RaiseBet.onClick.AddListener(OnRaiseBet);
+            if (Fold != null) Fold.onClick.AddListener(OnFold);
+            if (Bet != null) Bet.onClick.AddListener(OnBet);
+            if (DrawFromDeck != null) DrawFromDeck.onClick.AddListener(OnDrawFromDeck);
+            if (ShowCall != null) ShowCall.onClick.AddListener(OnShowCall);
+            if (ContinueRound != null) ContinueRound.onClick.AddListener(() => EventBus.Publish(new PlayerActionContinueGame(true)));
+            if (NewGame != null) NewGame.onClick.AddListener(() => EventBus.Publish(new PlayerActionStartNewGame()));
+            if (PurchaseCoins != null) PurchaseCoins.onClick.AddListener(() => EventBus.Publish(new PurchaseCoins(1000)));
+        }
+        #endregion
 
+        #region Event Subscription
+        private void SubscribeToEvents()
+        {
             EventBus.Subscribe<InitializeUIPlayers>(OnInitializeUIPlayers);
-
             EventBus.Subscribe<NewGameEventArgs>(OnNewGame);
-            EventBus.Subscribe<UpdateFloorCard>(OnUpdateFloorCard);
-
             EventBus.Subscribe<UpdateGameState>(OnUpdateGameState);
-            EventBus.Subscribe<UIMessage>(OnMessage);
             EventBus.Subscribe<PlayerStartCountDown>(OnPlayerStartCountDown);
             EventBus.Subscribe<PlayerStopCountDown>(OnPlayerStopCountDown);
-            EventBus.Subscribe<OfferContinuation>(OnOfferContinuation);
-            EventBus.Subscribe<UpdateRoundDisplay>(OnUpdateRoundDisplay);
-            EventBus.Subscribe<OfferNewGame>(OnOfferNewGame);
+            EventBus.Subscribe<UpdateFloorCard>(OnUpdateFloorCard);
             EventBus.Subscribe<UpdateFloorCardList>(OnUpdateFloorCardList);
-
             EventBus.Subscribe<UpdatePlayerHandDisplay>(OnUpdatePlayerHandDisplay);
-
-
-
+            EventBus.Subscribe<UpdateRoundDisplay>(OnUpdateRoundDisplay);
+            EventBus.Subscribe<OfferContinuation>(OnOfferContinuation);
+            EventBus.Subscribe<OfferNewGame>(OnOfferNewGame);
+            EventBus.Subscribe<UIMessage>(OnMessage);
         }
 
-
-
-
-        private void OnDisable()
+        private void UnsubscribeFromEvents()
         {
             EventBus.Unsubscribe<InitializeUIPlayers>(OnInitializeUIPlayers);
-
             EventBus.Unsubscribe<NewGameEventArgs>(OnNewGame);
-            EventBus.Unsubscribe<UpdateFloorCard>(OnUpdateFloorCard);
-
             EventBus.Unsubscribe<UpdateGameState>(OnUpdateGameState);
-            EventBus.Unsubscribe<UIMessage>(OnMessage);
             EventBus.Unsubscribe<PlayerStartCountDown>(OnPlayerStartCountDown);
             EventBus.Unsubscribe<PlayerStopCountDown>(OnPlayerStopCountDown);
-            EventBus.Unsubscribe<OfferContinuation>(OnOfferContinuation);
-            EventBus.Unsubscribe<UpdateRoundDisplay>(OnUpdateRoundDisplay);
-            EventBus.Unsubscribe<OfferNewGame>(OnOfferNewGame);
+            EventBus.Unsubscribe<UpdateFloorCard>(OnUpdateFloorCard);
             EventBus.Unsubscribe<UpdateFloorCardList>(OnUpdateFloorCardList);
-
-
             EventBus.Unsubscribe<UpdatePlayerHandDisplay>(OnUpdatePlayerHandDisplay);
-
-
+            EventBus.Unsubscribe<UpdateRoundDisplay>(OnUpdateRoundDisplay);
+            EventBus.Unsubscribe<OfferContinuation>(OnOfferContinuation);
+            EventBus.Unsubscribe<OfferNewGame>(OnOfferNewGame);
+            EventBus.Unsubscribe<UIMessage>(OnMessage);
         }
+        #endregion
 
-
-
-        private void OnUpdateFloorCardList(UpdateFloorCardList e)
+        #region Player Actions
+        private void OnPlayerSeeHand()
         {
-            LeftPanelController.AddCard(e.Card);
+            TakeAction(PlayerAction.SeeHand, ButtonState.TakeAction);
         }
 
-        private void OnUpdateFloorCard(UpdateFloorCard e)
+        private void OnPlayBlind()
         {
-            UpdateFloorCard(e.Card);
+            TakeAction(PlayerAction.PlayBlind, ButtonState.ActionTaken);
+
         }
 
+        private void OnRaiseBet()
+        {
+            if (int.TryParse(RaiseAmount.text, out int raiseAmount) && raiseAmount > 0)
+            {
+                EventBus.Publish(new PlayerActionRaiseBet(typeof(HumanPlayer), raiseAmount.ToString()));
+                SetButtonState(ButtonState.ActionTaken); 
 
+            }
+            else
+            {
+                ShowMessage("Please enter a valid raise amount.", 3f);
+            }
+        }
 
-        public void OnInitializeUIPlayers(InitializeUIPlayers e)
+        private void OnFold()
+        {
+            TakeAction(PlayerAction.Fold, ButtonState.ActionTaken);
+
+        }
+
+        private void OnBet()
+        {
+            TakeAction(PlayerAction.Bet, ButtonState.ActionTaken);
+
+        }
+
+        private void OnDrawFromDeck()
+        {
+            TakeAction(PlayerAction.DrawFromDeck, ButtonState.ActionTaken);
+
+        }
+
+        private void OnShowCall()
+        {
+            TakeAction(PlayerAction.Show, ButtonState.ActionTaken);
+
+        }
+
+        private void TakeAction(PlayerAction action, ButtonState buttonState)
+        {
+            EventBus.Publish(new PlayerActionEvent(typeof(HumanPlayer), action));
+            SetButtonState(buttonState);
+        }
+        #endregion
+
+        #region Event Handlers
+        private void OnInitializeUIPlayers(InitializeUIPlayers e)
         {
             HumanPlayerTimer.SetPlayer(e.GameManager.HumanPlayer);
             HumanPlayerTimer.Show(false);
@@ -243,195 +272,23 @@ namespace OcentraAI.LLMGames.ThreeCardBrag.UI.Controllers
             FloorCardView.gameObject.SetActive(false);
             FloorCardView.transform.parent.gameObject.SetActive(false);
 
-
             e.CompletionSource.TrySetResult(true);
         }
 
-        private void OnOfferNewGame(OfferNewGame obj)
-        {
-            ShowMessage($"Do you want to play a new game?", 15f);
-            if (NewGame != null) NewGame.gameObject.SetActive(true);
-        }
-
-
-
-        private void OnUpdateRoundDisplay(UpdateRoundDisplay e)
-        {
-            ComputerPlayerWins.text = $"{e.ScoreKeeper.ComputerTotalWins}";
-            HumanPlayersWins.text = $"{e.ScoreKeeper.HumanTotalWins}";
-        }
-
-        private void OnOfferContinuation(OfferContinuation e)
-        {
-
-            if (ContinueRound != null) ContinueRound.gameObject.SetActive(true);
-
-        }
-
-
-
-        private void OnMessage(UIMessage e)
-        {
-            ShowMessage(e.Message, e.Delay);
-        }
-        private void OnPlayerStartCountDown(PlayerStartCountDown e)
-        {
-            EnablePlayerActions(e.TurnInfo.CurrentPlayer);
-
-
-            if (e.TurnInfo.CurrentPlayer is HumanPlayer)
-            {
-                CurrentPlayerTimer = HumanPlayerTimer;
-
-                foreach (Image image in HumanPlayerCardHighlight)
-                {
-                    image.enabled = true;
-                }
-
-                foreach (Image image in ComputerPlayerCardHighlight)
-                {
-                    image.enabled = false;
-                }
-            }
-            else if (e.TurnInfo.CurrentPlayer is ComputerPlayer)
-            {
-                CurrentPlayerTimer = ComputerPlayerTimer;
-
-                foreach (Image image in HumanPlayerCardHighlight)
-                {
-                    image.enabled = false;
-                }
-
-                foreach (Image image in ComputerPlayerCardHighlight)
-                {
-                    image.enabled = true;
-                }
-            }
-
-            CurrentPlayerTimer.StartTimer(e.TurnInfo);
-
-
-        }
-
-        private void OnPlayerStopCountDown(PlayerStopCountDown e)
-        {
-            if (e.CurrentPlayer is HumanPlayer)
-            {
-                CurrentPlayerTimer = HumanPlayerTimer;
-            }
-            else if (e.CurrentPlayer is ComputerPlayer)
-            {
-                CurrentPlayerTimer = ComputerPlayerTimer;
-            }
-            CurrentPlayerTimer.StopTimer();
-
-        }
         private void OnNewGame(NewGameEventArgs e)
         {
-            ShowMessage("New game started with initial coins: " + e.InitialCoins, 5f);
-            UpdateCoinsDisplay(e.InitialCoins);
+            ShowMessage($"New game started with initial coins: {e.InitialCoins}", 5f);
+            UpdateCoinsDisplay(e.InitialCoins, e.InitialCoins);
         }
 
-
-
-
-        private void Start()
+        private void OnUpdateGameState(UpdateGameState e)
         {
-            Init();
-
-            if (ShowPlayerHand != null) ShowPlayerHand.onClick.AddListener(OnPlayerSeeHand);
-            if (PlayBlind != null) PlayBlind.onClick.AddListener(OnPlayBlind);
-            if (RaiseBet != null) RaiseBet.onClick.AddListener(OnRaiseBet);
-            if (Fold != null) Fold.onClick.AddListener(OnFold);
-            if (Bet != null) Bet.onClick.AddListener(OnBet);
-            if (DrawFromDeck != null)
-            {
-                DrawFromDeck.interactable = false;
-
-                DrawFromDeck.onClick.AddListener(OnDrawFromDeck);
-            }
-            if (ShowCall != null) ShowCall.onClick.AddListener(OnShowCall);
-
-            if (ContinueRound != null) ContinueRound.onClick.AddListener(() =>
-            {
-                EventBus.Publish(new PlayerActionContinueGame(true));
-            });
-
-            if (NewGame != null) NewGame.onClick.AddListener(() =>
-            {
-                EventBus.Publish(new PlayerActionStartNewGame());
-
-            });
-
-            if (PurchaseCoins != null)
-            {
-                PurchaseCoins.onClick.AddListener(() =>
-                {
-                    EventBus.Publish(new PurchaseCoins(1000));
-
-                });
-            }
-        }
-
-
-
-        private void OnShowCall()
-        {
-            TakeActionAsync(PlayerAction.Show);
-        }
-
-        private void OnDrawFromDeck()
-        {
-            TakeActionAsync(PlayerAction.DrawFromDeck);
-        }
-
-        private void OnFold()
-        {
-            TakeActionAsync(PlayerAction.Fold);
-        }
-
-        private void OnPlayBlind()
-        {
-            TakeActionAsync(PlayerAction.PlayBlind);
-        }
-
-        
-        private void OnPlayerSeeHand()
-        {
-            ShowPlayerHand.enabled = false;
-            TakeActionAsync(PlayerAction.SeeHand);
-        }
-
-        private void OnBet()
-        {
-            TakeActionAsync(PlayerAction.Bet);
-        }
-
-        private void OnRaiseBet()
-        {
-            EventBus.Publish(new PlayerActionRaiseBet(typeof(HumanPlayer), RaiseAmount.text));
-        }
-
-
-
-        public void TakeActionAsync(PlayerAction action)
-        {
-            EventBus.Publish(new PlayerActionEvent(typeof(HumanPlayer), action));
-
-        }
-
-
-        public void OnUpdateGameState(UpdateGameState e)
-        {
-            UpdateCoinsDisplay(e.GameManager.HumanPlayer.Coins);
+            UpdateCoinsDisplay(e.GameManager.HumanPlayer.Coins, e.GameManager.ComputerPlayer.Coins);
             UpdatePotDisplay(e.GameManager.Pot);
             UpdateCurrentBetDisplay(e.GameManager.CurrentBet);
 
-            if (e.GameManager.CurrentTurn is { CurrentPlayer: not null })
-            {
-                EnablePlayerActions(e.GameManager.CurrentTurn.CurrentPlayer);
+            EnablePlayerActions();
 
-            }
 
             if (e.IsNewRound)
             {
@@ -439,107 +296,51 @@ namespace OcentraAI.LLMGames.ThreeCardBrag.UI.Controllers
             }
         }
 
-        private void ResetAllCardViews()
+        private void OnPlayerStartCountDown(PlayerStartCountDown e)
         {
-            foreach (CardView cardView in HumanPlayerCardViews)
+            CurrentPlayer = e.TurnInfo.CurrentPlayer;
+
+            if (CurrentPlayer is HumanPlayer)
             {
-                cardView.ResetCardView();
+                CurrentPlayerTimer = HumanPlayerTimer;
+                SetCardHighlights(HumanPlayerCardHighlight, true);
+                SetCardHighlights(ComputerPlayerCardHighlight, false);
+            }
+            else if (CurrentPlayer is ComputerPlayer)
+            {
+                CurrentPlayerTimer = ComputerPlayerTimer;
+                SetCardHighlights(HumanPlayerCardHighlight, false);
+                SetCardHighlights(ComputerPlayerCardHighlight, true);
             }
 
-            foreach (CardView cardView in ComputerPlayerCardViews)
-            {
-                cardView.ResetCardView();
-            }
-
-            LeftPanelController.ResetView();
+            CurrentPlayerTimer.StartTimer(e.TurnInfo);
         }
 
-        public void EnablePlayerActions(Player currentPlayer)
+        private void OnPlayerStopCountDown(PlayerStopCountDown e)
         {
-            bool humanPlayerHasSeenHand = false;
-            bool isCurrentPlayerHuman = currentPlayer is HumanPlayer;
-            int humanPlayerCoins = 0;
+            CurrentPlayer = e.CurrentPlayer;
 
-            if (currentPlayer is HumanPlayer humanPlayer)
-            {
-                humanPlayerHasSeenHand = humanPlayer.HasSeenHand;
-                humanPlayerCoins = humanPlayer.Coins;
-            }
+            CurrentPlayerTimer = (e.CurrentPlayer is HumanPlayer) ? HumanPlayerTimer : ComputerPlayerTimer;
 
-            if (PurchaseCoins != null)
-            {
-                PurchaseCoins.gameObject.SetActive(humanPlayerCoins <= 100 && isCurrentPlayerHuman);
-            }
+            EnablePlayerActions();
 
-            if (PlayBlind != null)
-            {
-                PlayBlind.gameObject.SetActive(!humanPlayerHasSeenHand && isCurrentPlayerHuman);
-            }
+            SetButtonState(ButtonState.ActionTaken);
+            SetCardHighlights(ComputerPlayerCardHighlight, false);
+            SetCardHighlights(HumanPlayerCardHighlight, false);
 
-            if (RaiseBet != null)
-            {
-                RaiseBet.gameObject.transform.parent.gameObject.SetActive(humanPlayerHasSeenHand && isCurrentPlayerHuman);
-            }
-            if (Fold != null)
-            {
-                Fold.gameObject.SetActive(humanPlayerHasSeenHand && isCurrentPlayerHuman);
+            CurrentPlayerTimer.StopTimer();
 
-            }
-
-            if (Bet != null)
-            {
-                Bet.gameObject.SetActive(humanPlayerHasSeenHand && isCurrentPlayerHuman);
-            }
-
-
-            if (DrawFromDeck != null)
-            {
-                DrawFromDeck.interactable = humanPlayerHasSeenHand && isCurrentPlayerHuman;
-            }
-
-            if (ShowCall != null)
-            {
-                ShowCall.gameObject.SetActive(humanPlayerHasSeenHand && isCurrentPlayerHuman);
-            }
         }
 
-        public void UpdateCoinsDisplay(int coins)
+        private void OnUpdateFloorCard(UpdateFloorCard e)
         {
-            if (HumanPlayersCoins != null) HumanPlayersCoins.text = $"{coins}";
-            if (ComputerPlayerCoins != null) ComputerPlayerCoins.text = $"{coins}";
+            UpdateFloorCard(e.Card);
         }
 
-        public void UpdatePotDisplay(int potAmount)
+        private void OnUpdateFloorCardList(UpdateFloorCardList e)
         {
-            if (Pot != null) Pot.text = $"{potAmount}";
+            LeftPanelController.AddCard(e.Card);
         }
-
-        public void UpdateCurrentBetDisplay(int currentBet)
-        {
-            if (CurrentBet != null) CurrentBet.text = $"Current Bet: {currentBet} ";
-        }
-
-
-
-        public void UpdateFloorCard(Card floorCard = null)
-        {
-            if (FloorCardView != null)
-            {
-                if (floorCard != null)
-                {
-                    FloorCardView.SetCard(floorCard);
-                    FloorCardView.UpdateCardView();
-                }
-
-                FloorCardView.SetActive(floorCard != null);
-                FloorCardView.transform.parent.gameObject.SetActive(floorCard != null);
-
-            }
-        }
-
-
-
-
 
         private void OnUpdatePlayerHandDisplay(UpdatePlayerHandDisplay e)
         {
@@ -554,7 +355,129 @@ namespace OcentraAI.LLMGames.ThreeCardBrag.UI.Controllers
             }
         }
 
-        public void UpdateHumanPlayerHandDisplay(Player player, bool isRoundEnd = false)
+        private void OnUpdateRoundDisplay(UpdateRoundDisplay e)
+        {
+            UpdateWinDisplay(e.ScoreKeeper.HumanTotalWins, e.ScoreKeeper.ComputerTotalWins);
+        }
+
+        private void OnOfferContinuation(OfferContinuation e)
+        {
+            if (ContinueRound != null) ContinueRound.gameObject.SetActive(true);
+        }
+
+        private void OnOfferNewGame(OfferNewGame obj)
+        {
+            ShowMessage("Do you want to play a new game?", 15f);
+            if (NewGame != null) NewGame.gameObject.SetActive(true);
+        }
+
+        private void OnMessage(UIMessage e)
+        {
+            ShowMessage(e.Message, e.Delay);
+        }
+        #endregion
+
+        #region Helper Methods
+        private void EnablePlayerActions()
+        {
+            ButtonState buttonState = ButtonState;
+
+            bool isHumanTurn = CurrentPlayer is HumanPlayer or null;
+            bool hasSeenHand = false;
+            int coins = 0;
+
+            if (isHumanTurn)
+            {
+                HumanPlayer humanPlayer = (HumanPlayer)CurrentPlayer;
+                if (humanPlayer != null)
+                {
+                    hasSeenHand = humanPlayer.HasSeenHand;
+                    coins = humanPlayer.Coins;
+                }
+            }
+
+
+            SetButtonState(PurchaseCoins, isHumanTurn && coins <= 100 && buttonState != ButtonState.ActionTaken);
+            SetButtonState(PlayBlind, isHumanTurn && !hasSeenHand && buttonState != ButtonState.ActionTaken);
+            SetButtonState(RaiseBet, isHumanTurn && hasSeenHand && buttonState != ButtonState.ActionTaken);
+            SetButtonState(Fold, isHumanTurn && hasSeenHand && buttonState != ButtonState.ActionTaken);
+            SetButtonState(Bet, isHumanTurn && hasSeenHand && buttonState != ButtonState.ActionTaken);
+            SetButtonState(ShowCall, isHumanTurn && hasSeenHand && buttonState != ButtonState.ActionTaken);
+
+            if (DrawFromDeck != null)
+            {
+                DrawFromDeck.interactable = isHumanTurn && hasSeenHand && buttonState != ButtonState.ActionTaken && buttonState != ButtonState.DrawnFromDeck;
+            }
+
+            if (RaiseBet != null)
+            {
+                RaiseBet.transform.parent.gameObject.SetActive(isHumanTurn && hasSeenHand && buttonState != ButtonState.ActionTaken);
+            }
+        }
+
+        private void SetButtonState(Button button, bool state)
+        {
+            if (button != null)
+            {
+                button.gameObject.SetActive(state);
+                button.interactable = state;
+            }
+        }
+
+        public void SetButtonState(ButtonState buttonState)
+        {
+            ButtonState = buttonState;
+        }
+
+        private void SetCardHighlights(Image[] highlights, bool enabled)
+        {
+            foreach (Image highlight in highlights)
+            {
+                if (highlight != null)
+                {
+                    highlight.enabled = enabled;
+                }
+            }
+        }
+
+        private void UpdateCoinsDisplay(int humanCoins, int computerCoins)
+        {
+            if (HumanPlayersCoins != null) HumanPlayersCoins.text = $"{humanCoins}";
+            if (ComputerPlayerCoins != null) ComputerPlayerCoins.text = $"{computerCoins}";
+        }
+
+        private void UpdatePotDisplay(int potAmount)
+        {
+            if (Pot != null) Pot.text = $"{potAmount}";
+        }
+
+        private void UpdateCurrentBetDisplay(int currentBet)
+        {
+            if (CurrentBet != null) CurrentBet.text = $"Current Bet: {currentBet}";
+        }
+
+        private void UpdateWinDisplay(int humanWins, int computerWins)
+        {
+            if (HumanPlayersWins != null) HumanPlayersWins.text = $"{humanWins}";
+            if (ComputerPlayerWins != null) ComputerPlayerWins.text = $"{computerWins}";
+        }
+
+        private void UpdateFloorCard(Card card)
+        {
+            if (FloorCardView != null)
+            {
+                if (card != null)
+                {
+                    FloorCardView.SetCard(card);
+                    FloorCardView.UpdateCardView();
+                }
+
+                FloorCardView.SetActive(card != null);
+                FloorCardView.transform.parent.gameObject.SetActive(card != null);
+            }
+        }
+
+        private void UpdateHumanPlayerHandDisplay(Player player, bool isRoundEnd = false)
         {
             if (player.HasSeenHand || isRoundEnd)
             {
@@ -566,10 +489,9 @@ namespace OcentraAI.LLMGames.ThreeCardBrag.UI.Controllers
             }
         }
 
-
-        public void UpdateComputerHandDisplay(Player player, bool isRoundEnd = false)
+        private void UpdateComputerHandDisplay(Player player, bool isRoundEnd = false)
         {
-            ComputerPlayingBlind.text = player.HasSeenHand ? "" : $" Playing Blind ";
+            ComputerPlayingBlind.text = player.HasSeenHand ? "" : "Playing Blind";
 
             for (int i = 0; i < player.Hand.Count; i++)
             {
@@ -592,7 +514,22 @@ namespace OcentraAI.LLMGames.ThreeCardBrag.UI.Controllers
             }
         }
 
-        public async void ShowMessage(string message, float delay = 5f)
+        private void ResetAllCardViews()
+        {
+            foreach (CardView cardView in HumanPlayerCardViews)
+            {
+                cardView.ResetCardView();
+            }
+
+            foreach (CardView cardView in ComputerPlayerCardViews)
+            {
+                cardView.ResetCardView();
+            }
+
+            LeftPanelController.ResetView();
+        }
+
+        private void ShowMessage(string message, float delay = 5f)
         {
             if (MessageHolder != null)
             {
@@ -602,19 +539,29 @@ namespace OcentraAI.LLMGames.ThreeCardBrag.UI.Controllers
                     Message.text = message;
                 }
 
-              //  await HideMessageAfterDelay(delay);
+                StartCoroutine(HideMessageAfterDelay(delay));
             }
         }
 
-        private async Task HideMessageAfterDelay(float delay)
+        private IEnumerator HideMessageAfterDelay(float delay)
         {
-            await Utility.Delay(delay);
+            yield return new WaitForSeconds(delay);
 
             if (MessageHolder != null)
             {
                 MessageHolder.gameObject.SetActive(false);
             }
         }
+        #endregion
+
+
     }
 
+
+    public enum ButtonState
+    {
+        TakeAction,
+        ActionTaken,
+        DrawnFromDeck
+    }
 }

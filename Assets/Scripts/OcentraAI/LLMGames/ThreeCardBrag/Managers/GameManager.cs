@@ -194,7 +194,8 @@ namespace OcentraAI.LLMGames.ThreeCardBrag.Manager
         {
             if (e.CurrentPlayerType == CurrentTurn.CurrentPlayer.GetType())
             {
-                CurrentTurn.CurrentPlayer.PickAndSwap(e.PickCard, e.SwapCard);
+                CurrentTurn.CurrentPlayer.PickAndSwap(e.FloorCard, e.SwapCard);
+                EventBus.Publish(new UpdateGameState(this));
 
             }
         }
@@ -328,9 +329,9 @@ namespace OcentraAI.LLMGames.ThreeCardBrag.Manager
         {
             using CancellationTokenSource cancellationTokenSource = CancellationTokenSource.CreateLinkedTokenSource(globalCancellationTokenSource.Token);
 
-            
+
             Task completedTask = await Task.WhenAny(CurrentTurn.ActionCompletionSource.Task, CurrentTurn.TimerCompletionSource.Task);
-           
+
 
             if (completedTask == CurrentTurn.ActionCompletionSource.Task)
             {
@@ -360,39 +361,48 @@ namespace OcentraAI.LLMGames.ThreeCardBrag.Manager
 
 
             ShowMessage(message);
-            EventBus.Publish(new UpdateGameState(this));
 
 
             switch (action)
             {
                 case PlayerAction.SeeHand:
                     CurrentTurn.CurrentPlayer.SeeHand();
+                    EventBus.Publish(new UpdateGameState(this));
                     await CurrentTurn.ActionCompletionSource.Task;
                     break;
                 case PlayerAction.PlayBlind:
+                    EventBus.Publish(new UpdateGameState(this));
+
                     await PlayBlind();
                     break;
                 case PlayerAction.Bet:
+                    EventBus.Publish(new UpdateGameState(this));
+
                     await Bet();
                     break;
                 case PlayerAction.Fold:
+                    EventBus.Publish(new UpdateGameState(this));
+
                     await Fold();
                     break;
                 case PlayerAction.DrawFromDeck:
+                    EventBus.Publish(new UpdateGameState(this));
+
                     CurrentTurn.CurrentPlayer.DrawFromDeck();
                     await CurrentTurn.ActionCompletionSource.Task;
                     break;
 
                 case PlayerAction.Show:
+                    EventBus.Publish(new UpdateGameState(this));
+
                     await Show();
                     break;
                 default:
                     break;
             }
 
-           
+
             CurrentTurn.StopTurn();
-            EventBus.Publish(new UpdateGameState(this));
 
             SwitchTurn();
 
@@ -456,6 +466,7 @@ namespace OcentraAI.LLMGames.ThreeCardBrag.Manager
         {
             if (globalCancellationTokenSource?.IsCancellationRequested == true) return;
             Player nextPlayer = CurrentTurn.CurrentPlayer is HumanPlayer ? ComputerPlayer : HumanPlayer;
+
             await PlayerTurnAsync(nextPlayer);
         }
 
@@ -503,7 +514,7 @@ namespace OcentraAI.LLMGames.ThreeCardBrag.Manager
 
         private async Task EndRound(Player winner, bool showHand)
         {
-           CurrentTurn.StopTurn();
+            CurrentTurn.StopTurn();
             if (winner == null)
             {
                 HumanPlayer.ShowHand(true);
@@ -536,7 +547,7 @@ namespace OcentraAI.LLMGames.ThreeCardBrag.Manager
             EventBus.Publish(new UIMessage(message, f));
         }
 
-        private async Task CheckForContinuation(bool showHand )
+        private async Task CheckForContinuation(bool showHand)
         {
             if (CurrentRound >= MaxRounds)
             {
@@ -545,7 +556,7 @@ namespace OcentraAI.LLMGames.ThreeCardBrag.Manager
 
                 if (trailingPlayer.Coins > leadingPlayer.Coins)
                 {
-                   CurrentTurn.StopTurn();
+                    CurrentTurn.StopTurn();
                     EventBus.Publish(new OfferContinuation(10));
                     HumanPlayer.ShowHand(showHand);
                     ComputerPlayer.ShowHand(showHand);
@@ -562,7 +573,7 @@ namespace OcentraAI.LLMGames.ThreeCardBrag.Manager
                 HumanPlayer.ShowHand(showHand);
                 ComputerPlayer.ShowHand(showHand);
             }
-  
+
         }
 
 

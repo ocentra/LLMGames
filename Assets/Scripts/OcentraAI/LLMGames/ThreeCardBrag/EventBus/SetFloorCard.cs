@@ -1,13 +1,21 @@
+using OcentraAI.LLMGames.Scriptable;
 using System;
 
 namespace OcentraAI.LLMGames.ThreeCardBrag.Events
 {
     public class SetFloorCard : EventArgs
     {
-        public bool SetNull { get; } = false;
-        public SetFloorCard(bool setNull = false)
+        public Card SwapCard { get; }
+        public SetFloorCard()
         {
-            SetNull = setNull;
+            
+        }
+
+        public SetFloorCard(Card swapCard)
+        {
+            SwapCard = swapCard;
         }
     }
+
+
 }

@@ -164,7 +164,7 @@ namespace OcentraAI.LLMGames.Authentication
                 }
                 else
                 {
-                    Debug.LogError("Player session could not be refreshed and expired.");
+                   // Debug.LogError("Player session could not be refreshed and expired.");
                 }
             };
         }

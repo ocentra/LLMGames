@@ -64,9 +64,9 @@ namespace OcentraAI.LLMGames.ThreeCardBrag.Players
         {
             if (floorCard != null && swapCard != null)
             {
-                SwapCard(swapCard, floorCard);
+                SwapCard(floorCard, swapCard);
 
-                EventBus.Publish(new SetFloorCard(true));
+                EventBus.Publish(new SetFloorCard(swapCard));
             }
         }
 
@@ -126,7 +126,7 @@ namespace OcentraAI.LLMGames.ThreeCardBrag.Players
 
         }
 
-        public void SwapCard(Card swapCard, Card floorCard)
+        public void SwapCard(Card floorCard, Card swapCard )
         {
             for (int index = 0; index < Hand.Count; index++)
             {
@@ -134,9 +134,9 @@ namespace OcentraAI.LLMGames.ThreeCardBrag.Players
                 if (cardInHand.Suit == swapCard.Suit && cardInHand.Rank == swapCard.Rank)
                 {
                     Hand[index] = floorCard;
+                    break;
                 }
             }
-
 
         }
     }

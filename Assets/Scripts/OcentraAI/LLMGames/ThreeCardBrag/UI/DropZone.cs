@@ -42,7 +42,7 @@ namespace OcentraAI.LLMGames.ThreeCardBrag.UI
             if (CardView != null)
             {
                 CardHighlight = CardView.transform.FindChildRecursively<Image>();
-                originalColor = CardHighlight.color; 
+                originalColor = CardHighlight.color;
             }
         }
 
@@ -52,9 +52,10 @@ namespace OcentraAI.LLMGames.ThreeCardBrag.UI
 
             if (draggable != null)
             {
-                EventBus.Publish(new PlayerActionPickAndSwap(typeof(HumanPlayer), pickCard: draggable.CardView.Card, swapCard: CardView.Card));
+                EventBus.Publish(new PlayerActionPickAndSwap(typeof(HumanPlayer), floorCard: draggable.CardView.Card, swapCard: CardView.Card));
                 draggable.SetOverValidDropZone(false);
-                CardHighlight.color = originalColor; 
+                CardHighlight.color = originalColor;
+                UIController.SetButtonState(ButtonState.DrawnFromDeck);
             }
         }
 
@@ -64,8 +65,8 @@ namespace OcentraAI.LLMGames.ThreeCardBrag.UI
             if (draggable != null)
             {
                 draggable.SetOverValidDropZone(true);
-                originalColor = CardHighlight.color; 
-                CardHighlight.color = Color.cyan; 
+                originalColor = CardHighlight.color;
+                CardHighlight.color = Color.cyan;
             }
         }
 
@@ -75,7 +76,7 @@ namespace OcentraAI.LLMGames.ThreeCardBrag.UI
             if (draggable != null)
             {
                 draggable.SetOverValidDropZone(false);
-                CardHighlight.color = originalColor; 
+                CardHighlight.color = originalColor;
             }
         }
     }

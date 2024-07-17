@@ -32,6 +32,9 @@ namespace OcentraAI.LLMGames.ThreeCardBrag.Manager
         public Card FloorCard { get; set; }
 
         [ShowInInspector]
+        public Card SwapCard { get; set; }
+
+        [ShowInInspector]
         public Card TrumpCard { get; private set; }
 
         [ShowInInspector]
@@ -45,16 +48,17 @@ namespace OcentraAI.LLMGames.ThreeCardBrag.Manager
 
         public void OnSetFloorCard(SetFloorCard e)
         {
-            if (e.SetNull)
+            if (e.SwapCard != null)
             {
-                OnSetFloorCardList();
+                OnSetFloorCardList(e.SwapCard);
                 FloorCard = null;
             }
             else
             {
-                if (FloorCard != null)
+                if (FloorCard !=null)
                 {
-                   OnSetFloorCardList();
+                    OnSetFloorCardList(FloorCard);
+
                 }
                 FloorCard = DrawCard();
             }
@@ -90,12 +94,12 @@ namespace OcentraAI.LLMGames.ThreeCardBrag.Manager
             return card;
         }
 
-        public void OnSetFloorCardList()
+        public void OnSetFloorCardList(Card floorCard)
         {
-            if (!FloorCards.Contains(FloorCard))
+            if (!FloorCards.Contains(floorCard))
             {
-                FloorCards.Add(FloorCard);
-                EventBus.Publish(new UpdateFloorCardList(FloorCard));
+                FloorCards.Add(floorCard);
+                EventBus.Publish(new UpdateFloorCardList(floorCard));
             }
         }
 

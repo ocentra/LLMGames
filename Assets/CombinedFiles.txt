@@ -173,13 +173,13 @@ namespace OcentraAI.LLMGames.ThreeCardBrag.Events
 {
     public class PlayerActionPickAndSwap : EventArgs
     {
-        public  Card PickCard { get; }
+        public  Card FloorCard { get; }
         public Card SwapCard { get; }
         public Type CurrentPlayerType { get; }
-        public PlayerActionPickAndSwap(Type currentPlayerType, Card pickCard, Card swapCard)
+        public PlayerActionPickAndSwap(Type currentPlayerType, Card floorCard, Card swapCard)
         {
             CurrentPlayerType = currentPlayerType;
-            PickCard = pickCard;
+            FloorCard = floorCard;
             SwapCard = swapCard;
         }
     }
@@ -286,18 +286,26 @@ namespace OcentraAI.LLMGames.ThreeCardBrag.Events
 
 // File: SetFloorCard.cs
 
+using OcentraAI.LLMGames.Scriptable;
 using System;
 
 namespace OcentraAI.LLMGames.ThreeCardBrag.Events
 {
     public class SetFloorCard : EventArgs
     {
-        public bool SetNull { get; } = false;
-        public SetFloorCard(bool setNull = false)
+        public Card SwapCard { get; }
+        public SetFloorCard()
         {
-            SetNull = setNull;
+            
+        }
+
+        public SetFloorCard(Card swapCard)
+        {
+            SwapCard = swapCard;
         }
     }
+
+
 }
 
 // ---
@@ -465,6 +473,9 @@ namespace OcentraAI.LLMGames.ThreeCardBrag.Manager
         public Card FloorCard { get; set; }
 
         [ShowInInspector]
+        public Card SwapCard { get; set; }
+
+        [ShowInInspector]
         public Card TrumpCard { get; private set; }
 
         [ShowInInspector]
@@ -478,17 +489,14 @@ namespace OcentraAI.LLMGames.ThreeCardBrag.Manager
 
         public void OnSetFloorCard(SetFloorCard e)
         {
-            if (e.SetNull)
+            if (e.SwapCard != null)
             {
-                OnSetFloorCardList();
+                OnSetFloorCardList(e.SwapCard);
                 FloorCard = null;
             }
             else
             {
-                if (FloorCard != null)
-                {
-                   OnSetFloorCardList();
-                }
+                OnSetFloorCardList(FloorCard);
                 FloorCard = DrawCard();
             }
 
@@ -523,12 +531,12 @@ namespace OcentraAI.LLMGames.ThreeCardBrag.Manager
             return card;
         }
 
-        public void OnSetFloorCardList()
+        public void OnSetFloorCardList(Card floorCard)
         {
-            if (!FloorCards.Contains(FloorCard))
+            if (!FloorCards.Contains(floorCard))
             {
-                FloorCards.Add(FloorCard);
-                EventBus.Publish(new UpdateFloorCardList(FloorCard));
+                FloorCards.Add(floorCard);
+                EventBus.Publish(new UpdateFloorCardList(floorCard));
             }
         }
 
@@ -781,7 +789,7 @@ namespace OcentraAI.LLMGames.ThreeCardBrag.Manager
         {
             if (e.CurrentPlayerType == CurrentTurn.CurrentPlayer.GetType())
             {
-                CurrentTurn.CurrentPlayer.PickAndSwap(e.PickCard, e.SwapCard);
+                CurrentTurn.CurrentPlayer.PickAndSwap(e.FloorCard, e.SwapCard);
 
             }
         }
@@ -1391,7 +1399,7 @@ namespace OcentraAI.LLMGames.ThreeCardBrag.Players
         {
             if (FloorCard == null) return;
             int worstCardIndex = Hand.FindIndex(c => c.GetRankValue() == Hand.Min(card => card.GetRankValue()));
-            EventBus.Publish(new PlayerActionPickAndSwap(GetType(), FloorCard, Hand[worstCardIndex]));
+            EventBus.Publish(new PlayerActionPickAndSwap(GetType(), floorCard:FloorCard, swapCard:Hand[worstCardIndex]));
         }
 
         private async Task HandleDrawnCard(int currentBet)
@@ -1545,9 +1553,9 @@ namespace OcentraAI.LLMGames.ThreeCardBrag.Players
         {
             if (floorCard != null && swapCard != null)
             {
-                SwapCard(swapCard, floorCard);
+                SwapCard(floorCard, swapCard);
 
-                EventBus.Publish(new SetFloorCard(true));
+                EventBus.Publish(new SetFloorCard(swapCard));
             }
         }
 
@@ -1607,7 +1615,7 @@ namespace OcentraAI.LLMGames.ThreeCardBrag.Players
 
         }
 
-        public void SwapCard(Card swapCard, Card floorCard)
+        public void SwapCard(Card floorCard, Card swapCard )
         {
             for (int index = 0; index < Hand.Count; index++)
             {
@@ -1615,9 +1623,9 @@ namespace OcentraAI.LLMGames.ThreeCardBrag.Players
                 if (cardInHand.Suit == swapCard.Suit && cardInHand.Rank == swapCard.Rank)
                 {
                     Hand[index] = floorCard;
+                    break;
                 }
             }
-
 
         }
     }
@@ -2062,77 +2070,121 @@ namespace OcentraAI.LLMGames.ThreeCardBrag.UI
 
 // File: Draggable.cs
 
-using OcentraAI.LLMGames.ThreeCardBrag.Manager;
+
+using OcentraAI.LLMGames.Extensions;
 using OcentraAI.LLMGames.ThreeCardBrag.UI.Controllers;
 using Sirenix.OdinInspector;
 using UnityEngine;
 using UnityEngine.EventSystems;
-
+using UnityEngine.UI;
 namespace OcentraAI.LLMGames.ThreeCardBrag.UI
 {
     [RequireComponent(typeof(CanvasGroup))]
-    public class Draggable : MonoBehaviour, IBeginDragHandler, IDragHandler, IEndDragHandler
+    public class Draggable : MonoBehaviour, IBeginDragHandler, IDragHandler, IEndDragHandler, IPointerEnterHandler, IPointerExitHandler
     {
         [ShowInInspector, Required]
         private CanvasGroup CanvasGroup { get; set; }
-
+       
         [ShowInInspector, Required]
         private Vector2 OriginalPosition { get; set; }
-
+       
         [ShowInInspector, Required]
         private RectTransform RectTransform { get; set; }
-
+       
         [ShowInInspector, Required]
         private UIController UIController { get; set; }
-
+        
         [ShowInInspector, Required]
         public CardView CardView { get; set; }
+       
+        [ShowInInspector, Required]
+        public Image CardHighlight { get; set; }
 
+
+        [ShowInInspector, Required]
+        public Transform PickFromFloor { get; set; }
+
+        [ShowInInspector] public float MaxScaleDownFactor { get; set; } = 0.5f;
+        [ShowInInspector] public float MaxDragDistance { get; set; } = 500f;
+        private bool isOverValidDropZone = false;
+        private Vector3 originalScale;
         void OnValidate()
         {
             Init();
         }
-
         void Start()
         {
             Init();
         }
-
         private void Init()
         {
-            if (RectTransform == null)
-                RectTransform = GetComponent<RectTransform>();
-
-            if (CanvasGroup == null)
-                CanvasGroup = GetComponent<CanvasGroup>();
-
-            if (UIController == null)
-                UIController = FindObjectOfType<UIController>();
-
-            if (CardView == null)
+           
+            CanvasGroup = GetComponent<CanvasGroup>();
+            UIController = FindObjectOfType<UIController>();
+            CardView = GetComponentInChildren<CardView>();
+            if (CardView != null)
             {
-                CardView = GetComponentInChildren<CardView>();
+                CardHighlight = CardView.transform.FindChildRecursively<Image>();
             }
+
+            PickFromFloor = transform.FindChildRecursively<Transform>(nameof(PickFromFloor));
+            RectTransform = PickFromFloor.GetComponent<RectTransform>();
+            originalScale = PickFromFloor.localScale;
         }
+
+
+        
 
         public void OnBeginDrag(PointerEventData eventData)
         {
             OriginalPosition = RectTransform.anchoredPosition;
             CanvasGroup.blocksRaycasts = false;
-            UIController.OnPickFromFloor();
+            CardHighlight.color = Color.cyan;
         }
-
         public void OnDrag(PointerEventData eventData)
         {
-            RectTransform.anchoredPosition += eventData.delta / RectTransform.localScale.x;
-        }
+            float distance = Vector2.Distance(RectTransform.anchoredPosition, OriginalPosition);
+            float scaleFactor = Mathf.Lerp(1f, MaxScaleDownFactor, distance / MaxDragDistance);
+            PickFromFloor.localScale = originalScale * scaleFactor;
+            RectTransform.anchoredPosition += eventData.delta;
 
+            //RectTransform.anchoredPosition += eventData.delta / RectTransform.localScale.x;
+
+            CardHighlight.color = isOverValidDropZone ? Color.green : Color.red;
+        }
         public void OnEndDrag(PointerEventData eventData)
         {
             CanvasGroup.blocksRaycasts = true;
             RectTransform.anchoredPosition = OriginalPosition;
+            CardHighlight.color = Color.clear;
+            ResetScale();
 
-
+        }
+        public void OnPointerEnter(PointerEventData eventData)
+        {
+            if (CardHighlight != null && !eventData.dragging)
+            {
+                CardHighlight.color = Color.green;
+            }
+        }
+        public void OnPointerExit(PointerEventData eventData)
+        {
+            if (CardHighlight != null && !eventData.dragging)
+            {
+                CardHighlight.color = Color.clear;
+            }
+        }
+        public void SetOverValidDropZone(bool isOver)
+        {
+            isOverValidDropZone = isOver;
+            if (!CanvasGroup.blocksRaycasts)
+            {
+                CardHighlight.color = isOver ? Color.green : Color.red;
+            }
+        }
+        private void ResetScale()
+        {
+            PickFromFloor.localScale = originalScale;
         }
     }
 }
@@ -2141,6 +2193,7 @@ namespace OcentraAI.LLMGames.ThreeCardBrag.UI
 
 // File: DropZone.cs
 
+using OcentraAI.LLMGames.Extensions;
 using OcentraAI.LLMGames.Scriptable;
 using OcentraAI.LLMGames.ThreeCardBrag.Events;
 using OcentraAI.LLMGames.ThreeCardBrag.Manager;
@@ -2150,10 +2203,11 @@ using OcentraAI.LLMGames.Utilities;
 using Sirenix.OdinInspector;
 using UnityEngine;
 using UnityEngine.EventSystems;
+using UnityEngine.UI;
 
 namespace OcentraAI.LLMGames.ThreeCardBrag.UI
 {
-    public class DropZone : MonoBehaviour, IDropHandler
+    public class DropZone : MonoBehaviour, IDropHandler, IPointerEnterHandler, IPointerExitHandler
     {
         [ShowInInspector, Required]
         private CardView CardView { get; set; }
@@ -2161,7 +2215,10 @@ namespace OcentraAI.LLMGames.ThreeCardBrag.UI
         [ShowInInspector, Required]
         private UIController UIController { get; set; }
 
+        [ShowInInspector, Required]
+        public Image CardHighlight { get; set; }
 
+        private Color originalColor;
 
         void OnValidate()
         {
@@ -2177,6 +2234,11 @@ namespace OcentraAI.LLMGames.ThreeCardBrag.UI
         {
             CardView = GetComponent<CardView>();
             UIController = FindObjectOfType<UIController>();
+            if (CardView != null)
+            {
+                CardHighlight = CardView.transform.FindChildRecursively<Image>();
+                originalColor = CardHighlight.color; 
+            }
         }
 
         public void OnDrop(PointerEventData eventData)
@@ -2185,12 +2247,35 @@ namespace OcentraAI.LLMGames.ThreeCardBrag.UI
 
             if (draggable != null)
             {
-                EventBus.Publish(new PlayerActionPickAndSwap(typeof(HumanPlayer), pickCard: draggable.CardView.Card,swapCard: CardView.Card));
+                EventBus.Publish(new PlayerActionPickAndSwap(typeof(HumanPlayer), floorCard: draggable.CardView.Card, swapCard: CardView.Card));
+                draggable.SetOverValidDropZone(false);
+                CardHighlight.color = originalColor; 
+            }
+        }
 
+        public void OnPointerEnter(PointerEventData eventData)
+        {
+            Draggable draggable = eventData.pointerDrag?.GetComponent<Draggable>();
+            if (draggable != null)
+            {
+                draggable.SetOverValidDropZone(true);
+                originalColor = CardHighlight.color; 
+                CardHighlight.color = Color.cyan; 
+            }
+        }
+
+        public void OnPointerExit(PointerEventData eventData)
+        {
+            Draggable draggable = eventData.pointerDrag?.GetComponent<Draggable>();
+            if (draggable != null)
+            {
+                draggable.SetOverValidDropZone(false);
+                CardHighlight.color = originalColor; 
             }
         }
     }
 }
+
 
 // ---
 
@@ -2370,7 +2455,6 @@ namespace OcentraAI.LLMGames.ThreeCardBrag.UI.Controllers
 using OcentraAI.LLMGames.Extensions;
 using OcentraAI.LLMGames.Scriptable;
 using OcentraAI.LLMGames.ThreeCardBrag.Events;
-using OcentraAI.LLMGames.ThreeCardBrag.Manager;
 using OcentraAI.LLMGames.ThreeCardBrag.Players;
 using OcentraAI.LLMGames.Utilities;
 using Sirenix.OdinInspector;
@@ -2463,8 +2547,13 @@ namespace OcentraAI.LLMGames.ThreeCardBrag.UI.Controllers
         private CardView[] HumanPlayerCardViews { get; set; }
 
         [Required, ShowInInspector]
+        private Image[] HumanPlayerCardHighlight { get; set; }
+
+        [Required, ShowInInspector]
         private CardView[] ComputerPlayerCardViews { get; set; }
 
+        [Required, ShowInInspector]
+        private Image[] ComputerPlayerCardHighlight { get; set; }
 
         [Required, ShowInInspector]
         public LeftPanelController LeftPanelController { get; set; }
@@ -2492,7 +2581,25 @@ namespace OcentraAI.LLMGames.ThreeCardBrag.UI.Controllers
             PurchaseCoins = transform.FindChildRecursively<Button>(nameof(PurchaseCoins));
 
             HumanPlayerCardViews = ShowPlayerHand.GetComponentsInChildren<CardView>();
+            HumanPlayerCardHighlight = new Image[HumanPlayerCardViews.Length];
+
+            for (int index = 0; index < HumanPlayerCardViews.Length; index++)
+            {
+                CardView cardView = HumanPlayerCardViews[index];
+                Image image = cardView.transform.FindChildRecursively<Image>();
+                HumanPlayerCardHighlight[index] = image;
+            }
+
             ComputerPlayerCardViews = ComputerHand.GetComponentsInChildren<CardView>();
+            ComputerPlayerCardHighlight = new Image[ComputerPlayerCardViews.Length];
+
+            for (int index = 0; index < ComputerPlayerCardViews.Length; index++)
+            {
+                CardView cardView = ComputerPlayerCardViews[index];
+                Image image = cardView.transform.FindChildRecursively<Image>();
+                ComputerPlayerCardHighlight[index] = image;
+            }
+
 
             FloorCardView = transform.FindChildRecursively<CardView>(nameof(FloorCardView));
             Message = transform.FindChildRecursively<TextMeshProUGUI>(nameof(Message));
@@ -2629,10 +2736,30 @@ namespace OcentraAI.LLMGames.ThreeCardBrag.UI.Controllers
             if (e.TurnInfo.CurrentPlayer is HumanPlayer)
             {
                 CurrentPlayerTimer = HumanPlayerTimer;
+
+                foreach (Image image in HumanPlayerCardHighlight)
+                {
+                    image.enabled = true;
+                }
+
+                foreach (Image image in ComputerPlayerCardHighlight)
+                {
+                    image.enabled = false;
+                }
             }
             else if (e.TurnInfo.CurrentPlayer is ComputerPlayer)
             {
                 CurrentPlayerTimer = ComputerPlayerTimer;
+
+                foreach (Image image in HumanPlayerCardHighlight)
+                {
+                    image.enabled = false;
+                }
+
+                foreach (Image image in ComputerPlayerCardHighlight)
+                {
+                    image.enabled = true;
+                }
             }
 
             CurrentPlayerTimer.StartTimer(e.TurnInfo);
@@ -2722,12 +2849,7 @@ namespace OcentraAI.LLMGames.ThreeCardBrag.UI.Controllers
             TakeActionAsync(PlayerAction.PlayBlind);
         }
 
-
-        public void OnPickFromFloor()
-        {
-            ShowMessage($"Drop the Card to Hand Card to discard, else Draw new card", 5f);
-        }
-
+        
         private void OnPlayerSeeHand()
         {
             ShowPlayerHand.enabled = false;

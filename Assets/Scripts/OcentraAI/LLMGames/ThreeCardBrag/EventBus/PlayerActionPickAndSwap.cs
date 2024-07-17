@@ -5,13 +5,13 @@ namespace OcentraAI.LLMGames.ThreeCardBrag.Events
 {
     public class PlayerActionPickAndSwap : EventArgs
     {
-        public  Card PickCard { get; }
+        public  Card FloorCard { get; }
         public Card SwapCard { get; }
         public Type CurrentPlayerType { get; }
-        public PlayerActionPickAndSwap(Type currentPlayerType, Card pickCard, Card swapCard)
+        public PlayerActionPickAndSwap(Type currentPlayerType, Card floorCard, Card swapCard)
         {
             CurrentPlayerType = currentPlayerType;
-            PickCard = pickCard;
+            FloorCard = floorCard;
             SwapCard = swapCard;
         }
     }

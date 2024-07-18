@@ -33,6 +33,8 @@ namespace OcentraAI.LLMGames.ThreeCardBrag.Manager
             {
                 OnSetFloorCardList(e.SwapCard);
                 FloorCard = null;
+                EventBus.Publish(new UpdateFloorCard(null,true));
+
             }
             else
             {
@@ -42,9 +44,10 @@ namespace OcentraAI.LLMGames.ThreeCardBrag.Manager
 
                 }
                 FloorCard = DrawCard();
+                EventBus.Publish(new UpdateFloorCard(FloorCard));
+
             }
 
-            EventBus.Publish(new UpdateFloorCard(FloorCard));
         }
 
 
@@ -111,6 +114,9 @@ namespace OcentraAI.LLMGames.ThreeCardBrag.Manager
             {
                 LastDrawnTrumpCards.Dequeue();
             }
+
+            EventBus.Publish(new UpdateTrumpCard(TrumpCard));
+
         }
 
 
@@ -128,6 +134,7 @@ namespace OcentraAI.LLMGames.ThreeCardBrag.Manager
             FloorCard = null;
             EventBus.Publish(new UpdateFloorCard(null,true));
             EventBus.Publish(new UpdateFloorCardList(null,true));
+            EventBus.Publish(new UpdateTrumpCard(null,true));
 
         }
 

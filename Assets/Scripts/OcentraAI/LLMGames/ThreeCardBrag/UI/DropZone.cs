@@ -1,7 +1,5 @@
 using OcentraAI.LLMGames.Extensions;
-using OcentraAI.LLMGames.Scriptable;
 using OcentraAI.LLMGames.ThreeCardBrag.Events;
-using OcentraAI.LLMGames.ThreeCardBrag.Manager;
 using OcentraAI.LLMGames.ThreeCardBrag.Players;
 using OcentraAI.LLMGames.ThreeCardBrag.UI.Controllers;
 using OcentraAI.LLMGames.Utilities;

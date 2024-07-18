@@ -540,7 +540,7 @@ namespace OcentraAI.LLMGames.ThreeCardBrag.Manager
         private async Task CheckForContinuation(bool showHand, Player winner)
         {
             string message = ColouredMessage("Round Over!", Color.red) +
-                             ColouredMessage($"{winner.PlayerName}", Color.white, true) + ColouredMessage($"wins the game!", Color.cyan) +
+                             ColouredMessage($"{winner.PlayerName} ", Color.white, true) + ColouredMessage($"wins the game!", Color.cyan) +
                              $"{Environment.NewLine}" +
                              ColouredMessage("Continue Next Rounds ?", Color.red, true);
 

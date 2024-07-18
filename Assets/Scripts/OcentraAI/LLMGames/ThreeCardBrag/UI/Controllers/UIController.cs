@@ -27,6 +27,7 @@ namespace OcentraAI.LLMGames.ThreeCardBrag.UI.Controllers
         [Required, ShowInInspector] private Button ShowCall { get; set; }
         [Required, ShowInInspector] private Button ContinueRound { get; set; }
         [Required, ShowInInspector] private Button NewGame { get; set; }
+        [Required, ShowInInspector] private Transform NewGameContinueRoundHolder { get; set; }
         [Required, ShowInInspector] private Button PurchaseCoins { get; set; }
 
         [Required, ShowInInspector] private Transform ComputerHand { get; set; }
@@ -49,6 +50,7 @@ namespace OcentraAI.LLMGames.ThreeCardBrag.UI.Controllers
         [ShowInInspector] public Player CurrentPlayer { get; set; }
 
         [Required, ShowInInspector] private CardView FloorCardView { get; set; }
+        [Required, ShowInInspector] private CardView TrumpCardView { get; set; }
         [Required, ShowInInspector] private CardView[] HumanPlayerCardViews { get; set; }
         [Required, ShowInInspector] private Image[] HumanPlayerCardHighlight { get; set; }
         [Required, ShowInInspector] private CardView[] ComputerPlayerCardViews { get; set; }
@@ -104,11 +106,14 @@ namespace OcentraAI.LLMGames.ThreeCardBrag.UI.Controllers
             ShowCall = transform.FindChildRecursively<Button>(nameof(ShowCall));
             ContinueRound = transform.FindChildRecursively<Button>(nameof(ContinueRound));
             NewGame = transform.FindChildRecursively<Button>(nameof(NewGame));
+            NewGameContinueRoundHolder = transform.FindChildRecursively<Transform>(nameof(NewGameContinueRoundHolder));
             PurchaseCoins = transform.FindChildRecursively<Button>(nameof(PurchaseCoins));
 
             SetupCardViews();
 
             FloorCardView = transform.FindChildRecursively<CardView>(nameof(FloorCardView));
+            TrumpCardView = transform.FindChildRecursively<CardView>(nameof(TrumpCardView));
+
             Message = transform.FindChildRecursively<TextMeshProUGUI>(nameof(Message));
             HumanPlayersCoins = transform.FindChildRecursively<TextMeshProUGUI>(nameof(HumanPlayersCoins));
             ComputerPlayerCoins = transform.FindChildRecursively<TextMeshProUGUI>(nameof(ComputerPlayerCoins));
@@ -153,7 +158,12 @@ namespace OcentraAI.LLMGames.ThreeCardBrag.UI.Controllers
         private void SetupInitialUIState()
         {
             if (NewGame != null) NewGame.gameObject.SetActive(false);
-            if (ContinueRound != null) ContinueRound.gameObject.SetActive(false);
+            if (ContinueRound != null)
+            {
+                ContinueRound.gameObject.SetActive(false);
+                NewGameContinueRoundHolder.gameObject.SetActive(false);
+
+            }
             if (MessageHolder != null) MessageHolder.gameObject.SetActive(false);
             if (ShowPlayerHand != null) ShowPlayerHand.interactable = true;
 
@@ -166,7 +176,7 @@ namespace OcentraAI.LLMGames.ThreeCardBrag.UI.Controllers
                 }
             }
 
-            
+
             if (ComputerPlayerCardViews is { Length: > 0 })
             {
                 foreach (var cardView in ComputerPlayerCardViews)
@@ -178,7 +188,7 @@ namespace OcentraAI.LLMGames.ThreeCardBrag.UI.Controllers
 
             ButtonState = ButtonState.TakeAction;
 
-            
+
         }
 
         private void SetupButtonListeners()
@@ -209,6 +219,7 @@ namespace OcentraAI.LLMGames.ThreeCardBrag.UI.Controllers
             EventBus.Subscribe<UpdateTurnState>(OnUpdateTurnState);
             EventBus.Subscribe<PlayerStopCountDown>(OnPlayerStopCountDown);
             EventBus.Subscribe<UpdateFloorCard>(OnUpdateFloorCard);
+            EventBus.Subscribe<UpdateTrumpCard>(OnUpdateTrumpCard);
             EventBus.Subscribe<UpdateFloorCardList>(OnUpdateFloorCardList);
             EventBus.Subscribe<UpdatePlayerHandDisplay>(OnUpdatePlayerHandDisplay);
             EventBus.Subscribe<UpdateRoundDisplay>(OnUpdateRoundDisplay);
@@ -226,6 +237,8 @@ namespace OcentraAI.LLMGames.ThreeCardBrag.UI.Controllers
             EventBus.Unsubscribe<UpdateTurnState>(OnUpdateTurnState);
             EventBus.Unsubscribe<PlayerStopCountDown>(OnPlayerStopCountDown);
             EventBus.Unsubscribe<UpdateFloorCard>(OnUpdateFloorCard);
+            EventBus.Unsubscribe<UpdateTrumpCard>(OnUpdateTrumpCard);
+
             EventBus.Unsubscribe<UpdateFloorCardList>(OnUpdateFloorCardList);
             EventBus.Unsubscribe<UpdatePlayerHandDisplay>(OnUpdatePlayerHandDisplay);
             EventBus.Unsubscribe<UpdateRoundDisplay>(OnUpdateRoundDisplay);
@@ -291,13 +304,13 @@ namespace OcentraAI.LLMGames.ThreeCardBrag.UI.Controllers
             TakeAction(PlayerAction.Show, ButtonState.ActionTaken);
         }
 
-        private  void OnPurchaseCoins()
+        private void OnPurchaseCoins()
         {
             EventBus.Publish(new PurchaseCoins(1000));
             HideMessage();
         }
 
-        private  void OnNewGame()
+        private void OnNewGame()
         {
             EventBus.Publish(new PlayerActionStartNewGame());
             HideMessage();
@@ -395,15 +408,21 @@ namespace OcentraAI.LLMGames.ThreeCardBrag.UI.Controllers
             CurrentPlayerTimer.StopTimer();
 
         }
+        private void OnUpdateTrumpCard(UpdateTrumpCard e)
+        {
+            UpdateCardView(e.Card, e.Reset, TrumpCardView);
 
+        }
         private void OnUpdateFloorCard(UpdateFloorCard e)
         {
-            UpdateFloorCard(e.Card,e.Reset);
+            UpdateCardView(e.Card, e.Reset, FloorCardView);
+            FloorCardView.SetActive(FloorCardView.Card != null);
+            FloorCardView.transform.parent.gameObject.SetActive(FloorCardView.Card != null);
         }
 
         private void OnUpdateFloorCardList(UpdateFloorCardList e)
         {
-            LeftPanelController.AddCard(e.Card,e.Reset);
+            LeftPanelController.AddCard(e.Card, e.Reset);
         }
 
         private void OnUpdatePlayerHandDisplay(UpdatePlayerHandDisplay e)
@@ -428,7 +447,11 @@ namespace OcentraAI.LLMGames.ThreeCardBrag.UI.Controllers
         {
             ShowMessage(e.Message, e.Delay);
             EnablePlayerActions();
-            if (ContinueRound != null) ContinueRound.gameObject.SetActive(true);
+            if (ContinueRound != null)
+            {
+                NewGameContinueRoundHolder.gameObject.SetActive(true);
+                ContinueRound.gameObject.SetActive(true);
+            }
         }
 
         private void OnOfferNewGame(OfferNewGame e)
@@ -437,7 +460,11 @@ namespace OcentraAI.LLMGames.ThreeCardBrag.UI.Controllers
             ShowMessage(e.Message, e.Delay);
             EnablePlayerActions();
 
-            if (NewGame != null) NewGame.gameObject.SetActive(true);
+            if (NewGame != null)
+            {
+                NewGameContinueRoundHolder.gameObject.SetActive(true);
+                NewGame.gameObject.SetActive(true);
+            }
         }
 
         private void OnMessage(UIMessage e)
@@ -538,28 +565,29 @@ namespace OcentraAI.LLMGames.ThreeCardBrag.UI.Controllers
             if (ComputerPlayerWins != null) ComputerPlayerWins.text = $"{computerWins}";
         }
 
-        private void UpdateFloorCard(Card card, bool reset)
+        private void UpdateCardView(Card card, bool reset, CardView cardView)
         {
 
-            if (FloorCardView != null)
+            if (cardView != null)
             {
                 if (reset)
                 {
-                    FloorCardView.SetCard(null);
-                    FloorCardView.UpdateCardView();
-                  
+                    cardView.SetCard(null);
+                    cardView.UpdateCardView();
+                    return;
                 }
 
                 if (card != null)
                 {
-                    FloorCardView.SetCard(card);
-                    FloorCardView.UpdateCardView();
+                    cardView.SetCard(card);
+                    cardView.UpdateCardView();
                 }
 
-                FloorCardView.SetActive(FloorCardView.Card != null);
-                FloorCardView.transform.parent.gameObject.SetActive(FloorCardView.Card != null);
+
             }
         }
+
+
 
         private void UpdateHumanPlayerHandDisplay(Player player, bool isRoundEnd)
         {
@@ -641,8 +669,13 @@ namespace OcentraAI.LLMGames.ThreeCardBrag.UI.Controllers
             {
                 MessageHolder.gameObject.SetActive(false);
                 if (Message != null) Message.text = "";
-                if (ContinueRound != null) ContinueRound.gameObject.SetActive(false);
-                if (ContinueRound != null) ContinueRound.gameObject.SetActive(true);
+                if (ContinueRound != null)
+                {
+                    ContinueRound.gameObject.SetActive(false);
+                    NewGameContinueRoundHolder.gameObject.SetActive(false);
+
+                }
+                if (NewGame != null) NewGame.gameObject.SetActive(true);
             }
         }
 

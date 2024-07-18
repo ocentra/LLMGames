@@ -11,41 +11,22 @@ namespace OcentraAI.LLMGames.ThreeCardBrag.Manager
 
     public class DeckManager
     {
-        [ShowInInspector]
-        public List<Card> DeckCards { get; private set; } = new List<Card>();
-
-        [ShowInInspector]
-        public List<Card> FloorCards { get; private set; } = new List<Card>();
-
-        [ShowInInspector]
-        public Card BackCard => Deck.Instance.BackCard;
-
-        [ShowInInspector]
-        public int TotalCards => Deck.Instance.CardTemplates.Count;
-        [ShowInInspector]
-        public int RemainingCards => DeckCards.Count;
-
-        [ShowInInspector]
-        public int FloorCardsCount => FloorCards.Count;
-
-        [ShowInInspector]
-        public Card FloorCard { get; set; }
-
-        [ShowInInspector]
-        public Card SwapCard { get; set; }
-
-        [ShowInInspector]
-        public Card TrumpCard { get; private set; }
-
-        [ShowInInspector]
-        private Queue<Card> LastDrawnTrumpCards { get; set; } = new Queue<Card>();
+        [ShowInInspector] public List<Card> DeckCards { get; private set; } = new List<Card>();
+        [ShowInInspector] public List<Card> FloorCards { get; private set; } = new List<Card>();
+        [ShowInInspector] public Card BackCard => Deck.Instance.BackCard;
+        [ShowInInspector] public int TotalCards => Deck.Instance.CardTemplates.Count;
+        [ShowInInspector] public int RemainingCards => DeckCards.Count;
+        [ShowInInspector] public int FloorCardsCount => FloorCards.Count;
+        [ShowInInspector] public Card FloorCard { get; set; }
+        [ShowInInspector] public Card SwapCard { get; set; }
+        [ShowInInspector] public Card TrumpCard { get; private set; }
+        [ShowInInspector] private Queue<Card> LastDrawnTrumpCards { get; set; } = new Queue<Card>();
         public DeckManager()
         {
             InitializeDeck();
         }
 
-
-
+        
         public void OnSetFloorCard(SetFloorCard e)
         {
             if (e.SwapCard != null)

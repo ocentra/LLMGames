@@ -6,8 +6,10 @@ using OcentraAI.LLMGames.Utilities;
 using Sirenix.OdinInspector;
 using System.Collections;
 using TMPro;
+using UnityEditor.VersionControl;
 using UnityEngine;
 using UnityEngine.UI;
+using Button = UnityEngine.UI.Button;
 
 namespace OcentraAI.LLMGames.ThreeCardBrag.UI.Controllers
 {
@@ -152,21 +154,46 @@ namespace OcentraAI.LLMGames.ThreeCardBrag.UI.Controllers
             if (NewGame != null) NewGame.gameObject.SetActive(false);
             if (ContinueRound != null) ContinueRound.gameObject.SetActive(false);
             if (MessageHolder != null) MessageHolder.gameObject.SetActive(false);
+            if (ShowPlayerHand != null) ShowPlayerHand.interactable = true;
+
+            if (HumanPlayerCardViews is { Length: > 0 })
+            {
+                foreach (var cardView in HumanPlayerCardViews)
+                {
+                    cardView.SetCard(null);
+                    cardView.UpdateCardView();
+                }
+            }
+
+            
+            if (ComputerPlayerCardViews is { Length: > 0 })
+            {
+                foreach (var cardView in ComputerPlayerCardViews)
+                {
+                    cardView.SetCard(null);
+                    cardView.UpdateCardView();
+                }
+            }
+
+            ButtonState = ButtonState.TakeAction;
         }
 
         private void SetupButtonListeners()
         {
-            if (ShowPlayerHand != null) ShowPlayerHand.onClick.AddListener(OnPlayerSeeHand);
-            if (PlayBlind != null) PlayBlind.onClick.AddListener(OnPlayBlind);
-            if (RaiseBet != null) RaiseBet.onClick.AddListener(OnRaiseBet);
-            if (Fold != null) Fold.onClick.AddListener(OnFold);
-            if (Bet != null) Bet.onClick.AddListener(OnBet);
-            if (DrawFromDeck != null) DrawFromDeck.onClick.AddListener(OnDrawFromDeck);
-            if (ShowCall != null) ShowCall.onClick.AddListener(OnShowCall);
-            if (ContinueRound != null) ContinueRound.onClick.AddListener(() => EventBus.Publish(new PlayerActionContinueGame(true)));
-            if (NewGame != null) NewGame.onClick.AddListener(() => EventBus.Publish(new PlayerActionStartNewGame()));
-            if (PurchaseCoins != null) PurchaseCoins.onClick.AddListener(() => EventBus.Publish(new PurchaseCoins(1000)));
+            if (ShowPlayerHand != null) ShowPlayerHand.onClick.AddListener(() => OnPlayerSeeHand(ShowPlayerHand));
+            if (PlayBlind != null) PlayBlind.onClick.AddListener(() => OnPlayBlind(PlayBlind));
+            if (RaiseBet != null) RaiseBet.onClick.AddListener(() => OnRaiseBet(RaiseBet));
+            if (Fold != null) Fold.onClick.AddListener(() => OnFold(Fold));
+            if (Bet != null) Bet.onClick.AddListener(() => OnBet(Bet));
+            if (DrawFromDeck != null) DrawFromDeck.onClick.AddListener(() => OnDrawFromDeck(DrawFromDeck));
+            if (ShowCall != null) ShowCall.onClick.AddListener(() => OnShowCall(ShowCall));
+            if (ContinueRound != null) ContinueRound.onClick.AddListener(OnContinueRound);
+            if (NewGame != null) NewGame.onClick.AddListener(OnNewGame);
+            if (PurchaseCoins != null) PurchaseCoins.onClick.AddListener(OnPurchaseCoins);
         }
+
+
+
         #endregion
 
         #region Event Subscription
@@ -176,6 +203,7 @@ namespace OcentraAI.LLMGames.ThreeCardBrag.UI.Controllers
             EventBus.Subscribe<NewGameEventArgs>(OnNewGame);
             EventBus.Subscribe<UpdateGameState>(OnUpdateGameState);
             EventBus.Subscribe<PlayerStartCountDown>(OnPlayerStartCountDown);
+            EventBus.Subscribe<UpdateTurnState>(OnUpdateTurnState);
             EventBus.Subscribe<PlayerStopCountDown>(OnPlayerStopCountDown);
             EventBus.Subscribe<UpdateFloorCard>(OnUpdateFloorCard);
             EventBus.Subscribe<UpdateFloorCardList>(OnUpdateFloorCardList);
@@ -192,6 +220,7 @@ namespace OcentraAI.LLMGames.ThreeCardBrag.UI.Controllers
             EventBus.Unsubscribe<NewGameEventArgs>(OnNewGame);
             EventBus.Unsubscribe<UpdateGameState>(OnUpdateGameState);
             EventBus.Unsubscribe<PlayerStartCountDown>(OnPlayerStartCountDown);
+            EventBus.Unsubscribe<UpdateTurnState>(OnUpdateTurnState);
             EventBus.Unsubscribe<PlayerStopCountDown>(OnPlayerStopCountDown);
             EventBus.Unsubscribe<UpdateFloorCard>(OnUpdateFloorCard);
             EventBus.Unsubscribe<UpdateFloorCardList>(OnUpdateFloorCardList);
@@ -201,27 +230,33 @@ namespace OcentraAI.LLMGames.ThreeCardBrag.UI.Controllers
             EventBus.Unsubscribe<OfferNewGame>(OnOfferNewGame);
             EventBus.Unsubscribe<UIMessage>(OnMessage);
         }
+
+
+
         #endregion
 
         #region Player Actions
-        private void OnPlayerSeeHand()
+        private void OnPlayerSeeHand(Button button)
         {
+            button.interactable = false;
             TakeAction(PlayerAction.SeeHand, ButtonState.TakeAction);
         }
 
-        private void OnPlayBlind()
+        private void OnPlayBlind(Button button)
         {
+            button.interactable = false;
             TakeAction(PlayerAction.PlayBlind, ButtonState.ActionTaken);
 
         }
 
-        private void OnRaiseBet()
+        private void OnRaiseBet(Button button)
         {
+
             if (int.TryParse(RaiseAmount.text, out int raiseAmount) && raiseAmount > 0)
             {
                 EventBus.Publish(new PlayerActionRaiseBet(typeof(HumanPlayer), raiseAmount.ToString()));
-                SetButtonState(ButtonState.ActionTaken); 
-
+                SetButtonState(ButtonState.ActionTaken);
+                button.interactable = false;
             }
             else
             {
@@ -229,34 +264,54 @@ namespace OcentraAI.LLMGames.ThreeCardBrag.UI.Controllers
             }
         }
 
-        private void OnFold()
+        private void OnFold(Button button)
         {
+            button.interactable = false;
             TakeAction(PlayerAction.Fold, ButtonState.ActionTaken);
-
         }
 
-        private void OnBet()
+        private void OnBet(Button button)
         {
+            button.interactable = false;
             TakeAction(PlayerAction.Bet, ButtonState.ActionTaken);
-
         }
 
-        private void OnDrawFromDeck()
+        private void OnDrawFromDeck(Button button)
         {
-            TakeAction(PlayerAction.DrawFromDeck, ButtonState.ActionTaken);
-
+            button.interactable = false;
+            TakeAction(PlayerAction.DrawFromDeck, ButtonState.Draw);
         }
 
-        private void OnShowCall()
+        private void OnShowCall(Button button)
         {
+            button.interactable = false;
             TakeAction(PlayerAction.Show, ButtonState.ActionTaken);
+        }
 
+        private  void OnPurchaseCoins()
+        {
+            EventBus.Publish(new PurchaseCoins(1000));
+            HideMessage();
+        }
+
+        private  void OnNewGame()
+        {
+            EventBus.Publish(new PlayerActionStartNewGame());
+            HideMessage();
+            SetupInitialUIState();
+        }
+
+        private void OnContinueRound()
+        {
+            EventBus.Publish(new PlayerActionContinueGame(true));
+            HideMessage();
+            SetupInitialUIState();
         }
 
         private void TakeAction(PlayerAction action, ButtonState buttonState)
         {
-            EventBus.Publish(new PlayerActionEvent(typeof(HumanPlayer), action));
             SetButtonState(buttonState);
+            EventBus.Publish(new PlayerActionEvent(typeof(HumanPlayer), action));
         }
         #endregion
 
@@ -277,7 +332,7 @@ namespace OcentraAI.LLMGames.ThreeCardBrag.UI.Controllers
 
         private void OnNewGame(NewGameEventArgs e)
         {
-            ShowMessage($"New game started with initial coins: {e.InitialCoins}", 5f);
+            ShowMessage(e.Message);
             UpdateCoinsDisplay(e.InitialCoins, e.InitialCoins);
         }
 
@@ -286,34 +341,43 @@ namespace OcentraAI.LLMGames.ThreeCardBrag.UI.Controllers
             UpdateCoinsDisplay(e.GameManager.HumanPlayer.Coins, e.GameManager.ComputerPlayer.Coins);
             UpdatePotDisplay(e.GameManager.Pot);
             UpdateCurrentBetDisplay(e.GameManager.CurrentBet);
-
             EnablePlayerActions();
-
-
             if (e.IsNewRound)
             {
                 ResetAllCardViews();
             }
         }
 
+
         private void OnPlayerStartCountDown(PlayerStartCountDown e)
         {
             CurrentPlayer = e.TurnInfo.CurrentPlayer;
+            CurrentPlayerTimer.StartTimer(e.TurnInfo);
+        }
 
-            if (CurrentPlayer is HumanPlayer)
+        private void OnUpdateTurnState(UpdateTurnState e)
+        {
+            CurrentPlayer = e.CurrentPlayer;
+
+            if (e.IsHumanTurn)
             {
                 CurrentPlayerTimer = HumanPlayerTimer;
                 SetCardHighlights(HumanPlayerCardHighlight, true);
                 SetCardHighlights(ComputerPlayerCardHighlight, false);
+                SetButtonState(ButtonState.TakeAction);
+
             }
-            else if (CurrentPlayer is ComputerPlayer)
+            else if (e.IsComputerTurn && CurrentPlayer is ComputerPlayer computerPlayer)
             {
                 CurrentPlayerTimer = ComputerPlayerTimer;
                 SetCardHighlights(HumanPlayerCardHighlight, false);
                 SetCardHighlights(ComputerPlayerCardHighlight, true);
+                computerPlayer.ResetState();
+
             }
 
-            CurrentPlayerTimer.StartTimer(e.TurnInfo);
+            EnablePlayerActions();
+
         }
 
         private void OnPlayerStopCountDown(PlayerStopCountDown e)
@@ -321,13 +385,7 @@ namespace OcentraAI.LLMGames.ThreeCardBrag.UI.Controllers
             CurrentPlayer = e.CurrentPlayer;
 
             CurrentPlayerTimer = (e.CurrentPlayer is HumanPlayer) ? HumanPlayerTimer : ComputerPlayerTimer;
-
-            EnablePlayerActions();
-
-            SetButtonState(ButtonState.ActionTaken);
-            SetCardHighlights(ComputerPlayerCardHighlight, false);
-            SetCardHighlights(HumanPlayerCardHighlight, false);
-
+            SetButtonState(ButtonState.TakeAction);
             CurrentPlayerTimer.StopTimer();
 
         }
@@ -347,10 +405,10 @@ namespace OcentraAI.LLMGames.ThreeCardBrag.UI.Controllers
             switch (e.Player)
             {
                 case HumanPlayer humanPlayer:
-                    UpdateHumanPlayerHandDisplay(humanPlayer);
+                    UpdateHumanPlayerHandDisplay(humanPlayer, e.IsRoundEnd);
                     break;
                 case ComputerPlayer computerPlayer:
-                    UpdateComputerHandDisplay(computerPlayer);
+                    UpdateComputerHandDisplay(computerPlayer, e.IsRoundEnd);
                     break;
             }
         }
@@ -362,12 +420,16 @@ namespace OcentraAI.LLMGames.ThreeCardBrag.UI.Controllers
 
         private void OnOfferContinuation(OfferContinuation e)
         {
+            ShowMessage(e.Message, e.Delay);
+            EnablePlayerActions();
             if (ContinueRound != null) ContinueRound.gameObject.SetActive(true);
         }
 
-        private void OnOfferNewGame(OfferNewGame obj)
+        private void OnOfferNewGame(OfferNewGame e)
         {
-            ShowMessage("Do you want to play a new game?", 15f);
+            ShowMessage(e.Message, e.Delay);
+            EnablePlayerActions();
+
             if (NewGame != null) NewGame.gameObject.SetActive(true);
         }
 
@@ -382,7 +444,9 @@ namespace OcentraAI.LLMGames.ThreeCardBrag.UI.Controllers
         {
             ButtonState buttonState = ButtonState;
 
-            bool isHumanTurn = CurrentPlayer is HumanPlayer or null;
+            bool isHumanTurn = !(CurrentPlayer is ComputerPlayer);
+
+
             bool hasSeenHand = false;
             int coins = 0;
 
@@ -397,21 +461,25 @@ namespace OcentraAI.LLMGames.ThreeCardBrag.UI.Controllers
             }
 
 
-            SetButtonState(PurchaseCoins, isHumanTurn && coins <= 100 && buttonState != ButtonState.ActionTaken);
-            SetButtonState(PlayBlind, isHumanTurn && !hasSeenHand && buttonState != ButtonState.ActionTaken);
-            SetButtonState(RaiseBet, isHumanTurn && hasSeenHand && buttonState != ButtonState.ActionTaken);
-            SetButtonState(Fold, isHumanTurn && hasSeenHand && buttonState != ButtonState.ActionTaken);
-            SetButtonState(Bet, isHumanTurn && hasSeenHand && buttonState != ButtonState.ActionTaken);
-            SetButtonState(ShowCall, isHumanTurn && hasSeenHand && buttonState != ButtonState.ActionTaken);
+            bool showState = buttonState is ButtonState.TakeAction or ButtonState.DrawnFromDeck or ButtonState.Draw;
+
+
+
+            SetButtonState(PurchaseCoins, isHumanTurn && coins <= 100 && showState);
+            SetButtonState(PlayBlind, isHumanTurn && !hasSeenHand && showState);
+            SetButtonState(RaiseBet, isHumanTurn && hasSeenHand && showState);
+            SetButtonState(Fold, isHumanTurn && hasSeenHand && showState);
+            SetButtonState(Bet, isHumanTurn && hasSeenHand && showState);
+            SetButtonState(ShowCall, isHumanTurn && hasSeenHand && showState);
 
             if (DrawFromDeck != null)
             {
-                DrawFromDeck.interactable = isHumanTurn && hasSeenHand && buttonState != ButtonState.ActionTaken && buttonState != ButtonState.DrawnFromDeck;
+                DrawFromDeck.interactable = isHumanTurn && hasSeenHand && buttonState != ButtonState.ActionTaken && buttonState != ButtonState.Draw && buttonState != ButtonState.DrawnFromDeck;
             }
 
             if (RaiseBet != null)
             {
-                RaiseBet.transform.parent.gameObject.SetActive(isHumanTurn && hasSeenHand && buttonState != ButtonState.ActionTaken);
+                RaiseBet.transform.parent.gameObject.SetActive(isHumanTurn && hasSeenHand && showState);
             }
         }
 
@@ -427,6 +495,7 @@ namespace OcentraAI.LLMGames.ThreeCardBrag.UI.Controllers
         public void SetButtonState(ButtonState buttonState)
         {
             ButtonState = buttonState;
+            EnablePlayerActions();
         }
 
         private void SetCardHighlights(Image[] highlights, bool enabled)
@@ -477,7 +546,7 @@ namespace OcentraAI.LLMGames.ThreeCardBrag.UI.Controllers
             }
         }
 
-        private void UpdateHumanPlayerHandDisplay(Player player, bool isRoundEnd = false)
+        private void UpdateHumanPlayerHandDisplay(Player player, bool isRoundEnd)
         {
             if (player.HasSeenHand || isRoundEnd)
             {
@@ -489,7 +558,7 @@ namespace OcentraAI.LLMGames.ThreeCardBrag.UI.Controllers
             }
         }
 
-        private void UpdateComputerHandDisplay(Player player, bool isRoundEnd = false)
+        private void UpdateComputerHandDisplay(Player player, bool isRoundEnd)
         {
             ComputerPlayingBlind.text = player.HasSeenHand ? "" : "Playing Blind";
 
@@ -539,19 +608,27 @@ namespace OcentraAI.LLMGames.ThreeCardBrag.UI.Controllers
                     Message.text = message;
                 }
 
-                StartCoroutine(HideMessageAfterDelay(delay));
+                // StartCoroutine(HideMessageAfterDelay(delay));
             }
         }
 
         private IEnumerator HideMessageAfterDelay(float delay)
         {
             yield return new WaitForSeconds(delay);
+            HideMessage();
+        }
 
+        private void HideMessage()
+        {
             if (MessageHolder != null)
             {
                 MessageHolder.gameObject.SetActive(false);
+                if (Message != null) Message.text = "";
+                if (ContinueRound != null) ContinueRound.gameObject.SetActive(false);
+                if (ContinueRound != null) ContinueRound.gameObject.SetActive(true);
             }
         }
+
         #endregion
 
 
@@ -562,6 +639,7 @@ namespace OcentraAI.LLMGames.ThreeCardBrag.UI.Controllers
     {
         TakeAction,
         ActionTaken,
+        Draw,
         DrawnFromDeck
     }
 }

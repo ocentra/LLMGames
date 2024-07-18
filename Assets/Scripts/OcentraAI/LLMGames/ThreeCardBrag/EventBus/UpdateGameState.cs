@@ -6,6 +6,8 @@ namespace OcentraAI.LLMGames.ThreeCardBrag.Events
     public class UpdateGameState : EventArgs
     {
         public bool IsNewRound { get; } = false;
+
+
         public GameManager GameManager { get; }
         public UpdateGameState(GameManager gameManager, bool isNewRound =false)
         {

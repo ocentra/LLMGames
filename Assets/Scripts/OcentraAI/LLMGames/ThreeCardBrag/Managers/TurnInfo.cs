@@ -1,4 +1,5 @@
 using OcentraAI.LLMGames.ThreeCardBrag.Events;
+using OcentraAI.LLMGames.ThreeCardBrag.Manager;
 using OcentraAI.LLMGames.Utilities;
 using System;
 using System.Threading;
@@ -18,9 +19,8 @@ namespace OcentraAI.LLMGames.ThreeCardBrag.Players
         public float RemainingTime { get; private set; }
         private CancellationTokenSource CancellationTokenSource { get; set; }
 
-        public TurnInfo(Player currentPlayer, float duration)
+        public TurnInfo(float duration)
         {
-            CurrentPlayer = currentPlayer;
             Duration = duration;
             ElapsedTime = 0f;
             RemainingTime = Duration;
@@ -29,16 +29,20 @@ namespace OcentraAI.LLMGames.ThreeCardBrag.Players
             CancellationTokenSource = new CancellationTokenSource();
         }
 
-        public void StartTurn()
+        public void StartTurn(Player currentPlayer)
         {
+            CurrentPlayer = currentPlayer;
+
             ActionCompletionSource = new TaskCompletionSource<bool>();
             TimerCompletionSource = new TaskCompletionSource<bool>();
             CancellationTokenSource = new CancellationTokenSource();
 
-            StartTimer(CurrentPlayer);
+            StartTimer();
+            EventBus.Publish(new UpdateTurnState(CurrentPlayer));
+
         }
 
-        public async void StartTimer(Player currentPlayer)
+        private async void StartTimer()
         {
             PlayerStartCountDown playerStartCountDown = new PlayerStartCountDown(this);
             ElapsedTime = 0f;
@@ -67,6 +71,15 @@ namespace OcentraAI.LLMGames.ThreeCardBrag.Players
             }
         }
 
+        public Task SwitchTurn(CancellationTokenSource cancellationTokenSource)
+        {
+            if (cancellationTokenSource?.IsCancellationRequested == true) return Task.CompletedTask;
+            StopTurn();
+            CurrentPlayer = CurrentPlayer is HumanPlayer ? GameManager.Instance.ComputerPlayer : GameManager.Instance.HumanPlayer;
+            StartTurn(CurrentPlayer);
+
+            return Task.CompletedTask;
+        }
         public void StopTurn()
         {
             CancellationTokenSource.Cancel();

@@ -7,6 +7,8 @@ using System.Threading.Tasks;
 using System;
 using OcentraAI.LLMGames.LLMServices;
 using Sirenix.OdinInspector;
+using UnityEditor.VersionControl;
+using Task = System.Threading.Tasks.Task;
 
 namespace OcentraAI.LLMGames.Authentication
 {
@@ -53,8 +55,10 @@ namespace OcentraAI.LLMGames.Authentication
             await TryGetAllConfigsFromCloud();
         }
 
+
         private void ApplyRemoteSettings(ConfigResponse configResponse)
         {
+
             //switch (configResponse.requestOrigin)
             //{
             //    case ConfigOrigin.Default:
@@ -76,29 +80,46 @@ namespace OcentraAI.LLMGames.Authentication
             //    Debug.Log($"Key: {key}, Value: {value}");
             //}
 
-            foreach (LLMProvider provider in Enum.GetValues(typeof(LLMProvider)))
+
+            string configJson = RemoteConfigService.Instance.appConfig.GetJson(nameof(LLMConfig));
+
+            if (!string.IsNullOrEmpty(configJson))
             {
-                string configJson = RemoteConfigService.Instance.appConfig.GetJson(provider.ToString());
-                //Debug.Log($"Fetched config for {provider}: {configJson}");
-                if (!string.IsNullOrEmpty(configJson))
+                try
                 {
-                    try
+                    var llmConfigDictionary = JsonConvert.DeserializeObject<Dictionary<string, Dictionary<string, object>>>(configJson);
+
+                    foreach (var providerConfig in llmConfigDictionary)
                     {
-                        LLMConfig config = JsonConvert.DeserializeObject<LLMConfig>(configJson);
-                        DefaultLLMConfigs[$"{provider}"] = config;
-                        //Debug.Log($"Configuration Loaded for {provider}: {configJson}");
+                        var providerConfigJson = JsonConvert.SerializeObject(providerConfig.Value);
+                        LLMConfig config = JsonConvert.DeserializeObject<LLMConfig>(providerConfigJson);
+
+                        string providerName = config.ProviderName.ToLower();
+
+                        if (Enum.TryParse(typeof(LLMProvider), providerName, true, out var enumValue))
+                        {
+                            DefaultLLMConfigs[enumValue.ToString()] = config;
+                           // Debug.Log($"Configuration Loaded for {enumValue}: {providerConfigJson}");
+                        }
+                        else
+                        {
+                            Debug.LogWarning($"Provider {providerName} is not a valid LLMProvider enum value.");
+                        }
                     }
-                    catch (JsonException jsonEx)
-                    {
-                        Debug.LogError($"Failed to deserialize JSON for {provider}: {jsonEx.Message}");
-                    }
+
+                   // Debug.Log("LLM configurations loaded successfully.");
                 }
-                else
+                catch (JsonException jsonEx)
                 {
-                    Debug.LogWarning($"{provider} configuration is missing or empty.");
+                    Debug.LogError($"Failed to deserialize LLMConfig JSON: {jsonEx.Message}");
                 }
             }
+            else
+            {
+                Debug.LogWarning("LLMConfig configuration is missing or empty.");
+            }
         }
+
 
 
 

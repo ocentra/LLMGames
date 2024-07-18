@@ -16,7 +16,7 @@ namespace OcentraAI.LLMGames.ThreeCardBrag.Players
         public override void ShowHand(bool isRoundEnd=false)
         {
             base.ShowHand(isRoundEnd);
-            EventBus.Publish(new UpdatePlayerHandDisplay(this));
+            EventBus.Publish(new UpdatePlayerHandDisplay(this, isRoundEnd));
         }
 
         public override void PickAndSwap(Card floorCard, Card swapCard)

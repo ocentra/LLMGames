@@ -18,49 +18,21 @@ namespace OcentraAI.LLMGames.ThreeCardBrag.Manager
     public class GameManager : MonoBehaviour
     {
         public static GameManager Instance { get; private set; }
-
-        [ShowInInspector]
-        public HumanPlayer HumanPlayer { get; private set; }
-
-        [ShowInInspector]
-        public ComputerPlayer ComputerPlayer { get; private set; }
-
-        [ShowInInspector, ReadOnly]
-        public ScoreKeeper ScoreKeeper { get; private set; }
-
-        [ShowInInspector]
-        public float TurnDuration { get; private set; } = 60f;
-
-        [ShowInInspector, ReadOnly]
-        public int Pot { get; private set; } = 0;
-
-        [ShowInInspector]
-        public int BaseBet { get; private set; } = 10;
-
-        [ShowInInspector, ReadOnly]
-        public int CurrentBet { get; private set; }
-
-        [ShowInInspector, ReadOnly]
-        public int BlindMultiplier { get; private set; } = 1;
-
-        [ShowInInspector]
-        public int InitialCoins { get; private set; } = 1000;
-
-        [ShowInInspector, ReadOnly]
-        private int CurrentRound { get; set; } = 0;
-
-        [ShowInInspector, ReadOnly]
-        public DeckManager DeckManager { get; private set; }
-
-        [ShowInInspector]
-        public int MaxRounds { get; private set; } = 10;
-
-        [ShowInInspector]
-        public TurnInfo CurrentTurn { get; private set; }
-
+        [ShowInInspector] public HumanPlayer HumanPlayer { get; private set; }
+        [ShowInInspector] public ComputerPlayer ComputerPlayer { get; private set; }
+        [ShowInInspector, ReadOnly] public ScoreKeeper ScoreKeeper { get; private set; }
+        [ShowInInspector] public float TurnDuration { get; private set; } = 60f;
+        [ShowInInspector, ReadOnly] public int Pot { get; private set; } = 0;
+        [ShowInInspector] public int BaseBet { get; private set; } = 10;
+        [ShowInInspector, ReadOnly] public int CurrentBet { get; private set; }
+        [ShowInInspector, ReadOnly] public int BlindMultiplier { get; private set; } = 1;
+        [ShowInInspector] public int InitialCoins { get; private set; } = 1000;
+        [ShowInInspector, ReadOnly] private int CurrentRound { get; set; } = 0;
+        [ShowInInspector, ReadOnly] public DeckManager DeckManager { get; private set; }
+        [ShowInInspector] public int MaxRounds { get; private set; } = 10;
+        [ShowInInspector] public TurnInfo CurrentTurn { get; private set; }
         public AIHelper AIHelper { get; private set; }
-
-        private CancellationTokenSource globalCancellationTokenSource;
+        public CancellationTokenSource GlobalCancellationTokenSource { get; set; }
 
 
         private void Awake()
@@ -78,7 +50,7 @@ namespace OcentraAI.LLMGames.ThreeCardBrag.Manager
 
         private void OnEnable()
         {
-            globalCancellationTokenSource = new CancellationTokenSource();
+            GlobalCancellationTokenSource = new CancellationTokenSource();
             UnityEditor.EditorApplication.playModeStateChanged += OnPlayModeStateChanged;
 
             EventBus.Subscribe<PlayerActionStartNewGame>(OnPlayerActionStartNewGame);
@@ -95,8 +67,8 @@ namespace OcentraAI.LLMGames.ThreeCardBrag.Manager
 
         private void OnDisable()
         {
-            globalCancellationTokenSource?.Cancel();
-            globalCancellationTokenSource?.Dispose();
+            GlobalCancellationTokenSource?.Cancel();
+            GlobalCancellationTokenSource?.Dispose();
             UnityEditor.EditorApplication.playModeStateChanged -= OnPlayModeStateChanged;
 
             EventBus.Unsubscribe<PlayerActionStartNewGame>(OnPlayerActionStartNewGame);
@@ -115,15 +87,20 @@ namespace OcentraAI.LLMGames.ThreeCardBrag.Manager
 
         private async void Start()
         {
+            if (IsCancellationRequested()) return;
             await InitializeGameAsync();
         }
 
         private async void OnPlayerActionStartNewGame(PlayerActionStartNewGame obj)
         {
+            if (IsCancellationRequested()) return;
+
             await StartNewGameAsync();
         }
         private async void OnPlayerActionContinueGame(PlayerActionContinueGame e)
         {
+            if (IsCancellationRequested()) return;
+
 
             if (e.ShouldContinue)
             {
@@ -137,6 +114,8 @@ namespace OcentraAI.LLMGames.ThreeCardBrag.Manager
 
         private async void OnPlayerAction(PlayerActionEvent e)
         {
+            if (IsCancellationRequested()) return;
+
             if (CurrentTurn.CurrentPlayer.GetType() == e.CurrentPlayerType)
             {
                 await ProcessPlayerAction(e.Action);
@@ -145,12 +124,14 @@ namespace OcentraAI.LLMGames.ThreeCardBrag.Manager
 
         private async void OnPlayerActionRaiseBet(PlayerActionRaiseBet e)
         {
+            if (IsCancellationRequested()) return;
 
             if (CurrentTurn.CurrentPlayer.GetType() == e.CurrentPlayerType)
             {
                 if (string.IsNullOrEmpty(e.Amount))
                 {
-                    ShowMessage($" Please Set RaiseAmount! Needs to be higher than CurrentBet {CurrentBet}", 5f);
+                    ShowMessage($" Please Set RaiseAmount! Needs to be higher than CurrentBet {CurrentBet}");
+
                     return;
                 }
 
@@ -164,25 +145,23 @@ namespace OcentraAI.LLMGames.ThreeCardBrag.Manager
                         newBet = (int)(CurrentBet * 2 + CurrentBet * randomMultiplier);
                     }
 
-
-
                     if (CurrentTurn.CurrentPlayer.Coins >= CurrentBet)
                     {
                         SetCurrentBet(newBet);
                         CurrentTurn.CurrentPlayer.Raise(CurrentBet);
                         Pot += CurrentBet;
-                        CurrentTurn.ActionCompletionSource.TrySetResult(true);
-
+                        await SwitchTurn();
                     }
                     else
                     {
-                        EventBus.Publish(new UIMessage($"Not enough coins ({CurrentTurn.CurrentPlayer.Coins}). Current bet is {CurrentBet}. You need to fold!", 5f));
+                        ShowMessage($"Not enough coins ({CurrentTurn.CurrentPlayer.Coins}). Current bet is {CurrentBet}. You need to fold!");
                         await Fold();
                     }
                 }
                 else
                 {
-                    ShowMessage($" RaiseAmount {raiseAmount} Needs to be higher than CurrentBet {CurrentBet}", 5f);
+                    ShowMessage($" RaiseAmount {raiseAmount} Needs to be higher than CurrentBet {CurrentBet}");
+
                 }
 
 
@@ -192,10 +171,11 @@ namespace OcentraAI.LLMGames.ThreeCardBrag.Manager
 
         private void OnPlayerActionPickAndSwap(PlayerActionPickAndSwap e)
         {
+            if (IsCancellationRequested()) return;
+
             if (e.CurrentPlayerType == CurrentTurn.CurrentPlayer.GetType())
             {
                 CurrentTurn.CurrentPlayer.PickAndSwap(e.FloorCard, e.SwapCard);
-                EventBus.Publish(new UpdateGameState(this));
 
             }
         }
@@ -205,24 +185,22 @@ namespace OcentraAI.LLMGames.ThreeCardBrag.Manager
             // For now, we'll just add the coins directly
 
             HumanPlayer.AdjustCoins(obj.Amount);
-            EventBus.Publish(new UpdateGameState(this));
         }
-
 
 
         private void OnPlayModeStateChanged(UnityEditor.PlayModeStateChange state)
         {
             if (state == UnityEditor.PlayModeStateChange.ExitingPlayMode)
             {
-                globalCancellationTokenSource.Cancel();
+                GlobalCancellationTokenSource.Cancel();
             }
         }
-
-
 
         private async Task InitializeGameAsync()
         {
             Init();
+            if (IsCancellationRequested()) return;
+
             await Task.WhenAll(
                 InitializePlayers(),
                 InitializeDeck(),
@@ -232,17 +210,15 @@ namespace OcentraAI.LLMGames.ThreeCardBrag.Manager
         }
 
 
-
         private Task InitializeUIPlayers()
         {
-            var initializedUIPlayersSource = new TaskCompletionSource<bool>();
+            TaskCompletionSource<bool> initializedUIPlayersSource = new TaskCompletionSource<bool>();
 
             EventBus.Publish(new InitializeUIPlayers(initializedUIPlayersSource, this));
 
             return initializedUIPlayersSource.Task;
 
         }
-
 
         private void Init()
         {
@@ -276,7 +252,7 @@ namespace OcentraAI.LLMGames.ThreeCardBrag.Manager
             HumanPlayer.AdjustCoins(InitialCoins);
             ComputerPlayer.AdjustCoins(InitialCoins);
             DeckManager.ResetForNewGame();
-            EventBus.Publish(new NewGameEventArgs(InitialCoins));
+            EventBus.Publish(new NewGameEventArgs(InitialCoins, $"Starting new game"));
 
             await StartNewRoundAsync();
 
@@ -301,25 +277,28 @@ namespace OcentraAI.LLMGames.ThreeCardBrag.Manager
 
             DeckManager.SetRandomTrumpCard();
 
-            EventBus.Publish(new UpdateGameState(this, true));
+            EventBus.Publish(new UpdateGameState(this, isNewRound: true));
 
-            await PlayerTurnAsync(HumanPlayer);
+            CurrentTurn = new TurnInfo(TurnDuration);
+            CurrentTurn.StartTurn(HumanPlayer);
+            await PlayerTurnAsync();
         }
 
-        private async Task PlayerTurnAsync(Player currentPlayer)
+        private async Task PlayerTurnAsync()
         {
-            CurrentTurn = new TurnInfo(currentPlayer, TurnDuration);
-            CurrentTurn.StartTurn();
+
+            EventBus.Publish(new UpdateGameState(this));
 
             if (CurrentTurn.CurrentPlayer is HumanPlayer)
             {
                 await WaitForPlayerActionAndSwitchTurnAsync();
             }
-            else
+            else if (CurrentTurn.CurrentPlayer is ComputerPlayer)
             {
                 await ComputerPlayer.MakeDecision(CurrentBet);
                 await WaitForPlayerActionAndSwitchTurnAsync();
             }
+
         }
 
 
@@ -327,7 +306,9 @@ namespace OcentraAI.LLMGames.ThreeCardBrag.Manager
 
         private async Task WaitForPlayerActionAndSwitchTurnAsync()
         {
-            using CancellationTokenSource cancellationTokenSource = CancellationTokenSource.CreateLinkedTokenSource(globalCancellationTokenSource.Token);
+            if (IsCancellationRequested()) return;
+
+            using CancellationTokenSource cancellationTokenSource = CancellationTokenSource.CreateLinkedTokenSource(GlobalCancellationTokenSource.Token);
 
 
             Task completedTask = await Task.WhenAny(CurrentTurn.ActionCompletionSource.Task, CurrentTurn.TimerCompletionSource.Task);
@@ -352,62 +333,66 @@ namespace OcentraAI.LLMGames.ThreeCardBrag.Manager
         private async Task ProcessPlayerAction(PlayerAction action)
         {
 
-
-
             string message = $"<color={GetColor(Color.white)}>Player : </color> <color={GetColor(Color.blue)}>{CurrentTurn.CurrentPlayer.PlayerName}</color>" +
                              $"{Environment.NewLine}<color={GetColor(Color.white)}>PlayerAction : </color> <color={GetColor(Color.green)}>{action.ToString()}</color>" +
                              $"{Environment.NewLine}<color={GetColor(Color.white)}>Current bet : </color> <color={GetColor(Color.yellow)}>{CurrentBet}</color>" +
                              $"{Environment.NewLine}<color={GetColor(Color.white)}>Player coins : </color> <color={GetColor(Color.yellow)}>{CurrentTurn.CurrentPlayer.Coins}</color>";
 
 
-            ShowMessage(message);
+            ShowMessage(message, false);
 
 
-            switch (action)
+            if (action is PlayerAction.SeeHand or PlayerAction.DrawFromDeck)
             {
-                case PlayerAction.SeeHand:
-                    CurrentTurn.CurrentPlayer.SeeHand();
-                    EventBus.Publish(new UpdateGameState(this));
-                    await CurrentTurn.ActionCompletionSource.Task;
-                    break;
-                case PlayerAction.PlayBlind:
-                    EventBus.Publish(new UpdateGameState(this));
 
-                    await PlayBlind();
-                    break;
-                case PlayerAction.Bet:
-                    EventBus.Publish(new UpdateGameState(this));
+                switch (action)
+                {
+                    case PlayerAction.SeeHand:
+                        CurrentTurn.CurrentPlayer.SeeHand();
+                        break;
+                    case PlayerAction.DrawFromDeck:
+                        CurrentTurn.CurrentPlayer.DrawFromDeck();
+                        break;
+                }
 
-                    await Bet();
-                    break;
-                case PlayerAction.Fold:
-                    EventBus.Publish(new UpdateGameState(this));
+                EventBus.Publish(new UpdateGameState(this));
+                await CurrentTurn.ActionCompletionSource.Task;
 
-                    await Fold();
-                    break;
-                case PlayerAction.DrawFromDeck:
-                    EventBus.Publish(new UpdateGameState(this));
+            }
+            else if (action is PlayerAction.PlayBlind or PlayerAction.Bet  )
+            {
+                switch (action)
+                {
+                    case PlayerAction.PlayBlind:
+                        await PlayBlind();
+                        break;
+                    case PlayerAction.Bet:
+                        await Bet();
+                        break;
+                }
 
-                    CurrentTurn.CurrentPlayer.DrawFromDeck();
-                    await CurrentTurn.ActionCompletionSource.Task;
-                    break;
+                await SwitchTurn();
+            }
 
-                case PlayerAction.Show:
-                    EventBus.Publish(new UpdateGameState(this));
-
-                    await Show();
-                    break;
-                default:
-                    break;
+            else if (action == PlayerAction.Fold)
+            {
+                await Fold();
+            }
+            else if (action == PlayerAction.Show)
+            {
+                await Show();
             }
 
 
-            CurrentTurn.StopTurn();
-
-            SwitchTurn();
-
         }
 
+        private async Task SwitchTurn()
+        {
+            EventBus.Publish(new UpdateGameState(this));
+            await CurrentTurn.SwitchTurn(GlobalCancellationTokenSource);
+            CurrentTurn.ActionCompletionSource.TrySetResult(true);
+            await PlayerTurnAsync();
+        }
 
 
         private async Task PlayBlind()
@@ -423,10 +408,12 @@ namespace OcentraAI.LLMGames.ThreeCardBrag.Manager
             }
             else
             {
-                ShowMessage($"Not enough coins ({CurrentTurn.CurrentPlayer.Coins}). Current bet is {CurrentBet}. You need to fold!", 5f);
+                ShowMessage($"Not enough coins ({CurrentTurn.CurrentPlayer.Coins}). Current bet is {CurrentBet}. You need to fold!");
                 await Fold();
             }
         }
+
+
 
         private async Task Bet()
         {
@@ -441,7 +428,7 @@ namespace OcentraAI.LLMGames.ThreeCardBrag.Manager
             }
             else
             {
-                ShowMessage($"Not enough coins ({CurrentTurn.CurrentPlayer.Coins}). Current bet is {CurrentBet}. You need to fold!", 5f);
+                ShowMessage($"Not enough coins ({CurrentTurn.CurrentPlayer.Coins}). Current bet is {CurrentBet}. You need to fold!");
                 await Fold();
             }
         }
@@ -462,20 +449,14 @@ namespace OcentraAI.LLMGames.ThreeCardBrag.Manager
             await DetermineWinner();
         }
 
-        private async void SwitchTurn()
-        {
-            if (globalCancellationTokenSource?.IsCancellationRequested == true) return;
-            Player nextPlayer = CurrentTurn.CurrentPlayer is HumanPlayer ? ComputerPlayer : HumanPlayer;
 
-            await PlayerTurnAsync(nextPlayer);
-        }
 
         private Player GetOtherPlayer(Player currentPlayer)
         {
             return currentPlayer == HumanPlayer ? ComputerPlayer : HumanPlayer;
         }
 
-        private async Task DetermineWinner()
+        private async Task<Player> DetermineWinner()
         {
             int humanValue = HumanPlayer.CalculateHandValue();
             int computerValue = ComputerPlayer.CalculateHandValue();
@@ -510,45 +491,56 @@ namespace OcentraAI.LLMGames.ThreeCardBrag.Manager
             }
 
             await EndRound(winner, true);
+
+            return winner;
         }
 
         private async Task EndRound(Player winner, bool showHand)
         {
             CurrentTurn.StopTurn();
+
             if (winner == null)
             {
-                HumanPlayer.ShowHand(true);
-                ComputerPlayer.ShowHand(true);
-                ShowMessage("It's a tie!", 5f);
+                OfferContinuation(showHand, "It's a tie!");
+                await DelayWithCancellation(GlobalCancellationTokenSource, 5000);
+                return;
             }
-            else
-            {
-                winner.AdjustCoins(Pot);
-                ScoreKeeper.AddToTotalRoundScores(winner, Pot);
-                ShowMessage($"{winner.PlayerName} wins the round with Pot {Pot} coins!", 6f);
-                EventBus.Publish(new UpdateRoundDisplay(ScoreKeeper));
-                EventBus.Publish(new UpdateGameState(this));
-            }
+
+            winner.AdjustCoins(Pot);
+            ScoreKeeper.AddToTotalRoundScores(winner, Pot);
+            EventBus.Publish(new UpdateRoundDisplay(ScoreKeeper));
+            EventBus.Publish(new UpdateGameState(this));
 
             if (HumanPlayer.Coins <= 0 || ComputerPlayer.Coins <= 0)
             {
-                await EndGame(true);
+                await EndGame();
             }
             else
             {
-                await CheckForContinuation(showHand);
+                await CheckForContinuation(showHand, winner);
             }
 
 
         }
 
-        private void ShowMessage(string message, float f = 5f)
+        private async void ShowMessage(string message, bool delay = true, float delayTime = 5f)
         {
-            EventBus.Publish(new UIMessage(message, f));
+            EventBus.Publish(new UIMessage(message, delayTime));
+            if (delay)
+            {
+                await DelayWithCancellation(GlobalCancellationTokenSource, (int)delayTime * 1000);
+
+            }
+
         }
 
-        private async Task CheckForContinuation(bool showHand)
+        private async Task CheckForContinuation(bool showHand, Player winner)
         {
+            string message = ColouredMessage("Round Over!", Color.red) +
+                             ColouredMessage($"{winner.PlayerName}", Color.white, true) + ColouredMessage($"wins the game!", Color.cyan) +
+                             $"{Environment.NewLine}" +
+                             ColouredMessage("Continue Next Rounds ?", Color.red, true);
+
             if (CurrentRound >= MaxRounds)
             {
                 Player trailingPlayer = ScoreKeeper.HumanTotalWins < ScoreKeeper.ComputerTotalWins ? HumanPlayer : ComputerPlayer;
@@ -556,29 +548,31 @@ namespace OcentraAI.LLMGames.ThreeCardBrag.Manager
 
                 if (trailingPlayer.Coins > leadingPlayer.Coins)
                 {
-                    CurrentTurn.StopTurn();
-                    EventBus.Publish(new OfferContinuation(10));
-                    HumanPlayer.ShowHand(showHand);
-                    ComputerPlayer.ShowHand(showHand);
+                    OfferContinuation(showHand, message);
                 }
                 else
                 {
-                    await EndGame(showHand);
+                    await EndGame();
                 }
             }
             else
             {
-                CurrentTurn.StopTurn();
-                EventBus.Publish(new OfferContinuation(10));
-                HumanPlayer.ShowHand(showHand);
-                ComputerPlayer.ShowHand(showHand);
+                OfferContinuation(showHand, message);
             }
 
         }
 
+        private void OfferContinuation(bool showHand, string message)
+        {
+            CurrentTurn.CurrentPlayer = null;
+            EventBus.Publish(new OfferContinuation(10, message));
+            HumanPlayer.ShowHand(showHand);
+            ComputerPlayer.ShowHand(showHand);
+
+        }
 
 
-        private async Task EndGame(bool showHand)
+        private Task EndGame()
         {
             Player winner;
             if (HumanPlayer.Coins <= 0)
@@ -598,22 +592,30 @@ namespace OcentraAI.LLMGames.ThreeCardBrag.Manager
                 winner = HumanPlayer.Coins > ComputerPlayer.Coins ? HumanPlayer : ComputerPlayer;
             }
 
-            ShowMessage($"Game Over! {winner.PlayerName} wins the game!", 6f);
-            HumanPlayer.ShowHand(showHand);
-            ComputerPlayer.ShowHand(showHand);
+            HumanPlayer.ShowHand(true);
+            ComputerPlayer.ShowHand(true);
 
-            await Task.Delay(6000, globalCancellationTokenSource.Token);
+            string message = ColouredMessage("Game Over!", Color.red) +
+                             ColouredMessage($"{winner.PlayerName}", Color.white, true) + ColouredMessage($"wins the game!", Color.cyan) +
+                             $"{Environment.NewLine}" +
+                             ColouredMessage("Play New Game of 10 rounds ?", Color.red, true);
 
-            EventBus.Publish(new OfferNewGame(15));
-
-
+            CurrentTurn.CurrentPlayer = null;
+            EventBus.Publish(new OfferNewGame(60, message));
+            return Task.CompletedTask;
         }
+
 
 
 
         public void SetCurrentBet(int bet)
         {
             CurrentBet = bet;
+        }
+
+        private bool IsCancellationRequested()
+        {
+            return GlobalCancellationTokenSource?.IsCancellationRequested ?? false;
         }
     }
 

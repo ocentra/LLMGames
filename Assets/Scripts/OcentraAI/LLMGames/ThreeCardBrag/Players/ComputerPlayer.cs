@@ -1,6 +1,8 @@
 using OcentraAI.LLMGames.Scriptable;
 using OcentraAI.LLMGames.ThreeCardBrag.Events;
+using OcentraAI.LLMGames.ThreeCardBrag.Manager;
 using OcentraAI.LLMGames.Utilities;
+using System;
 using System.Linq;
 using System.Threading.Tasks;
 using UnityEngine;
@@ -9,28 +11,66 @@ namespace OcentraAI.LLMGames.ThreeCardBrag.Players
 {
     public class ComputerPlayer : Player
     {
-        public async Task MakeDecision(int currentBet)
+        private enum ComputerPlayerState
         {
-            await SimulateThinkingAndMakeDecision(currentBet);
+            CanTakeAction,
+            ActionTaken,
+            DrawnFromDeck
         }
 
-        private async Task SimulateThinkingAndMakeDecision(int currentBet)
-        {
-            // Simulate thinking time
-            float thinkingTime = Random.Range(2f, 5f);
-            await Task.Delay((int)(thinkingTime * 1000));
+        private ComputerPlayerState currentState = ComputerPlayerState.CanTakeAction;
 
-            if (!HasSeenHand)
+        public async Task MakeDecision(int currentBet)
+        {
+            try
             {
-                if (Random.value > 0.3f)
+                if (IsCancellationRequested() || currentState != ComputerPlayerState.CanTakeAction)
                 {
-                    EventBus.Publish(new PlayerActionEvent(GetType(), PlayerAction.SeeHand));
-                    await SimulateThinkingAndMakeDecision(currentBet);
+                    return;
+                }
+
+                await SimulateThinkingTime();
+
+                if (!HasSeenHand)
+                {
+                    await DecideInitialAction(currentBet);
                 }
                 else
                 {
-                    EventBus.Publish(new PlayerActionEvent(GetType(), PlayerAction.PlayBlind));
+                    await DecideMainAction(currentBet);
                 }
+            }
+            catch (OperationCanceledException)
+            {
+                Debug.Log("ComputerPlayer decision making was canceled.");
+            }
+            catch (Exception ex)
+            {
+                Debug.LogError($"Error in ComputerPlayer MakeDecision: {ex.Message}");
+            }
+        }
+
+        private async Task DecideInitialAction(int currentBet)
+        {
+            if (IsCancellationRequested())
+            {
+                return;
+            }
+
+            if (UnityEngine.Random.value > 0.3f)
+            {
+                await TakeActionSeeHand(currentBet);
+            }
+            else
+            {
+                TakeActionPlayBlind();
+            }
+        }
+
+        private async Task DecideMainAction(int currentBet)
+        {
+            if (IsCancellationRequested())
+            {
                 return;
             }
 
@@ -38,9 +78,9 @@ namespace OcentraAI.LLMGames.ThreeCardBrag.Players
 
             if (handValue >= 50)
             {
-                if (Random.value > 0.7f)
+                if (UnityEngine.Random.value > 0.7f)
                 {
-                    EventBus.Publish(new PlayerActionEvent(GetType(), PlayerAction.Show));
+                    TakeActionShow();
                 }
                 else
                 {
@@ -53,14 +93,13 @@ namespace OcentraAI.LLMGames.ThreeCardBrag.Players
                 {
                     SwapWithFloorCard();
                 }
-                else if (Random.value > 0.4f)
+                else if (UnityEngine.Random.value > 0.4f)
                 {
                     DecideOnBetOrRaise(currentBet, 0.6f);
                 }
                 else
                 {
-                    EventBus.Publish(new PlayerActionEvent(GetType(), PlayerAction.DrawFromDeck));
-                    await HandleDrawnCard(currentBet);
+                    await TakeActionDrawFromDeck(currentBet);
                 }
             }
             else
@@ -69,28 +108,26 @@ namespace OcentraAI.LLMGames.ThreeCardBrag.Players
                 {
                     SwapWithFloorCard();
                 }
-                else if (FloorCard == null || Random.value > 0.7f)
+                else if (FloorCard == null || UnityEngine.Random.value > 0.7f)
                 {
-                    EventBus.Publish(new PlayerActionEvent(GetType(), PlayerAction.DrawFromDeck));
-                    await HandleDrawnCard(currentBet);
+                    await TakeActionDrawFromDeck(currentBet);
                 }
                 else
                 {
-                    EventBus.Publish(new PlayerActionEvent(GetType(), PlayerAction.Fold));
+                    TakeActionFold();
                 }
             }
         }
 
         private void DecideOnBetOrRaise(int currentBet, float raiseChance)
         {
-            if (Random.value < raiseChance)
+            if (UnityEngine.Random.value < raiseChance)
             {
-                int raiseAmount = (int)(currentBet * Random.Range(1.5f, 3f));
-                EventBus.Publish(new PlayerActionRaiseBet(GetType(), raiseAmount.ToString()));
+                TakeActionRaise(currentBet);
             }
             else
             {
-                EventBus.Publish(new PlayerActionEvent(GetType(), PlayerAction.Bet));
+                TakeActionBet();
             }
         }
 
@@ -105,20 +142,48 @@ namespace OcentraAI.LLMGames.ThreeCardBrag.Players
         {
             if (FloorCard == null) return;
             int worstCardIndex = Hand.FindIndex(c => c.GetRankValue() == Hand.Min(card => card.GetRankValue()));
-            EventBus.Publish(new PlayerActionPickAndSwap(GetType(), floorCard:FloorCard, swapCard:Hand[worstCardIndex]));
+            PickAndSwap(FloorCard, Hand[worstCardIndex]);
+            currentState = ComputerPlayerState.ActionTaken;
         }
 
-        private async Task HandleDrawnCard(int currentBet)
+        private async Task TakeActionSeeHand(int currentBet)
         {
-            // Simulate thinking about the drawn card
-            await Task.Delay(Random.Range(1000, 3000));
-
-            if (FloorCard != null && ShouldSwapCard())
+            if (IsCancellationRequested())
             {
-                SwapWithFloorCard();
+                return;
             }
 
-            // Make a decision after drawing/swapping
+            TakeAction(PlayerAction.SeeHand);
+            await SimulateThinkingTime(1f);
+            await MakeDecision(currentBet);
+        }
+
+        private void TakeActionPlayBlind() => TakeAction(PlayerAction.PlayBlind);
+        private void TakeActionBet() => TakeAction(PlayerAction.Bet);
+        private void TakeActionFold() => TakeAction(PlayerAction.Fold);
+        private void TakeActionShow() => TakeAction(PlayerAction.Show);
+
+        private async Task TakeActionDrawFromDeck(int currentBet)
+        {
+            TakeAction(PlayerAction.DrawFromDeck);
+            await SimulateThinkingTime(1f);
+            await HandlePostDraw(currentBet);
+        }
+
+        private async Task HandlePostDraw(int currentBet)
+        {
+            if (IsCancellationRequested())
+            {
+                return;
+            }
+
+            if (ShouldSwapCard())
+            {
+                SwapWithFloorCard();
+                await SimulateThinkingTime(0.5f);
+            }
+
+            // After swapping or deciding not to swap, make a betting decision
             int handValue = CalculateHandValue();
             if (handValue >= 40)
             {
@@ -126,30 +191,60 @@ namespace OcentraAI.LLMGames.ThreeCardBrag.Players
             }
             else if (handValue >= 20)
             {
-                EventBus.Publish(new PlayerActionEvent(GetType(), PlayerAction.Bet));
+                TakeActionBet();
             }
             else
             {
-                EventBus.Publish(new PlayerActionEvent(GetType(), PlayerAction.Fold));
+                TakeActionFold();
             }
         }
 
-        public override void SeeHand()
+        private void TakeActionRaise(int currentBet)
         {
-            base.SeeHand();
-            EventBus.Publish(new UpdatePlayerHandDisplay(this));
+            int raiseAmount = (int)(currentBet * UnityEngine.Random.Range(1.5f, 3f));
+            EventBus.Publish(new PlayerActionRaiseBet(GetType(), raiseAmount.ToString()));
+            currentState = ComputerPlayerState.ActionTaken;
+        }
+
+        private void TakeAction(PlayerAction action)
+        {
+            EventBus.Publish(new PlayerActionEvent(GetType(), action));
+            currentState = action == PlayerAction.DrawFromDeck ? ComputerPlayerState.DrawnFromDeck : ComputerPlayerState.ActionTaken;
         }
 
         public override void ShowHand(bool isRoundEnd = false)
         {
             base.ShowHand(isRoundEnd);
-            EventBus.Publish(new UpdatePlayerHandDisplay(this));
+            EventBus.Publish(new UpdatePlayerHandDisplay(this, isRoundEnd));
         }
 
         public override void PickAndSwap(Card floorCard, Card swapCard)
         {
             base.PickAndSwap(floorCard, swapCard);
             EventBus.Publish(new UpdatePlayerHandDisplay(this));
+        }
+
+        public void ResetState()
+        {
+            currentState = ComputerPlayerState.CanTakeAction;
+        }
+
+        private async Task SimulateThinkingTime(float seconds = 0)
+        {
+            float thinkingTime = seconds == 0 ? UnityEngine.Random.Range(2f, 5f) : seconds;
+            try
+            {
+                await Task.Delay(TimeSpan.FromSeconds(thinkingTime), GameManager.Instance.GlobalCancellationTokenSource.Token);
+            }
+            catch (TaskCanceledException)
+            {
+                Debug.Log("Thinking time simulation was canceled.");
+            }
+        }
+
+        private bool IsCancellationRequested()
+        {
+            return GameManager.Instance.GlobalCancellationTokenSource?.IsCancellationRequested ?? false;
         }
     }
 }

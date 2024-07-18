@@ -252,7 +252,8 @@ namespace OcentraAI.LLMGames.ThreeCardBrag.Manager
             HumanPlayer.AdjustCoins(InitialCoins);
             ComputerPlayer.AdjustCoins(InitialCoins);
             DeckManager.ResetForNewGame();
-            EventBus.Publish(new NewGameEventArgs(InitialCoins, $"Starting new game"));
+            ScoreKeeper.ResetScores();
+            EventBus.Publish(new NewGameEventArgs(this, $"Starting new game"));
 
             await StartNewRoundAsync();
 
@@ -269,12 +270,14 @@ namespace OcentraAI.LLMGames.ThreeCardBrag.Manager
             CurrentBet = BaseBet;
             BlindMultiplier = 1;
 
+
             for (int i = 0; i < 3; i++)
             {
                 HumanPlayer.Hand.Add(DeckManager.DrawCard());
                 ComputerPlayer.Hand.Add(DeckManager.DrawCard());
             }
 
+            DeckManager.SetRandomTrumpCard();
             DeckManager.SetRandomTrumpCard();
 
             EventBus.Publish(new UpdateGameState(this, isNewRound: true));

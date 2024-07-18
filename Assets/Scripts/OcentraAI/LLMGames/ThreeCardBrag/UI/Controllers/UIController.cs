@@ -1,6 +1,7 @@
 using OcentraAI.LLMGames.Extensions;
 using OcentraAI.LLMGames.Scriptable;
 using OcentraAI.LLMGames.ThreeCardBrag.Events;
+using OcentraAI.LLMGames.ThreeCardBrag.Manager;
 using OcentraAI.LLMGames.ThreeCardBrag.Players;
 using OcentraAI.LLMGames.Utilities;
 using Sirenix.OdinInspector;
@@ -176,6 +177,8 @@ namespace OcentraAI.LLMGames.ThreeCardBrag.UI.Controllers
             }
 
             ButtonState = ButtonState.TakeAction;
+
+            
         }
 
         private void SetupButtonListeners()
@@ -333,19 +336,22 @@ namespace OcentraAI.LLMGames.ThreeCardBrag.UI.Controllers
         private void OnNewGame(NewGameEventArgs e)
         {
             ShowMessage(e.Message);
-            UpdateCoinsDisplay(e.InitialCoins, e.InitialCoins);
+            ResetAllCardViews();
+            EnablePlayerActions();
+            UpdateUI(e.GameManager);
         }
 
         private void OnUpdateGameState(UpdateGameState e)
         {
-            UpdateCoinsDisplay(e.GameManager.HumanPlayer.Coins, e.GameManager.ComputerPlayer.Coins);
-            UpdatePotDisplay(e.GameManager.Pot);
-            UpdateCurrentBetDisplay(e.GameManager.CurrentBet);
+            UpdateUI(e.GameManager);
+        }
+
+        private void UpdateUI(GameManager gameManager)
+        {
+            UpdateCoinsDisplay(gameManager.HumanPlayer.Coins, gameManager.ComputerPlayer.Coins);
+            UpdatePotDisplay(gameManager.Pot);
+            UpdateCurrentBetDisplay(gameManager.CurrentBet);
             EnablePlayerActions();
-            if (e.IsNewRound)
-            {
-                ResetAllCardViews();
-            }
         }
 
 
@@ -392,12 +398,12 @@ namespace OcentraAI.LLMGames.ThreeCardBrag.UI.Controllers
 
         private void OnUpdateFloorCard(UpdateFloorCard e)
         {
-            UpdateFloorCard(e.Card);
+            UpdateFloorCard(e.Card,e.Reset);
         }
 
         private void OnUpdateFloorCardList(UpdateFloorCardList e)
         {
-            LeftPanelController.AddCard(e.Card);
+            LeftPanelController.AddCard(e.Card,e.Reset);
         }
 
         private void OnUpdatePlayerHandDisplay(UpdatePlayerHandDisplay e)
@@ -427,6 +433,7 @@ namespace OcentraAI.LLMGames.ThreeCardBrag.UI.Controllers
 
         private void OnOfferNewGame(OfferNewGame e)
         {
+
             ShowMessage(e.Message, e.Delay);
             EnablePlayerActions();
 
@@ -531,18 +538,26 @@ namespace OcentraAI.LLMGames.ThreeCardBrag.UI.Controllers
             if (ComputerPlayerWins != null) ComputerPlayerWins.text = $"{computerWins}";
         }
 
-        private void UpdateFloorCard(Card card)
+        private void UpdateFloorCard(Card card, bool reset)
         {
+
             if (FloorCardView != null)
             {
+                if (reset)
+                {
+                    FloorCardView.SetCard(null);
+                    FloorCardView.UpdateCardView();
+                  
+                }
+
                 if (card != null)
                 {
                     FloorCardView.SetCard(card);
                     FloorCardView.UpdateCardView();
                 }
 
-                FloorCardView.SetActive(card != null);
-                FloorCardView.transform.parent.gameObject.SetActive(card != null);
+                FloorCardView.SetActive(FloorCardView.Card != null);
+                FloorCardView.transform.parent.gameObject.SetActive(FloorCardView.Card != null);
             }
         }
 
@@ -596,6 +611,8 @@ namespace OcentraAI.LLMGames.ThreeCardBrag.UI.Controllers
             }
 
             LeftPanelController.ResetView();
+
+            ShowPlayerHand.interactable = true;
         }
 
         private void ShowMessage(string message, float delay = 5f)

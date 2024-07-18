@@ -53,9 +53,15 @@ namespace OcentraAI.LLMGames.ThreeCardBrag.UI.Controllers
             CollapsePanel();
         }
 
-        public void AddCard(Card card)
+        public void AddCard(Card card, bool reset)
         {
-            if (CardViewPrefab != null && FloorCardsHolder != null)
+            if (reset)
+            {
+                ResetView();
+                return;
+            }
+
+            if (CardViewPrefab != null && FloorCardsHolder != null && card != null)
             {
                 GameObject newCardViewObject = Instantiate(CardViewPrefab, FloorCardsHolder);
                 CardView newCardView = newCardViewObject.GetComponentInChildren<CardView>();

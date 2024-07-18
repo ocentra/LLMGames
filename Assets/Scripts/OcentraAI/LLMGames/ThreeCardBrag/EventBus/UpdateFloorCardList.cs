@@ -7,10 +7,11 @@ namespace OcentraAI.LLMGames.ThreeCardBrag.Events
     {
         public Card Card { get; }
 
-
-        public UpdateFloorCardList(Card card)
+        public bool Reset { get; }
+        public UpdateFloorCardList(Card card, bool reset = false)
         {
             Card = card;
+            Reset = reset;
         }
     }
 }

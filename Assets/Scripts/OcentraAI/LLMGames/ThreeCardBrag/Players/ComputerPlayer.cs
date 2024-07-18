@@ -92,6 +92,7 @@ namespace OcentraAI.LLMGames.ThreeCardBrag.Players
                 if (FloorCard != null && ShouldSwapCard())
                 {
                     SwapWithFloorCard();
+                    DecideOnBetOrRaise(currentBet, 0.6f);
                 }
                 else if (UnityEngine.Random.value > 0.4f)
                 {
@@ -107,6 +108,7 @@ namespace OcentraAI.LLMGames.ThreeCardBrag.Players
                 if (FloorCard != null && ShouldSwapCard())
                 {
                     SwapWithFloorCard();
+                    TakeActionBet();
                 }
                 else if (FloorCard == null || UnityEngine.Random.value > 0.7f)
                 {
@@ -143,7 +145,6 @@ namespace OcentraAI.LLMGames.ThreeCardBrag.Players
             if (FloorCard == null) return;
             int worstCardIndex = Hand.FindIndex(c => c.GetRankValue() == Hand.Min(card => card.GetRankValue()));
             PickAndSwap(FloorCard, Hand[worstCardIndex]);
-            currentState = ComputerPlayerState.ActionTaken;
         }
 
         private async Task TakeActionSeeHand(int currentBet)
@@ -155,7 +156,7 @@ namespace OcentraAI.LLMGames.ThreeCardBrag.Players
 
             TakeAction(PlayerAction.SeeHand);
             await SimulateThinkingTime(1f);
-            await MakeDecision(currentBet);
+            await DecideMainAction(currentBet);
         }
 
         private void TakeActionPlayBlind() => TakeAction(PlayerAction.PlayBlind);
@@ -183,7 +184,6 @@ namespace OcentraAI.LLMGames.ThreeCardBrag.Players
                 await SimulateThinkingTime(0.5f);
             }
 
-            // After swapping or deciding not to swap, make a betting decision
             int handValue = CalculateHandValue();
             if (handValue >= 40)
             {

@@ -125,6 +125,10 @@ namespace OcentraAI.LLMGames.ThreeCardBrag.Manager
         {
             InitializeDeck();
             TrumpCard = null;
+            FloorCard = null;
+            EventBus.Publish(new UpdateFloorCard(null,true));
+            EventBus.Publish(new UpdateFloorCardList(null,true));
+
         }
 
 

@@ -1,3 +1,4 @@
+using OcentraAI.LLMGames.ThreeCardBrag.Manager;
 using System;
 
 namespace OcentraAI.LLMGames.ThreeCardBrag.Events
@@ -6,11 +7,12 @@ namespace OcentraAI.LLMGames.ThreeCardBrag.Events
     {
         public int InitialCoins { get; }
         public string Message { get; }
-
-        public NewGameEventArgs(int initialCoins, string message)
+        public GameManager GameManager { get; }
+        public NewGameEventArgs(GameManager gameManager, string message)
         {
-            InitialCoins = initialCoins;
+            GameManager = gameManager;
             Message = message;
+            InitialCoins = GameManager.InitialCoins;
         }
     }
 }

@@ -1,3 +1,4 @@
+using OcentraAI.LLMGames.Authentication;
 using OcentraAI.LLMGames.Scriptable;
 using OcentraAI.LLMGames.ThreeCardBrag.Events;
 using OcentraAI.LLMGames.ThreeCardBrag.Manager;
@@ -11,6 +12,11 @@ namespace OcentraAI.LLMGames.ThreeCardBrag.Players
 {
     public class ComputerPlayer : Player
     {
+        public ComputerPlayer(PlayerData playerData, int initialCoins)
+            : base(playerData, PlayerType.Computer, initialCoins)
+        {
+            AdjustCoins(initialCoins);
+        }
         private enum ComputerPlayerState
         {
             CanTakeAction,

@@ -34,9 +34,9 @@ namespace OcentraAI.LLMGames.LLMServices
         public string GetUserPrompt()
         {
             return $"Current Hand: {GetHandDetails(GameManager)}. " +
-                   $"Current Hand Value: {GameManager.ComputerPlayer.CalculateHandValue()}. " +
-                   $"Current Bet: {GameManager.CurrentBet}, Pot Size: {GameManager.Pot}. " +
-                   $"Your Coins: {GameManager.ComputerPlayer.Coins}, Opponent's Coins: {GameManager.HumanPlayer.Coins}. " +
+                   $"Current Hand Value: {GameManager.PlayerManager.ComputerPlayer.CalculateHandValue()}. " +
+                   $"Current Bet: {GameManager.ScoreManager.CurrentBet}, Pot Size: {GameManager.ScoreManager.Pot}. " +
+                   $"Your Coins: {GameManager.PlayerManager.ComputerPlayer.Coins}, Opponent's Coins: {GameManager.PlayerManager.HumanPlayer.Coins}. " +
                    $"Current Game State: {GetGameStateDetails(GameManager)}. " +
                    $"Move Options: {GetMoveWord()}";
         }
@@ -79,7 +79,7 @@ namespace OcentraAI.LLMGames.LLMServices
 
         private static string GetHandDetails(GameManager gameManager)
         {
-            return string.Join(", ", gameManager.ComputerPlayer.Hand.Select((card, index) => $"Card {index + 1}: {card.Rank} of {card.Suit}"));
+            return string.Join(", ", gameManager.PlayerManager.ComputerPlayer.Hand.Select((card, index) => $"Card {index + 1}: {card.Rank} of {card.Suit}"));
         }
 
         private static string GetGameStateDetails(GameManager gameManager)
@@ -92,7 +92,7 @@ namespace OcentraAI.LLMGames.LLMServices
 
         private static string GetPotDetails(GameManager gameManager)
         {
-            return $"Current pot: {gameManager.Pot} coins, Current bet: {gameManager.CurrentBet} coins";
+            return $"Current pot: {gameManager.ScoreManager.Pot} coins, Current bet: {gameManager.ScoreManager.CurrentBet} coins";
         }
 
         private static string GetDeckDetails(GameManager gameManager)
@@ -111,8 +111,8 @@ namespace OcentraAI.LLMGames.LLMServices
 
         private static string GetPlayerDetails(GameManager gameManager)
         {
-            return $"Human: {gameManager.HumanPlayer.Coins} coins, Computer: {gameManager.ComputerPlayer.Coins} coins, " +
-                   $"Human playing blind: {!gameManager.HumanPlayer.HasSeenHand}, Computer playing blind: {!gameManager.ComputerPlayer.HasSeenHand}";
+            return $"Human: {gameManager.PlayerManager.HumanPlayer.Coins} coins, Computer: {gameManager.PlayerManager.ComputerPlayer.Coins} coins, " +
+                   $"Human playing blind: {!gameManager.PlayerManager.HumanPlayer.HasSeenHand}, Computer playing blind: {!gameManager.PlayerManager.ComputerPlayer.HasSeenHand}";
         }
 
 

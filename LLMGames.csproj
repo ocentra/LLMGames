@@ -64,6 +64,7 @@
     <Compile Include="Assets\Scripts\OcentraAI\LLMGames\Utilities\CustomGlobalConfig.cs" />
     <Compile Include="Assets\Scripts\OcentraAI\LLMGames\ThreeCardBrag\EventBus\UIMessage.cs" />
     <Compile Include="Assets\Scripts\OcentraAI\LLMGames\ThreeCardBrag\UI\CardView.cs" />
+    <Compile Include="Assets\Scripts\OcentraAI\LLMGames\ThreeCardBrag\Managers\ScoreManager.cs" />
     <Compile Include="Assets\Scripts\OcentraAI\LLMGames\ThreeCardBrag\EventBus\UpdateGameState.cs" />
     <Compile Include="Assets\Scripts\OcentraAI\LLMGames\LLMServices\Rules\HandType.cs" />
     <Compile Include="Assets\Scripts\OcentraAI\LLMGames\LLMServices\Rules\PairInHandRule.cs" />
@@ -88,8 +89,8 @@
     <Compile Include="Assets\Scripts\OcentraAI\LLMGames\ThreeCardBrag\EventBus\PlayerStopCountDown.cs" />
     <Compile Include="Assets\Scripts\OcentraAI\LLMGames\ThreeCardBrag\EventBus\UpdatePlayerHandDisplay.cs" />
     <Compile Include="Assets\Scripts\OcentraAI\LLMGames\LLMServices\LocalLLMService.cs" />
-    <Compile Include="Assets\Scripts\OcentraAI\LLMGames\ThreeCardBrag\Managers\TurnInfo.cs" />
     <Compile Include="Assets\Scripts\OcentraAI\LLMGames\Utilities\ICustomGlobalConfigEvents.cs" />
+    <Compile Include="Assets\Scripts\OcentraAI\LLMGames\ThreeCardBrag\Managers\PlayerManager.cs" />
     <Compile Include="Assets\Scripts\OcentraAI\LLMGames\LLMServices\AzureOpenAIService.cs" />
     <Compile Include="Assets\Scripts\OcentraAI\LLMGames\LLMServices\ClaudeResponse.cs" />
     <Compile Include="Assets\Scripts\OcentraAI\LLMGames\ThreeCardBrag\EventBus\PlayerActionRaiseBet.cs" />
@@ -103,17 +104,18 @@
     <Compile Include="Assets\Scripts\OcentraAI\LLMGames\ThreeCardBrag\EventBus\SetFloorCard.cs" />
     <Compile Include="Assets\Scripts\OcentraAI\LLMGames\LLMServices\Rules\SameColorsSequenceRule.cs" />
     <Compile Include="Assets\Scripts\OcentraAI\LLMGames\LLMServices\Rules\ThreeOfAKindRule.cs" />
+    <Compile Include="Assets\Scripts\OcentraAI\LLMGames\ThreeCardBrag\Managers\TurnManager.cs" />
     <Compile Include="Assets\Scripts\OcentraAI\LLMGames\LLMServices\Rules\StraightFlushRule.cs" />
     <Compile Include="Assets\Scripts\OcentraAI\LLMGames\Authentication\ConfigManager.cs" />
     <Compile Include="Assets\Scripts\OcentraAI\LLMGames\ThreeCardBrag\EventBus\UpdateRoundDisplay.cs" />
     <Compile Include="Assets\Scripts\OcentraAI\LLMGames\LLMServices\CardRanking.cs" />
-    <Compile Include="Assets\Scripts\OcentraAI\LLMGames\ThreeCardBrag\Scores\ScoreKeeper.cs" />
     <Compile Include="Assets\Scripts\OcentraAI\LLMGames\LLMServices\LLMConfig.cs" />
     <Compile Include="Assets\Scripts\OcentraAI\LLMGames\GameScreens\GameOverScreen.cs" />
     <Compile Include="Assets\Scripts\OcentraAI\LLMGames\Utilities\Utility.cs" />
     <Compile Include="Assets\Scripts\OcentraAI\LLMGames\ThreeCardBrag\EventBus\PurchaseCoins.cs" />
     <Compile Include="Assets\Scripts\OcentraAI\LLMGames\ThreeCardBrag\EventBus\InitializeUIPlayers.cs" />
     <Compile Include="Assets\Scripts\OcentraAI\LLMGames\LLMServices\LocalLLMResponse.cs" />
+    <Compile Include="Assets\Scripts\OcentraAI\LLMGames\Utilities\GameLogger.cs" />
     <Compile Include="Assets\Scripts\OcentraAI\LLMGames\Scriptable\ScriptableSingletons\GameInfo.cs" />
     <Compile Include="Assets\Scripts\OcentraAI\LLMGames\ThreeCardBrag\Scores\RoundScore.cs" />
     <Compile Include="Assets\Scripts\OcentraAI\LLMGames\LLMServices\Choice.cs" />

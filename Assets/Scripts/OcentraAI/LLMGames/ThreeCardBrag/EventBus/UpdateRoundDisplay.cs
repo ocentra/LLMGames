@@ -1,14 +1,14 @@
-using OcentraAI.LLMGames.ThreeCardBrag.Scores;
+using OcentraAI.LLMGames.ThreeCardBrag.Manager;
 using System;
 
 namespace OcentraAI.LLMGames.ThreeCardBrag.Events
 {
     public class UpdateRoundDisplay : EventArgs
     {
-        public ScoreKeeper ScoreKeeper { get; }
-        public UpdateRoundDisplay(ScoreKeeper scoreKeeper)
+        public ScoreManager ScoreManager { get; }
+        public UpdateRoundDisplay(ScoreManager scoreManager)
         {
-            ScoreKeeper = scoreKeeper;
+            ScoreManager = scoreManager;
         }
     }
 }

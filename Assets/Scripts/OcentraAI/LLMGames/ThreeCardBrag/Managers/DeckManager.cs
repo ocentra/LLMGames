@@ -21,12 +21,18 @@ namespace OcentraAI.LLMGames.ThreeCardBrag.Manager
         [ShowInInspector] public Card SwapCard { get; set; }
         [ShowInInspector] public Card TrumpCard { get; private set; }
         [ShowInInspector] private Queue<Card> LastDrawnTrumpCards { get; set; } = new Queue<Card>();
+
+        [ShowInInspector] TurnManager TurnManager => GameManager.Instance.TurnManager;
         public DeckManager()
         {
-            InitializeDeck();
+            DeckCards = new List<Card>(Deck.Instance.CardTemplates);
+
+        }
+        public void Init()
+        {
+
         }
 
-        
         public void OnSetFloorCard(SetFloorCard e)
         {
             if (e.SwapCard != null)
@@ -51,12 +57,7 @@ namespace OcentraAI.LLMGames.ThreeCardBrag.Manager
         }
 
 
-        public void InitializeDeck()
-        {
-            DeckCards = new List<Card>(Deck.Instance.CardTemplates);
-            FloorCards.Clear();
-            Shuffle();
-        }
+
 
         public void Shuffle()
         {
@@ -122,15 +123,17 @@ namespace OcentraAI.LLMGames.ThreeCardBrag.Manager
 
         public void ResetForNewGame()
         {
-            Reset();
+            ResetForNewRound();
             LastDrawnTrumpCards = new Queue<Card>();
 
         }
 
-        public void Reset()
+        public void ResetForNewRound()
         {
-            InitializeDeck();
-            TrumpCard = null;
+            FloorCards.Clear();
+            Shuffle();
+
+            SetRandomTrumpCard();
             FloorCard = null;
             EventBus.Publish(new UpdateFloorCard(null,true));
             EventBus.Publish(new UpdateFloorCardList(null,true));
@@ -139,7 +142,15 @@ namespace OcentraAI.LLMGames.ThreeCardBrag.Manager
         }
 
 
+        private void Log(string message)
+        {
+            GameLogger.Log($"{nameof(DeckManager)} {message}");
+        }
 
+        private void LogError(string message)
+        {
+            GameLogger.LogError($"{nameof(DeckManager)}  {message}");
+        }
 
     }
 }

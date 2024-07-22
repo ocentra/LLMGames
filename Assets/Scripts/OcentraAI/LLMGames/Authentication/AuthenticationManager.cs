@@ -350,6 +350,10 @@ namespace OcentraAI.LLMGames.Authentication
                 };
 
                 await AuthenticationService.Instance.SignInAnonymouslyAsync(signInOptions);
+                string playerId = AuthenticationService.Instance.PlayerId;
+                string playerName = AuthenticationService.Instance.PlayerName;
+
+                PlayerData = new PlayerData { PlayerID = playerId, PlayerName = playerName };
                 //Debug.Log("Sign in anonymously succeeded!");
                 //Debug.Log($"PlayerID: {AuthenticationService.Instance.PlayerId}");
             }

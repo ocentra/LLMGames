@@ -1,442 +1,3 @@
-// File: EventBus.cs
-
-using System;
-using System.Collections.Generic;
-
-namespace OcentraAI.LLMGames.Utilities
-{
-    public static class EventBus
-    {
-        private static readonly Dictionary<Type, List<Delegate>> Subscribers = new Dictionary<Type, List<Delegate>>();
-
-        public static void Subscribe<T>(Action<T> subscriber) where T : EventArgs
-        {
-            var eventType = typeof(T);
-            if (!Subscribers.TryGetValue(eventType, out var subscriberList))
-            {
-                subscriberList = new List<Delegate>();
-                Subscribers.Add(eventType, subscriberList);
-            }
-            subscriberList.Add(subscriber);
-        }
-
-        public static void Unsubscribe<T>(Action<T> subscriber) where T : EventArgs
-        {
-            var eventType = typeof(T);
-            if (Subscribers.TryGetValue(eventType, out var subscriberList))
-            {
-                subscriberList.Remove(subscriber);
-            }
-        }
-
-        public static void Publish<T>(T eventArgs) where T : EventArgs
-        {
-            var eventType = typeof(T);
-            if (Subscribers.TryGetValue(eventType, out var subscriberList))
-            {
-                foreach (var subscriber in subscriberList)
-                {
-                    ((Action<T>)subscriber)(eventArgs);
-                }
-            }
-        }
-    }
-}
-
-// ---
-
-// File: InitializeUIPlayers.cs
-
-using OcentraAI.LLMGames.ThreeCardBrag.Manager;
-using System;
-using System.Threading.Tasks;
-
-namespace OcentraAI.LLMGames.ThreeCardBrag.Events
-{
-
-    public class InitializeUIPlayers : EventArgs
-    {
-        public TaskCompletionSource<bool> CompletionSource { get; }
-        public GameManager GameManager { get; }
-        public InitializeUIPlayers(TaskCompletionSource<bool> completionSource, GameManager gameManager)
-        {
-            CompletionSource = completionSource;
-            GameManager = gameManager;
-        }
-    }
-}
-
-// ---
-
-// File: NewGameEventArgs.cs
-
-using System;
-
-namespace OcentraAI.LLMGames.ThreeCardBrag.Events
-{
-    public class NewGameEventArgs : EventArgs
-    {
-        public int InitialCoins { get; }
-
-        public NewGameEventArgs(int initialCoins)
-        {
-            InitialCoins = initialCoins;
-        }
-    }
-}
-
-// ---
-
-// File: OfferContinuation.cs
-
-using System;
-
-namespace OcentraAI.LLMGames.ThreeCardBrag.Events
-{
-    public class OfferContinuation : EventArgs
-    {
-        public float Delay { get; }
-
-        public OfferContinuation(float delay)
-        {
-            Delay = delay;
-        }
-    }
-}
-
-// ---
-
-// File: OfferNewGame.cs
-
-using System;
-
-namespace OcentraAI.LLMGames.ThreeCardBrag.Events
-{
-    public class OfferNewGame : EventArgs
-    {
-        public float Delay { get; }
-
-        public OfferNewGame(float delay)
-        {
-            Delay = delay;
-        }
-    }
-}
-
-// ---
-
-// File: PlayerActionContinueGame.cs
-
-using System;
-
-namespace OcentraAI.LLMGames.ThreeCardBrag.Events
-{
-    public class PlayerActionContinueGame : EventArgs
-    {
-        public bool ShouldContinue { get; }
-        public PlayerActionContinueGame(bool continueGame)
-        {
-            ShouldContinue = continueGame;
-        }
-    }
-}
-
-// ---
-
-// File: PlayerActionEvent.cs
-
-using OcentraAI.LLMGames.ThreeCardBrag.Players;
-using System;
-
-namespace OcentraAI.LLMGames.ThreeCardBrag.Events
-{
-    public class PlayerActionEvent : EventArgs
-    {
-        public PlayerAction Action { get; }
-        public Type CurrentPlayerType { get; }
-        public PlayerActionEvent(Type currentPlayerType, PlayerAction action)
-        {
-            CurrentPlayerType = currentPlayerType;
-            Action = action;
-        }
-    }
-}
-
-// ---
-
-// File: PlayerActionPickAndSwap.cs
-
-using OcentraAI.LLMGames.Scriptable;
-using System;
-
-namespace OcentraAI.LLMGames.ThreeCardBrag.Events
-{
-    public class PlayerActionPickAndSwap : EventArgs
-    {
-        public  Card FloorCard { get; }
-        public Card SwapCard { get; }
-        public Type CurrentPlayerType { get; }
-        public PlayerActionPickAndSwap(Type currentPlayerType, Card floorCard, Card swapCard)
-        {
-            CurrentPlayerType = currentPlayerType;
-            FloorCard = floorCard;
-            SwapCard = swapCard;
-        }
-    }
-}
-
-// ---
-
-// File: PlayerActionRaiseBet.cs
-
-using System;
-
-namespace OcentraAI.LLMGames.ThreeCardBrag.Events
-{
-    public class PlayerActionRaiseBet : EventArgs
-    {
-        public string Amount;
-        public Type CurrentPlayerType { get; }
-        public PlayerActionRaiseBet(Type currentPlayerType, string amount)
-        {
-            CurrentPlayerType = currentPlayerType;
-            Amount = amount;
-        }
-    }
-}
-
-// ---
-
-// File: PlayerActionStartNewGame.cs
-
-using System;
-
-namespace OcentraAI.LLMGames.ThreeCardBrag.Events
-{
-    public class PlayerActionStartNewGame : EventArgs
-    {
-
-        public PlayerActionStartNewGame()
-        {
-
-        }
-    }
-}
-
-// ---
-
-// File: PlayerStartCountDown.cs
-
-using OcentraAI.LLMGames.ThreeCardBrag.Players;
-using System;
-
-namespace OcentraAI.LLMGames.ThreeCardBrag.Events
-{
-    public class PlayerStartCountDown : EventArgs
-    {
-        public TurnInfo TurnInfo { get; }
-        public PlayerStartCountDown(TurnInfo turnInfo)
-        {
-
-            TurnInfo = turnInfo;
-        }
-    }
-}
-
-// ---
-
-// File: PlayerStopCountDown.cs
-
-using OcentraAI.LLMGames.ThreeCardBrag.Players;
-using System;
-
-namespace OcentraAI.LLMGames.ThreeCardBrag.Events
-{
-    public class PlayerStopCountDown : EventArgs
-    {
-        public Player CurrentPlayer { get; }
-
-        public PlayerStopCountDown(Player currentPlayer)
-        {
-            CurrentPlayer = currentPlayer;
-        }
-    }
-}
-
-// ---
-
-// File: PurchaseCoins.cs
-
-using System;
-
-namespace OcentraAI.LLMGames.ThreeCardBrag.Events
-{
-    public class PurchaseCoins : EventArgs
-    {
-        public int Amount { get; }
-
-        public PurchaseCoins(int amount)
-        {
-            Amount = amount;
-        }
-    }
-}
-
-// ---
-
-// File: SetFloorCard.cs
-
-using OcentraAI.LLMGames.Scriptable;
-using System;
-
-namespace OcentraAI.LLMGames.ThreeCardBrag.Events
-{
-    public class SetFloorCard : EventArgs
-    {
-        public Card SwapCard { get; }
-        public SetFloorCard()
-        {
-            
-        }
-
-        public SetFloorCard(Card swapCard)
-        {
-            SwapCard = swapCard;
-        }
-    }
-
-
-}
-
-// ---
-
-// File: UIMessage.cs
-
-using System;
-
-namespace OcentraAI.LLMGames.ThreeCardBrag.Events
-{
-    public class UIMessage : EventArgs
-    {
-        public string Message { get; }
-        public float Delay { get; }
-
-        public UIMessage(string message, float delay)
-        {
-            Message = message;
-            Delay = delay;
-        }
-    }
-}
-
-// ---
-
-// File: UpdateFloorCard.cs
-
-using OcentraAI.LLMGames.Scriptable;
-using System;
-
-namespace OcentraAI.LLMGames.ThreeCardBrag.Events
-{
-    public class UpdateFloorCard : EventArgs
-    {
-        public Card Card { get; }
-        public UpdateFloorCard()
-        {
-
-        }
-
-        public UpdateFloorCard(Card card)
-        {
-            Card = card;
-        }
-    }
-}
-
-// ---
-
-// File: UpdateFloorCardList.cs
-
-using OcentraAI.LLMGames.Scriptable;
-using System;
-
-namespace OcentraAI.LLMGames.ThreeCardBrag.Events
-{
-    public class UpdateFloorCardList : EventArgs
-    {
-        public Card Card { get; }
-
-
-        public UpdateFloorCardList(Card card)
-        {
-            Card = card;
-        }
-    }
-}
-
-// ---
-
-// File: UpdateGameState.cs
-
-using OcentraAI.LLMGames.ThreeCardBrag.Manager;
-using System;
-
-namespace OcentraAI.LLMGames.ThreeCardBrag.Events
-{
-    public class UpdateGameState : EventArgs
-    {
-        public bool IsNewRound { get; } = false;
-        public GameManager GameManager { get; }
-        public UpdateGameState(GameManager gameManager, bool isNewRound =false)
-        {
-            GameManager = gameManager;
-        }
-
-
-    }
-}
-
-// ---
-
-// File: UpdatePlayerHandDisplay.cs
-
-using OcentraAI.LLMGames.ThreeCardBrag.Players;
-using System;
-
-namespace OcentraAI.LLMGames.ThreeCardBrag.Events
-{
-    public class UpdatePlayerHandDisplay : EventArgs
-    {
-        public Player Player { get; }
-
-        public UpdatePlayerHandDisplay(Player player)
-        {
-            Player = player;
-        }
-    }
-}
-
-// ---
-
-// File: UpdateRoundDisplay.cs
-
-using OcentraAI.LLMGames.ThreeCardBrag.Scores;
-using System;
-
-namespace OcentraAI.LLMGames.ThreeCardBrag.Events
-{
-    public class UpdateRoundDisplay : EventArgs
-    {
-        public ScoreKeeper ScoreKeeper { get; }
-        public UpdateRoundDisplay(ScoreKeeper scoreKeeper)
-        {
-            ScoreKeeper = scoreKeeper;
-        }
-    }
-}
-
-// ---
-
 // File: DeckManager.cs
 
 using OcentraAI.LLMGames.Scriptable;
@@ -452,40 +13,28 @@ namespace OcentraAI.LLMGames.ThreeCardBrag.Manager
 
     public class DeckManager
     {
-        [ShowInInspector]
-        public List<Card> DeckCards { get; private set; } = new List<Card>();
+        [ShowInInspector] public List<Card> DeckCards { get; private set; } = new List<Card>();
+        [ShowInInspector] public List<Card> FloorCards { get; private set; } = new List<Card>();
+        [ShowInInspector] public Card BackCard => Deck.Instance.BackCard;
+        [ShowInInspector] public int TotalCards => Deck.Instance.CardTemplates.Count;
+        [ShowInInspector] public int RemainingCards => DeckCards.Count;
+        [ShowInInspector] public int FloorCardsCount => FloorCards.Count;
+        [ShowInInspector] public Card FloorCard { get; set; }
+        [ShowInInspector] public Card SwapCard { get; set; }
+        [ShowInInspector] public Card TrumpCard { get; private set; }
+        [ShowInInspector] private Queue<Card> LastDrawnTrumpCards { get; set; } = new Queue<Card>();
 
-        [ShowInInspector]
-        public List<Card> FloorCards { get; private set; } = new List<Card>();
-
-        [ShowInInspector]
-        public Card BackCard => Deck.Instance.BackCard;
-
-        [ShowInInspector]
-        public int TotalCards => Deck.Instance.CardTemplates.Count;
-        [ShowInInspector]
-        public int RemainingCards => DeckCards.Count;
-
-        [ShowInInspector]
-        public int FloorCardsCount => FloorCards.Count;
-
-        [ShowInInspector]
-        public Card FloorCard { get; set; }
-
-        [ShowInInspector]
-        public Card SwapCard { get; set; }
-
-        [ShowInInspector]
-        public Card TrumpCard { get; private set; }
-
-        [ShowInInspector]
-        private Queue<Card> LastDrawnTrumpCards { get; set; } = new Queue<Card>();
+        [ShowInInspector] TurnManager TurnManager { get; set; }
         public DeckManager()
         {
-            InitializeDeck();
+
         }
+        public void Init(TurnManager turnManager)
+        {
+            TurnManager = turnManager;
+            DeckCards = new List<Card>(Deck.Instance.CardTemplates);
 
-
+        }
 
         public void OnSetFloorCard(SetFloorCard e)
         {
@@ -493,23 +42,25 @@ namespace OcentraAI.LLMGames.ThreeCardBrag.Manager
             {
                 OnSetFloorCardList(e.SwapCard);
                 FloorCard = null;
+                EventBus.Publish(new UpdateFloorCard(null,true));
+
             }
             else
             {
-                OnSetFloorCardList(FloorCard);
+                if (FloorCard !=null)
+                {
+                    OnSetFloorCardList(FloorCard);
+
+                }
                 FloorCard = DrawCard();
+                EventBus.Publish(new UpdateFloorCard(FloorCard));
+
             }
 
-            EventBus.Publish(new UpdateFloorCard(FloorCard));
         }
 
 
-        public void InitializeDeck()
-        {
-            DeckCards = new List<Card>(Deck.Instance.CardTemplates);
-            FloorCards.Clear();
-            Shuffle();
-        }
+
 
         public void Shuffle()
         {
@@ -567,24 +118,42 @@ namespace OcentraAI.LLMGames.ThreeCardBrag.Manager
             {
                 LastDrawnTrumpCards.Dequeue();
             }
+
+            EventBus.Publish(new UpdateTrumpCard(TrumpCard));
+
         }
 
 
         public void ResetForNewGame()
         {
-            Reset();
+            ResetForNewRound();
             LastDrawnTrumpCards = new Queue<Card>();
 
         }
 
-        public void Reset()
+        public void ResetForNewRound()
         {
-            InitializeDeck();
-            TrumpCard = null;
+            FloorCards.Clear();
+            Shuffle();
+
+            SetRandomTrumpCard();
+            FloorCard = null;
+            EventBus.Publish(new UpdateFloorCard(null,true));
+            EventBus.Publish(new UpdateFloorCardList(null,true));
+            EventBus.Publish(new UpdateTrumpCard(null,true));
+
         }
 
 
+        private void Log(string message)
+        {
+            GameLogger.Log($"{nameof(DeckManager)} {message}");
+        }
 
+        private void LogError(string message)
+        {
+            GameLogger.LogError($"{nameof(DeckManager)}  {message}");
+        }
 
     }
 }
@@ -593,14 +162,16 @@ namespace OcentraAI.LLMGames.ThreeCardBrag.Manager
 
 // File: GameManager.cs
 
+using OcentraAI.LLMGames.Authentication;
 using OcentraAI.LLMGames.LLMServices;
 using OcentraAI.LLMGames.Scriptable.ScriptableSingletons;
 using OcentraAI.LLMGames.ThreeCardBrag.Events;
 using OcentraAI.LLMGames.ThreeCardBrag.Players;
-using OcentraAI.LLMGames.ThreeCardBrag.Scores;
 using OcentraAI.LLMGames.Utilities;
 using Sirenix.OdinInspector;
 using System;
+using System.Collections.Generic;
+using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using UnityEngine;
@@ -612,51 +183,27 @@ namespace OcentraAI.LLMGames.ThreeCardBrag.Manager
     [RequireComponent(typeof(LLMManager))]
     public class GameManager : MonoBehaviour
     {
+        #region Fields and Properties
+
+        // Singleton instance
         public static GameManager Instance { get; private set; }
 
-        [ShowInInspector]
-        public HumanPlayer HumanPlayer { get; private set; }
+        // Game configuration
+        [ShowInInspector] public int MaxRounds { get; private set; } = 10;
 
-        [ShowInInspector]
-        public ComputerPlayer ComputerPlayer { get; private set; }
+        // Managers
+        [ShowInInspector, ReadOnly] public PlayerManager PlayerManager { get; private set; }
+        [ShowInInspector, ReadOnly] public ScoreManager ScoreManager { get; private set; }
+        [ShowInInspector, ReadOnly] public DeckManager DeckManager { get; private set; }
+        [ShowInInspector] public TurnManager TurnManager { get; private set; }
 
-        [ShowInInspector, ReadOnly]
-        public ScoreKeeper ScoreKeeper { get; private set; }
-
-        [ShowInInspector]
-        public float TurnDuration { get; private set; } = 60f;
-
-        [ShowInInspector, ReadOnly]
-        public int Pot { get; private set; } = 0;
-
-        [ShowInInspector]
-        public int BaseBet { get; private set; } = 10;
-
-        [ShowInInspector, ReadOnly]
-        public int CurrentBet { get; private set; }
-
-        [ShowInInspector, ReadOnly]
-        public int BlindMultiplier { get; private set; } = 1;
-
-        [ShowInInspector]
-        public int InitialCoins { get; private set; } = 1000;
-
-        [ShowInInspector, ReadOnly]
-        private int CurrentRound { get; set; } = 0;
-
-        [ShowInInspector, ReadOnly]
-        public DeckManager DeckManager { get; private set; }
-
-        [ShowInInspector]
-        public int MaxRounds { get; private set; } = 10;
-
-        [ShowInInspector]
-        public TurnInfo CurrentTurn { get; private set; }
-
+        // Helpers
         public AIHelper AIHelper { get; private set; }
+        public CancellationTokenSource GlobalCancellationTokenSource { get; set; }
 
-        private CancellationTokenSource globalCancellationTokenSource;
+        #endregion
 
+        #region Unity Lifecycle Methods
 
         private void Awake()
         {
@@ -671,54 +218,147 @@ namespace OcentraAI.LLMGames.ThreeCardBrag.Manager
             }
         }
 
+        private void Start()
+        {
+            if (IsCancellationRequested()) return;
+
+            AuthenticationManager.Instance.AuthenticationCompleted += async () =>
+            {
+                await InitializeGameAsync();
+            };
+        }
+
+        #endregion
+
+        #region Initialization
+
+        private async Task InitializeGameAsync()
+        {
+            if (IsCancellationRequested()) return;
+
+            await Task.WhenAll(
+                InitializeDeck(),
+                InitializePlayers(),
+                InitializeOtherManagers(),
+                InitializeUIPlayers()
+               
+            );
+
+            await StartNewGameAsync();
+        }
+
+        private Task InitializeDeck()
+        {
+            DeckManager = new DeckManager();
+            EventBus.Subscribe<SetFloorCard>(DeckManager.OnSetFloorCard);
+
+            return Task.CompletedTask;
+        }
+
+        private Task InitializePlayers()
+        {
+            ScoreManager = new ScoreManager();
+
+            TurnManager = new TurnManager();
+
+            PlayerManager = new PlayerManager();
+
+            DeckManager.Init(TurnManager);
+
+            ScoreManager.Init(PlayerManager,TurnManager);
+
+            PlayerManager.Init(DeckManager,ScoreManager,TurnManager);
+
+            TurnManager.Init(GlobalCancellationTokenSource,PlayerManager);
+
+            PlayerManager.AddPlayer(AuthenticationManager.Instance.PlayerData, PlayerType.Human);
+
+            PlayerData playerData = new PlayerData { PlayerID = Guid.NewGuid().ToString(), PlayerName = nameof(ComputerPlayer) };
+            PlayerManager.AddPlayer(playerData, PlayerType.Computer);
+
+
+            
+            return Task.CompletedTask;
+        }
+
+        private Task InitializeOtherManagers()
+        {
+
+            AIHelper = new AIHelper(GameInfo.Instance, this);
+            return Task.CompletedTask;
+        }
+
+
+
+        private Task InitializeUIPlayers()
+        {
+            TaskCompletionSource<bool> initializedUIPlayersSource = new TaskCompletionSource<bool>();
+
+            EventBus.Publish(new InitializeUIPlayers(initializedUIPlayersSource, this));
+
+            return initializedUIPlayersSource.Task;
+        }
+
+        #endregion
+
+        #region Event Subscriptions
+
         private void OnEnable()
         {
-            globalCancellationTokenSource = new CancellationTokenSource();
+            GlobalCancellationTokenSource = new CancellationTokenSource();
+#if UNITY_EDITOR
             UnityEditor.EditorApplication.playModeStateChanged += OnPlayModeStateChanged;
+#endif
 
-            EventBus.Subscribe<PlayerActionStartNewGame>(OnPlayerActionStartNewGame);
-            EventBus.Subscribe<PlayerActionContinueGame>(OnPlayerActionContinueGame);
-
-            EventBus.Subscribe<PlayerActionEvent>(OnPlayerAction);
-            EventBus.Subscribe<PlayerActionRaiseBet>(OnPlayerActionRaiseBet);
-            EventBus.Subscribe<PlayerActionPickAndSwap>(OnPlayerActionPickAndSwap);
-
-
-            EventBus.Subscribe<PurchaseCoins>(OnPurchaseCoins);
-
+            SubscribeToEvents();
         }
 
         private void OnDisable()
         {
-            globalCancellationTokenSource?.Cancel();
-            globalCancellationTokenSource?.Dispose();
+            GlobalCancellationTokenSource?.Cancel();
+            GlobalCancellationTokenSource?.Dispose();
+#if UNITY_EDITOR
             UnityEditor.EditorApplication.playModeStateChanged -= OnPlayModeStateChanged;
+#endif
 
+            UnsubscribeFromEvents();
+        }
+
+        private void SubscribeToEvents()
+        {
+            EventBus.Subscribe<PlayerActionStartNewGame>(OnPlayerActionStartNewGame);
+            EventBus.Subscribe<PlayerActionContinueGame>(OnPlayerActionContinueGame);
+            EventBus.Subscribe<PlayerActionEvent>(OnPlayerAction);
+            EventBus.Subscribe<PlayerActionRaiseBet>(OnPlayerActionRaiseBet);
+            EventBus.Subscribe<PlayerActionPickAndSwap>(OnPlayerActionPickAndSwap);
+            EventBus.Subscribe<PurchaseCoins>(OnPurchaseCoins);
+        }
+
+        private void UnsubscribeFromEvents()
+        {
             EventBus.Unsubscribe<PlayerActionStartNewGame>(OnPlayerActionStartNewGame);
             EventBus.Unsubscribe<PlayerActionContinueGame>(OnPlayerActionContinueGame);
-
             EventBus.Unsubscribe<PlayerActionEvent>(OnPlayerAction);
             EventBus.Unsubscribe<PlayerActionRaiseBet>(OnPlayerActionRaiseBet);
             EventBus.Unsubscribe<PlayerActionPickAndSwap>(OnPlayerActionPickAndSwap);
-
-
             EventBus.Unsubscribe<PurchaseCoins>(OnPurchaseCoins);
-
             EventBus.Unsubscribe<SetFloorCard>(DeckManager.OnSetFloorCard);
-
         }
 
-        private async void Start()
-        {
-            await InitializeGameAsync();
-        }
+        #endregion
+
+        #region Event Handlers and Utilities
 
         private async void OnPlayerActionStartNewGame(PlayerActionStartNewGame obj)
         {
+            if (IsCancellationRequested()) return;
+
             await StartNewGameAsync();
         }
+
         private async void OnPlayerActionContinueGame(PlayerActionContinueGame e)
         {
+            if (IsCancellationRequested()) return;
 
             if (e.ShouldContinue)
             {
@@ -732,7 +372,9 @@ namespace OcentraAI.LLMGames.ThreeCardBrag.Manager
 
         private async void OnPlayerAction(PlayerActionEvent e)
         {
-            if (CurrentTurn.CurrentPlayer.GetType() == e.CurrentPlayerType)
+            if (IsCancellationRequested()) return;
+
+            if (TurnManager.CurrentPlayer.GetType() == e.CurrentPlayerType)
             {
                 await ProcessPlayerAction(e.Action);
             }
@@ -740,198 +382,153 @@ namespace OcentraAI.LLMGames.ThreeCardBrag.Manager
 
         private async void OnPlayerActionRaiseBet(PlayerActionRaiseBet e)
         {
+            if (IsCancellationRequested()) return;
 
-            if (CurrentTurn.CurrentPlayer.GetType() == e.CurrentPlayerType)
+            if (TurnManager.CurrentPlayer.GetType() == e.CurrentPlayerType)
             {
                 if (string.IsNullOrEmpty(e.Amount))
                 {
-                    ShowMessage($" Please Set RaiseAmount! Needs to be higher than CurrentBet {CurrentBet}", 5f);
+                    ShowMessage($"Please Set RaiseAmount! Needs to be higher than CurrentBet {ScoreManager.CurrentBet}");
                     return;
                 }
 
-                if (int.TryParse(e.Amount, out int raiseAmount) && raiseAmount > CurrentBet)
+                if (int.TryParse(e.Amount, out int raiseAmount) && raiseAmount > ScoreManager.CurrentBet)
                 {
                     int newBet = raiseAmount;
                     if (raiseAmount <= 0) // this will happen from computer atm
                     {
                         float randomMultiplier = Random.Range(0.25f, 3f);
-                        // because raise have to be double + if just doubble its normal bet!
-                        newBet = (int)(CurrentBet * 2 + CurrentBet * randomMultiplier);
+                        // because raise have to be double + if just double it's normal bet!
+                        newBet = (int)(ScoreManager.CurrentBet * 2 + ScoreManager.CurrentBet * randomMultiplier);
                     }
 
+                    var (success, errorMessage) = ScoreManager.ProcessRaise(newBet);
 
-
-                    if (CurrentTurn.CurrentPlayer.Coins >= CurrentBet)
+                    if (success)
                     {
-                        SetCurrentBet(newBet);
-                        CurrentTurn.CurrentPlayer.Raise(CurrentBet);
-                        Pot += CurrentBet;
-                        CurrentTurn.ActionCompletionSource.TrySetResult(true);
-
+                        await SwitchTurn();
                     }
                     else
                     {
-                        EventBus.Publish(new UIMessage($"Not enough coins ({CurrentTurn.CurrentPlayer.Coins}). Current bet is {CurrentBet}. You need to fold!", 5f));
+                        ShowMessage($"{errorMessage} You need to fold!");
                         await Fold();
                     }
                 }
                 else
                 {
-                    ShowMessage($" RaiseAmount {raiseAmount} Needs to be higher than CurrentBet {CurrentBet}", 5f);
+                    ShowMessage($"RaiseAmount {raiseAmount} Needs to be higher than CurrentBet {ScoreManager.CurrentBet}");
                 }
-
-
             }
-
         }
 
         private void OnPlayerActionPickAndSwap(PlayerActionPickAndSwap e)
         {
-            if (e.CurrentPlayerType == CurrentTurn.CurrentPlayer.GetType())
-            {
-                CurrentTurn.CurrentPlayer.PickAndSwap(e.FloorCard, e.SwapCard);
+            if (IsCancellationRequested()) return;
 
+            if (e.CurrentPlayerType == TurnManager.CurrentPlayer.GetType())
+            {
+                TurnManager.CurrentPlayer.PickAndSwap(e.FloorCard, e.SwapCard);
             }
         }
+
         private void OnPurchaseCoins(PurchaseCoins obj)
         {
             // This method would interface with the external service to handle coin purchases
             // For now, we'll just add the coins directly
-
-            HumanPlayer.AdjustCoins(obj.Amount);
-            EventBus.Publish(new UpdateGameState(this));
+            PlayerManager.HumanPlayer.AdjustCoins(obj.Amount);
         }
 
+        private async void ShowMessage(string message, bool delay = true, float delayTime = 5f)
+        {
+            EventBus.Publish(new UIMessage(message, delayTime));
+            if (delay)
+            {
+                await DelayWithCancellation(GlobalCancellationTokenSource, (int)delayTime * 1000);
+            }
+        }
 
+        private void Log(string message)
+        {
+            GameLogger.Log($"{nameof(GameManager)} {message}");
+        }
 
+        private void LogError(string message)
+        {
+            GameLogger.LogError($"{nameof(GameManager)}  {message}");
+        }
+
+        private bool IsCancellationRequested()
+        {
+            return GlobalCancellationTokenSource?.IsCancellationRequested ?? false;
+        }
+
+#if UNITY_EDITOR
         private void OnPlayModeStateChanged(UnityEditor.PlayModeStateChange state)
         {
             if (state == UnityEditor.PlayModeStateChange.ExitingPlayMode)
             {
-                globalCancellationTokenSource.Cancel();
+                GlobalCancellationTokenSource.Cancel();
             }
         }
+#endif
 
+        #endregion
 
-
-        private async Task InitializeGameAsync()
-        {
-            Init();
-            await Task.WhenAll(
-                InitializePlayers(),
-                InitializeDeck(),
-                InitializeUIPlayers()
-            );
-            await StartNewGameAsync();
-        }
-
-
-
-        private Task InitializeUIPlayers()
-        {
-            var initializedUIPlayersSource = new TaskCompletionSource<bool>();
-
-            EventBus.Publish(new InitializeUIPlayers(initializedUIPlayersSource, this));
-
-            return initializedUIPlayersSource.Task;
-
-        }
-
-
-        private void Init()
-        {
-            ScoreKeeper = new ScoreKeeper();
-            AIHelper = new AIHelper(GameInfo.Instance, this);
-        }
-
-        private Task InitializePlayers()
-        {
-            HumanPlayer = new HumanPlayer();
-            HumanPlayer.SetName(nameof(HumanPlayer));
-
-            ComputerPlayer = new ComputerPlayer();
-            ComputerPlayer.SetName(nameof(ComputerPlayer));
-
-            return Task.CompletedTask;
-        }
-
-        private Task InitializeDeck()
-        {
-            DeckManager = new DeckManager();
-            EventBus.Subscribe<SetFloorCard>(DeckManager.OnSetFloorCard);
-
-            return Task.CompletedTask;
-        }
+        #region Game Flow Control
 
         public async Task StartNewGameAsync()
         {
-
-            CurrentRound = 0;
-            HumanPlayer.AdjustCoins(InitialCoins);
-            ComputerPlayer.AdjustCoins(InitialCoins);
+            PlayerManager.ResetForNewGame();
             DeckManager.ResetForNewGame();
-            EventBus.Publish(new NewGameEventArgs(InitialCoins));
+            ScoreManager.ResetForNewGame();
+            TurnManager.ResetForNewGame();
+            EventBus.Publish(new NewGameEventArgs(this, $"Starting new game"));
 
             await StartNewRoundAsync();
-
         }
 
         private async Task StartNewRoundAsync()
         {
+            DeckManager.ResetForNewRound();
+            PlayerManager.ResetForNewRound();
+            ScoreManager.ResetForNewRound();
+            TurnManager.ResetForNewRound();
+            TurnManager.StartTurn();
+            
+            EventBus.Publish(new UpdateGameState(this, isNewRound: true));
 
-            CurrentRound++;
-            DeckManager.Reset();
-            HumanPlayer.ResetForNewRound();
-            ComputerPlayer.ResetForNewRound();
-            Pot = 0;
-            CurrentBet = BaseBet;
-            BlindMultiplier = 1;
-
-            for (int i = 0; i < 3; i++)
-            {
-                HumanPlayer.Hand.Add(DeckManager.DrawCard());
-                ComputerPlayer.Hand.Add(DeckManager.DrawCard());
-            }
-
-            DeckManager.SetRandomTrumpCard();
-
-            EventBus.Publish(new UpdateGameState(this, true));
-
-            await PlayerTurnAsync(HumanPlayer);
+            await PlayerTurnAsync();
         }
 
-        private async Task PlayerTurnAsync(Player currentPlayer)
+        private async Task PlayerTurnAsync()
         {
-            CurrentTurn = new TurnInfo(currentPlayer, TurnDuration);
-            CurrentTurn.StartTurn();
+            EventBus.Publish(new UpdateGameState(this));
 
-            if (CurrentTurn.CurrentPlayer is HumanPlayer)
+            if (TurnManager.CurrentPlayer is HumanPlayer)
             {
                 await WaitForPlayerActionAndSwitchTurnAsync();
             }
-            else
+            else if (TurnManager.CurrentPlayer is ComputerPlayer computerPlayer)
             {
-                await ComputerPlayer.MakeDecision(CurrentBet);
+                await Task.Delay(100);
+                await computerPlayer.MakeDecision(ScoreManager.CurrentBet);
                 await WaitForPlayerActionAndSwitchTurnAsync();
             }
         }
-
-
-
 
         private async Task WaitForPlayerActionAndSwitchTurnAsync()
         {
-            using CancellationTokenSource cancellationTokenSource = CancellationTokenSource.CreateLinkedTokenSource(globalCancellationTokenSource.Token);
+            if (IsCancellationRequested()) return;
 
-            
-            Task completedTask = await Task.WhenAny(CurrentTurn.ActionCompletionSource.Task, CurrentTurn.TimerCompletionSource.Task);
-           
+            using CancellationTokenSource cancellationTokenSource = CancellationTokenSource.CreateLinkedTokenSource(GlobalCancellationTokenSource.Token);
 
-            if (completedTask == CurrentTurn.ActionCompletionSource.Task)
+            Task completedTask = await Task.WhenAny(TurnManager.ActionCompletionSource.Task, TurnManager.TimerCompletionSource.Task);
+
+            if (completedTask == TurnManager.ActionCompletionSource.Task)
             {
-                CurrentTurn.StopTurn();
+                await TurnManager.StopTurn();
             }
-            else if (completedTask == CurrentTurn.TimerCompletionSource.Task)
+            else if (completedTask == TurnManager.TimerCompletionSource.Task)
             {
                 ShowMessage("Time's up! Placing automatic bet.");
                 await ProcessPlayerAction(PlayerAction.Bet);
@@ -940,2137 +537,514 @@ namespace OcentraAI.LLMGames.ThreeCardBrag.Manager
             cancellationTokenSource.Cancel();
         }
 
+        private async Task SwitchTurn()
+        {
+            await TurnManager.SwitchTurn();
+            await PlayerTurnAsync();
+        }
 
+        #endregion
 
+        #region Player Actions
 
         private async Task ProcessPlayerAction(PlayerAction action)
         {
-
-
-
-            string message = $"<color={GetColor(Color.white)}>Player : </color> <color={GetColor(Color.blue)}>{CurrentTurn.CurrentPlayer.PlayerName}</color>" +
+            string message = $"<color={GetColor(Color.white)}>Player : </color> <color={GetColor(Color.blue)}>{TurnManager.CurrentPlayer.PlayerName}</color>" +
                              $"{Environment.NewLine}<color={GetColor(Color.white)}>PlayerAction : </color> <color={GetColor(Color.green)}>{action.ToString()}</color>" +
-                             $"{Environment.NewLine}<color={GetColor(Color.white)}>Current bet : </color> <color={GetColor(Color.yellow)}>{CurrentBet}</color>" +
-                             $"{Environment.NewLine}<color={GetColor(Color.white)}>Player coins : </color> <color={GetColor(Color.yellow)}>{CurrentTurn.CurrentPlayer.Coins}</color>";
+                             $"{Environment.NewLine}<color={GetColor(Color.white)}>Current bet : </color> <color={GetColor(Color.yellow)}>{ScoreManager.CurrentBet}</color>" +
+                             $"{Environment.NewLine}<color={GetColor(Color.white)}>Player coins : </color> <color={GetColor(Color.yellow)}>{TurnManager.CurrentPlayer.Coins}</color>";
 
-
-            ShowMessage(message);
-            EventBus.Publish(new UpdateGameState(this));
-
+            ShowMessage(message, false);
 
             switch (action)
             {
                 case PlayerAction.SeeHand:
-                    CurrentTurn.CurrentPlayer.SeeHand();
-                    await CurrentTurn.ActionCompletionSource.Task;
+                case PlayerAction.DrawFromDeck:
+                    HandleViewingActions(action);
                     break;
+                case PlayerAction.PlayBlind:
+                case PlayerAction.Bet:
+                    await HandleBettingActions(action);
+                    break;
+                case PlayerAction.Fold:
+                    await Fold();
+                    break;
+                case PlayerAction.Show:
+                    await Show();
+                    break;
+            }
+        }
+
+        private void HandleViewingActions(PlayerAction action)
+        {
+            switch (action)
+            {
+                case PlayerAction.SeeHand:
+                    TurnManager.CurrentPlayer.SeeHand();
+                    break;
+                case PlayerAction.DrawFromDeck:
+                    TurnManager.CurrentPlayer.DrawFromDeck();
+                    break;
+            }
+
+            EventBus.Publish(new UpdateGameState(this));
+            TurnManager.ActionCompletionSource.TrySetResult(true);
+        }
+
+        private async Task HandleBettingActions(PlayerAction action)
+        {
+            switch (action)
+            {
                 case PlayerAction.PlayBlind:
                     await PlayBlind();
                     break;
                 case PlayerAction.Bet:
                     await Bet();
                     break;
-                case PlayerAction.Fold:
-                    await Fold();
-                    break;
-                case PlayerAction.DrawFromDeck:
-                    CurrentTurn.CurrentPlayer.DrawFromDeck();
-                    await CurrentTurn.ActionCompletionSource.Task;
-                    break;
-
-                case PlayerAction.Show:
-                    await Show();
-                    break;
-                default:
-                    break;
             }
 
-           
-            CurrentTurn.StopTurn();
-            EventBus.Publish(new UpdateGameState(this));
-
-            SwitchTurn();
-
+            await SwitchTurn();
         }
-
-
 
         private async Task PlayBlind()
         {
-            CurrentBet *= BlindMultiplier;
-            if (CurrentTurn.CurrentPlayer.Coins >= CurrentBet)
-            {
-                CurrentTurn.CurrentPlayer.BetOnBlind(CurrentBet);
-                Pot += CurrentBet;
-                BlindMultiplier *= 2;
-                CurrentTurn.ActionCompletionSource.TrySetResult(true);
+            var (success, errorMessage) = ScoreManager.ProcessBlindBet();
 
+            if (success)
+            {
+                TurnManager.ActionCompletionSource.TrySetResult(true);
             }
             else
             {
-                ShowMessage($"Not enough coins ({CurrentTurn.CurrentPlayer.Coins}). Current bet is {CurrentBet}. You need to fold!", 5f);
+                ShowMessage($"{errorMessage} You need to fold!");
                 await Fold();
             }
         }
 
         private async Task Bet()
         {
+            var (success, errorMessage) = ScoreManager.ProcessRegularBet();
 
-            int betAmount = CurrentTurn.CurrentPlayer.HasSeenHand ? CurrentBet * 2 : CurrentBet;
-            if (CurrentTurn.CurrentPlayer.Coins >= betAmount)
+            if (success)
             {
-                CurrentTurn.CurrentPlayer.Bet(CurrentBet);
-                Pot += betAmount;
-                CurrentTurn.ActionCompletionSource.TrySetResult(true);
-
+                TurnManager.ActionCompletionSource.TrySetResult(true);
             }
             else
             {
-                ShowMessage($"Not enough coins ({CurrentTurn.CurrentPlayer.Coins}). Current bet is {CurrentBet}. You need to fold!", 5f);
+                ShowMessage($"{errorMessage} You need to fold!");
                 await Fold();
             }
         }
 
-
-
         private async Task Fold()
         {
-            CurrentTurn.CurrentPlayer.Fold();
-            await EndRound(GetOtherPlayer(CurrentTurn.CurrentPlayer), false);
+            ScoreManager.ProcessFold();
+            TurnManager.CallShow();
+
+            await EndRound(PlayerManager.GetActivePlayers(), false);
         }
 
         private async Task Show()
         {
-            HumanPlayer.ShowHand(true);
-            ComputerPlayer.ShowHand(true);
+            var (success, errorMessage) = ScoreManager.ProcessShowBet();
 
-            await DetermineWinner();
+            if (success)
+            {
+                TurnManager.CallShow();
+                await DetermineWinner();
+            }
+            else
+            {
+                ShowMessage($"{errorMessage} You need to fold!");
+                await Fold();
+            }
         }
 
-        private async void SwitchTurn()
-        {
-            if (globalCancellationTokenSource?.IsCancellationRequested == true) return;
-            Player nextPlayer = CurrentTurn.CurrentPlayer is HumanPlayer ? ComputerPlayer : HumanPlayer;
-            await PlayerTurnAsync(nextPlayer);
-        }
+        #endregion
 
-        private Player GetOtherPlayer(Player currentPlayer)
-        {
-            return currentPlayer == HumanPlayer ? ComputerPlayer : HumanPlayer;
-        }
+        #region Game End and Continuation
 
         private async Task DetermineWinner()
         {
-            int humanValue = HumanPlayer.CalculateHandValue();
-            int computerValue = ComputerPlayer.CalculateHandValue();
-
-            Player winner;
-            if (humanValue > computerValue)
+            List<Player> activePlayers = PlayerManager.GetActivePlayers();
+            if (activePlayers.Count == 0)
             {
-                winner = HumanPlayer;
-            }
-            else if (computerValue > humanValue)
-            {
-                winner = ComputerPlayer;
-            }
-            else
-            {
-                int humanHighCard = HumanPlayer.GetHighestCardValue();
-                int computerHighCard = ComputerPlayer.GetHighestCardValue();
-
-                if (humanHighCard > computerHighCard)
-                {
-                    winner = HumanPlayer;
-                }
-                else if (computerHighCard > humanHighCard)
-                {
-                    winner = ComputerPlayer;
-                }
-                else
-                {
-                    // It's a tie
-                    winner = null;
-                }
-            }
-
-            await EndRound(winner, true);
-        }
-
-        private async Task EndRound(Player winner, bool showHand)
-        {
-           CurrentTurn.StopTurn();
-            if (winner == null)
-            {
-                HumanPlayer.ShowHand(true);
-                ComputerPlayer.ShowHand(true);
-                ShowMessage("It's a tie!", 5f);
-            }
-            else
-            {
-                winner.AdjustCoins(Pot);
-                ScoreKeeper.AddToTotalRoundScores(winner, Pot);
-                ShowMessage($"{winner.PlayerName} wins the round with Pot {Pot} coins!", 6f);
-                EventBus.Publish(new UpdateRoundDisplay(ScoreKeeper));
-                EventBus.Publish(new UpdateGameState(this));
-            }
-
-            if (HumanPlayer.Coins <= 0 || ComputerPlayer.Coins <= 0)
-            {
-                await EndGame(true);
-            }
-            else
-            {
-                await CheckForContinuation(showHand);
-            }
-
-
-        }
-
-        private void ShowMessage(string message, float f = 5f)
-        {
-            EventBus.Publish(new UIMessage(message, f));
-        }
-
-        private async Task CheckForContinuation(bool showHand )
-        {
-            if (CurrentRound >= MaxRounds)
-            {
-                Player trailingPlayer = ScoreKeeper.HumanTotalWins < ScoreKeeper.ComputerTotalWins ? HumanPlayer : ComputerPlayer;
-                Player leadingPlayer = GetOtherPlayer(trailingPlayer);
-
-                if (trailingPlayer.Coins > leadingPlayer.Coins)
-                {
-                   CurrentTurn.StopTurn();
-                    EventBus.Publish(new OfferContinuation(10));
-                    HumanPlayer.ShowHand(showHand);
-                    ComputerPlayer.ShowHand(showHand);
-                }
-                else
-                {
-                    await EndGame(showHand);
-                }
-            }
-            else
-            {
-                CurrentTurn.StopTurn();
-                EventBus.Publish(new OfferContinuation(10));
-                HumanPlayer.ShowHand(showHand);
-                ComputerPlayer.ShowHand(showHand);
-            }
-  
-        }
-
-
-
-        private async Task EndGame(bool showHand)
-        {
-            Player winner;
-            if (HumanPlayer.Coins <= 0)
-            {
-                winner = ComputerPlayer;
-            }
-            else if (ComputerPlayer.Coins <= 0)
-            {
-                winner = HumanPlayer;
-            }
-            else if (ScoreKeeper.HumanTotalWins != ScoreKeeper.ComputerTotalWins)
-            {
-                winner = ScoreKeeper.HumanTotalWins > ScoreKeeper.ComputerTotalWins ? HumanPlayer : ComputerPlayer;
-            }
-            else
-            {
-                winner = HumanPlayer.Coins > ComputerPlayer.Coins ? HumanPlayer : ComputerPlayer;
-            }
-
-            ShowMessage($"Game Over! {winner.PlayerName} wins the game!", 6f);
-            HumanPlayer.ShowHand(showHand);
-            ComputerPlayer.ShowHand(showHand);
-
-            await Task.Delay(6000, globalCancellationTokenSource.Token);
-
-            EventBus.Publish(new OfferNewGame(15));
-
-
-        }
-
-
-
-        public void SetCurrentBet(int bet)
-        {
-            CurrentBet = bet;
-        }
-    }
-
-
-}
-
-
-// ---
-
-// File: TurnInfo.cs
-
-using OcentraAI.LLMGames.ThreeCardBrag.Events;
-using OcentraAI.LLMGames.Utilities;
-using System;
-using System.Threading;
-using System.Threading.Tasks;
-using UnityEngine;
-
-namespace OcentraAI.LLMGames.ThreeCardBrag.Players
-{
-    [System.Serializable]
-    public class TurnInfo
-    {
-        public Player CurrentPlayer;
-        public float ElapsedTime;
-        public TaskCompletionSource<bool> ActionCompletionSource { get; set; }
-        public TaskCompletionSource<bool> TimerCompletionSource { get; set; }
-        public float Duration { get; private set; }
-        public float RemainingTime { get; private set; }
-        private CancellationTokenSource CancellationTokenSource { get; set; }
-
-        public TurnInfo(Player currentPlayer, float duration)
-        {
-            CurrentPlayer = currentPlayer;
-            Duration = duration;
-            ElapsedTime = 0f;
-            RemainingTime = Duration;
-            ActionCompletionSource = new TaskCompletionSource<bool>();
-            TimerCompletionSource = new TaskCompletionSource<bool>();
-            CancellationTokenSource = new CancellationTokenSource();
-        }
-
-        public void StartTurn()
-        {
-            ActionCompletionSource = new TaskCompletionSource<bool>();
-            TimerCompletionSource = new TaskCompletionSource<bool>();
-            CancellationTokenSource = new CancellationTokenSource();
-
-            StartTimer(CurrentPlayer);
-        }
-
-        public async void StartTimer(Player currentPlayer)
-        {
-            PlayerStartCountDown playerStartCountDown = new PlayerStartCountDown(this);
-            ElapsedTime = 0f;
-            RemainingTime = Duration;
-            try
-            {
-                while (RemainingTime > 0)
-                {
-                    if (CancellationTokenSource.Token.IsCancellationRequested)
-                    {
-                        return;
-                    }
-                    await Task.Yield();
-                    EventBus.Publish(playerStartCountDown);
-                    RemainingTime = Mathf.Max(0, RemainingTime - Time.deltaTime);
-                }
-                TimerCompletionSource.TrySetResult(true);
-            }
-            catch (Exception ex)
-            {
-                TimerCompletionSource.TrySetException(ex);
-            }
-            finally
-            {
-                StopTurn();
-            }
-        }
-
-        public void StopTurn()
-        {
-            CancellationTokenSource.Cancel();
-            ElapsedTime = 0f;
-            RemainingTime = Duration;
-            EventBus.Publish(new PlayerStopCountDown(CurrentPlayer));
-        }
-    }
-}
-
-// ---
-
-// File: ComputerPlayer.cs
-
-using OcentraAI.LLMGames.Scriptable;
-using OcentraAI.LLMGames.ThreeCardBrag.Events;
-using OcentraAI.LLMGames.Utilities;
-using System.Linq;
-using System.Threading.Tasks;
-using UnityEngine;
-
-namespace OcentraAI.LLMGames.ThreeCardBrag.Players
-{
-    public class ComputerPlayer : Player
-    {
-        public async Task MakeDecision(int currentBet)
-        {
-            await SimulateThinkingAndMakeDecision(currentBet);
-        }
-
-        private async Task SimulateThinkingAndMakeDecision(int currentBet)
-        {
-            // Simulate thinking time
-            float thinkingTime = Random.Range(2f, 5f);
-            await Task.Delay((int)(thinkingTime * 1000));
-
-            if (!HasSeenHand)
-            {
-                if (Random.value > 0.3f)
-                {
-                    EventBus.Publish(new PlayerActionEvent(GetType(), PlayerAction.SeeHand));
-                    await SimulateThinkingAndMakeDecision(currentBet);
-                }
-                else
-                {
-                    EventBus.Publish(new PlayerActionEvent(GetType(), PlayerAction.PlayBlind));
-                }
+                ShowMessage("No active players found when determining winner");
                 return;
             }
 
-            int handValue = CalculateHandValue();
+            int highestHandValue = activePlayers.Max(p => p.CalculateHandValue());
+            List<Player> potentialWinners = activePlayers.Where(p => p.CalculateHandValue() == highestHandValue).ToList();
 
-            if (handValue >= 50)
+            if (potentialWinners.Count == 1)
             {
-                if (Random.value > 0.7f)
-                {
-                    EventBus.Publish(new PlayerActionEvent(GetType(), PlayerAction.Show));
-                }
-                else
-                {
-                    DecideOnBetOrRaise(currentBet, 0.8f);
-                }
+                await EndRound(potentialWinners, true);
+                return;
             }
-            else if (handValue >= 25)
+
+            int highestCardValue = potentialWinners.Max(p => p.GetHighestCardValue());
+            List<Player> winners = potentialWinners.Where(p => p.GetHighestCardValue() == highestCardValue).ToList();
+
+            await EndRound(winners, true);
+        }
+
+        private async Task EndRound(List<Player> winners, bool showHand)
+        {
+            await TurnManager.StopTurn();
+
+            if (winners.Count == 0)
             {
-                if (FloorCard != null && ShouldSwapCard())
+                Debug.LogError("EndRound called with no winners");
+                return;
+            }
+
+            if (winners.Count > 1)
+            {
+                HandleTie(winners, showHand);
+            }
+            else
+            {
+                await HandleSingleWinner(winners[0], showHand);
+            }
+
+
+        }
+
+        private void HandleTie(List<Player> winners, bool showHand)
+        {
+            if (ScoreManager.AwardTiedPot(winners))
+            {
+                string winnerNames = string.Join(", ", winners.Select(w => w.PlayerName));
+                EventBus.Publish(new UpdateRoundDisplay(ScoreManager));
+                EventBus.Publish(new UpdateGameState(this));
+                OfferContinuation(showHand, $"It's a tie between {winnerNames}! The pot has been split.");
+            }
+            else
+            {
+                Debug.LogError("Failed to award tied pot");
+            }
+        }
+
+        private async Task HandleSingleWinner(Player winner, bool showHand)
+        {
+            if (ScoreManager.AddToRoundScores(winner, ScoreManager.Pot) &&
+                ScoreManager.AwardPotToWinner(winner))
+            {
+                EventBus.Publish(new UpdateRoundDisplay(ScoreManager));
+                EventBus.Publish(new UpdateGameState(this));
+
+                if (PlayerManager.GetActivePlayers().Any(p => p.Coins <= 0))
                 {
-                    SwapWithFloorCard();
-                }
-                else if (Random.value > 0.4f)
-                {
-                    DecideOnBetOrRaise(currentBet, 0.6f);
+                    await EndGame();
                 }
                 else
                 {
-                    EventBus.Publish(new PlayerActionEvent(GetType(), PlayerAction.DrawFromDeck));
-                    await HandleDrawnCard(currentBet);
+                    await CheckForContinuation(showHand, winner);
                 }
             }
             else
             {
-                if (FloorCard != null && ShouldSwapCard())
+                Debug.LogError("Failed to award pot to winner");
+            }
+        }
+
+        private async Task CheckForContinuation(bool showHand, Player winner)
+        {
+            string message = ColouredMessage("Round Over!", Color.red) +
+                             ColouredMessage($"{winner.PlayerName} ", Color.white, true) + ColouredMessage($"wins the round!", Color.cyan) +
+                             $"{Environment.NewLine}" +
+                             ColouredMessage("Continue Next Rounds ?", Color.red, true);
+
+            if (TurnManager.CurrentRound >= MaxRounds)
+            {
+                var leaderboard = ScoreManager.GetLeaderboard();
+                if (leaderboard.Count > 1 && leaderboard[0].TotalWinnings > leaderboard[1].TotalWinnings)
                 {
-                    SwapWithFloorCard();
-                }
-                else if (FloorCard == null || Random.value > 0.7f)
-                {
-                    EventBus.Publish(new PlayerActionEvent(GetType(), PlayerAction.DrawFromDeck));
-                    await HandleDrawnCard(currentBet);
+                    await EndGame();
                 }
                 else
                 {
-                    EventBus.Publish(new PlayerActionEvent(GetType(), PlayerAction.Fold));
+                    OfferContinuation(showHand, message);
                 }
             }
-        }
-
-        private void DecideOnBetOrRaise(int currentBet, float raiseChance)
-        {
-            if (Random.value < raiseChance)
-            {
-                int raiseAmount = (int)(currentBet * Random.Range(1.5f, 3f));
-                EventBus.Publish(new PlayerActionRaiseBet(GetType(), raiseAmount.ToString()));
-            }
             else
             {
-                EventBus.Publish(new PlayerActionEvent(GetType(), PlayerAction.Bet));
+                OfferContinuation(showHand, message);
             }
         }
 
-        private bool ShouldSwapCard()
+        private void OfferContinuation(bool showHand, string message)
         {
-            if (FloorCard == null) return false;
-            int worstCardValue = Hand.Min(card => card.GetRankValue());
-            return FloorCard.GetRankValue() > worstCardValue;
+            EventBus.Publish(new OfferContinuation(10, message));
+            TurnManager.CallShow();
+            PlayerManager.ShowHand(showHand);
         }
 
-        private void SwapWithFloorCard()
+        private Task EndGame()
         {
-            if (FloorCard == null) return;
-            int worstCardIndex = Hand.FindIndex(c => c.GetRankValue() == Hand.Min(card => card.GetRankValue()));
-            EventBus.Publish(new PlayerActionPickAndSwap(GetType(), floorCard:FloorCard, swapCard:Hand[worstCardIndex]));
+            var (winnerId, winCount) = ScoreManager.GetOverallWinner();
+            Player winner = winnerId == PlayerManager.HumanPlayer.Id ? PlayerManager.HumanPlayer : PlayerManager.ComputerPlayer;
+
+            TurnManager.CallShow();
+            PlayerManager.ShowHand(true);
+
+
+            string message = ColouredMessage("Game Over!", Color.red) +
+                             ColouredMessage($"{winner.PlayerName}", Color.white, true) +
+                             ColouredMessage($"wins the game with {winCount} rounds!", Color.cyan) +
+                             $"{Environment.NewLine}" +
+                             ColouredMessage("Play New Game of 10 rounds ?", Color.red, true);
+
+            EventBus.Publish(new OfferNewGame(60, message));
+            return Task.CompletedTask;
         }
 
-        private async Task HandleDrawnCard(int currentBet)
-        {
-            // Simulate thinking about the drawn card
-            await Task.Delay(Random.Range(1000, 3000));
-
-            if (FloorCard != null && ShouldSwapCard())
-            {
-                SwapWithFloorCard();
-            }
-
-            // Make a decision after drawing/swapping
-            int handValue = CalculateHandValue();
-            if (handValue >= 40)
-            {
-                DecideOnBetOrRaise(currentBet, 0.7f);
-            }
-            else if (handValue >= 20)
-            {
-                EventBus.Publish(new PlayerActionEvent(GetType(), PlayerAction.Bet));
-            }
-            else
-            {
-                EventBus.Publish(new PlayerActionEvent(GetType(), PlayerAction.Fold));
-            }
-        }
-
-        public override void SeeHand()
-        {
-            base.SeeHand();
-            EventBus.Publish(new UpdatePlayerHandDisplay(this));
-        }
-
-        public override void ShowHand(bool isRoundEnd = false)
-        {
-            base.ShowHand(isRoundEnd);
-            EventBus.Publish(new UpdatePlayerHandDisplay(this));
-        }
-
-        public override void PickAndSwap(Card floorCard, Card swapCard)
-        {
-            base.PickAndSwap(floorCard, swapCard);
-            EventBus.Publish(new UpdatePlayerHandDisplay(this));
-        }
+        #endregion
     }
+
+
 }
+
 
 // ---
 
-// File: HumanPlayer.cs
+// File: TurnManager.cs
 
-using OcentraAI.LLMGames.Scriptable;
 using OcentraAI.LLMGames.ThreeCardBrag.Events;
-using OcentraAI.LLMGames.Utilities;
-
-namespace OcentraAI.LLMGames.ThreeCardBrag.Players
-{
-    public class HumanPlayer : Player
-    {
-        public override void SeeHand()
-        {
-            base.SeeHand();
-            EventBus.Publish(new UpdatePlayerHandDisplay(this));
-            ShowHand();
-        }
-
-        public override void ShowHand(bool isRoundEnd=false)
-        {
-            base.ShowHand(isRoundEnd);
-            EventBus.Publish(new UpdatePlayerHandDisplay(this));
-        }
-
-        public override void PickAndSwap(Card floorCard, Card swapCard)
-        {
-            base.PickAndSwap(floorCard, swapCard);
-            EventBus.Publish(new UpdatePlayerHandDisplay(this));
-
-        }
-
-    }
-}
-
-// ---
-
-// File: Player.cs
-
-using OcentraAI.LLMGames.LLMServices;
-using OcentraAI.LLMGames.Scriptable;
-using OcentraAI.LLMGames.Scriptable.ScriptableSingletons;
-using OcentraAI.LLMGames.ThreeCardBrag.Events;
+using OcentraAI.LLMGames.ThreeCardBrag.Players;
 using OcentraAI.LLMGames.Utilities;
 using Sirenix.OdinInspector;
+using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Threading;
+using System.Threading.Tasks;
 
-namespace OcentraAI.LLMGames.ThreeCardBrag.Players
+namespace OcentraAI.LLMGames.ThreeCardBrag.Manager
 {
-    public class Player
+    [System.Serializable]
+    public class TurnManager
     {
+        [ShowInInspector] private List<Player> Players { get; set; }
+        [ShowInInspector] public Player CurrentPlayer { get; private set; }
+        [ShowInInspector] public Player RoundStarter { get; private set; }
+        [ShowInInspector] public Player LastRoundWinner { get; private set; }
+        [ShowInInspector] public Player LastBettor { get; private set; }
+        [ShowInInspector] public bool IsShowdown { get; private set; }
+        [ShowInInspector] public int CurrentRound { get; private set; } = 0;
+        [ShowInInspector] public float TurnDuration { get; private set; } = 60f;
+        [ShowInInspector] public float RemainingTime { get; private set; }
 
+        public TaskCompletionSource<bool> ActionCompletionSource { get; private set; }
+        public TaskCompletionSource<bool> TimerCompletionSource { get; private set; }
+        private CancellationTokenSource TurnCancellationTokenSource { get; set; }
+        private CancellationTokenSource GlobalCancellationTokenSource { get; set; }
+        private PlayerManager PlayerManager { get; set; }
+        private PlayerStartCountDown PlayerStartCountDown { get; set; }
 
-        [ShowInInspector, ReadOnly]
-        public string PlayerName { get; private set; }
-        [ShowInInspector, ReadOnly]
-        public List<Card> Hand { get; private set; } = new List<Card>();
-
-        [ShowInInspector, ReadOnly]
-        public int Coins { get; private set; }
-        [ShowInInspector, ReadOnly]
-        public bool HasSeenHand { get; private set; } = false;
-        [ShowInInspector, ReadOnly]
-        public bool HasBetOnBlind { get; private set; } = true;
-
-        protected Card FloorCard { get;  set; } 
-
-        public virtual void SetName(string playerName)
+        public TurnManager()
         {
-            PlayerName = playerName;
         }
 
-
-
-        public virtual void SeeHand()
+        public void Init(CancellationTokenSource globalCancellationTokenSource, PlayerManager playerManager)
         {
-            HasSeenHand = true;
+            GlobalCancellationTokenSource = globalCancellationTokenSource;
+            PlayerManager = playerManager;
+            PlayerStartCountDown = new PlayerStartCountDown(this);
         }
 
-        public virtual void Bet(int amount)
+        private List<Player> InitializePlayers()
         {
-            AdjustCoins(-amount);
+            var allPlayers = PlayerManager.GetAllPlayers();
+            var computerPlayers = allPlayers.Where(p => p is ComputerPlayer).ToList();
+            var humanPlayers = allPlayers.Where(p => p is HumanPlayer).ToList();
 
-        }
-
-        public virtual void Raise(int amount)
-        {
-            AdjustCoins(-amount);
-        }
-
-        public virtual void Fold()
-        {
-            Hand.Clear();
-        }
-
-        public virtual void DrawFromDeck()
-        {
-            EventBus.Publish(new SetFloorCard());
-        }
-
-        public virtual void PickAndSwap(Card floorCard, Card swapCard)
-        {
-            if (floorCard != null && swapCard != null)
+            if (computerPlayers.Count == 0 || humanPlayers.Count == 0)
             {
-                SwapCard(floorCard, swapCard);
-
-                EventBus.Publish(new SetFloorCard(swapCard));
-            }
-        }
-
-
-
-
-        public virtual void BetOnBlind(int amount)
-        {
-            AdjustCoins(-amount);
-            HasBetOnBlind = true;
-
-        }
-
-        public int CalculateHandValue()
-        {
-            int handValue = Hand.Sum(card => card.GetRankValue());
-            BaseBonusRule[] bonusRules = GameInfo.Instance.BonusRules;
-
-            foreach (BaseBonusRule rule in bonusRules)
-            {
-                if (rule.Evaluate(Hand))
-                {
-                    handValue += rule.BonusValue;
-                }
+                LogError("At least one computer player and one human player are required.");
+                return null;
             }
 
-            return handValue;
+            var orderedPlayers = new List<Player> { humanPlayers[0] }; // Human player first
+            orderedPlayers.AddRange(computerPlayers); // Followed by computer players
+
+            return orderedPlayers;
         }
 
-        public int GetHighestCardValue()
+        public void ResetForNewGame()
         {
-            return Hand.Max(card => card.GetRankValue());
-        }
+            CurrentRound = 0;
+            IsShowdown = false;
+            LastBettor = null;
+            LastRoundWinner = null;
+            RoundStarter = null;
+            CurrentPlayer = null;
+            RemainingTime = TurnDuration;
+            ActionCompletionSource = new TaskCompletionSource<bool>();
+            TimerCompletionSource = new TaskCompletionSource<bool>();
 
-        public virtual void ShowHand(bool isRoundEnd = false)
-        {
-            foreach (Card card in Hand)
-            {
-                // Debug.Log($"{PlayerName}'s card: {card.Rank} of {card.Suit}");
-            }
-            //Debug.Log($"{PlayerName}'s hand value: {CalculateHandValue()}");
-
-
+            Players = InitializePlayers();
+            Log("TurnManager reset for new game");
         }
 
         public void ResetForNewRound()
         {
-            Hand.Clear();
-            HasSeenHand = false;
-            HasBetOnBlind = true;
-        }
+            CurrentRound++;
+            IsShowdown = false;
+            LastBettor = null;
 
-        public void AdjustCoins(int amount)
-        {
-            Coins += amount;
-
-
-        }
-
-        public void SwapCard(Card floorCard, Card swapCard )
-        {
-            for (int index = 0; index < Hand.Count; index++)
+            if (CurrentRound == 1)
             {
-                Card cardInHand = Hand[index];
-                if (cardInHand.Suit == swapCard.Suit && cardInHand.Rank == swapCard.Rank)
-                {
-                    Hand[index] = floorCard;
-                    break;
-                }
-            }
-
-        }
-    }
-}
-
-
-// ---
-
-// File: PlayerAction.cs
-
-namespace OcentraAI.LLMGames.ThreeCardBrag.Players
-{
-    public enum PlayerAction
-    {
-        SeeHand,
-        PlayBlind,
-        Bet,
-        Fold,
-        DrawFromDeck,
-        Show
-    }
-}
-
-// ---
-
-// File: PlayerTimer.cs
-
-using OcentraAI.LLMGames.Extensions;
-using Sirenix.OdinInspector;
-using TMPro;
-using UnityEngine;
-using UnityEngine.UI;
-
-namespace OcentraAI.LLMGames.ThreeCardBrag.Players
-{
-    public class PlayerTimer : MonoBehaviour
-    {
-        [Required, ShowInInspector]
-        private TextMeshProUGUI TurnCountdownText { get; set; }
-
-        [Required, ShowInInspector]
-        private Image CircleImage { get; set; }
-
-        [Required, ShowInInspector]
-        private Image BackgroundImage { get; set; }
-
-        [Required, ShowInInspector]
-        private Image Image { get; set; }
-
-        private Player  Player { get; set; }
-        private float Duration { get; set; }
-        private float RemainingTime { get; set; }
-
-
-
-        private void OnValidate()
-        {
-            Init();
-        }
-
-        void Start()
-        {
-            Init();
-        }
-
-        private void Init()
-        {
-            Image = GetComponent<Image>();
-            TurnCountdownText = transform.FindChildRecursively<TextMeshProUGUI>(nameof(TurnCountdownText));
-            CircleImage = transform.FindChildRecursively<Image>(nameof(CircleImage));
-            BackgroundImage = transform.FindChildRecursively<Image>(nameof(BackgroundImage));
-        }
-
-        public void SetPlayer(Player player)
-        {
-            Player = player;
-        }
-
-
-        public void StartTimer(TurnInfo turnInfo)
-        {
-            if (Player != turnInfo.CurrentPlayer)
-            {
-                StopTimer();
-                return;
-            }
-            Duration = turnInfo.Duration;
-            Show(true);
-            RemainingTime = turnInfo.RemainingTime;
-           
-        }
-
-
-        public void StopTimer()
-        {
-            Show(false);
-           
-        }
-
- 
-
-        private void UpdateDisplay()
-        {
-            if (TurnCountdownText != null) TurnCountdownText.text = $"{RemainingTime:F1}";
-            if (CircleImage != null) CircleImage.fillAmount = RemainingTime / Duration;
-        }
-
-
-
-        public void Show(bool show, string fromMethod = "")
-        {
-            UpdateDisplay();
-            if (TurnCountdownText != null) TurnCountdownText.enabled = show;
-            if (CircleImage != null) CircleImage.enabled = show;
-            if (BackgroundImage != null) BackgroundImage.enabled = show;
-            if (Image != null) Image.enabled = show;
-        }
-
-
-    }
-}
-
-
-// ---
-
-// File: RoundScore.cs
-
-using OcentraAI.LLMGames.ThreeCardBrag.Players;
-
-namespace OcentraAI.LLMGames.ThreeCardBrag.Scores
-{
-    [System.Serializable]
-    public class RoundScore
-    {
-        public Player Winner;
-        public int Pot;
-    }
-}
-
-// ---
-
-// File: ScoreKeeper.cs
-
-using OcentraAI.LLMGames.ThreeCardBrag.Players;
-using System.Collections.Generic;
-
-namespace OcentraAI.LLMGames.ThreeCardBrag.Scores
-{
-    public class ScoreKeeper 
-    {
-
-        public List<RoundScore> RoundScores = new List<RoundScore>();
-        public int HumanTotalWins = 0;
-        public int ComputerTotalWins = 0;
-        public RoundScore RoundScore = new RoundScore();
-
-
-
-
-        public void AddToTotalRoundScores(Player player, int pot)
-        {
-            RoundScore.Winner = player;
-            RoundScore.Pot = pot;
-            RoundScores.Add(RoundScore);
-            switch (player)
-            {
-                case HumanPlayer:
-                    HumanTotalWins++;
-                    break;
-                case ComputerPlayer:
-                    ComputerTotalWins++;
-                    break;
-            }
-
-            RoundScore = new RoundScore();
-        }
-
-        public void ResetScores()
-        {
-            RoundScores.Clear();
-            HumanTotalWins = 0;
-            ComputerTotalWins = 0;
-        }
-    }
-}
-
-// ---
-
-// File: BragSelectable.cs
-
-using OcentraAI.LLMGames.Screens;
-using UnityEngine;
-using UnityEngine.Events;
-using UnityEngine.EventSystems;
-using UnityEngine.UI;
-using Sirenix.OdinInspector;
-
-namespace OcentraAI.LLMGames.ThreeCardBrag.UI
-
-{
-    public class BragSelectable : Selectable, ISubmitHandler, ICancelHandler, IPointerClickHandler
-    {
-        public Toggle Toggle;
-        public Button Button;
-        public Slider Slider;
-        public float SliderSensitivity = 1f;
-        public bool SelectOnPointerEnter = false;
-        public bool SendButtonClickToSubmit = false;
-
-        public UnityEvent OnBragSelected;
-        public UnityEvent OnBragDeselected;
-        public UnityEvent OnBragSubmit;
-        public UnityEvent OnBragCancel;
-
-        [ReadOnly]
-        public UIScreen ParentScreen;
-
-        protected override void Awake()
-        {
-            base.Awake();
-            if (Toggle != null)
-            {
-                Toggle.interactable = false;
-            }
-            if (Button != null)
-            {
-                Button.interactable = false;
-            }
-        }
-
-        public override void OnSelect(BaseEventData eventData)
-        {
-            base.OnSelect(eventData);
-            if (Toggle != null)
-            {
-                Toggle.isOn = true;
-            }
-            OnBragSelected?.Invoke();
-            if (ParentScreen != null)
-            {
-                ParentScreen.PlaySelectionSound();
-            }
-        }
-
-        public override void OnDeselect(BaseEventData eventData)
-        {
-            base.OnDeselect(eventData);
-            if (Toggle != null)
-            {
-                Toggle.isOn = false;
-            }
-            OnBragDeselected?.Invoke();
-        }
-
-        public override void OnMove(AxisEventData eventData)
-        {
-            base.OnMove(eventData);
-            if (ParentScreen != null && !ParentScreen.Interactable)
-                return;
-
-            switch (eventData.moveDir)
-            {
-                case MoveDirection.Left:
-                case MoveDirection.Right:
-                    MoveSlider(eventData.moveVector.x);
-                    break;
-            }
-
-            if (ParentScreen != null)
-            {
-                ParentScreen.PlayNavigationSound();
-            }
-        }
-
-        private void MoveSlider(float value)
-        {
-            if (Slider == null)
-                return;
-            
-            Slider.value += value * SliderSensitivity * Time.deltaTime;
-        }
-
-        public void OnSubmit(BaseEventData eventData)
-        {
-            if (ParentScreen != null && !ParentScreen.Interactable)
-                return;
-
-            if (Button != null)
-            {
-                Button.onClick.Invoke();
-            }
-            OnBragSubmit?.Invoke();
-            if (ParentScreen != null)
-            {
-                ParentScreen.PlaySelectionSound();
-            }
-        }
-
-        public void OnCancel(BaseEventData eventData)
-        {
-            if (ParentScreen != null && !ParentScreen.Interactable)
-                return;
-
-            OnBragCancel?.Invoke();
-            if (ParentScreen != null)
-            {
-                ParentScreen.PlayBackGroundSound();
-            }
-        }
-
-        public void OnPointerClick(PointerEventData eventData)
-        {
-            if (ParentScreen != null && !ParentScreen.Interactable)
-                return;
-
-            if (SendButtonClickToSubmit)
-            {
-                if(Button != null)
-                    Button.onClick.Invoke();
-                OnBragSubmit?.Invoke();
-                if (ParentScreen != null)
-                {
-                    ParentScreen.PlaySelectionSound();
-                }
-            }
-        }
-
-        public override void OnPointerEnter(PointerEventData eventData)
-        {
-            base.OnPointerEnter(eventData);
-            if (SelectOnPointerEnter)
-            {
-                EventSystem.current.SetSelectedGameObject(this.gameObject);
-            }
-        }
-    }
-}
-
-
-
-
-
-
-// ---
-
-// File: CardView.cs
-
-using OcentraAI.LLMGames.Scriptable;
-using OcentraAI.LLMGames.Scriptable.ScriptableSingletons;
-using Sirenix.OdinInspector;
-using UnityEngine;
-using UnityEngine.UI;
-
-namespace OcentraAI.LLMGames.ThreeCardBrag.UI
-{
-    public class CardView : MonoBehaviour
-    {
-        [ShowInInspector]
-        public Image CardImage { get; private set; }
-
-        [ShowInInspector]
-        public Card Card { get; private set; }
-
-        [ShowInInspector]
-        private Transform Parent { get; set; }
-
-
-
-        void OnValidate()
-        {
-            Init();
-
-        }
-        void Start()
-        {
-            Init();
-        }
-
-        public void Init()
-        {
-
-            if (CardImage == null)
-            {
-                CardImage = GetComponent<Image>();
-            }
-
-            Parent = transform.parent;
-
-
-            UpdateCardView();
-        }
-
-        public void SetCard(Card newCard)
-        {
-            Card = newCard;
-        }
-
-        public void ShowBackside()
-        {
-            CardImage.sprite = Deck.Instance.BackCard.Sprite;
-        }
-
-        public void UpdateCardView()
-        {
-            if (CardImage == null)
-            {
-                CardImage = GetComponent<Image>();
-            }
-
-            if (Card != null && Card.Sprite != null && CardImage != null)
-            {
-                CardImage.sprite = Card.Sprite;
+                // First round of the game, human starts
+                RoundStarter = Players[0]; // Human player starts
             }
             else
             {
-                ShowBackside();
-            }
-        }
-
-        public void SetActive(bool value)
-        {
-
-            gameObject.SetActive(value);
-            if (Parent != null)
-            {
-                Parent.gameObject.SetActive(value);
-
-            }
-        }
-
-
-
-        public void ResetCardView()
-        {
-            Card = null;
-            ShowBackside();
-        }
-    }
-}
-
-// ---
-
-// File: Draggable.cs
-
-
-using OcentraAI.LLMGames.Extensions;
-using OcentraAI.LLMGames.ThreeCardBrag.UI.Controllers;
-using Sirenix.OdinInspector;
-using UnityEngine;
-using UnityEngine.EventSystems;
-using UnityEngine.UI;
-namespace OcentraAI.LLMGames.ThreeCardBrag.UI
-{
-    [RequireComponent(typeof(CanvasGroup))]
-    public class Draggable : MonoBehaviour, IBeginDragHandler, IDragHandler, IEndDragHandler, IPointerEnterHandler, IPointerExitHandler
-    {
-        [ShowInInspector, Required]
-        private CanvasGroup CanvasGroup { get; set; }
-       
-        [ShowInInspector, Required]
-        private Vector2 OriginalPosition { get; set; }
-       
-        [ShowInInspector, Required]
-        private RectTransform RectTransform { get; set; }
-       
-        [ShowInInspector, Required]
-        private UIController UIController { get; set; }
-        
-        [ShowInInspector, Required]
-        public CardView CardView { get; set; }
-       
-        [ShowInInspector, Required]
-        public Image CardHighlight { get; set; }
-
-
-        [ShowInInspector, Required]
-        public Transform PickFromFloor { get; set; }
-
-        [ShowInInspector] public float MaxScaleDownFactor { get; set; } = 0.5f;
-        [ShowInInspector] public float MaxDragDistance { get; set; } = 500f;
-        private bool isOverValidDropZone = false;
-        private Vector3 originalScale;
-        void OnValidate()
-        {
-            Init();
-        }
-        void Start()
-        {
-            Init();
-        }
-        private void Init()
-        {
-           
-            CanvasGroup = GetComponent<CanvasGroup>();
-            UIController = FindObjectOfType<UIController>();
-            CardView = GetComponentInChildren<CardView>();
-            if (CardView != null)
-            {
-                CardHighlight = CardView.transform.FindChildRecursively<Image>();
+                // Subsequent rounds
+                RoundStarter = LastRoundWinner ?? GetNextPlayerInOrder(RoundStarter);
             }
 
-            PickFromFloor = transform.FindChildRecursively<Transform>(nameof(PickFromFloor));
-            RectTransform = PickFromFloor.GetComponent<RectTransform>();
-            originalScale = PickFromFloor.localScale;
+            CurrentPlayer = RoundStarter;
+            RemainingTime = TurnDuration;
+            ActionCompletionSource = new TaskCompletionSource<bool>();
+            TimerCompletionSource = new TaskCompletionSource<bool>();
+
+            Log($"TurnManager reset for round {CurrentRound}");
         }
 
-
-        
-
-        public void OnBeginDrag(PointerEventData eventData)
+        public void StartTurn()
         {
-            OriginalPosition = RectTransform.anchoredPosition;
-            CanvasGroup.blocksRaycasts = false;
-            CardHighlight.color = Color.cyan;
+            Log($"Turn started for {CurrentPlayer.GetType().Name}");
+            Reset();
+            TurnCancellationTokenSource = CancellationTokenSource.CreateLinkedTokenSource(GlobalCancellationTokenSource.Token);
+
+            StartTimer();
+            EventBus.Publish(new UpdateTurnState(CurrentPlayer));
         }
-        public void OnDrag(PointerEventData eventData)
-        {
-            float distance = Vector2.Distance(RectTransform.anchoredPosition, OriginalPosition);
-            float scaleFactor = Mathf.Lerp(1f, MaxScaleDownFactor, distance / MaxDragDistance);
-            PickFromFloor.localScale = originalScale * scaleFactor;
-            RectTransform.anchoredPosition += eventData.delta;
 
-            //RectTransform.anchoredPosition += eventData.delta / RectTransform.localScale.x;
-
-            CardHighlight.color = isOverValidDropZone ? Color.green : Color.red;
-        }
-        public void OnEndDrag(PointerEventData eventData)
+        private async void StartTimer()
         {
-            CanvasGroup.blocksRaycasts = true;
-            RectTransform.anchoredPosition = OriginalPosition;
-            CardHighlight.color = Color.clear;
-            ResetScale();
+            Log($"Timer started. Duration: {TurnDuration}");
+            int remainingSeconds = (int)TurnDuration;
 
-        }
-        public void OnPointerEnter(PointerEventData eventData)
-        {
-            if (CardHighlight != null && !eventData.dragging)
+            try
             {
-                CardHighlight.color = Color.green;
-            }
-        }
-        public void OnPointerExit(PointerEventData eventData)
-        {
-            if (CardHighlight != null && !eventData.dragging)
-            {
-                CardHighlight.color = Color.clear;
-            }
-        }
-        public void SetOverValidDropZone(bool isOver)
-        {
-            isOverValidDropZone = isOver;
-            if (!CanvasGroup.blocksRaycasts)
-            {
-                CardHighlight.color = isOver ? Color.green : Color.red;
-            }
-        }
-        private void ResetScale()
-        {
-            PickFromFloor.localScale = originalScale;
-        }
-    }
-}
-
-// ---
-
-// File: DropZone.cs
-
-using OcentraAI.LLMGames.Extensions;
-using OcentraAI.LLMGames.Scriptable;
-using OcentraAI.LLMGames.ThreeCardBrag.Events;
-using OcentraAI.LLMGames.ThreeCardBrag.Manager;
-using OcentraAI.LLMGames.ThreeCardBrag.Players;
-using OcentraAI.LLMGames.ThreeCardBrag.UI.Controllers;
-using OcentraAI.LLMGames.Utilities;
-using Sirenix.OdinInspector;
-using UnityEngine;
-using UnityEngine.EventSystems;
-using UnityEngine.UI;
-
-namespace OcentraAI.LLMGames.ThreeCardBrag.UI
-{
-    public class DropZone : MonoBehaviour, IDropHandler, IPointerEnterHandler, IPointerExitHandler
-    {
-        [ShowInInspector, Required]
-        private CardView CardView { get; set; }
-
-        [ShowInInspector, Required]
-        private UIController UIController { get; set; }
-
-        [ShowInInspector, Required]
-        public Image CardHighlight { get; set; }
-
-        private Color originalColor;
-
-        void OnValidate()
-        {
-            Init();
-        }
-
-        void Start()
-        {
-            Init();
-        }
-
-        private void Init()
-        {
-            CardView = GetComponent<CardView>();
-            UIController = FindObjectOfType<UIController>();
-            if (CardView != null)
-            {
-                CardHighlight = CardView.transform.FindChildRecursively<Image>();
-                originalColor = CardHighlight.color; 
-            }
-        }
-
-        public void OnDrop(PointerEventData eventData)
-        {
-            Draggable draggable = eventData.pointerDrag.GetComponent<Draggable>();
-
-            if (draggable != null)
-            {
-                EventBus.Publish(new PlayerActionPickAndSwap(typeof(HumanPlayer), floorCard: draggable.CardView.Card, swapCard: CardView.Card));
-                draggable.SetOverValidDropZone(false);
-                CardHighlight.color = originalColor; 
-            }
-        }
-
-        public void OnPointerEnter(PointerEventData eventData)
-        {
-            Draggable draggable = eventData.pointerDrag?.GetComponent<Draggable>();
-            if (draggable != null)
-            {
-                draggable.SetOverValidDropZone(true);
-                originalColor = CardHighlight.color; 
-                CardHighlight.color = Color.cyan; 
-            }
-        }
-
-        public void OnPointerExit(PointerEventData eventData)
-        {
-            Draggable draggable = eventData.pointerDrag?.GetComponent<Draggable>();
-            if (draggable != null)
-            {
-                draggable.SetOverValidDropZone(false);
-                CardHighlight.color = originalColor; 
-            }
-        }
-    }
-}
-
-
-// ---
-
-// File: LeftPanelController.cs
-
-using System.Collections.Generic;
-using UnityEngine;
-using UnityEngine.UI;
-using Sirenix.OdinInspector;
-using System.Collections;
-using OcentraAI.LLMGames.Extensions;
-using OcentraAI.LLMGames.Scriptable;
-
-namespace OcentraAI.LLMGames.ThreeCardBrag.UI.Controllers
-{
-    public class LeftPanelController : MonoBehaviour
-    {
-        public RectTransform Panel;
-        [Required]
-        public RectTransform Middle;
-        [Required]
-        public LayoutElement MiddleLayoutElement;
-        [Required]
-        public Transform FloorCardsHolder;
-        [Required]
-        public GridLayoutGroup FloorCardsGrid;
-        [Required]
-        public Button ShowAllFloorCards;
-        public List<GameObject> FloorCards = new List<GameObject>();
-        public float MinHeight = 700;
-        public float MaxHeight = 70000;
-        public bool IsExpanded = false;
-        [Required]
-        public GameObject CardViewPrefab;
-
-        void Start()
-        {
-            Init();
-            ShowAllFloorCards.onClick.AddListener(ToggleExpand);
-        }
-
-        void OnValidate()
-        {
-            Init();
-        }
-
-        private void Init()
-        {
-            IsExpanded = false;
-            Panel = GetComponent<RectTransform>();
-            Middle = transform.FindChildRecursively<RectTransform>(nameof(Middle));
-            MiddleLayoutElement = Middle.GetComponent<LayoutElement>();
-            FloorCardsHolder = transform.FindChildRecursively<Transform>(nameof(FloorCardsHolder));
-            FloorCardsGrid = FloorCardsHolder.GetComponent<GridLayoutGroup>();
-            ShowAllFloorCards = transform.FindChildRecursively<Button>(nameof(ShowAllFloorCards));
-            FloorCards = new List<GameObject>();
-            CardViewPrefab = Resources.Load<GameObject>($"Prefabs/{nameof(CardViewPrefab)}");
-            CollapsePanel();
-        }
-
-        public void AddCard(Card card)
-        {
-            if (CardViewPrefab != null && FloorCardsHolder != null)
-            {
-                GameObject newCardViewObject = Instantiate(CardViewPrefab, FloorCardsHolder);
-                CardView newCardView = newCardViewObject.GetComponentInChildren<CardView>();
-
-                if (newCardView != null)
+                while (remainingSeconds > 0)
                 {
-                    newCardView.SetCard(card);
-                    newCardView.SetActive(true);
-                    newCardView.UpdateCardView();
-
-                    FloorCards.Insert(0, newCardViewObject);
-
-                    newCardViewObject.transform.SetSiblingIndex(0);
-
-                    if (!IsExpanded && FloorCards.Count > 8)
+                    if (TurnCancellationTokenSource.IsCancellationRequested)
                     {
-                        for (int i = 8; i < FloorCards.Count; i++)
-                        {
-                            FloorCards[i].SetActive(false);
-                        }
+                        Log("Timer cancelled");
+                        return;
                     }
+
+                    RemainingTime = remainingSeconds;
+                    Log($"Timer update: {remainingSeconds}s remaining");
+                    EventBus.Publish(PlayerStartCountDown);
+
+                    await Task.Delay(1000, TurnCancellationTokenSource.Token);
+                    remainingSeconds--;
                 }
-                else
+
+                RemainingTime = 0;
+                EventBus.Publish(PlayerStartCountDown);
+                Log("Timer completed");
+                TimerCompletionSource.TrySetResult(true);
+            }
+            catch (Exception ex)
+            {
+                LogError($"Exception in StartTimer: {ex.Message}");
+                TimerCompletionSource.TrySetException(ex);
+            }
+        }
+
+        public Task SwitchTurn()
+        {
+            if (GlobalCancellationTokenSource.IsCancellationRequested) return Task.CompletedTask;
+
+            CurrentPlayer = GetNextPlayerInOrder(CurrentPlayer);
+            Log($"Switching turn to {CurrentPlayer.GetType().Name}");
+            ActionCompletionSource.TrySetResult(true);
+
+            StartTurn();
+            return Task.CompletedTask;
+        }
+
+        private Player GetNextPlayerInOrder(Player currentPlayer)
+        {
+            int currentIndex = Players.IndexOf(currentPlayer);
+            for (int i = 1; i <= Players.Count; i++)
+            {
+                int nextIndex = (currentIndex + i) % Players.Count;
+                Player nextPlayer = Players[nextIndex];
+                if (PlayerManager.GetActivePlayers().Contains(nextPlayer))
                 {
-                    Destroy(newCardViewObject);
-                    Debug.LogError("Failed to find CardView component in the instantiated prefab.");
+                    return nextPlayer;
                 }
             }
-            else
-            {
-                Debug.LogError($"Error adding cards. CardViewPrefab null? {CardViewPrefab == null} FloorCardsHolder null? {FloorCardsHolder == null}");
-            }
+            throw new InvalidOperationException("No active players found");
         }
 
-        [Button]
-        void ToggleExpand()
+        public async Task StopTurn()
         {
-            if (IsExpanded)
-            {
-                CollapsePanel();
-            }
-            else
-            {
-                ShowAllFloorCards.gameObject.SetActive(false);
-
-                ExpandPanel();
-
-                StartCoroutine(CollapseAfterDelay(15f));
-            }
-
-            IsExpanded = !IsExpanded;
+            Log("Stopping turn");
+            TurnCancellationTokenSource?.Cancel();
+            TurnCancellationTokenSource?.Dispose();
+            TurnCancellationTokenSource = CancellationTokenSource.CreateLinkedTokenSource(GlobalCancellationTokenSource.Token);
+            EventBus.Publish(new PlayerStopCountDown(CurrentPlayer));
+            await Task.Yield();
         }
 
-        IEnumerator CollapseAfterDelay(float delay)
+        private void Reset()
         {
-            yield return new WaitForSeconds(delay);
-
-            CollapsePanel();
-
-            ShowAllFloorCards.gameObject.SetActive(true);
-
-            IsExpanded = false;
+            RemainingTime = TurnDuration;
+            ActionCompletionSource = new TaskCompletionSource<bool>();
+            TimerCompletionSource = new TaskCompletionSource<bool>();
+            Log($"Reset completed. RemainingTime set to {RemainingTime}");
         }
 
-        void ExpandPanel()
+        public void SetLastRoundWinner(Player player)
         {
-            MiddleLayoutElement.preferredHeight = MaxHeight;
-            FloorCardsGrid.cellSize = new Vector2(75, 125);
-
-            foreach (GameObject go in FloorCards)
-            {
-                CardView cardView = go.GetComponent<CardView>();
-                if (cardView != null)
-                {
-                    cardView.SetActive(true);
-
-                }
-            }
+            LastRoundWinner = player;
         }
 
-        void CollapsePanel()
+        public void SetLastBettor(Player player)
         {
-            MiddleLayoutElement.preferredHeight = MinHeight;
-            FloorCardsGrid.cellSize = new Vector2(142, 227);
-
-            if (FloorCards.Count > 8)
-            {
-                for (int i = 8; i < FloorCards.Count; i++)
-                {
-                    GameObject floorCard = FloorCards[i];
-                    CardView cardView = floorCard.GetComponentInChildren<CardView>();
-                    cardView.SetActive(false);
-                }
-            }
+            LastBettor = player;
         }
 
-        public void ResetView()
+        public void CallShow()
         {
-            foreach (Transform child in FloorCardsHolder)
+            IsShowdown = true;
+        }
+
+        public bool IsRoundComplete()
+        {
+            var activePlayers = PlayerManager.GetActivePlayers();
+
+            if (activePlayers.Count <= 1)
             {
-                Destroy(child.gameObject);
+                return true; // Round ends if all but one player have folded
             }
 
-            FloorCards.Clear();
+            if (IsShowdown)
+            {
+                return true; // Round ends if there's a showdown
+            }
+
+            // Round continues if the current player isn't the last bettor
+            return CurrentPlayer == LastBettor;
+        }
+
+        private void Log(string message)
+        {
+            GameLogger.Log($"[Turn {CurrentRound}] {message}");
+        }
+
+        private void LogError(string message)
+        {
+            GameLogger.LogError($"[Turn {CurrentRound}] {message}");
         }
     }
-}
-
-
-// ---
-
-// File: UIController.cs
-
-using OcentraAI.LLMGames.Extensions;
-using OcentraAI.LLMGames.Scriptable;
-using OcentraAI.LLMGames.ThreeCardBrag.Events;
-using OcentraAI.LLMGames.ThreeCardBrag.Players;
-using OcentraAI.LLMGames.Utilities;
-using Sirenix.OdinInspector;
-using TMPro;
-using UnityEngine;
-using UnityEngine.UI;
-using Task = System.Threading.Tasks.Task;
-
-namespace OcentraAI.LLMGames.ThreeCardBrag.UI.Controllers
-{
-    public class UIController : MonoBehaviour
-    {
-
-        [Required, ShowInInspector]
-        private Button ShowPlayerHand { get; set; }
-        [Required, ShowInInspector]
-        private Button PlayBlind { get; set; }
-        [Required, ShowInInspector]
-        private Button RaiseBet { get; set; }
-
-        [Required, ShowInInspector]
-        private Button Fold { get; set; }
-
-        [Required, ShowInInspector]
-        private Button Bet { get; set; }
-
-        [Required, ShowInInspector]
-        private Button DrawFromDeck { get; set; }
-
-        [Required, ShowInInspector]
-        private Button ShowCall { get; set; }
-
-        [Required, ShowInInspector]
-        private Button ContinueRound { get; set; }
-
-        [Required, ShowInInspector]
-        private Button NewGame { get; set; }
-        [Required, ShowInInspector]
-        private Button PurchaseCoins { get; set; }
-
-        [Required, ShowInInspector]
-        private Transform ComputerHand { get; set; }
-
-        [Required, ShowInInspector]
-        private Transform MessageHolder { get; set; }
-
-
-        [Required, ShowInInspector]
-        private TMP_InputField RaiseAmount { get; set; }
-
-        [Required, ShowInInspector]
-        private TextMeshProUGUI Message { get; set; }
-
-        [Required, ShowInInspector]
-        private TextMeshProUGUI HumanPlayersCoins { get; set; }
-
-        [Required, ShowInInspector]
-        private TextMeshProUGUI ComputerPlayerCoins { get; set; }
-
-        [Required, ShowInInspector]
-        private TextMeshProUGUI HumanPlayersWins { get; set; }
-
-        [Required, ShowInInspector]
-        private TextMeshProUGUI ComputerPlayerWins { get; set; }
-
-        [Required, ShowInInspector]
-        private TextMeshProUGUI Pot { get; set; }
-
-        [Required, ShowInInspector]
-        private TextMeshProUGUI CurrentBet { get; set; }
-
-        [Required, ShowInInspector]
-        private TextMeshProUGUI ComputerPlayingBlind { get; set; }
-
-        [Required, ShowInInspector]
-        private PlayerTimer HumanPlayerTimer { get; set; }
-
-        [Required, ShowInInspector]
-        private PlayerTimer ComputerPlayerTimer { get; set; }
-
-        [ShowInInspector]
-        public PlayerTimer CurrentPlayerTimer { get; set; }
-
-
-
-        [Required, ShowInInspector]
-        private CardView FloorCardView { get; set; }
-
-        [Required, ShowInInspector]
-        private CardView[] HumanPlayerCardViews { get; set; }
-
-        [Required, ShowInInspector]
-        private Image[] HumanPlayerCardHighlight { get; set; }
-
-        [Required, ShowInInspector]
-        private CardView[] ComputerPlayerCardViews { get; set; }
-
-        [Required, ShowInInspector]
-        private Image[] ComputerPlayerCardHighlight { get; set; }
-
-        [Required, ShowInInspector]
-        public LeftPanelController LeftPanelController { get; set; }
-
-        void OnValidate()
-        {
-            Init();
-        }
-
-        private void Init()
-        {
-
-            ComputerHand = transform.FindChildRecursively<Transform>(nameof(ComputerHand));
-            MessageHolder = transform.FindChildRecursively<Transform>(nameof(MessageHolder));
-
-            ShowPlayerHand = transform.FindChildRecursively<Button>(nameof(ShowPlayerHand));
-            PlayBlind = transform.FindChildRecursively<Button>(nameof(PlayBlind));
-            RaiseBet = transform.FindChildRecursively<Button>(nameof(RaiseBet));
-            Fold = transform.FindChildRecursively<Button>(nameof(Fold));
-            Bet = transform.FindChildRecursively<Button>(nameof(Bet));
-            DrawFromDeck = transform.FindChildRecursively<Button>(nameof(DrawFromDeck));
-            ShowCall = transform.FindChildRecursively<Button>(nameof(ShowCall));
-            ContinueRound = transform.FindChildRecursively<Button>(nameof(ContinueRound));
-            NewGame = transform.FindChildRecursively<Button>(nameof(NewGame));
-            PurchaseCoins = transform.FindChildRecursively<Button>(nameof(PurchaseCoins));
-
-            HumanPlayerCardViews = ShowPlayerHand.GetComponentsInChildren<CardView>();
-            HumanPlayerCardHighlight = new Image[HumanPlayerCardViews.Length];
-
-            for (int index = 0; index < HumanPlayerCardViews.Length; index++)
-            {
-                CardView cardView = HumanPlayerCardViews[index];
-                Image image = cardView.transform.FindChildRecursively<Image>();
-                HumanPlayerCardHighlight[index] = image;
-            }
-
-            ComputerPlayerCardViews = ComputerHand.GetComponentsInChildren<CardView>();
-            ComputerPlayerCardHighlight = new Image[ComputerPlayerCardViews.Length];
-
-            for (int index = 0; index < ComputerPlayerCardViews.Length; index++)
-            {
-                CardView cardView = ComputerPlayerCardViews[index];
-                Image image = cardView.transform.FindChildRecursively<Image>();
-                ComputerPlayerCardHighlight[index] = image;
-            }
-
-
-            FloorCardView = transform.FindChildRecursively<CardView>(nameof(FloorCardView));
-            Message = transform.FindChildRecursively<TextMeshProUGUI>(nameof(Message));
-            HumanPlayersCoins = transform.FindChildRecursively<TextMeshProUGUI>(nameof(HumanPlayersCoins));
-            ComputerPlayerCoins = transform.FindChildRecursively<TextMeshProUGUI>(nameof(ComputerPlayerCoins));
-            Pot = transform.FindChildRecursively<TextMeshProUGUI>(nameof(Pot));
-            CurrentBet = transform.FindChildRecursively<TextMeshProUGUI>(nameof(CurrentBet));
-            ComputerPlayingBlind = transform.FindChildRecursively<TextMeshProUGUI>(nameof(ComputerPlayingBlind));
-
-            ComputerPlayerWins = transform.FindChildRecursively<TextMeshProUGUI>(nameof(ComputerPlayerWins));
-            HumanPlayersWins = transform.FindChildRecursively<TextMeshProUGUI>(nameof(HumanPlayersWins));
-
-            HumanPlayerTimer = transform.parent.FindChildRecursively<PlayerTimer>(nameof(HumanPlayerTimer));
-            ComputerPlayerTimer = transform.parent.FindChildRecursively<PlayerTimer>(nameof(ComputerPlayerTimer));
-
-            RaiseAmount = transform.FindChildRecursively<TMP_InputField>(nameof(RaiseAmount));
-            if (NewGame != null) NewGame.gameObject.SetActive(false);
-            if (ContinueRound != null) ContinueRound.gameObject.SetActive(false);
-            if (MessageHolder != null) MessageHolder.gameObject.SetActive(false);
-
-            LeftPanelController = FindObjectOfType<LeftPanelController>();
-        }
-
-
-        private void OnEnable()
-        {
-
-            EventBus.Subscribe<InitializeUIPlayers>(OnInitializeUIPlayers);
-
-            EventBus.Subscribe<NewGameEventArgs>(OnNewGame);
-            EventBus.Subscribe<UpdateFloorCard>(OnUpdateFloorCard);
-
-            EventBus.Subscribe<UpdateGameState>(OnUpdateGameState);
-            EventBus.Subscribe<UIMessage>(OnMessage);
-            EventBus.Subscribe<PlayerStartCountDown>(OnPlayerStartCountDown);
-            EventBus.Subscribe<PlayerStopCountDown>(OnPlayerStopCountDown);
-            EventBus.Subscribe<OfferContinuation>(OnOfferContinuation);
-            EventBus.Subscribe<UpdateRoundDisplay>(OnUpdateRoundDisplay);
-            EventBus.Subscribe<OfferNewGame>(OnOfferNewGame);
-            EventBus.Subscribe<UpdateFloorCardList>(OnUpdateFloorCardList);
-
-            EventBus.Subscribe<UpdatePlayerHandDisplay>(OnUpdatePlayerHandDisplay);
-
-
-
-        }
-
-
-
-
-        private void OnDisable()
-        {
-            EventBus.Unsubscribe<InitializeUIPlayers>(OnInitializeUIPlayers);
-
-            EventBus.Unsubscribe<NewGameEventArgs>(OnNewGame);
-            EventBus.Unsubscribe<UpdateFloorCard>(OnUpdateFloorCard);
-
-            EventBus.Unsubscribe<UpdateGameState>(OnUpdateGameState);
-            EventBus.Unsubscribe<UIMessage>(OnMessage);
-            EventBus.Unsubscribe<PlayerStartCountDown>(OnPlayerStartCountDown);
-            EventBus.Unsubscribe<PlayerStopCountDown>(OnPlayerStopCountDown);
-            EventBus.Unsubscribe<OfferContinuation>(OnOfferContinuation);
-            EventBus.Unsubscribe<UpdateRoundDisplay>(OnUpdateRoundDisplay);
-            EventBus.Unsubscribe<OfferNewGame>(OnOfferNewGame);
-            EventBus.Unsubscribe<UpdateFloorCardList>(OnUpdateFloorCardList);
-
-
-            EventBus.Unsubscribe<UpdatePlayerHandDisplay>(OnUpdatePlayerHandDisplay);
-
-
-        }
-
-
-
-        private void OnUpdateFloorCardList(UpdateFloorCardList e)
-        {
-            LeftPanelController.AddCard(e.Card);
-        }
-
-        private void OnUpdateFloorCard(UpdateFloorCard e)
-        {
-            UpdateFloorCard(e.Card);
-        }
-
-
-
-        public void OnInitializeUIPlayers(InitializeUIPlayers e)
-        {
-            HumanPlayerTimer.SetPlayer(e.GameManager.HumanPlayer);
-            HumanPlayerTimer.Show(false);
-
-            ComputerPlayerTimer.SetPlayer(e.GameManager.ComputerPlayer);
-            ComputerPlayerTimer.Show(false);
-
-            FloorCardView.gameObject.SetActive(false);
-            FloorCardView.transform.parent.gameObject.SetActive(false);
-
-
-            e.CompletionSource.TrySetResult(true);
-        }
-
-        private void OnOfferNewGame(OfferNewGame obj)
-        {
-            ShowMessage($"Do you want to play a new game?", 15f);
-            if (NewGame != null) NewGame.gameObject.SetActive(true);
-        }
-
-
-
-        private void OnUpdateRoundDisplay(UpdateRoundDisplay e)
-        {
-            ComputerPlayerWins.text = $"{e.ScoreKeeper.ComputerTotalWins}";
-            HumanPlayersWins.text = $"{e.ScoreKeeper.HumanTotalWins}";
-        }
-
-        private void OnOfferContinuation(OfferContinuation e)
-        {
-
-            if (ContinueRound != null) ContinueRound.gameObject.SetActive(true);
-
-        }
-
-
-
-        private void OnMessage(UIMessage e)
-        {
-            ShowMessage(e.Message, e.Delay);
-        }
-        private void OnPlayerStartCountDown(PlayerStartCountDown e)
-        {
-            EnablePlayerActions(e.TurnInfo.CurrentPlayer);
-
-
-            if (e.TurnInfo.CurrentPlayer is HumanPlayer)
-            {
-                CurrentPlayerTimer = HumanPlayerTimer;
-
-                foreach (Image image in HumanPlayerCardHighlight)
-                {
-                    image.enabled = true;
-                }
-
-                foreach (Image image in ComputerPlayerCardHighlight)
-                {
-                    image.enabled = false;
-                }
-            }
-            else if (e.TurnInfo.CurrentPlayer is ComputerPlayer)
-            {
-                CurrentPlayerTimer = ComputerPlayerTimer;
-
-                foreach (Image image in HumanPlayerCardHighlight)
-                {
-                    image.enabled = false;
-                }
-
-                foreach (Image image in ComputerPlayerCardHighlight)
-                {
-                    image.enabled = true;
-                }
-            }
-
-            CurrentPlayerTimer.StartTimer(e.TurnInfo);
-
-
-        }
-
-        private void OnPlayerStopCountDown(PlayerStopCountDown e)
-        {
-            if (e.CurrentPlayer is HumanPlayer)
-            {
-                CurrentPlayerTimer = HumanPlayerTimer;
-            }
-            else if (e.CurrentPlayer is ComputerPlayer)
-            {
-                CurrentPlayerTimer = ComputerPlayerTimer;
-            }
-            CurrentPlayerTimer.StopTimer();
-
-        }
-        private void OnNewGame(NewGameEventArgs e)
-        {
-            ShowMessage("New game started with initial coins: " + e.InitialCoins, 5f);
-            UpdateCoinsDisplay(e.InitialCoins);
-        }
-
-
-
-
-        private void Start()
-        {
-            Init();
-
-            if (ShowPlayerHand != null) ShowPlayerHand.onClick.AddListener(OnPlayerSeeHand);
-            if (PlayBlind != null) PlayBlind.onClick.AddListener(OnPlayBlind);
-            if (RaiseBet != null) RaiseBet.onClick.AddListener(OnRaiseBet);
-            if (Fold != null) Fold.onClick.AddListener(OnFold);
-            if (Bet != null) Bet.onClick.AddListener(OnBet);
-            if (DrawFromDeck != null)
-            {
-                DrawFromDeck.interactable = false;
-
-                DrawFromDeck.onClick.AddListener(OnDrawFromDeck);
-            }
-            if (ShowCall != null) ShowCall.onClick.AddListener(OnShowCall);
-
-            if (ContinueRound != null) ContinueRound.onClick.AddListener(() =>
-            {
-                EventBus.Publish(new PlayerActionContinueGame(true));
-            });
-
-            if (NewGame != null) NewGame.onClick.AddListener(() =>
-            {
-                EventBus.Publish(new PlayerActionStartNewGame());
-
-            });
-
-            if (PurchaseCoins != null)
-            {
-                PurchaseCoins.onClick.AddListener(() =>
-                {
-                    EventBus.Publish(new PurchaseCoins(1000));
-
-                });
-            }
-        }
-
-
-
-        private void OnShowCall()
-        {
-            TakeActionAsync(PlayerAction.Show);
-        }
-
-        private void OnDrawFromDeck()
-        {
-            TakeActionAsync(PlayerAction.DrawFromDeck);
-        }
-
-        private void OnFold()
-        {
-            TakeActionAsync(PlayerAction.Fold);
-        }
-
-        private void OnPlayBlind()
-        {
-            TakeActionAsync(PlayerAction.PlayBlind);
-        }
-
-        
-        private void OnPlayerSeeHand()
-        {
-            ShowPlayerHand.enabled = false;
-            TakeActionAsync(PlayerAction.SeeHand);
-        }
-
-        private void OnBet()
-        {
-            TakeActionAsync(PlayerAction.Bet);
-        }
-
-        private void OnRaiseBet()
-        {
-            EventBus.Publish(new PlayerActionRaiseBet(typeof(HumanPlayer), RaiseAmount.text));
-        }
-
-
-
-        public void TakeActionAsync(PlayerAction action)
-        {
-            EventBus.Publish(new PlayerActionEvent(typeof(HumanPlayer), action));
-
-        }
-
-
-        public void OnUpdateGameState(UpdateGameState e)
-        {
-            UpdateCoinsDisplay(e.GameManager.HumanPlayer.Coins);
-            UpdatePotDisplay(e.GameManager.Pot);
-            UpdateCurrentBetDisplay(e.GameManager.CurrentBet);
-
-            if (e.GameManager.CurrentTurn is { CurrentPlayer: not null })
-            {
-                EnablePlayerActions(e.GameManager.CurrentTurn.CurrentPlayer);
-
-            }
-
-            if (e.IsNewRound)
-            {
-                ResetAllCardViews();
-            }
-        }
-
-        private void ResetAllCardViews()
-        {
-            foreach (CardView cardView in HumanPlayerCardViews)
-            {
-                cardView.ResetCardView();
-            }
-
-            foreach (CardView cardView in ComputerPlayerCardViews)
-            {
-                cardView.ResetCardView();
-            }
-
-            LeftPanelController.ResetView();
-        }
-
-        public void EnablePlayerActions(Player currentPlayer)
-        {
-            bool humanPlayerHasSeenHand = false;
-            bool isCurrentPlayerHuman = currentPlayer is HumanPlayer;
-            int humanPlayerCoins = 0;
-
-            if (currentPlayer is HumanPlayer humanPlayer)
-            {
-                humanPlayerHasSeenHand = humanPlayer.HasSeenHand;
-                humanPlayerCoins = humanPlayer.Coins;
-            }
-
-            if (PurchaseCoins != null)
-            {
-                PurchaseCoins.gameObject.SetActive(humanPlayerCoins <= 100 && isCurrentPlayerHuman);
-            }
-
-            if (PlayBlind != null)
-            {
-                PlayBlind.gameObject.SetActive(!humanPlayerHasSeenHand && isCurrentPlayerHuman);
-            }
-
-            if (RaiseBet != null)
-            {
-                RaiseBet.gameObject.transform.parent.gameObject.SetActive(humanPlayerHasSeenHand && isCurrentPlayerHuman);
-            }
-            if (Fold != null)
-            {
-                Fold.gameObject.SetActive(humanPlayerHasSeenHand && isCurrentPlayerHuman);
-
-            }
-
-            if (Bet != null)
-            {
-                Bet.gameObject.SetActive(humanPlayerHasSeenHand && isCurrentPlayerHuman);
-            }
-
-
-            if (DrawFromDeck != null)
-            {
-                DrawFromDeck.interactable = humanPlayerHasSeenHand && isCurrentPlayerHuman;
-            }
-
-            if (ShowCall != null)
-            {
-                ShowCall.gameObject.SetActive(humanPlayerHasSeenHand && isCurrentPlayerHuman);
-            }
-        }
-
-        public void UpdateCoinsDisplay(int coins)
-        {
-            if (HumanPlayersCoins != null) HumanPlayersCoins.text = $"{coins}";
-            if (ComputerPlayerCoins != null) ComputerPlayerCoins.text = $"{coins}";
-        }
-
-        public void UpdatePotDisplay(int potAmount)
-        {
-            if (Pot != null) Pot.text = $"{potAmount}";
-        }
-
-        public void UpdateCurrentBetDisplay(int currentBet)
-        {
-            if (CurrentBet != null) CurrentBet.text = $"Current Bet: {currentBet} ";
-        }
-
-
-
-        public void UpdateFloorCard(Card floorCard = null)
-        {
-            if (FloorCardView != null)
-            {
-                if (floorCard != null)
-                {
-                    FloorCardView.SetCard(floorCard);
-                    FloorCardView.UpdateCardView();
-                }
-
-                FloorCardView.SetActive(floorCard != null);
-                FloorCardView.transform.parent.gameObject.SetActive(floorCard != null);
-
-            }
-        }
-
-
-
-
-
-        private void OnUpdatePlayerHandDisplay(UpdatePlayerHandDisplay e)
-        {
-            switch (e.Player)
-            {
-                case HumanPlayer humanPlayer:
-                    UpdateHumanPlayerHandDisplay(humanPlayer);
-                    break;
-                case ComputerPlayer computerPlayer:
-                    UpdateComputerHandDisplay(computerPlayer);
-                    break;
-            }
-        }
-
-        public void UpdateHumanPlayerHandDisplay(Player player, bool isRoundEnd = false)
-        {
-            if (player.HasSeenHand || isRoundEnd)
-            {
-                for (int i = 0; i < player.Hand.Count; i++)
-                {
-                    HumanPlayerCardViews[i].SetCard(player.Hand[i]);
-                    HumanPlayerCardViews[i].UpdateCardView();
-                }
-            }
-        }
-
-
-        public void UpdateComputerHandDisplay(Player player, bool isRoundEnd = false)
-        {
-            ComputerPlayingBlind.text = player.HasSeenHand ? "" : $" Playing Blind ";
-
-            for (int i = 0; i < player.Hand.Count; i++)
-            {
-                ComputerPlayerCardViews[i].SetCard(player.Hand[i]);
-            }
-
-            if (isRoundEnd)
-            {
-                foreach (CardView cardView in ComputerPlayerCardViews)
-                {
-                    cardView.UpdateCardView();
-                }
-            }
-            else
-            {
-                foreach (CardView cardView in ComputerPlayerCardViews)
-                {
-                    cardView.ShowBackside();
-                }
-            }
-        }
-
-        public async void ShowMessage(string message, float delay = 5f)
-        {
-            if (MessageHolder != null)
-            {
-                MessageHolder.gameObject.SetActive(true);
-                if (Message != null)
-                {
-                    Message.text = message;
-                }
-
-              //  await HideMessageAfterDelay(delay);
-            }
-        }
-
-        private async Task HideMessageAfterDelay(float delay)
-        {
-            await Utility.Delay(delay);
-
-            if (MessageHolder != null)
-            {
-                MessageHolder.gameObject.SetActive(false);
-            }
-        }
-    }
-
 }
 
 

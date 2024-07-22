@@ -334,10 +334,10 @@ namespace OcentraAI.LLMGames.ThreeCardBrag.UI.Controllers
         #region Event Handlers
         private void OnInitializeUIPlayers(InitializeUIPlayers e)
         {
-            HumanPlayerTimer.SetPlayer(e.GameManager.HumanPlayer);
+            HumanPlayerTimer.SetPlayer(e.GameManager.PlayerManager.HumanPlayer);
             HumanPlayerTimer.Show(false);
 
-            ComputerPlayerTimer.SetPlayer(e.GameManager.ComputerPlayer);
+            ComputerPlayerTimer.SetPlayer(e.GameManager.PlayerManager.ComputerPlayer);
             ComputerPlayerTimer.Show(false);
 
             FloorCardView.gameObject.SetActive(false);
@@ -361,17 +361,17 @@ namespace OcentraAI.LLMGames.ThreeCardBrag.UI.Controllers
 
         private void UpdateUI(GameManager gameManager)
         {
-            UpdateCoinsDisplay(gameManager.HumanPlayer.Coins, gameManager.ComputerPlayer.Coins);
-            UpdatePotDisplay(gameManager.Pot);
-            UpdateCurrentBetDisplay(gameManager.CurrentBet);
+            UpdateCoinsDisplay(gameManager.PlayerManager.HumanPlayer.Coins, gameManager.PlayerManager.ComputerPlayer.Coins);
+            UpdatePotDisplay(gameManager.ScoreManager.Pot);
+            UpdateCurrentBetDisplay(gameManager.ScoreManager.CurrentBet);
             EnablePlayerActions();
         }
 
 
         private void OnPlayerStartCountDown(PlayerStartCountDown e)
         {
-            CurrentPlayer = e.TurnInfo.CurrentPlayer;
-            CurrentPlayerTimer.StartTimer(e.TurnInfo);
+            CurrentPlayer = e.TurnManager.CurrentPlayer;
+            CurrentPlayerTimer.StartTimer(e.TurnManager);
         }
 
         private void OnUpdateTurnState(UpdateTurnState e)
@@ -405,7 +405,7 @@ namespace OcentraAI.LLMGames.ThreeCardBrag.UI.Controllers
 
             CurrentPlayerTimer = (e.CurrentPlayer is HumanPlayer) ? HumanPlayerTimer : ComputerPlayerTimer;
             SetButtonState(ButtonState.TakeAction);
-            CurrentPlayerTimer.StopTimer();
+            CurrentPlayerTimer.StopTimer(CurrentPlayer);
 
         }
         private void OnUpdateTrumpCard(UpdateTrumpCard e)
@@ -440,7 +440,7 @@ namespace OcentraAI.LLMGames.ThreeCardBrag.UI.Controllers
 
         private void OnUpdateRoundDisplay(UpdateRoundDisplay e)
         {
-            UpdateWinDisplay(e.ScoreKeeper.HumanTotalWins, e.ScoreKeeper.ComputerTotalWins);
+            UpdateWinDisplay(e.ScoreManager.HumanTotalWins, e.ScoreManager.ComputerTotalWins);
         }
 
         private void OnOfferContinuation(OfferContinuation e)

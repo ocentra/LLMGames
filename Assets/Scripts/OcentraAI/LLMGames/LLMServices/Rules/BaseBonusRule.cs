@@ -9,22 +9,25 @@ namespace OcentraAI.LLMGames.LLMServices
     [Serializable]
     public abstract class BaseBonusRule
     {
+        public string RuleName;
         public string Description;
-        public int BonusValue;
-        public Card TrumpCard;
 
-        protected BaseBonusRule(string description, int bonusValue)
+        public int BonusValue;
+
+        protected BaseBonusRule(string ruleName,string description, int bonusValue)
         {
             Description = description;
             BonusValue = bonusValue;
+            RuleName = ruleName;
         }
 
-        public abstract bool Evaluate(List<Card> hand);
+        public abstract bool Evaluate(List<Card> hand, out int bonusValue);
 
-        public virtual void GetTrumpCard()
+        public virtual Card GetTrumpCard()
         {
-            TrumpCard = GameManager.Instance.DeckManager.TrumpCard;
+            return GameManager.Instance.DeckManager.WildCards.GetValueOrDefault("TrumpCard"); 
         }
+
         protected int CalculateHandValue(List<Card> hand)
         {
             return hand.Sum(card => card.GetRankValue());
@@ -32,7 +35,7 @@ namespace OcentraAI.LLMGames.LLMServices
 
         protected bool HasTrumpCard(List<Card> hand)
         {
-            return hand.Any(card => card.Equals(TrumpCard));
+            return hand.Any(card => card.Equals(GetTrumpCard()));
         }
 
         protected Dictionary<Rank, int> GetRankCounts(List<Card> hand)

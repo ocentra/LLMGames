@@ -31,6 +31,9 @@ namespace OcentraAI.LLMGames.ThreeCardBrag.Manager
         private PlayerManager PlayerManager => GameManager.Instance.PlayerManager;
         private PlayerStartCountDown PlayerStartCountDown { get; set; }
 
+        [ShowInInspector] public int MaxRounds { get; private set; } = 10;
+
+
         public TurnManager()
         {
             PlayerStartCountDown = new PlayerStartCountDown(this);
@@ -302,7 +305,10 @@ namespace OcentraAI.LLMGames.ThreeCardBrag.Manager
             return false;
         }
 
-
+        public bool IsFixedRoundsOver()
+        {
+            return CurrentRound > MaxRounds;
+        }
 
         private void Log(string message, string method)
         {
@@ -313,5 +319,7 @@ namespace OcentraAI.LLMGames.ThreeCardBrag.Manager
         {
             GameLogger.LogError($"[Turn {CurrentRound}] {message} in method {method}");
         }
+
+
     }
 }

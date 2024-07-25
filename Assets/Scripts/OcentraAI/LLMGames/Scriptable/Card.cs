@@ -1,7 +1,8 @@
-using Sirenix.OdinInspector;
+﻿using Sirenix.OdinInspector;
 using System;
 using UnityEditor;
 using UnityEngine;
+using static OcentraAI.LLMGames.Utility;
 
 namespace OcentraAI.LLMGames.Scriptable
 {
@@ -14,12 +15,14 @@ namespace OcentraAI.LLMGames.Scriptable
 
         [Required] public Sprite Sprite;
 
+        public string Id => $"{Suit}_{Rank}";
+
         public int GetRankValue()
         {
             return (int)Rank;
         }
 
-        public string GetColor()
+        public string GetColorString()
         {
             return Suit switch
             {
@@ -30,6 +33,43 @@ namespace OcentraAI.LLMGames.Scriptable
 
                 _ => throw new ArgumentOutOfRangeException()
             };
+        }
+
+        public Color GetColorValue()
+        {
+            return Suit switch
+            {
+                Suit.Hearts => Color.red,
+                Suit.Diamonds => Color.red,
+                Suit.Clubs => Color.black,
+                Suit.Spades => Color.black,
+
+                _ => throw new ArgumentOutOfRangeException()
+            };
+        }
+
+
+        public string GetRankSymbol()
+        {
+            string symbol = Suit switch
+            {
+                Suit.Clubs => ColouredMessage($"♣", Color.black),
+                Suit.Diamonds => ColouredMessage($"♦", Color.red),
+                Suit.Hearts => ColouredMessage($"♥", Color.red),
+                Suit.Spades => ColouredMessage($"♠", Color.black),
+                _ => ""
+            };
+
+            string formattedRank = Rank switch
+            {
+                Rank.A => "A",
+                Rank.K => "K",
+                Rank.Q => "Q",
+                Rank.J => "J",
+                _ => ((int)Rank).ToString()
+            };
+
+            return $"{ColouredMessage($"{formattedRank}", GetColorValue())}{symbol}";
         }
 
         public void Init(Suit suit, Rank rank)
@@ -73,5 +113,7 @@ namespace OcentraAI.LLMGames.Scriptable
             AssetDatabase.SaveAssets();
             AssetDatabase.Refresh();
         }
+
+  
     }
 }

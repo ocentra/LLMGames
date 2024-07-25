@@ -9,7 +9,7 @@ namespace OcentraAI.LLMGames.ThreeCardBrag.Players
     public class HumanPlayer : Player
     {
 
-        public HumanPlayer(PlayerData playerData,int initialCoins)
+        public HumanPlayer(PlayerData playerData, int initialCoins)
             : base(playerData, PlayerType.Human, initialCoins)
         {
             SetInitialCoins(initialCoins);
@@ -20,21 +20,34 @@ namespace OcentraAI.LLMGames.ThreeCardBrag.Players
         {
             base.SeeHand();
             EventBus.Publish(new UpdatePlayerHandDisplay(this));
+
+            if (WildCardInHand != null)
+            {
+                EventBus.Publish(new UpdateWildCardsHighlight(WildCardInHand, true));
+            }
             ShowHand();
         }
 
-        public override void ShowHand(bool isRoundEnd = false)
+        public override void ShowHand(bool showHands = false)
         {
-            base.ShowHand(isRoundEnd);
-            EventBus.Publish(new UpdatePlayerHandDisplay(this, isRoundEnd));
+            base.ShowHand(showHands);
+            EventBus.Publish(new UpdatePlayerHandDisplay(this, showHands));
         }
 
         public override void PickAndSwap(Card floorCard, Card swapCard)
         {
             base.PickAndSwap(floorCard, swapCard);
+
+            if (WildCardInHand != null)
+            {
+                EventBus.Publish(new UpdateWildCardsHighlight(WildCardInHand, true));
+            }
+
             EventBus.Publish(new UpdatePlayerHandDisplay(this));
 
         }
+
+
 
     }
 }

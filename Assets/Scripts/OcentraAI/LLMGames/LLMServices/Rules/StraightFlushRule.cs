@@ -8,10 +8,11 @@ namespace OcentraAI.LLMGames.LLMServices.Rules
     [Serializable]
     public class StraightFlushRule : BaseBonusRule
     {
-        public StraightFlushRule() : base("Straight Flush with Trump Wild Card. Example: 9, 10, J of Spades", 12) { }
+        public StraightFlushRule() : base(nameof(StraightFlushRule), "Straight Flush with Trump Wild Card. Example: 9, 10, J of Spades", 12) { }
 
-        public override bool Evaluate(List<Card> hand)
+        public override bool Evaluate(List<Card> hand, out int bonus)
         {
+            bonus = 0;
             GetTrumpCard();
             if (hand.Count != 3)
             {
@@ -28,7 +29,7 @@ namespace OcentraAI.LLMGames.LLMServices.Rules
             for (int i = 0; i < hand.Count; i++)
             {
                 Card card = hand[i];
-                if (card.Suit != firstCardSuit && !card.Equals(TrumpCard))
+                if (card.Suit != firstCardSuit && !card.Equals(GetTrumpCard()))
                 {
                     allSameSuit = false;
                     break;
@@ -46,11 +47,11 @@ namespace OcentraAI.LLMGames.LLMServices.Rules
 
             if (wildCardValue > normalValue)
             {
-                BonusValue = wildCardValue - handValue;
+                bonus = wildCardValue - handValue;
             }
             else
             {
-                BonusValue = normalValue - handValue;
+                bonus = normalValue - handValue;
             }
 
             return IsSequence(ranks) || (hasTrumpCard && CanFormSequenceWithWild(ranks));
@@ -70,7 +71,7 @@ namespace OcentraAI.LLMGames.LLMServices.Rules
                     bool isAdjacent = false;
                     for (int i = 0; i < hand.Count; i++)
                     {
-                        if (IsRankAdjacent(hand[i].Rank, TrumpCard.Rank))
+                        if (IsRankAdjacent(hand[i].Rank, GetTrumpCard().Rank))
                         {
                             isAdjacent = true;
                             break;
@@ -97,7 +98,7 @@ namespace OcentraAI.LLMGames.LLMServices.Rules
             int straightFlushValue = 0;
             for (int i = 0; i < hand.Count; i++)
             {
-                if (!hand[i].Equals(TrumpCard))
+                if (!hand[i].Equals(GetTrumpCard()))
                 {
                     straightFlushValue += hand[i].GetRankValue();
                 }

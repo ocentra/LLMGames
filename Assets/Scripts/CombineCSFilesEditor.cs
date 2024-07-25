@@ -3,13 +3,12 @@ using Sirenix.OdinInspector.Editor;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using Unity.VisualScripting;
 using UnityEditor;
 using UnityEngine;
 
 public class CombineCsFilesEditor : OdinEditorWindow
 {
-    [FolderPath(AbsolutePath = true), ReadOnly]
+    [FolderPath(AbsolutePath = true)]
     public string StartDirectory = "Assets";
 
     [ReadOnly]
@@ -53,17 +52,18 @@ public class CombineCsFilesEditor : OdinEditorWindow
     {
         try
         {
-            IEnumerable<string> csFiles = fileSelectionMap.Where(f => f.Value).Select(f => f.Key);
+            // Get selected files
+            IEnumerable<string> csFiles = fileSelectionMap.Where(f => f.Value).Select(f => f.Key).ToList();
 
-            IEnumerable<string> enumerable = csFiles as string[] ?? csFiles.ToArray();
-            if (!enumerable.Any())
+            // If no files are selected, get all .cs files from the StartDirectory
+            if (!csFiles.Any())
             {
                 csFiles = Directory.GetFiles(StartDirectory, "*.cs", SearchOption.AllDirectories);
             }
 
-            using (StreamWriter writer = new(OutputFile))
+            using (StreamWriter writer = new StreamWriter(OutputFile))
             {
-                foreach (var file in enumerable)
+                foreach (var file in csFiles)
                 {
                     writer.WriteLine($"// File: {Path.GetFileName(file)}\n");
                     writer.WriteLine(File.ReadAllText(file));
@@ -79,6 +79,7 @@ public class CombineCsFilesEditor : OdinEditorWindow
             EditorUtility.DisplayDialog("Error", $"An error occurred: {ex.Message}", "OK");
         }
     }
+
 
     protected override void OnDisable()
     {
@@ -217,7 +218,7 @@ public class CombineCsFilesEditor : OdinEditorWindow
 
             SearchResult = foundFile;
 
-    
+
             string directoriesToExpandLog = "Directories to expand:\n" + string.Join("\n", directoriesToExpand);
             string folderFoldoutMapLog = "State of folderFoldoutMap:\n" + string.Join("\n", folderFoldoutMap.Select(kvp => $"{kvp.Key}: {kvp.Value}"));
 

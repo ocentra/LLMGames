@@ -122,11 +122,11 @@ namespace OcentraAI.LLMGames.ThreeCardBrag.Manager
             return Players;
         }
 
-        public void ShowHand(bool showHand)
+        public void ShowHand(bool showHand, bool isRoundEnd = false)
         {
             foreach (Player player in Players)
             {
-                player.ShowHand();
+                player.ShowHand(isRoundEnd && showHand);
             }
         }
     }

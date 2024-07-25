@@ -1,4 +1,5 @@
-using OcentraAI.LLMGames.ThreeCardBrag.UI;
+using OcentraAI.LLMGames.Extensions;
+using Sirenix.OdinInspector;
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
@@ -7,20 +8,37 @@ namespace OcentraAI.LLMGames.Screens
 {
     public abstract class UIScreen : MonoBehaviour
     {
-        public GameObject Panel;
+        [Required]
+        public GameObject MainPanel;
         public bool StartEnabled;
         public bool IsFocus;
         public bool Interactable;
 
-        [SerializeField] protected CanvasGroup CanvasGroup;
+        [SerializeField,Required] protected CanvasGroup CanvasGroup;
         [SerializeField] protected float FadeDuration = 0.5f;
+
+        protected static readonly Stack<UIScreen> ScreenHistory = new Stack<UIScreen>();
+
 
         protected virtual void Awake()
         {
+            Init();
+        }
+
+        public virtual void Init()
+        {
+            MainPanel = transform.FindChildRecursively<Transform>(nameof(MainPanel)).gameObject;
+
+
             if (CanvasGroup == null)
-                CanvasGroup = GetComponent<CanvasGroup>();
+            {
+                CanvasGroup = MainPanel.GetComponent<CanvasGroup>();
+            }
+
             if (CanvasGroup == null)
-                CanvasGroup = gameObject.AddComponent<CanvasGroup>();
+            {
+                CanvasGroup = MainPanel.AddComponent<CanvasGroup>();
+            }
         }
 
         public virtual bool VerifyCanShow() => true;
@@ -35,7 +53,7 @@ namespace OcentraAI.LLMGames.Screens
 
         public virtual void ResetScreenToStartState(bool cascade) { }
 
-        public bool IsScreenInstanceVisible() => Panel.activeInHierarchy;
+        public bool IsScreenInstanceVisible() => MainPanel.activeInHierarchy;
 
         protected IEnumerator FadeCoroutine(bool fadeIn)
         {
@@ -53,18 +71,6 @@ namespace OcentraAI.LLMGames.Screens
             CanvasGroup.alpha = endAlpha;
         }
 
-        protected virtual void SetupBragSelectables()
-        {
-            if (Panel != null)
-            {
-                var bragSelectables = Panel.GetComponentsInChildren<BragSelectable>(true);
-                foreach (var bragSelectable in bragSelectables)
-                {
-                    bragSelectable.ParentScreen = this;
-                }
-            }
-        }
-
         public virtual void PlaySelectionSound() { }
 
         public virtual void PlayNavigationSound() { }
@@ -77,33 +83,60 @@ namespace OcentraAI.LLMGames.Screens
 #if UNITY_EDITOR
             UnityEditor.EditorApplication.isPlaying = false;
 #else
-                Application.Quit();
+            Application.Quit();
 #endif
         }
 
         public IEnumerator ShowScreenCoroutine()
         {
-            Panel.SetActive(true);
+            MainPanel.SetActive(true);
             yield return StartCoroutine(FadeCoroutine(true));
             SetFocus(true);
             OnShowScreen(FirstShow);
             FirstShow = false;
+            ScreenHistory.Push(this);
         }
 
         public IEnumerator HideScreenCoroutine()
         {
             SetFocus(false);
             yield return StartCoroutine(FadeCoroutine(false));
-            Panel.SetActive(false);
+            MainPanel.SetActive(false);
             OnHideScreen(FirstHide);
             FirstHide = false;
+            if (ScreenHistory.Count > 0)
+            {
+                ScreenHistory.Pop();
+            }
         }
 
-        public virtual void ShowScreenInstance() { }
+        public virtual void ShowScreen()
+        {
+            StartCoroutine(ShowScreenCoroutine());
+        }
 
-        public virtual void HideScreenInstance() { }
+        public virtual void HideScreen()
+        {
+            StartCoroutine(HideScreenCoroutine());
+        }
 
-        public virtual void ToggleScreenInstance() { }
+        public virtual void ToggleScreen()
+        {
+            if (IsScreenInstanceVisible())
+                HideScreen();
+            else
+                ShowScreen();
+        }
+
+        public void GoBack()
+        {
+            if (ScreenHistory.Count > 1)
+            {
+                HideScreen();
+                UIScreen previousScreen = ScreenHistory.Peek();
+                previousScreen.ShowScreen();
+            }
+        }
 
         protected static bool FirstShow = true;
         protected static bool FirstHide = true;
@@ -120,72 +153,19 @@ namespace OcentraAI.LLMGames.Screens
     {
         public static T Instance { get; private set; }
 
-        private static readonly Stack<UIScreen> ScreenHistory = new Stack<UIScreen>();
-
-        public static void DestroyScreen()
+        protected override void Awake()
         {
+            base.Awake();
             if (Instance != null)
             {
-                Instance.OnScreenDestroy();
                 Destroy(Instance.gameObject);
-                Instance = null;
             }
+            Instance = (T)(object)this;
+            ResetScreenToStartState(false);
+            AwakeOverride();
         }
 
-        public static bool IsScreenVisible() => Instance != null && Instance.Panel.activeInHierarchy;
-
-        public override void ShowScreenInstance() => ShowScreen();
-
-        public override void HideScreenInstance() => HideScreen();
-
-        public override void ToggleScreenInstance() => ToggleScreen();
-
-        public static void ShowScreen(bool condition)
-        {
-            if (condition != IsScreenVisible())
-            {
-                if (condition)
-                    ShowScreen();
-                else
-                    HideScreen();
-            }
-        }
-
-        public static void ShowScreen()
-        {
-            if (Instance != null && Instance.VerifyCanShow())
-            {
-                Instance.StartCoroutine(Instance.ShowScreenCoroutine());
-                ScreenHistory.Push(Instance);
-            }
-        }
-
-        public static void HideScreen()
-        {
-            if (Instance != null)
-            {
-                Instance.StartCoroutine(Instance.HideScreenCoroutine());
-                ScreenHistory.Pop();
-            }
-        }
-
-        public static void ToggleScreen()
-        {
-            if (IsScreenVisible())
-                HideScreen();
-            else
-                ShowScreen();
-        }
-
-        public static void GoBack()
-        {
-            if (ScreenHistory.Count > 1)
-            {
-                HideScreen();
-                UIScreen previousScreen = ScreenHistory.Peek();
-                previousScreen.ShowScreenInstance();
-            }
-        }
+        protected virtual void AwakeOverride() { }
 
         public override void ResetScreenToStartState(bool cascade)
         {
@@ -206,22 +186,5 @@ namespace OcentraAI.LLMGames.Screens
                 }
             }
         }
-
-        protected override void Awake()
-        {
-            base.Awake();
-            if (Instance != null)
-            {
-                Instance.gameObject.SetActive(false);
-                Destroy(Instance.gameObject);
-            }
-
-            Instance = (T)(object)this;
-            SetupBragSelectables();
-            Instance.ResetScreenToStartState(false);
-            AwakeOverride();
-        }
-
-        protected virtual void AwakeOverride() { }
     }
 }

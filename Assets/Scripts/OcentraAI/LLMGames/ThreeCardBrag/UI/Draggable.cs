@@ -4,7 +4,6 @@ using OcentraAI.LLMGames.ThreeCardBrag.UI.Controllers;
 using Sirenix.OdinInspector;
 using UnityEngine;
 using UnityEngine.EventSystems;
-using UnityEngine.UI;
 namespace OcentraAI.LLMGames.ThreeCardBrag.UI
 {
     [RequireComponent(typeof(CanvasGroup))]
@@ -25,8 +24,7 @@ namespace OcentraAI.LLMGames.ThreeCardBrag.UI
         [ShowInInspector, Required]
         public CardView CardView { get; set; }
        
-        [ShowInInspector, Required]
-        public Image CardHighlight { get; set; }
+
 
 
         [ShowInInspector, Required]
@@ -50,10 +48,7 @@ namespace OcentraAI.LLMGames.ThreeCardBrag.UI
             CanvasGroup = GetComponent<CanvasGroup>();
             UIController = FindObjectOfType<UIController>();
             CardView = GetComponentInChildren<CardView>();
-            if (CardView != null)
-            {
-                CardHighlight = CardView.transform.FindChildRecursively<Image>();
-            }
+
 
             PickFromFloor = transform.FindChildRecursively<Transform>(nameof(PickFromFloor));
             RectTransform = PickFromFloor.GetComponent<RectTransform>();
@@ -67,7 +62,7 @@ namespace OcentraAI.LLMGames.ThreeCardBrag.UI
         {
             OriginalPosition = RectTransform.anchoredPosition;
             CanvasGroup.blocksRaycasts = false;
-            CardHighlight.color = Color.cyan;
+            CardView.HighlightImage.color = Color.cyan;
         }
         public void OnDrag(PointerEventData eventData)
         {
@@ -78,28 +73,28 @@ namespace OcentraAI.LLMGames.ThreeCardBrag.UI
 
             //RectTransform.anchoredPosition += eventData.delta / RectTransform.localScale.x;
 
-            CardHighlight.color = isOverValidDropZone ? Color.green : Color.red;
+            CardView.HighlightImage.color = isOverValidDropZone ? Color.green : Color.red;
         }
         public void OnEndDrag(PointerEventData eventData)
         {
             CanvasGroup.blocksRaycasts = true;
             RectTransform.anchoredPosition = OriginalPosition;
-            CardHighlight.color = Color.clear;
+            CardView.HighlightImage.color = Color.clear;
             ResetScale();
 
         }
         public void OnPointerEnter(PointerEventData eventData)
         {
-            if (CardHighlight != null && !eventData.dragging)
+            if (CardView.HighlightImage != null && !eventData.dragging)
             {
-                CardHighlight.color = Color.green;
+                CardView.HighlightImage.color = Color.green;
             }
         }
         public void OnPointerExit(PointerEventData eventData)
         {
-            if (CardHighlight != null && !eventData.dragging)
+            if (CardView.HighlightImage != null && !eventData.dragging)
             {
-                CardHighlight.color = Color.clear;
+                CardView.HighlightImage.color = Color.clear;
             }
         }
         public void SetOverValidDropZone(bool isOver)
@@ -107,7 +102,7 @@ namespace OcentraAI.LLMGames.ThreeCardBrag.UI
             isOverValidDropZone = isOver;
             if (!CanvasGroup.blocksRaycasts)
             {
-                CardHighlight.color = isOver ? Color.green : Color.red;
+                CardView.HighlightImage.color = isOver ? Color.green : Color.red;
             }
         }
         private void ResetScale()

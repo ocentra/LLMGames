@@ -1,3 +1,4 @@
+using OcentraAI.LLMGames.Scriptable;
 using System;
 using System.Threading;
 using System.Threading.Tasks;
@@ -21,6 +22,10 @@ namespace OcentraAI.LLMGames
         {
             return withNewLine ? $"{Environment.NewLine}<color={GetColor(color)}>{message}</color>" : $"<color={GetColor(color)}>{message}</color>";
         }
+
+
+
+
 
         public static async Task DelayWithCancellation(CancellationTokenSource cancellationTokenSource, int millisecondsDelay)
         {

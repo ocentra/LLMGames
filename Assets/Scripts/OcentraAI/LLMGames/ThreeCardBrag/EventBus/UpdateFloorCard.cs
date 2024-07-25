@@ -1,29 +1,41 @@
 using OcentraAI.LLMGames.Scriptable;
 using System;
+using System.Collections.Generic;
 
 namespace OcentraAI.LLMGames.ThreeCardBrag.Events
 {
     public class UpdateFloorCard : EventArgs
     {
         public Card Card { get; }
-        public bool Reset { get; }
         
-        public UpdateFloorCard(Card card, bool reset = false)
+        public UpdateFloorCard(Card card)
         {
             Card = card;
-            Reset = reset;
         }
     }
 
-    public class UpdateTrumpCard : EventArgs
+    public class UpdateWildCards : EventArgs
     {
-        public Card Card { get; }
-        public bool Reset { get; }
+        public Dictionary<string, Card> WildCards { get; }
 
-        public UpdateTrumpCard(Card card, bool reset = false)
+        public UpdateWildCards(Dictionary<string, Card> wildCards)
         {
-            Card = card;
-            Reset = reset;
+            WildCards = wildCards;
         }
     }
+
+
+    public class UpdateWildCardsHighlight : EventArgs
+    {
+        public Dictionary<string, Card> WildCardsInHand { get; }
+        public bool IsHighlighted { get; }
+
+        public UpdateWildCardsHighlight(Dictionary<string, Card> wildCardsInHand, bool isHighlighted = false)
+        {
+            WildCardsInHand = wildCardsInHand;
+            IsHighlighted = isHighlighted;
+        }
+    }
+
+
 }

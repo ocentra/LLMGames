@@ -82,7 +82,7 @@ namespace OcentraAI.LLMGames.Screens
         private void OpenSettings()
         {
             PlaySelectionSound();
-            UIScreen<SettingsScreen>.ShowScreen();
+            UIScreen<SettingsScreen>.Instance.ShowScreen();
         }
 
         public override void QuitGame()

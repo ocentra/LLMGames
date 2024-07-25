@@ -15,4 +15,13 @@ namespace OcentraAI.LLMGames.ThreeCardBrag.Events
             InitialCoins = GameManager.ScoreManager.InitialCoins;
         }
     }
+
+    public class NewRoundEventArgs : EventArgs
+    {
+        public GameManager GameManager { get; }
+        public NewRoundEventArgs(GameManager gameManager)
+        {
+            GameManager = gameManager;
+        }
+    }
 }

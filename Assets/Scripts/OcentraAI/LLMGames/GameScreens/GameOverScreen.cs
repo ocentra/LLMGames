@@ -69,7 +69,7 @@ namespace OcentraAI.LLMGames.Screens
         private void ReturnToMainMenu()
         {
             PlaySelectionSound();
-            UIScreen<WelcomeScreen>.ShowScreen();
+            UIScreen<WelcomeScreen>.Instance.ShowScreen();
             HideScreen();
         }
     }

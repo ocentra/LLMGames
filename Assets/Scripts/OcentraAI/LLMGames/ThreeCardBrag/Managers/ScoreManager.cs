@@ -286,7 +286,7 @@ namespace OcentraAI.LLMGames.ThreeCardBrag.Manager
 
         private bool ProcessBet(int betAmount)
         {
-            Debug.Log($"Processing bet: Player {TurnManager.CurrentPlayer.Id}, Amount: {betAmount}, Current Pot: {Pot}");
+           // Debug.Log($"Processing bet: Player {TurnManager.CurrentPlayer.Id}, Amount: {betAmount}, Current Pot: {Pot}");
             if (!ValidateBet(betAmount))
             {
                 Debug.LogError($"Invalid bet: Player {TurnManager.CurrentPlayer.Id}, Amount: {betAmount}, Player Coins: {TurnManager.CurrentPlayer.Coins}");
@@ -296,7 +296,7 @@ namespace OcentraAI.LLMGames.ThreeCardBrag.Manager
             Pot += betAmount;
             CurrentBet = betAmount;
             bool verificationResult = VerifyTotalCoins();
-            Debug.Log($"Bet processed. New Pot: {Pot}, Verification Result: {verificationResult}");
+          //  Debug.Log($"Bet processed. New Pot: {Pot}, Verification Result: {verificationResult}");
             return verificationResult;
         }
 

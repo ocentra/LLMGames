@@ -8,10 +8,11 @@ namespace OcentraAI.LLMGames.LLMServices.Rules
     [Serializable]
     public class PairInHandRule : BaseBonusRule
     {
-        public PairInHandRule() : base("Pair in hand with bonuses for trump card and same color. Example: 5 of Hearts, 5 of Spades, and any card", 5) { }
+        public PairInHandRule() : base(nameof(PairInHandRule), "Pair in hand with bonuses for trump card and same color. Example: 5 of Hearts, 5 of Spades, and any card", 5) { }
 
-        public override bool Evaluate(List<Card> hand)
+        public override bool Evaluate(List<Card> hand, out int bonus)
         {
+            bonus = 0;
             GetTrumpCard();
 
             int handValue = CalculateHandValue(hand);
@@ -33,11 +34,11 @@ namespace OcentraAI.LLMGames.LLMServices.Rules
 
             if (wildCardValue > normalValue)
             {
-                BonusValue = wildCardValue - handValue;
+                bonus = wildCardValue - handValue;
             }
             else
             {
-                BonusValue = normalBonus;
+                bonus = normalBonus;
             }
 
             return hasPair || hasThreeOfAKind || (hasTrumpCard && HasSingleCard(rankCounts));
@@ -48,7 +49,7 @@ namespace OcentraAI.LLMGames.LLMServices.Rules
             var colorCounts = new Dictionary<string, int>();
             foreach (var card in hand)
             {
-                var color = card.GetColor();
+                var color = card.GetColorString();
                 if (!colorCounts.TryAdd(color, 1))
                 {
                     colorCounts[color]++;
@@ -97,7 +98,7 @@ namespace OcentraAI.LLMGames.LLMServices.Rules
             {
                 bonus += BonusValue; // Base bonus for pair
 
-                if (hasTrumpCard && rankCounts[TrumpCard.Rank] >= 2)
+                if (hasTrumpCard && rankCounts[GetTrumpCard().Rank] >= 2)
                 {
                     bonus += GameInfo.Instance.CommonBonuses.TrumpCardBonus;
                 }
@@ -128,18 +129,18 @@ namespace OcentraAI.LLMGames.LLMServices.Rules
                     {
                         if (card.Rank == rank) threeOfAKindValue += card.GetRankValue();
                     }
-                    threeOfAKindValue += TrumpCard.GetRankValue();
+                    threeOfAKindValue += GetTrumpCard().GetRankValue();
 
                     int bonus = GameInfo.Instance.GetBonusRule<ThreeOfAKindRule>().BonusValue; // Base bonus for Three of a Kind
                     bonus += GameInfo.Instance.CommonBonuses.WildCardBonus; // Bonus for using Trump Card as wild
-                    if (IsRankAdjacent(rank, TrumpCard.Rank))
+                    if (IsRankAdjacent(rank, GetTrumpCard().Rank))
                     {
                         bonus += GameInfo.Instance.CommonBonuses.RankAdjacentBonus;
                     }
                     int totalValue = threeOfAKindValue + bonus;
                     if (totalValue > maxValue) maxValue = totalValue;
                 }
-                else if (rankCounts[rank] == 1 && rank != TrumpCard.Rank)
+                else if (rankCounts[rank] == 1 && rank != GetTrumpCard().Rank)
                 {
                     int pairValue = 0;
                     string cardColor = "";
@@ -148,15 +149,15 @@ namespace OcentraAI.LLMGames.LLMServices.Rules
                         if (card.Rank == rank)
                         {
                             pairValue = card.GetRankValue();
-                            cardColor = card.GetColor();
+                            cardColor = card.GetColorString();
                             break;
                         }
                     }
-                    pairValue += TrumpCard.GetRankValue();
+                    pairValue += GetTrumpCard().GetRankValue();
 
                     int bonus = BonusValue; // Base bonus for Pair
                     bonus += GameInfo.Instance.CommonBonuses.WildCardBonus; // Bonus for using Trump Card as wild
-                    if (cardColor == TrumpCard.GetColor())
+                    if (cardColor == GetTrumpCard().GetColorString())
                     {
                         bonus += GameInfo.Instance.CommonBonuses.SameColorBonus; // Bonus for same color
                     }

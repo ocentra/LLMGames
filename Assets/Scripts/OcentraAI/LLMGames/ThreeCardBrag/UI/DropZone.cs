@@ -1,4 +1,3 @@
-using OcentraAI.LLMGames.Extensions;
 using OcentraAI.LLMGames.ThreeCardBrag.Events;
 using OcentraAI.LLMGames.ThreeCardBrag.Players;
 using OcentraAI.LLMGames.ThreeCardBrag.UI.Controllers;
@@ -6,22 +5,24 @@ using OcentraAI.LLMGames.Utilities;
 using Sirenix.OdinInspector;
 using UnityEngine;
 using UnityEngine.EventSystems;
-using UnityEngine.UI;
 
 namespace OcentraAI.LLMGames.ThreeCardBrag.UI
 {
     public class DropZone : MonoBehaviour, IDropHandler, IPointerEnterHandler, IPointerExitHandler
     {
-        [ShowInInspector, Required]
-        private CardView CardView { get; set; }
+        [ShowInInspector, Required] private CardView CardView { get; set; }
 
-        [ShowInInspector, Required]
-        private UIController UIController { get; set; }
+        [ShowInInspector, Required] private UIController UIController { get; set; }
 
-        [ShowInInspector, Required]
-        public Image CardHighlight { get; set; }
+        
+        private Color originalEmissionColor;
 
-        private Color originalColor;
+        private Material originalMaterial;
+
+        [ColorUsage(true, true)]
+        public Color HighlightColor;
+
+
 
         void OnValidate()
         {
@@ -39,9 +40,13 @@ namespace OcentraAI.LLMGames.ThreeCardBrag.UI
             UIController = FindObjectOfType<UIController>();
             if (CardView != null)
             {
-                CardHighlight = CardView.transform.FindChildRecursively<Image>();
-                originalColor = CardHighlight.color;
+                originalMaterial = CardView.HighlightImage.material;
+                if (originalMaterial.HasProperty("_EmissionColor"))
+                {
+                    originalEmissionColor = originalMaterial.GetColor("_EmissionColor");
+                }
             }
+            
         }
 
         public void OnDrop(PointerEventData eventData)
@@ -52,7 +57,7 @@ namespace OcentraAI.LLMGames.ThreeCardBrag.UI
             {
                 EventBus.Publish(new PlayerActionPickAndSwap(typeof(HumanPlayer), floorCard: draggable.CardView.Card, swapCard: CardView.Card));
                 draggable.SetOverValidDropZone(false);
-                CardHighlight.color = originalColor;
+                SetGlow(false);
                 UIController.SetButtonState(ButtonState.DrawnFromDeck);
             }
         }
@@ -63,8 +68,7 @@ namespace OcentraAI.LLMGames.ThreeCardBrag.UI
             if (draggable != null)
             {
                 draggable.SetOverValidDropZone(true);
-                originalColor = CardHighlight.color;
-                CardHighlight.color = Color.cyan;
+                SetGlow(true);
             }
         }
 
@@ -74,7 +78,32 @@ namespace OcentraAI.LLMGames.ThreeCardBrag.UI
             if (draggable != null)
             {
                 draggable.SetOverValidDropZone(false);
-                CardHighlight.color = originalColor;
+                SetGlow(false);
+            }
+        }
+
+        private void SetGlow(bool isGlowing)
+        {
+
+
+            if (originalMaterial.HasProperty("_EmissionColor"))
+            {
+
+
+                if (isGlowing)
+                {
+                    var newMaterial = new Material(originalMaterial);
+                    newMaterial.SetColor("_EmissionColor", HighlightColor);
+
+                    originalMaterial.SetColor("_EmissionColor", Color.clear);
+
+                    CardView.HighlightImage.material = newMaterial;
+                }
+                else
+                {
+                    originalMaterial.SetColor("_EmissionColor", originalEmissionColor);
+                    CardView.HighlightImage.material = originalMaterial;
+                }
             }
         }
     }

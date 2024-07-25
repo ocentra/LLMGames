@@ -13,6 +13,7 @@ namespace OcentraAI.LLMGames.ThreeCardBrag.Players
 {
     public class Player
     {
+       
         [ShowInInspector, ReadOnly] public PlayerData PlayerData { get; private set; }
         [ShowInInspector, ReadOnly] public string Id { get; private set; }
         [ShowInInspector, ReadOnly] public string PlayerName { get; private set; }
@@ -22,6 +23,17 @@ namespace OcentraAI.LLMGames.ThreeCardBrag.Players
         [ShowInInspector, ReadOnly] public bool HasSeenHand { get; private set; } = false;
         [ShowInInspector, ReadOnly] public bool HasBetOnBlind { get; private set; } = true;
         [ShowInInspector, ReadOnly] public bool HasFolded { get; private set; } = false;
+
+        [ShowInInspector, ReadOnly] public int HandRankSum { get; private set; }
+        [ShowInInspector, ReadOnly] public int HandValue { get; private set; }
+
+        public Dictionary<string, Card> WildCards { get; private set; }
+
+        public Dictionary<string, Card> WildCardInHand { get; private set; } 
+
+        [ShowInInspector, ReadOnly]
+        public List<BaseBonusRule> AppliedRules { get; private set; } = new List<BaseBonusRule>();
+
         protected Card FloorCard { get; set; }
 
         public Player(PlayerData playerData, PlayerType type, int initialCoins)
@@ -31,17 +43,60 @@ namespace OcentraAI.LLMGames.ThreeCardBrag.Players
             PlayerName = playerData.PlayerName;
             Type = type;
             Coins = initialCoins;
+            WildCardInHand = new Dictionary<string, Card>();
+            SubscribeToEvents();
         }
 
-        public virtual void SetName(string playerName)
+        ~Player()
         {
-            PlayerName = playerName;
+            UnsubscribeFromEvents();
         }
 
+        private void SubscribeToEvents()
+        {
+            EventBus.Subscribe<UpdateWildCards>(OnUpdateWildCards);
+
+        }
+
+
+
+        private void UnsubscribeFromEvents()
+        {
+            EventBus.Unsubscribe<UpdateWildCards>(OnUpdateWildCards);
+
+        }
+
+
+        private void CheckForWildCardsInHand()
+        {
+            WildCardInHand = new Dictionary<string, Card>();
+
+            foreach (KeyValuePair<string, Card> card in WildCards)
+            {
+                if (Hand.Any(handCard => handCard.Id == card.Value.Id))
+                {
+                    WildCardInHand.Add(card.Key, card.Value);
+                }
+            }
+
+
+        }
+
+        private void OnUpdateWildCards(UpdateWildCards obj)
+        {
+            WildCards = obj.WildCards;
+        }
+        
         public virtual void SeeHand()
         {
             HasSeenHand = true;
         }
+
+        public string GetFormattedHand()
+        {
+            return string.Join(" ", Hand.Select(card => card.GetRankSymbol()));
+        }
+
 
         public bool CanAffordBet(int betAmount) => Coins >= betAmount;
 
@@ -91,16 +146,19 @@ namespace OcentraAI.LLMGames.ThreeCardBrag.Players
 
         public int CalculateHandValue()
         {
-            int handValue = Hand.Sum(card => card.GetRankValue());
+            AppliedRules = new List<BaseBonusRule>();
+            HandRankSum = Hand.Sum(card => card.GetRankValue());
+            HandValue = HandRankSum;
             BaseBonusRule[] bonusRules = GameInfo.Instance.BonusRules;
             foreach (BaseBonusRule rule in bonusRules)
             {
-                if (rule.Evaluate(Hand))
+                if (rule.Evaluate(Hand , out int bonusValue))
                 {
-                    handValue += rule.BonusValue;
+                    HandValue += bonusValue;
+                    AppliedRules.Add(rule);
                 }
             }
-            return handValue;
+            return HandValue;
         }
 
         public int GetHighestCardValue()
@@ -108,7 +166,7 @@ namespace OcentraAI.LLMGames.ThreeCardBrag.Players
             return Hand.Max(card => card.GetRankValue());
         }
 
-        public virtual void ShowHand(bool isRoundEnd = false)
+        public virtual void ShowHand(bool showHands = false)
         {
             foreach (Card card in Hand)
             {
@@ -121,10 +179,15 @@ namespace OcentraAI.LLMGames.ThreeCardBrag.Players
         {
             Hand.Clear();
 
+            AppliedRules = new List<BaseBonusRule>();
+            HandRankSum = 0;
+
             for (int i = 0; i < 3; i++)
             {
                 Hand.Add(deckManager.DrawCard());
             }
+
+            CheckForWildCardsInHand();
 
             HasSeenHand = false;
             HasBetOnBlind = true;
@@ -151,12 +214,11 @@ namespace OcentraAI.LLMGames.ThreeCardBrag.Players
                     break;
                 }
             }
+
+            CheckForWildCardsInHand();
         }
 
-        public virtual void DrawCard(Card card)
-        {
-            Hand.Add(card);
-        }
+
     }
 
     public enum PlayerType

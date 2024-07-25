@@ -8,10 +8,11 @@ namespace OcentraAI.LLMGames.LLMServices.Rules
     [Serializable]
     public class SameColorsSequenceRule : BaseBonusRule
     {
-        public SameColorsSequenceRule() : base("Sequence of 3 cards of the same color with Trump Wild Card. Example: 7 of Hearts, 8 of Diamonds, 9 of Hearts", 10) { }
+        public SameColorsSequenceRule() : base(nameof(SameColorsSequenceRule), "Sequence of 3 cards of the same color with Trump Wild Card. Example: 7 of Hearts, 8 of Diamonds, 9 of Hearts", 10) { }
 
-        public override bool Evaluate(List<Card> hand)
+        public override bool Evaluate(List<Card> hand, out int bonus)
         {
+            bonus = 0;
             GetTrumpCard();
             if (hand.Count != 3)
             {
@@ -21,7 +22,7 @@ namespace OcentraAI.LLMGames.LLMServices.Rules
             int handValue = CalculateHandValue(hand);
             bool hasTrumpCard = HasTrumpCard(hand);
 
-            string firstCardColor = hand[0].GetColor();
+            string firstCardColor = hand[0].GetColorString();
             List<int> ranks = new List<int>();
             bool allSameColor = true;
             bool trumpUsedAsWild = false;
@@ -29,17 +30,17 @@ namespace OcentraAI.LLMGames.LLMServices.Rules
             for (int i = 0; i < hand.Count; i++)
             {
                 Card card = hand[i];
-                if (card.GetColor() != firstCardColor && !card.Equals(TrumpCard))
+                if (card.GetColorString() != firstCardColor && !card.Equals(GetTrumpCard()))
                 {
                     allSameColor = false;
                     break;
                 }
-                if (card.Equals(TrumpCard))
+                if (card.Equals(GetTrumpCard()))
                 {
                     trumpUsedAsWild = true;
                 }
                 ranks.Add(card.GetRankValue());
-            }
+            }   
 
             if (!allSameColor)
             {
@@ -49,13 +50,12 @@ namespace OcentraAI.LLMGames.LLMServices.Rules
             bool isSequence = IsSequence(ranks);
             if (isSequence)
             {
-                int bonus = CalculateBonus(hand, hasTrumpCard, trumpUsedAsWild);
-                BonusValue = bonus;
+                 bonus = CalculateBonus(hand, hasTrumpCard, trumpUsedAsWild);
             }
             else if (hasTrumpCard && CanFormSequenceWithWild(ranks))
             {
                 int wildCardValue = CalculateWildCardValue(hand, ranks);
-                BonusValue = wildCardValue - handValue;
+                bonus = wildCardValue - handValue;
                 return true;
             }
 
@@ -79,11 +79,11 @@ namespace OcentraAI.LLMGames.LLMServices.Rules
                 bool isMiddle = false;
                 for (int i = 0; i < hand.Count; i++)
                 {
-                    if (IsRankAdjacent(hand[i].Rank, TrumpCard.Rank))
+                    if (IsRankAdjacent(hand[i].Rank, GetTrumpCard().Rank))
                     {
                         isAdjacent = true;
                     }
-                    if (i == 1 && hand[i].Equals(TrumpCard))
+                    if (i == 1 && hand[i].Equals(GetTrumpCard()))
                     {
                         isMiddle = true;
                     }
@@ -108,7 +108,7 @@ namespace OcentraAI.LLMGames.LLMServices.Rules
             int wildCardValue = 0;
             for (int i = 0; i < hand.Count; i++)
             {
-                if (!hand[i].Equals(TrumpCard))
+                if (!hand[i].Equals(GetTrumpCard()))
                 {
                     wildCardValue += hand[i].GetRankValue();
                 }

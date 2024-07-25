@@ -7,9 +7,7 @@ using OcentraAI.LLMGames.Utilities;
 using Sirenix.OdinInspector;
 using System.Collections;
 using TMPro;
-using UnityEditor.VersionControl;
 using UnityEngine;
-using UnityEngine.UI;
 using Button = UnityEngine.UI.Button;
 
 namespace OcentraAI.LLMGames.ThreeCardBrag.UI.Controllers
@@ -25,9 +23,8 @@ namespace OcentraAI.LLMGames.ThreeCardBrag.UI.Controllers
         [Required, ShowInInspector] private Button Bet { get; set; }
         [Required, ShowInInspector] private Button DrawFromDeck { get; set; }
         [Required, ShowInInspector] private Button ShowCall { get; set; }
-        [Required, ShowInInspector] private Button ContinueRound { get; set; }
-        [Required, ShowInInspector] private Button NewGame { get; set; }
-        [Required, ShowInInspector] private Transform NewGameContinueRoundHolder { get; set; }
+
+
         [Required, ShowInInspector] private Button PurchaseCoins { get; set; }
 
         [Required, ShowInInspector] private Transform ComputerHand { get; set; }
@@ -50,11 +47,15 @@ namespace OcentraAI.LLMGames.ThreeCardBrag.UI.Controllers
         [ShowInInspector] public Player CurrentPlayer { get; set; }
 
         [Required, ShowInInspector] private CardView FloorCardView { get; set; }
+
         [Required, ShowInInspector] private CardView TrumpCardView { get; set; }
+        [Required, ShowInInspector] private CardView MagicCard0 { get; set; }
+        [Required, ShowInInspector] private CardView MagicCard1 { get; set; }
+        [Required, ShowInInspector] private CardView MagicCard2 { get; set; }
+        [Required, ShowInInspector] private CardView MagicCard3 { get; set; }
+
         [Required, ShowInInspector] private CardView[] HumanPlayerCardViews { get; set; }
-        [Required, ShowInInspector] private Image[] HumanPlayerCardHighlight { get; set; }
         [Required, ShowInInspector] private CardView[] ComputerPlayerCardViews { get; set; }
-        [Required, ShowInInspector] private Image[] ComputerPlayerCardHighlight { get; set; }
         [Required, ShowInInspector] public LeftPanelController LeftPanelController { get; set; }
 
         [ShowInInspector]
@@ -104,15 +105,17 @@ namespace OcentraAI.LLMGames.ThreeCardBrag.UI.Controllers
             Bet = transform.FindChildRecursively<Button>(nameof(Bet));
             DrawFromDeck = transform.FindChildRecursively<Button>(nameof(DrawFromDeck));
             ShowCall = transform.FindChildRecursively<Button>(nameof(ShowCall));
-            ContinueRound = transform.FindChildRecursively<Button>(nameof(ContinueRound));
-            NewGame = transform.FindChildRecursively<Button>(nameof(NewGame));
-            NewGameContinueRoundHolder = transform.FindChildRecursively<Transform>(nameof(NewGameContinueRoundHolder));
             PurchaseCoins = transform.FindChildRecursively<Button>(nameof(PurchaseCoins));
 
             SetupCardViews();
 
             FloorCardView = transform.FindChildRecursively<CardView>(nameof(FloorCardView));
+
             TrumpCardView = transform.FindChildRecursively<CardView>(nameof(TrumpCardView));
+            MagicCard0 = transform.FindChildRecursively<CardView>(nameof(MagicCard0));
+            MagicCard1 = transform.FindChildRecursively<CardView>(nameof(MagicCard1));
+            MagicCard2 = transform.FindChildRecursively<CardView>(nameof(MagicCard2));
+            MagicCard3 = transform.FindChildRecursively<CardView>(nameof(MagicCard3));
 
             Message = transform.FindChildRecursively<TextMeshProUGUI>(nameof(Message));
             HumanPlayersCoins = transform.FindChildRecursively<TextMeshProUGUI>(nameof(HumanPlayersCoins));
@@ -135,35 +138,12 @@ namespace OcentraAI.LLMGames.ThreeCardBrag.UI.Controllers
         private void SetupCardViews()
         {
             HumanPlayerCardViews = ShowPlayerHand.GetComponentsInChildren<CardView>();
-            HumanPlayerCardHighlight = new Image[HumanPlayerCardViews.Length];
-
-            for (int index = 0; index < HumanPlayerCardViews.Length; index++)
-            {
-                CardView cardView = HumanPlayerCardViews[index];
-                Image image = cardView.transform.FindChildRecursively<Image>();
-                HumanPlayerCardHighlight[index] = image;
-            }
-
             ComputerPlayerCardViews = ComputerHand.GetComponentsInChildren<CardView>();
-            ComputerPlayerCardHighlight = new Image[ComputerPlayerCardViews.Length];
-
-            for (int index = 0; index < ComputerPlayerCardViews.Length; index++)
-            {
-                CardView cardView = ComputerPlayerCardViews[index];
-                Image image = cardView.transform.FindChildRecursively<Image>();
-                ComputerPlayerCardHighlight[index] = image;
-            }
         }
 
         private void SetupInitialUIState()
         {
-            if (NewGame != null) NewGame.gameObject.SetActive(false);
-            if (ContinueRound != null)
-            {
-                ContinueRound.gameObject.SetActive(false);
-                NewGameContinueRoundHolder.gameObject.SetActive(false);
 
-            }
             if (MessageHolder != null) MessageHolder.gameObject.SetActive(false);
             if (ShowPlayerHand != null) ShowPlayerHand.interactable = true;
 
@@ -200,8 +180,6 @@ namespace OcentraAI.LLMGames.ThreeCardBrag.UI.Controllers
             if (Bet != null) Bet.onClick.AddListener(() => OnBet(Bet));
             if (DrawFromDeck != null) DrawFromDeck.onClick.AddListener(() => OnDrawFromDeck(DrawFromDeck));
             if (ShowCall != null) ShowCall.onClick.AddListener(() => OnShowCall(ShowCall));
-            if (ContinueRound != null) ContinueRound.onClick.AddListener(OnContinueRound);
-            if (NewGame != null) NewGame.onClick.AddListener(OnNewGame);
             if (PurchaseCoins != null) PurchaseCoins.onClick.AddListener(OnPurchaseCoins);
         }
 
@@ -214,12 +192,14 @@ namespace OcentraAI.LLMGames.ThreeCardBrag.UI.Controllers
         {
             EventBus.Subscribe<InitializeUIPlayers>(OnInitializeUIPlayers);
             EventBus.Subscribe<NewGameEventArgs>(OnNewGame);
+            EventBus.Subscribe<NewRoundEventArgs>(OnNewRound);
             EventBus.Subscribe<UpdateGameState>(OnUpdateGameState);
             EventBus.Subscribe<PlayerStartCountDown>(OnPlayerStartCountDown);
             EventBus.Subscribe<UpdateTurnState>(OnUpdateTurnState);
             EventBus.Subscribe<PlayerStopCountDown>(OnPlayerStopCountDown);
             EventBus.Subscribe<UpdateFloorCard>(OnUpdateFloorCard);
-            EventBus.Subscribe<UpdateTrumpCard>(OnUpdateTrumpCard);
+            EventBus.Subscribe<UpdateWildCards>(OnUpdateWildCards);
+            EventBus.Subscribe<UpdateWildCardsHighlight>(OnUpdateWildCardsHighlight);
             EventBus.Subscribe<UpdateFloorCardList>(OnUpdateFloorCardList);
             EventBus.Subscribe<UpdatePlayerHandDisplay>(OnUpdatePlayerHandDisplay);
             EventBus.Subscribe<UpdateRoundDisplay>(OnUpdateRoundDisplay);
@@ -232,12 +212,14 @@ namespace OcentraAI.LLMGames.ThreeCardBrag.UI.Controllers
         {
             EventBus.Unsubscribe<InitializeUIPlayers>(OnInitializeUIPlayers);
             EventBus.Unsubscribe<NewGameEventArgs>(OnNewGame);
+            EventBus.Unsubscribe<NewRoundEventArgs>(OnNewRound);
             EventBus.Unsubscribe<UpdateGameState>(OnUpdateGameState);
             EventBus.Unsubscribe<PlayerStartCountDown>(OnPlayerStartCountDown);
             EventBus.Unsubscribe<UpdateTurnState>(OnUpdateTurnState);
             EventBus.Unsubscribe<PlayerStopCountDown>(OnPlayerStopCountDown);
             EventBus.Unsubscribe<UpdateFloorCard>(OnUpdateFloorCard);
-            EventBus.Unsubscribe<UpdateTrumpCard>(OnUpdateTrumpCard);
+            EventBus.Unsubscribe<UpdateWildCards>(OnUpdateWildCards);
+            EventBus.Unsubscribe<UpdateWildCardsHighlight>(OnUpdateWildCardsHighlight);
 
             EventBus.Unsubscribe<UpdateFloorCardList>(OnUpdateFloorCardList);
             EventBus.Unsubscribe<UpdatePlayerHandDisplay>(OnUpdatePlayerHandDisplay);
@@ -310,19 +292,9 @@ namespace OcentraAI.LLMGames.ThreeCardBrag.UI.Controllers
             HideMessage();
         }
 
-        private void OnNewGame()
-        {
-            EventBus.Publish(new PlayerActionStartNewGame());
-            HideMessage();
-            SetupInitialUIState();
-        }
 
-        private void OnContinueRound()
-        {
-            EventBus.Publish(new PlayerActionContinueGame(true));
-            HideMessage();
-            SetupInitialUIState();
-        }
+
+
 
         private void TakeAction(PlayerAction action, ButtonState buttonState)
         {
@@ -348,7 +320,16 @@ namespace OcentraAI.LLMGames.ThreeCardBrag.UI.Controllers
 
         private void OnNewGame(NewGameEventArgs e)
         {
+            SetupInitialUIState();
             ShowMessage(e.Message);
+            ResetAllCardViews();
+            EnablePlayerActions();
+            UpdateUI(e.GameManager);
+        }
+
+        private void OnNewRound(NewRoundEventArgs e)
+        {
+            SetupInitialUIState();
             ResetAllCardViews();
             EnablePlayerActions();
             UpdateUI(e.GameManager);
@@ -381,16 +362,16 @@ namespace OcentraAI.LLMGames.ThreeCardBrag.UI.Controllers
             if (e.IsHumanTurn)
             {
                 CurrentPlayerTimer = HumanPlayerTimer;
-                SetCardHighlights(HumanPlayerCardHighlight, true);
-                SetCardHighlights(ComputerPlayerCardHighlight, false);
+                SetCardHighlights(HumanPlayerCardViews, true);
+                SetCardHighlights(ComputerPlayerCardViews, false);
                 SetButtonState(ButtonState.TakeAction);
 
             }
             else if (e.IsComputerTurn && CurrentPlayer is ComputerPlayer computerPlayer)
             {
                 CurrentPlayerTimer = ComputerPlayerTimer;
-                SetCardHighlights(HumanPlayerCardHighlight, false);
-                SetCardHighlights(ComputerPlayerCardHighlight, true);
+                SetCardHighlights(HumanPlayerCardViews, false);
+                SetCardHighlights(ComputerPlayerCardViews, true);
                 computerPlayer.ResetState();
 
             }
@@ -408,14 +389,49 @@ namespace OcentraAI.LLMGames.ThreeCardBrag.UI.Controllers
             CurrentPlayerTimer.StopTimer(CurrentPlayer);
 
         }
-        private void OnUpdateTrumpCard(UpdateTrumpCard e)
+        private void OnUpdateWildCards(UpdateWildCards e)
         {
-            UpdateCardView(e.Card, e.Reset, TrumpCardView);
+            if (e.WildCards.TryGetValue("TrumpCard", out Card trumpCard))
+            {
+                UpdateCardView(TrumpCardView, trumpCard);
+            }
+            if (e.WildCards.TryGetValue(nameof(MagicCard0), out Card magicCard0))
+            {
+                UpdateCardView(MagicCard0, magicCard0);
+            }
+            if (e.WildCards.TryGetValue(nameof(MagicCard1), out Card magicCard1))
+            {
+                UpdateCardView(MagicCard1, magicCard1);
 
+            }
+            if (e.WildCards.TryGetValue(nameof(MagicCard2), out Card magicCard2))
+            {
+                UpdateCardView(MagicCard2, magicCard2);
+
+            }
+            if (e.WildCards.TryGetValue(nameof(MagicCard3), out Card magicCard3))
+            {
+                UpdateCardView(MagicCard3, magicCard3);
+
+            }
         }
+
+
+        private void OnUpdateWildCardsHighlight(UpdateWildCardsHighlight e)
+        {
+            TrumpCardView.SetHighlight(e.WildCardsInHand.TryGetValue("TrumpCard", out Card _));
+            MagicCard0.SetHighlight(e.WildCardsInHand.TryGetValue(nameof(MagicCard0), out Card _));
+            MagicCard1.SetHighlight(e.WildCardsInHand.TryGetValue(nameof(MagicCard1), out Card _));
+            MagicCard2.SetHighlight(e.WildCardsInHand.TryGetValue(nameof(MagicCard2), out Card _));
+            MagicCard3.SetHighlight(e.WildCardsInHand.TryGetValue(nameof(MagicCard3), out Card _));
+            
+        }
+
+
+
         private void OnUpdateFloorCard(UpdateFloorCard e)
         {
-            UpdateCardView(e.Card, e.Reset, FloorCardView);
+            UpdateCardView(FloorCardView, e.Card);
             FloorCardView.SetActive(FloorCardView.Card != null);
             FloorCardView.transform.parent.gameObject.SetActive(FloorCardView.Card != null);
         }
@@ -445,26 +461,15 @@ namespace OcentraAI.LLMGames.ThreeCardBrag.UI.Controllers
 
         private void OnOfferContinuation(OfferContinuation e)
         {
-            ShowMessage(e.Message, e.Delay);
             EnablePlayerActions();
-            if (ContinueRound != null)
-            {
-                NewGameContinueRoundHolder.gameObject.SetActive(true);
-                ContinueRound.gameObject.SetActive(true);
-            }
+
         }
 
         private void OnOfferNewGame(OfferNewGame e)
         {
 
-            ShowMessage(e.Message, e.Delay);
             EnablePlayerActions();
 
-            if (NewGame != null)
-            {
-                NewGameContinueRoundHolder.gameObject.SetActive(true);
-                NewGame.gameObject.SetActive(true);
-            }
         }
 
         private void OnMessage(UIMessage e)
@@ -532,13 +537,13 @@ namespace OcentraAI.LLMGames.ThreeCardBrag.UI.Controllers
             EnablePlayerActions();
         }
 
-        private void SetCardHighlights(Image[] highlights, bool enabled)
+        private void SetCardHighlights(CardView[] cardViews, bool enabled)
         {
-            foreach (Image highlight in highlights)
+            foreach (var cardView in cardViews)
             {
-                if (highlight != null)
+                if (cardView != null && cardView.HighlightImage != null)
                 {
-                    highlight.enabled = enabled;
+                    cardView.HighlightImage.enabled = enabled;
                 }
             }
         }
@@ -565,25 +570,13 @@ namespace OcentraAI.LLMGames.ThreeCardBrag.UI.Controllers
             if (ComputerPlayerWins != null) ComputerPlayerWins.text = $"{computerWins}";
         }
 
-        private void UpdateCardView(Card card, bool reset, CardView cardView)
+        private void UpdateCardView(CardView cardView, Card card)
         {
 
             if (cardView != null)
             {
-                if (reset)
-                {
-                    cardView.SetCard(null);
-                    cardView.UpdateCardView();
-                    return;
-                }
-
-                if (card != null)
-                {
-                    cardView.SetCard(card);
-                    cardView.UpdateCardView();
-                }
-
-
+                cardView.SetCard(card);
+                cardView.UpdateCardView();
             }
         }
 
@@ -669,13 +662,7 @@ namespace OcentraAI.LLMGames.ThreeCardBrag.UI.Controllers
             {
                 MessageHolder.gameObject.SetActive(false);
                 if (Message != null) Message.text = "";
-                if (ContinueRound != null)
-                {
-                    ContinueRound.gameObject.SetActive(false);
-                    NewGameContinueRoundHolder.gameObject.SetActive(false);
 
-                }
-                if (NewGame != null) NewGame.gameObject.SetActive(true);
             }
         }
 

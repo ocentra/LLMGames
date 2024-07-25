@@ -8,10 +8,11 @@ namespace OcentraAI.LLMGames.LLMServices.Rules
     [Serializable]
     public class ThreeConsecutiveSameSuitRule : BaseBonusRule
     {
-        public ThreeConsecutiveSameSuitRule() : base("Sequence of 3 cards of the same suit with Trump Wild Card. Example: 4, 5, 6 of Hearts", 10) { }
+        public ThreeConsecutiveSameSuitRule() : base(nameof(ThreeConsecutiveSameSuitRule), "Sequence of 3 cards of the same suit with Trump Wild Card. Example: 4, 5, 6 of Hearts", 10) { }
 
-        public override bool Evaluate(List<Card> hand)
+        public override bool Evaluate(List<Card> hand, out int bonus)
         {
+            bonus = 0;
             GetTrumpCard();
             if (hand.Count != 3)
             {
@@ -29,12 +30,12 @@ namespace OcentraAI.LLMGames.LLMServices.Rules
             for (int i = 0; i < hand.Count; i++)
             {
                 Card card = hand[i];
-                if (card.Suit != firstCardSuit && !card.Equals(TrumpCard))
+                if (card.Suit != firstCardSuit && !card.Equals(GetTrumpCard()))
                 {
                     allSameSuit = false;
                     break;
                 }
-                if (card.Equals(TrumpCard))
+                if (card.Equals(GetTrumpCard()))
                 {
                     trumpUsedAsWild = true;
                 }
@@ -49,8 +50,7 @@ namespace OcentraAI.LLMGames.LLMServices.Rules
             bool isSequence = IsSequence(ranks);
             if (isSequence)
             {
-                int bonus = CalculateBonus(hand, hasTrumpCard, trumpUsedAsWild);
-                BonusValue = bonus;
+                bonus = CalculateBonus(hand, hasTrumpCard, trumpUsedAsWild);
             }
 
             return isSequence;
@@ -67,7 +67,7 @@ namespace OcentraAI.LLMGames.LLMServices.Rules
                 bool isAdjacent = false;
                 for (int i = 0; i < hand.Count; i++)
                 {
-                    if (IsRankAdjacent(hand[i].Rank, TrumpCard.Rank))
+                    if (IsRankAdjacent(hand[i].Rank, GetTrumpCard().Rank))
                     {
                         isAdjacent = true;
                         break;

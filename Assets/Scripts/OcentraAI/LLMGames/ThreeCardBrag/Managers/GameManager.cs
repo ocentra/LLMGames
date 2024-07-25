@@ -24,8 +24,6 @@ namespace OcentraAI.LLMGames.ThreeCardBrag.Manager
         // Singleton instance
         public static GameManager Instance { get; private set; }
 
-        // Game configuration
-        [ShowInInspector] public int MaxRounds { get; private set; } = 10;
 
         // Managers
         [ShowInInspector, ReadOnly] public PlayerManager PlayerManager { get; private set; }
@@ -86,9 +84,9 @@ namespace OcentraAI.LLMGames.ThreeCardBrag.Manager
             await Task.WhenAll(
                 InitializeDeck(),
                 InitializePlayers(),
-                
+
                 InitializeUIPlayers()
-               
+
             );
 
             await StartNewGameAsync();
@@ -103,14 +101,14 @@ namespace OcentraAI.LLMGames.ThreeCardBrag.Manager
 
         private Task InitializePlayers()
         {
-            
+
             PlayerManager.AddPlayer(AuthenticationManager.Instance.PlayerData, PlayerType.Human);
 
             PlayerData playerData = new PlayerData { PlayerID = Guid.NewGuid().ToString(), PlayerName = nameof(ComputerPlayer) };
             PlayerManager.AddPlayer(playerData, PlayerType.Computer);
 
 
-            
+
             return Task.CompletedTask;
         }
 
@@ -155,7 +153,7 @@ namespace OcentraAI.LLMGames.ThreeCardBrag.Manager
         private void SubscribeToEvents()
         {
             EventBus.Subscribe<PlayerActionStartNewGame>(OnPlayerActionStartNewGame);
-            EventBus.Subscribe<PlayerActionContinueGame>(OnPlayerActionContinueGame);
+            EventBus.Subscribe<PlayerActionNewRound>(OnPlayerActionNewRound);
             EventBus.Subscribe<PlayerActionEvent>(OnPlayerAction);
             EventBus.Subscribe<PlayerActionRaiseBet>(OnPlayerActionRaiseBet);
             EventBus.Subscribe<PlayerActionPickAndSwap>(OnPlayerActionPickAndSwap);
@@ -165,7 +163,7 @@ namespace OcentraAI.LLMGames.ThreeCardBrag.Manager
         private void UnsubscribeFromEvents()
         {
             EventBus.Unsubscribe<PlayerActionStartNewGame>(OnPlayerActionStartNewGame);
-            EventBus.Unsubscribe<PlayerActionContinueGame>(OnPlayerActionContinueGame);
+            EventBus.Unsubscribe<PlayerActionNewRound>(OnPlayerActionNewRound);
             EventBus.Unsubscribe<PlayerActionEvent>(OnPlayerAction);
             EventBus.Unsubscribe<PlayerActionRaiseBet>(OnPlayerActionRaiseBet);
             EventBus.Unsubscribe<PlayerActionPickAndSwap>(OnPlayerActionPickAndSwap);
@@ -184,18 +182,12 @@ namespace OcentraAI.LLMGames.ThreeCardBrag.Manager
             await StartNewGameAsync();
         }
 
-        private async void OnPlayerActionContinueGame(PlayerActionContinueGame e)
+        private async void OnPlayerActionNewRound(PlayerActionNewRound e)
         {
             if (IsCancellationRequested()) return;
 
-            if (e.ShouldContinue)
-            {
-                await StartNewRoundAsync();
-            }
-            else
-            {
-                await StartNewGameAsync();
-            }
+            await StartNewRoundAsync();
+
         }
 
         private async void OnPlayerAction(PlayerActionEvent e)
@@ -326,10 +318,11 @@ namespace OcentraAI.LLMGames.ThreeCardBrag.Manager
                 ScoreManager.ResetForNewRound();
                 TurnManager.ResetForNewRound();
 
+                EventBus.Publish(new NewRoundEventArgs(this));
                 // Ensure the first turn is always started correctly
                 await StartFirstTurn();
 
-                EventBus.Publish(new UpdateGameState(this, isNewRound: true));
+               
             }
             catch (Exception ex)
             {
@@ -476,7 +469,7 @@ namespace OcentraAI.LLMGames.ThreeCardBrag.Manager
             {
                 await SwitchTurn();
             }
-  
+
         }
 
         private async Task PlayBlind()
@@ -546,8 +539,17 @@ namespace OcentraAI.LLMGames.ThreeCardBrag.Manager
                 return;
             }
 
-            int highestHandValue = activePlayers.Max(p => p.CalculateHandValue());
-            List<Player> potentialWinners = activePlayers.Where(p => p.CalculateHandValue() == highestHandValue).ToList();
+            Dictionary<Player, int> playerHandValues = new Dictionary<Player, int>();
+            foreach (var player in activePlayers)
+            {
+                playerHandValues[player] = player.CalculateHandValue();
+            }
+
+            int highestHandValue = playerHandValues.Values.Max();
+            List<Player> potentialWinners = playerHandValues
+                .Where(p => p.Value == highestHandValue)
+                .Select(p => p.Key)
+                .ToList();
 
             if (potentialWinners.Count == 1)
             {
@@ -555,11 +557,21 @@ namespace OcentraAI.LLMGames.ThreeCardBrag.Manager
                 return;
             }
 
-            int highestCardValue = potentialWinners.Max(p => p.GetHighestCardValue());
-            List<Player> winners = potentialWinners.Where(p => p.GetHighestCardValue() == highestCardValue).ToList();
+            Dictionary<Player, int> potentialWinnersCardValues = new Dictionary<Player, int>();
+            foreach (var player in potentialWinners)
+            {
+                potentialWinnersCardValues[player] = player.GetHighestCardValue();
+            }
+
+            int highestCardValue = potentialWinnersCardValues.Values.Max();
+            List<Player> winners = potentialWinnersCardValues
+                .Where(p => p.Value == highestCardValue)
+                .Select(p => p.Key)
+                .ToList();
 
             await EndRound(winners, true);
         }
+
 
         private async Task EndRound(List<Player> winners, bool showHand)
         {
@@ -612,7 +624,7 @@ namespace OcentraAI.LLMGames.ThreeCardBrag.Manager
                 }
                 else
                 {
-                    await CheckForContinuation(showHand, winner);
+                    await CheckForContinuation(winner, showHand);
                 }
             }
             else
@@ -621,14 +633,33 @@ namespace OcentraAI.LLMGames.ThreeCardBrag.Manager
             }
         }
 
-        private async Task CheckForContinuation(bool showHand, Player winner)
+        private async Task CheckForContinuation(Player winner, bool showHand)
         {
-            string message = ColouredMessage("Round Over!", Color.red) +
-                             ColouredMessage($"{winner.PlayerName} ", Color.white, true) + ColouredMessage($"wins the round!", Color.cyan) +
+            string message = ColouredMessage("Round Over!", Color.red, true) +
+                             ColouredMessage($" {winner.PlayerName} ", Color.green) +
+                             ColouredMessage($"wins the round. ", Color.white) +
                              $"{Environment.NewLine}" +
-                             ColouredMessage("Continue Next Rounds ?", Color.red, true);
+                             ColouredMessage("Round Stats", Color.red, true);
 
-            if (TurnManager.CurrentRound >= MaxRounds)
+
+            if (showHand)
+            {
+                var allPlayers = PlayerManager.GetAllPlayers().OrderByDescending(p => p.HandValue).ToList();
+
+                foreach (Player player in allPlayers)
+                {
+                   
+                    string appliedRules = player.AppliedRules.Count >0 ? string.Join(" + ", player.AppliedRules.Select(rule => $"{rule.RuleName} ({rule.BonusValue})")) : "None";
+                    string totalValue = $"Total Value: {player.HandValue}";
+                    message += $"{Environment.NewLine} {ColouredMessage($"{player.PlayerName}, Hand:",Color.white)} [ {player.GetFormattedHand()} ] " +
+                               $"{ColouredMessage($"HandRankSum: {player.HandRankSum}, Applied Bonus: {appliedRules}, {totalValue}", Color.white, true)} ";
+                }
+            }
+
+            message += $"{Environment.NewLine}" + ColouredMessage("Continue Next Rounds?", Color.white, true);
+
+
+            if (TurnManager.IsFixedRoundsOver())
             {
                 var leaderboard = ScoreManager.GetLeaderboard();
                 if (leaderboard.Count > 1 && leaderboard[0].TotalWinnings > leaderboard[1].TotalWinnings)
@@ -648,9 +679,10 @@ namespace OcentraAI.LLMGames.ThreeCardBrag.Manager
 
         private void OfferContinuation(bool showHand, string message)
         {
-            EventBus.Publish(new OfferContinuation(10, message));
             TurnManager.CallShow();
-            PlayerManager.ShowHand(showHand);
+            PlayerManager.ShowHand(showHand, true);
+            EventBus.Publish(new OfferContinuation(10, message));
+
         }
 
         private Task EndGame()

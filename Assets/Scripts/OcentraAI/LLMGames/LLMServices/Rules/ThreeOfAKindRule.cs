@@ -9,10 +9,11 @@ namespace OcentraAI.LLMGames.LLMServices.Rules
     [Serializable]
     public class ThreeOfAKindRule : BaseBonusRule
     {
-        public ThreeOfAKindRule() : base("Three of a Kind with Trump Wild Card. Example: AAA or KKK", 15) { }
+        public ThreeOfAKindRule() : base(nameof(ThreeOfAKindRule), "Three of a Kind with Trump Wild Card. Example: AAA or KKK", 15) { }
 
-        public override bool Evaluate(List<Card> hand)
+        public override bool Evaluate(List<Card> hand, out int bonus )
         {
+            bonus = 0;
             GetTrumpCard();
             if (hand.Count != 3)
             {
@@ -28,11 +29,11 @@ namespace OcentraAI.LLMGames.LLMServices.Rules
 
             if (wildCardValue > normalValue)
             {
-                BonusValue = wildCardValue - handValue;
+                bonus = wildCardValue - handValue;
             }
             else
             {
-                BonusValue = normalValue - handValue;
+                bonus = normalValue - handValue;
             }
 
             return rankCounts.ContainsValue(3) || (hasTrumpCard && rankCounts.ContainsValue(2));
@@ -63,7 +64,7 @@ namespace OcentraAI.LLMGames.LLMServices.Rules
                     bool hasAdjacentRank = false;
                     for (int i = 0; i < hand.Count; i++)
                     {
-                        if (IsRankAdjacent(hand[i].Rank, TrumpCard.Rank))
+                        if (IsRankAdjacent(hand[i].Rank, GetTrumpCard().Rank))
                         {
                             hasAdjacentRank = true;
                             break;
@@ -96,13 +97,13 @@ namespace OcentraAI.LLMGames.LLMServices.Rules
                             threeOfAKindValue += hand[i].GetRankValue();
                         }
                     }
-                    threeOfAKindValue += TrumpCard.GetRankValue();
+                    threeOfAKindValue += GetTrumpCard().GetRankValue();
 
                     int bonus = BonusValue; // Base bonus for Three of a Kind
                     bonus += GameInfo.Instance.CommonBonuses.WildCardBonus; // Bonus for using Trump Card as wild
                     bonus += GameInfo.Instance.CommonBonuses.TrumpCardBonus; // Bonus for Trump Card in hand
 
-                    if (IsRankAdjacent(kvp.Key, TrumpCard.Rank))
+                    if (IsRankAdjacent(kvp.Key, GetTrumpCard().Rank))
                     {
                         bonus += GameInfo.Instance.CommonBonuses.RankAdjacentBonus;
                     }

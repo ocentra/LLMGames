@@ -218,10 +218,10 @@ namespace OcentraAI.LLMGames.ThreeCardBrag.Players
             currentState = action == PlayerAction.DrawFromDeck ? ComputerPlayerState.DrawnFromDeck : ComputerPlayerState.ActionTaken;
         }
 
-        public override void ShowHand(bool isRoundEnd = false)
+        public override void ShowHand(bool showHands = false)
         {
-            base.ShowHand(isRoundEnd);
-            EventBus.Publish(new UpdatePlayerHandDisplay(this, isRoundEnd));
+            base.ShowHand(showHands);
+            EventBus.Publish(new UpdatePlayerHandDisplay(this, showHands));
         }
 
         public override void PickAndSwap(Card floorCard, Card swapCard)

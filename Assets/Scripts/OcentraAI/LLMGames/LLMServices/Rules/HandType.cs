@@ -9,6 +9,7 @@ namespace OcentraAI.LLMGames
 
     public enum Suit
     {
+        None,
         Hearts,
         Diamonds,
         Clubs,
@@ -17,6 +18,7 @@ namespace OcentraAI.LLMGames
 
     public enum Rank
     {
+        None,
         Two = 2,
         Three,
         Four,

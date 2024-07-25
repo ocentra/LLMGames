@@ -16,7 +16,7 @@ namespace OcentraAI.LLMGames.ThreeCardBrag.Manager
         [ShowInInspector] public HumanPlayer HumanPlayer { get; set; }
         [ShowInInspector] public ComputerPlayer ComputerPlayer { get; set; }
         private DeckManager DeckManager => GameManager.Instance.DeckManager;
-        private ScoreManager ScoreManager=> GameManager.Instance.ScoreManager;
+        private ScoreManager ScoreManager => GameManager.Instance.ScoreManager;
         private TurnManager TurnManager => GameManager.Instance.TurnManager;
         public PlayerManager()
         {
@@ -27,13 +27,13 @@ namespace OcentraAI.LLMGames.ThreeCardBrag.Manager
         {
 
         }
-        public void AddPlayer(PlayerData playerData,PlayerType playerType)
+        public void AddPlayer(PlayerData playerData, PlayerType playerType)
         {
             Player player = default;
             switch (playerType)
             {
                 case PlayerType.Human:
-                    player = new HumanPlayer(playerData,ScoreManager.InitialCoins);
+                    player = new HumanPlayer(playerData, ScoreManager.InitialCoins);
                     HumanPlayer = (HumanPlayer)player; // todo temp for now 2 player setup need to think once multiplayer
                     break;
                 case PlayerType.Computer:
@@ -57,14 +57,25 @@ namespace OcentraAI.LLMGames.ThreeCardBrag.Manager
             }
         }
 
+
+
         public void ResetForNewRound()
         {
             foldedPlayers.Clear();
+
             foreach (var player in Players)
             {
-                player.ResetForNewRound(DeckManager);
+                if (DevModeManager.Instance != null)
+                {
+                    DevModeManager.Instance.ApplyDevHandToPlayer(player, DeckManager);
+                }
+                else
+                {
+                    player.ResetForNewRound(DeckManager);
+                }
             }
         }
+
 
         public bool FoldPlayer()
         {
@@ -87,7 +98,7 @@ namespace OcentraAI.LLMGames.ThreeCardBrag.Manager
             return GetActivePlayers().Count <= 1;
         }
 
-        public bool GetHumanPlayer(string playerId ,out HumanPlayer player)
+        public bool GetHumanPlayer(string playerId, out HumanPlayer player)
         {
             player = default;
 
@@ -109,7 +120,7 @@ namespace OcentraAI.LLMGames.ThreeCardBrag.Manager
 
             foreach (Player p in Players)
             {
-                if (p.Type == PlayerType.Computer && p is ComputerPlayer computerPlayer )
+                if (p.Type == PlayerType.Computer && p is ComputerPlayer computerPlayer)
                 {
                     return computerPlayer;
                 }

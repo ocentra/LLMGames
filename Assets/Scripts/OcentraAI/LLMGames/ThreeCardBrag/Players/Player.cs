@@ -175,23 +175,32 @@ namespace OcentraAI.LLMGames.ThreeCardBrag.Players
             // Debug.Log($"{PlayerName}'s hand value: {CalculateHandValue()}");
         }
 
-        public void ResetForNewRound(DeckManager deckManager)
+        public virtual void ResetForNewRound(DeckManager deckManager, List<Card> customHand = null)
         {
             Hand.Clear();
-
             AppliedRules = new List<BaseBonusRule>();
             HandRankSum = 0;
 
-            for (int i = 0; i < 3; i++)
+            // this is temp solution for quick testing on dev mode 
+            if (customHand is { Count: 3 })
             {
-                Hand.Add(deckManager.DrawCard());
+                Hand = new List<Card>(customHand);
+                deckManager.RemoveCardsFromDeck(customHand);
+                HasSeenHand = true;
+            }
+            else
+            {
+                for (int i = 0; i < 3; i++)
+                {
+                    Hand.Add(deckManager.DrawCard());
+                }
+               
             }
 
             CheckForWildCardsInHand();
-
-            HasSeenHand = false;
-            HasBetOnBlind = true;
+            HasBetOnBlind = false;
             HasFolded = false;
+            HasSeenHand = false;
         }
 
         public void SetInitialCoins(int amount)

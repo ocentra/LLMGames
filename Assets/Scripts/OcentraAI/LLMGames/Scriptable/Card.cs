@@ -30,6 +30,7 @@ namespace OcentraAI.LLMGames.Scriptable
                 Suit.Diamonds => "Red",
                 Suit.Clubs => "Black",
                 Suit.Spades => "Black",
+                Suit.None => "Black",
 
                 _ => throw new ArgumentOutOfRangeException()
             };
@@ -43,6 +44,7 @@ namespace OcentraAI.LLMGames.Scriptable
                 Suit.Diamonds => Color.red,
                 Suit.Clubs => Color.black,
                 Suit.Spades => Color.black,
+                Suit.None => Color.black,
 
                 _ => throw new ArgumentOutOfRangeException()
             };

@@ -170,5 +170,13 @@ namespace OcentraAI.LLMGames.ThreeCardBrag.Manager
         {
             GameLogger.LogError($"{nameof(DeckManager)} {message}");
         }
+
+        public void RemoveCardsFromDeck(List<Card> cards)
+        {
+            foreach (Card card in cards)
+            {
+                DeckCards.RemoveAll(c => c.Id == card.Id);
+            }
+        }
     }
 }

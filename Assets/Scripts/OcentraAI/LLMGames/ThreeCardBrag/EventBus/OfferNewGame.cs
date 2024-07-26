@@ -1,3 +1,4 @@
+using OcentraAI.LLMGames.ThreeCardBrag.Manager;
 using System;
 
 namespace OcentraAI.LLMGames.ThreeCardBrag.Events
@@ -5,11 +6,12 @@ namespace OcentraAI.LLMGames.ThreeCardBrag.Events
     public class OfferNewGame : EventArgs
     {
         public float Delay { get; }
-        public string Message { get; }
-        public OfferNewGame(float delay, string message)
+
+        public GameManager GameManager { get; }
+        public OfferNewGame(GameManager gameManager,float delay)
         {
             Delay = delay;
-            Message = message;
+            GameManager = gameManager;
         }
     }
 }

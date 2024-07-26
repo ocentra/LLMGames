@@ -5,6 +5,8 @@ using OcentraAI.LLMGames.Scriptable;
 using OcentraAI.LLMGames.ThreeCardBrag.Players;
 using OcentraAI.LLMGames.Scriptable.ScriptableSingletons;
 using Sirenix.OdinInspector;
+using Sirenix.OdinInspector.Editor;
+using UnityEditor;
 
 namespace OcentraAI.LLMGames.ThreeCardBrag.Manager
 {
@@ -12,56 +14,13 @@ namespace OcentraAI.LLMGames.ThreeCardBrag.Manager
     {
         public static DevModeManager Instance { get; private set; }
 
-        [System.Serializable]
-        public class DevCard
-        {
-            [ValueDropdown("GetAvailableSuits")]
-            public Suit Suit = Suit.None;
-
-            [ValueDropdown("GetAvailableRanks")]
-            public Rank Rank = Rank.None;
-
-            [ShowInInspector, ReadOnly]
-            public string CardText => GetCardText();
-
-            private string GetCardText()
-            {
-                if (Suit == Suit.None || Rank == Rank.None)
-                    return "Not Set";
-
-                Card tempCard = ScriptableObject.CreateInstance<Card>();
-                tempCard.Suit = Suit;
-                tempCard.Rank = Rank;
-                string text = tempCard.GetRankSymbol();
-                Object.DestroyImmediate(tempCard);
-                return text;
-            }
-
-            private static List<Suit> GetAvailableSuits()
-            {
-                return System.Enum.GetValues(typeof(Suit)).Cast<Suit>().ToList();
-            }
-
-            private List<Rank> GetAvailableRanks()
-            {
-                return System.Enum.GetValues(typeof(Rank)).Cast<Rank>().ToList();
-            }
-
-            [Button("Clear")]
-            public void Clear()
-            {
-                Suit = Suit.None;
-                Rank = Rank.None;
-            }
-        }
-
         [Header("Dev Hand")]
         [TableList(ShowIndexLabels = true)]
         [ValidateInput("ValidateDevHand", "Duplicate cards are not allowed in the dev hand.")]
         public DevCard[] DevHand = new DevCard[3] { new DevCard(), new DevCard(), new DevCard() };
 
         [Header("Dev Mode Settings")]
-        [SerializeField] private bool isDevModeActive = false;
+        [SerializeField] public bool isDevModeActive = false;
 
         private void Awake()
         {
@@ -121,7 +80,6 @@ namespace OcentraAI.LLMGames.ThreeCardBrag.Manager
             {
                 player.ResetForNewRound(deckManager, devHand);
                 deckManager.RemoveCardsFromDeck(devHand);
-                Debug.Log($"Applied dev hand to player: {string.Join(", ", devHand.ConvertAll(card => card.GetRankSymbol()))}");
             }
             else
             {
@@ -145,5 +103,108 @@ namespace OcentraAI.LLMGames.ThreeCardBrag.Manager
         {
             isDevModeActive = !isDevModeActive;
         }
+
+        [ShowInInspector, ReadOnly]
+        public string CombinedHandString => string.Join(", ", DevHand.Select(card => card.CardText));
+    }
+
+    [System.Serializable]
+    public class DevCard
+    {
+        [ValueDropdown("GetAvailableSuits")]
+        public Suit Suit = Suit.None;
+
+        [ValueDropdown("GetAvailableRanks")]
+        public Rank Rank = Rank.None;
+
+        [ShowInInspector, ReadOnly]
+        public string CardText => GetCardText();
+
+        private string GetCardText()
+        {
+            if (Suit == Suit.None || Rank == Rank.None)
+                return "Not Set";
+
+            Card tempCard = ScriptableObject.CreateInstance<Card>();
+            tempCard.Suit = Suit;
+            tempCard.Rank = Rank;
+            string text = tempCard.GetRankSymbol();
+            Object.DestroyImmediate(tempCard);
+            return text;
+        }
+
+        private static List<Suit> GetAvailableSuits()
+        {
+            return System.Enum.GetValues(typeof(Suit)).Cast<Suit>().ToList();
+        }
+
+        private List<Rank> GetAvailableRanks()
+        {
+            return System.Enum.GetValues(typeof(Rank)).Cast<Rank>().ToList();
+        }
+
+        [Button("Clear")]
+        public void Clear()
+        {
+            Suit = Suit.None;
+            Rank = Rank.None;
+        }
+    }
+
+    [CustomEditor(typeof(DevModeManager))]
+    public class DevModeManagerEditor : OdinEditor
+    {
+        public override void OnInspectorGUI()
+        {
+            DevModeManager manager = (DevModeManager)target;
+
+            GUILayout.Space(10);
+            GUILayout.Label("Dev Hand", EditorStyles.boldLabel);
+
+            GUILayout.BeginHorizontal();
+            // Draw Dev Hand
+            for (int i = 0; i < manager.DevHand.Length; i++)
+            {
+                var devCard = manager.DevHand[i];
+                GUILayout.BeginHorizontal();
+                devCard.Suit = (Suit)EditorGUILayout.EnumPopup(devCard.Suit, GUILayout.Width(100));
+                devCard.Rank = (Rank)EditorGUILayout.EnumPopup(devCard.Rank, GUILayout.Width(50));
+                GUILayout.EndHorizontal();
+            }
+
+            // Draw Combined Hand String
+
+            GUILayout.Label("Hand", EditorStyles.boldLabel);
+            GUIStyle combinedStyle = new GUIStyle(EditorStyles.boldLabel)
+            {
+                richText = true, fontSize = 25
+            };
+
+            GUILayout.Label(new GUIContent(manager.CombinedHandString), combinedStyle);
+
+            GUILayout.Space(250);
+
+
+            GUILayout.EndHorizontal();
+
+            GUILayout.BeginHorizontal();
+
+            // Toggle for Dev Mode
+            manager.isDevModeActive = GUILayout.Toggle(manager.isDevModeActive, "Dev Mode Active", GUILayout.Width(150));
+
+            // Button for Reset Dev Hand
+            if (GUILayout.Button("Reset Dev Hand", GUILayout.Width(150)))
+            {
+                manager.ResetDevHand();
+            }
+
+            if (GUI.changed)
+            {
+                EditorUtility.SetDirty(manager);
+            }
+
+            GUILayout.EndHorizontal();
+        }
     }
 }
+

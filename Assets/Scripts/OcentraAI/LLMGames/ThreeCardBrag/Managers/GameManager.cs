@@ -322,7 +322,7 @@ namespace OcentraAI.LLMGames.ThreeCardBrag.Manager
                 // Ensure the first turn is always started correctly
                 await StartFirstTurn();
 
-               
+
             }
             catch (Exception ex)
             {
@@ -602,7 +602,7 @@ namespace OcentraAI.LLMGames.ThreeCardBrag.Manager
                 string winnerNames = string.Join(", ", winners.Select(w => w.PlayerName));
                 EventBus.Publish(new UpdateRoundDisplay(ScoreManager));
                 EventBus.Publish(new UpdateGameState(this));
-                OfferContinuation(showHand, $"It's a tie between {winnerNames}! The pot has been split.");
+                OfferContinuation(showHand);
             }
             else
             {
@@ -635,28 +635,7 @@ namespace OcentraAI.LLMGames.ThreeCardBrag.Manager
 
         private async Task CheckForContinuation(Player winner, bool showHand)
         {
-            string message = ColouredMessage("Round Over!", Color.red, true) +
-                             ColouredMessage($" {winner.PlayerName} ", Color.green) +
-                             ColouredMessage($"wins the round. ", Color.white) +
-                             $"{Environment.NewLine}" +
-                             ColouredMessage("Round Stats", Color.red, true);
 
-
-            if (showHand)
-            {
-                var allPlayers = PlayerManager.GetAllPlayers().OrderByDescending(p => p.HandValue).ToList();
-
-                foreach (Player player in allPlayers)
-                {
-                   
-                    string appliedRules = player.AppliedRules.Count >0 ? string.Join(" + ", player.AppliedRules.Select(rule => $"{rule.RuleName} ({rule.BonusValue})")) : "None";
-                    string totalValue = $"Total Value: {player.HandValue}";
-                    message += $"{Environment.NewLine} {ColouredMessage($"{player.PlayerName}, Hand:",Color.white)} [ {player.GetFormattedHand()} ] " +
-                               $"{ColouredMessage($"HandRankSum: {player.HandRankSum}, Applied Bonus: {appliedRules}, {totalValue}", Color.white, true)} ";
-                }
-            }
-
-            message += $"{Environment.NewLine}" + ColouredMessage("Continue Next Rounds?", Color.white, true);
 
 
             if (TurnManager.IsFixedRoundsOver())
@@ -668,20 +647,20 @@ namespace OcentraAI.LLMGames.ThreeCardBrag.Manager
                 }
                 else
                 {
-                    OfferContinuation(showHand, message);
+                    OfferContinuation(showHand);
                 }
             }
             else
             {
-                OfferContinuation(showHand, message);
+                OfferContinuation(showHand);
             }
         }
 
-        private void OfferContinuation(bool showHand, string message)
+        private void OfferContinuation(bool showHand)
         {
             TurnManager.CallShow();
             PlayerManager.ShowHand(showHand, true);
-            EventBus.Publish(new OfferContinuation(10, message));
+            EventBus.Publish(new OfferContinuation(this, 10));
 
         }
 
@@ -692,15 +671,7 @@ namespace OcentraAI.LLMGames.ThreeCardBrag.Manager
 
             TurnManager.CallShow();
             PlayerManager.ShowHand(true);
-
-
-            string message = ColouredMessage("Game Over!", Color.red) +
-                             ColouredMessage($"{winner.PlayerName}", Color.white, true) +
-                             ColouredMessage($"wins the game with {winCount} rounds!", Color.cyan) +
-                             $"{Environment.NewLine}" +
-                             ColouredMessage("Play New Game of 10 rounds ?", Color.red, true);
-
-            EventBus.Publish(new OfferNewGame(60, message));
+            EventBus.Publish(new OfferNewGame(this, 60));
             return Task.CompletedTask;
         }
 

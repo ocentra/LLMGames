@@ -27,6 +27,8 @@ namespace OcentraAI.LLMGames.ThreeCardBrag.Manager
         private PlayerManager PlayerManager =>GameManager.Instance.PlayerManager;
         private TurnManager TurnManager => GameManager.Instance.TurnManager;
 
+        private List<RoundRecord> RoundRecords { get; set; } = new List<RoundRecord>();
+
         #endregion
 
         #region Initialization
@@ -46,6 +48,7 @@ namespace OcentraAI.LLMGames.ThreeCardBrag.Manager
             BlindMultiplier = 1;
             PlayerWins.Clear();
             PlayerTotalWinnings.Clear();
+            RoundRecords.Clear(); 
             foreach (var player in PlayerManager.GetActivePlayers())
             {
                 PlayerWins[player.Id] = 0;
@@ -53,12 +56,14 @@ namespace OcentraAI.LLMGames.ThreeCardBrag.Manager
             }
         }
 
+
         public void ResetForNewRound()
         {
             Pot = 0;
             CurrentBet = BaseBet;
             BlindMultiplier = 1;
         }
+
 
         #endregion
 
@@ -180,8 +185,11 @@ namespace OcentraAI.LLMGames.ThreeCardBrag.Manager
                 HandleVerificationFailure("AwardPotToWinner - After");
                 return false;
             }
+
+            RecordRound(winner.Id, potAmount);  
             return true;
         }
+
 
         public bool AwardTiedPot(List<Player> tiedPlayers)
         {
@@ -212,8 +220,11 @@ namespace OcentraAI.LLMGames.ThreeCardBrag.Manager
                 HandleVerificationFailure("AwardTiedPot - After");
                 return false;
             }
+
+            RecordRound(null, Pot); 
             return true;
         }
+
 
         public bool AddToRoundScores(Player winner, int potAmount)
         {
@@ -279,6 +290,25 @@ namespace OcentraAI.LLMGames.ThreeCardBrag.Manager
 
         #region Private Helper Methods
 
+        private void RecordRound(string winnerId, int potAmount)
+        {
+            var roundRecord = new RoundRecord
+            {
+                RoundNumber = TurnManager.CurrentRound,
+                WinnerId = winnerId,
+                PotAmount = potAmount,
+                Players = PlayerManager.GetActivePlayers(),
+            };
+            
+            RoundRecords.Add(roundRecord);
+        }
+
+        public List<RoundRecord> GetRoundRecords()
+        {
+            return RoundRecords;
+        }
+
+
         private bool ValidateBet(int betAmount)
         {
             return TurnManager.CurrentPlayer.CanAffordBet(betAmount) && (Pot + betAmount <= TotalCoinsInPlay);
@@ -286,7 +316,6 @@ namespace OcentraAI.LLMGames.ThreeCardBrag.Manager
 
         private bool ProcessBet(int betAmount)
         {
-           // Debug.Log($"Processing bet: Player {TurnManager.CurrentPlayer.Id}, Amount: {betAmount}, Current Pot: {Pot}");
             if (!ValidateBet(betAmount))
             {
                 Debug.LogError($"Invalid bet: Player {TurnManager.CurrentPlayer.Id}, Amount: {betAmount}, Player Coins: {TurnManager.CurrentPlayer.Coins}");
@@ -296,7 +325,6 @@ namespace OcentraAI.LLMGames.ThreeCardBrag.Manager
             Pot += betAmount;
             CurrentBet = betAmount;
             bool verificationResult = VerifyTotalCoins();
-          //  Debug.Log($"Bet processed. New Pot: {Pot}, Verification Result: {verificationResult}");
             return verificationResult;
         }
 
@@ -330,5 +358,15 @@ namespace OcentraAI.LLMGames.ThreeCardBrag.Manager
         }
 
         #endregion
+    }
+
+    public class RoundRecord
+    {
+        public int RoundNumber { get; set; }
+        public List<Player> Players { get; set; } = new List<Player>();
+        public string WinnerId { get; set; }
+        public int PotAmount { get; set; }
+
+
     }
 }

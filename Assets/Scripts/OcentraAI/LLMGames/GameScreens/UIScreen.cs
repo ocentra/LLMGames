@@ -1,4 +1,5 @@
 using OcentraAI.LLMGames.Extensions;
+using OcentraAI.LLMGames.ThreeCardBrag.Manager;
 using Sirenix.OdinInspector;
 using System.Collections;
 using System.Collections.Generic;
@@ -8,6 +9,12 @@ namespace OcentraAI.LLMGames.Screens
 {
     public abstract class UIScreen : MonoBehaviour
     {
+        [Required] protected PlayerManager PlayerManager => PlayerManager.Instance;
+        [Required] protected ScoreManager ScoreManager => ScoreManager.Instance;
+        [Required] protected DeckManager DeckManager => DeckManager.Instance;
+        [Required] protected TurnManager TurnManager => TurnManager.Instance;
+        [Required] protected GameManager GameManager => GameManager.Instance;
+
         [Required]
         public GameObject MainPanel;
         public bool StartEnabled;

@@ -6,27 +6,27 @@ using System.Linq;
 
 namespace OcentraAI.LLMGames.ThreeCardBrag.Manager
 {
-    public class PlayerManager
+    public class PlayerManager : ManagerBase<PlayerManager>
     {
-        [ShowInInspector] private List<Player> Players { get; set; } = new();
 
-        private readonly HashSet<string> foldedPlayers = new HashSet<string>();
+        [ShowInInspector, ReadOnly] private List<Player> Players { get; set; } = new();
+
+        [ShowInInspector, ReadOnly] private readonly HashSet<string> foldedPlayers = new HashSet<string>();
 
         // Players
-        [ShowInInspector] public HumanPlayer HumanPlayer { get; set; }
-        [ShowInInspector] public ComputerPlayer ComputerPlayer { get; set; }
-        private DeckManager DeckManager => GameManager.Instance.DeckManager;
-        private ScoreManager ScoreManager => GameManager.Instance.ScoreManager;
-        private TurnManager TurnManager => GameManager.Instance.TurnManager;
-        public PlayerManager()
-        {
+        [ShowInInspector, ReadOnly] public HumanPlayer HumanPlayer { get; set; }
+        [ShowInInspector, ReadOnly] public ComputerPlayer ComputerPlayer { get; set; }
+        private DeckManager DeckManager => DeckManager.Instance;
+        private ScoreManager ScoreManager => ScoreManager.Instance;
+        private TurnManager TurnManager => TurnManager.Instance;
 
+        protected override void Awake()
+        {
+            base.Awake();
+           
         }
 
-        public void Init()
-        {
 
-        }
         public void AddPlayer(PlayerData playerData, PlayerType playerType)
         {
             Player player = default;

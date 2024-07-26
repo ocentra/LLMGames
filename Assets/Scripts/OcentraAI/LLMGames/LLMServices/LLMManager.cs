@@ -1,32 +1,24 @@
-using System.Collections.Generic;
-using System;
-using System.Threading.Tasks;
 using OcentraAI.LLMGames.Authentication;
 using OcentraAI.LLMGames.ThreeCardBrag.Manager;
+using System.Threading.Tasks;
 using UnityEngine;
 
 namespace OcentraAI.LLMGames.LLMServices
 {
-    public class LLMManager : MonoBehaviour
+    public class LLMManager : ManagerBase<LLMManager>
     {
-        public static LLMManager Instance { get; private set; }
+
 
         public LLMProvider CurrentProvider = LLMProvider.AzureOpenAI;
         private ILLMService CurrentLLMService { get; set; }
 
-        async void Awake()
+        protected override async void Awake()
         {
-            if (Instance != null && Instance != this)
-            {
-                Destroy(gameObject);
-            }
-            else
-            {
-                Instance = this;
-                DontDestroyOnLoad(gameObject);
-            }
+            base.Awake();
 
             await WaitForInitialization();
+
+           
         }
 
         private async Task WaitForInitialization()
@@ -58,7 +50,7 @@ namespace OcentraAI.LLMGames.LLMServices
                 && ValidateConfig(config))
             {
                 CurrentLLMService = LLMServiceFactory.CreateLLMService(config);
-               // Debug.Log($"LLM Service initialized for provider {provider}");
+                // Debug.Log($"LLM Service initialized for provider {provider}");
             }
             else
             {
@@ -111,7 +103,7 @@ namespace OcentraAI.LLMGames.LLMServices
 
         public async Task<string> GetLLMResponse()
         {
-            var (systemMessage, userPrompt) = GameManager.Instance.AIHelper.GetAIInstructions();
+            var (systemMessage, userPrompt) = AIHelper.Instance.GetAIInstructions();
             if (CurrentLLMService == null)
             {
                 Debug.LogError("LLM Service is not initialized!");

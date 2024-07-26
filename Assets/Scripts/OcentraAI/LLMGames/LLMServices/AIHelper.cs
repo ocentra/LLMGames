@@ -6,15 +6,20 @@ using System.Linq;
 
 namespace OcentraAI.LLMGames.LLMServices
 {
-    public class AIHelper
+    public class AIHelper : ManagerBase<AIHelper>
     {
-        private GameInfo GameInfo { get; set; }
-        private GameManager GameManager { get; set; }
+        
+        private GameInfo GameInfo => GameInfo.Instance;
+        private GameManager GameManager => GameManager.Instance;
+        private PlayerManager PlayerManager => PlayerManager.Instance;
+        private ScoreManager ScoreManager => ScoreManager.Instance;
+        private DeckManager DeckManager => DeckManager.Instance;
+        private TurnManager TurnManager => TurnManager.Instance;
 
-        public AIHelper(GameInfo gameInfo, GameManager gameManager)
+        protected override void Awake()
         {
-            GameInfo = gameInfo;
-            GameManager = gameManager;
+            base.Awake();
+           
         }
 
         public string GetSystemMessage()
@@ -33,11 +38,11 @@ namespace OcentraAI.LLMGames.LLMServices
 
         public string GetUserPrompt()
         {
-            return $"Current Hand: {GetHandDetails(GameManager)}. " +
-                   $"Current Hand Value: {GameManager.PlayerManager.ComputerPlayer.CalculateHandValue()}. " +
-                   $"Current Bet: {GameManager.ScoreManager.CurrentBet}, Pot Size: {GameManager.ScoreManager.Pot}. " +
-                   $"Your Coins: {GameManager.PlayerManager.ComputerPlayer.Coins}, Opponent's Coins: {GameManager.PlayerManager.HumanPlayer.Coins}. " +
-                   $"Current Game State: {GetGameStateDetails(GameManager)}. " +
+            return $"Current Hand: {GetHandDetails()}. " +
+                   $"Current Hand Value: {PlayerManager.ComputerPlayer.CalculateHandValue()}. " +
+                   $"Current Bet: {ScoreManager.CurrentBet}, Pot Size: {ScoreManager.Pot}. " +
+                   $"Your Coins: {PlayerManager.ComputerPlayer.Coins}, Opponent's Coins: {PlayerManager.HumanPlayer.Coins}. " +
+                   $"Current Game State: {GetGameStateDetails()}. " +
                    $"Move Options: {GetMoveWord()}";
         }
 
@@ -77,42 +82,42 @@ namespace OcentraAI.LLMGames.LLMServices
             return string.Join(" or ", Enum.GetNames(typeof(DifficultyLevels)));
         }
 
-        private static string GetHandDetails(GameManager gameManager)
+        private string GetHandDetails()
         {
-            return string.Join(", ", gameManager.PlayerManager.ComputerPlayer.Hand.Select((card, index) => $"Card {index + 1}: {card.Rank} of {card.Suit}"));
+            return string.Join(", ", PlayerManager.ComputerPlayer.Hand.Select((card, index) => $"Card {index + 1}: {card.Rank} of {card.Suit}"));
         }
 
-        private static string GetGameStateDetails(GameManager gameManager)
+        private  string GetGameStateDetails()
         {
-            return $"Pot: {GetPotDetails(gameManager)}{Environment.NewLine}" +
-                   $"Deck: {GetDeckDetails(gameManager)}{Environment.NewLine}" +
-                   $"Floor: {GetFloorDetails(gameManager)}{Environment.NewLine}" +
-                   $"Players: {GetPlayerDetails(gameManager)}";
+            return $"Pot: {GetPotDetails()}{Environment.NewLine}" +
+                   $"Deck: {GetDeckDetails()}{Environment.NewLine}" +
+                   $"Floor: {GetFloorDetails()}{Environment.NewLine}" +
+                   $"Players: {GetPlayerDetails()}";
         }
 
-        private static string GetPotDetails(GameManager gameManager)
+        private string GetPotDetails()
         {
-            return $"Current pot: {gameManager.ScoreManager.Pot} coins, Current bet: {gameManager.ScoreManager.CurrentBet} coins";
+            return $"Current pot: {ScoreManager.Pot} coins, Current bet: {ScoreManager.CurrentBet} coins";
         }
 
-        private static string GetDeckDetails(GameManager gameManager)
+        private string GetDeckDetails()
         {
-            return $"Remaining cards in deck: {gameManager.DeckManager.RemainingCards}";
+            return $"Remaining cards in deck: {DeckManager.RemainingCards}";
         }
 
-        private static string GetFloorDetails(GameManager gameManager)
+        private  string GetFloorDetails()
         {
-            string floorCardDetails = gameManager.DeckManager.FloorCard != null
-                ? $"{gameManager.DeckManager.FloorCard.Rank} of {gameManager.DeckManager.FloorCard.Suit}"
+            string floorCardDetails = DeckManager.FloorCard != null
+                ? $"{DeckManager.FloorCard.Rank} of {DeckManager.FloorCard.Suit}"
                 : "No card";
 
-            return $"Floor card: {floorCardDetails}, Cards in floor pile: {gameManager.DeckManager.FloorCardsCount}";
+            return $"Floor card: {floorCardDetails}, Cards in floor pile: {DeckManager.FloorCardsCount}";
         }
 
-        private static string GetPlayerDetails(GameManager gameManager)
+        private string GetPlayerDetails()
         {
-            return $"Human: {gameManager.PlayerManager.HumanPlayer.Coins} coins, Computer: {gameManager.PlayerManager.ComputerPlayer.Coins} coins, " +
-                   $"Human playing blind: {!gameManager.PlayerManager.HumanPlayer.HasSeenHand}, Computer playing blind: {!gameManager.PlayerManager.ComputerPlayer.HasSeenHand}";
+            return $"Human: {PlayerManager.HumanPlayer.Coins} coins, Computer: {PlayerManager.ComputerPlayer.Coins} coins, " +
+                   $"Human playing blind: {!PlayerManager.HumanPlayer.HasSeenHand}, Computer playing blind: {!PlayerManager.ComputerPlayer.HasSeenHand}";
         }
 
 

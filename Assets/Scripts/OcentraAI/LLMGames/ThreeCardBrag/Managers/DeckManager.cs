@@ -8,29 +8,29 @@ using UnityEngine;
 
 namespace OcentraAI.LLMGames.ThreeCardBrag.Manager
 {
-    public class DeckManager
+    public class DeckManager : ManagerBase<DeckManager>
     {
-        [ShowInInspector] public List<Card> DeckCards { get; private set; } = new List<Card>();
-        [ShowInInspector] public List<Card> FloorCards { get; private set; } = new List<Card>();
-        [ShowInInspector] public Card BackCard => Deck.Instance.BackCard;
-        [ShowInInspector] public int TotalCards => Deck.Instance.CardTemplates.Count;
-        [ShowInInspector] public int RemainingCards => DeckCards.Count;
-        [ShowInInspector] public int FloorCardsCount => FloorCards.Count;
-        [ShowInInspector] public Card FloorCard { get; set; }
-        [ShowInInspector] public Card SwapCard { get; set; }
-        [ShowInInspector] public Dictionary<string, Card> WildCards { get; private set; } = new Dictionary<string, Card>();
-        [ShowInInspector] private Queue<Card> LastDrawnWildCards { get; set; } = new Queue<Card>();
 
-        [ShowInInspector] TurnManager TurnManager => GameManager.Instance.TurnManager;
 
-        public DeckManager()
+        [ShowInInspector,ReadOnly] public List<Card> DeckCards { get; private set; } = new List<Card>();
+        [ShowInInspector, ReadOnly] public List<Card> FloorCards { get; private set; } = new List<Card>();
+        [ShowInInspector, ReadOnly] public Card BackCard => Deck.Instance.BackCard;
+        [ShowInInspector, ReadOnly] public int TotalCards => Deck.Instance.CardTemplates.Count;
+        [ShowInInspector, ReadOnly] public int RemainingCards => DeckCards.Count;
+        [ShowInInspector, ReadOnly] public int FloorCardsCount => FloorCards.Count;
+        [ShowInInspector, ReadOnly] public Card FloorCard { get; set; }
+        [ShowInInspector, ReadOnly] public Card SwapCard { get; set; }
+        [ShowInInspector, ReadOnly] public Dictionary<string, Card> WildCards { get; private set; } = new Dictionary<string, Card>();
+        [ShowInInspector, ReadOnly] private Queue<Card> LastDrawnWildCards { get; set; } = new Queue<Card>();
+
+        private TurnManager TurnManager => TurnManager.Instance;
+
+
+        protected override void Awake()
         {
+            base.Awake();
             DeckCards = new List<Card>(Deck.Instance.CardTemplates);
-        }
-
-        public void Init()
-        {
-
+           
         }
 
         public void OnSetFloorCard(SetFloorCard e)

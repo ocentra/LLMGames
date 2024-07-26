@@ -11,7 +11,6 @@ namespace OcentraAI.LLMGames.LLMServices
     {
         public string RuleName;
         public string Description;
-
         public int BonusValue;
 
         protected BaseBonusRule(string ruleName,string description, int bonusValue)
@@ -25,7 +24,7 @@ namespace OcentraAI.LLMGames.LLMServices
 
         public virtual Card GetTrumpCard()
         {
-            return GameManager.Instance.DeckManager.WildCards.GetValueOrDefault("TrumpCard"); 
+            return DeckManager.Instance.WildCards.GetValueOrDefault("TrumpCard"); 
         }
 
         protected int CalculateHandValue(List<Card> hand)

@@ -1,6 +1,4 @@
 using OcentraAI.LLMGames.Authentication;
-using OcentraAI.LLMGames.LLMServices;
-using OcentraAI.LLMGames.Scriptable.ScriptableSingletons;
 using OcentraAI.LLMGames.ThreeCardBrag.Events;
 using OcentraAI.LLMGames.ThreeCardBrag.Players;
 using OcentraAI.LLMGames.Utilities;
@@ -16,43 +14,37 @@ using Random = UnityEngine.Random;
 
 namespace OcentraAI.LLMGames.ThreeCardBrag.Manager
 {
-    [RequireComponent(typeof(LLMManager))]
-    public class GameManager : MonoBehaviour
+
+    public class GameManager : ManagerBase<GameManager>
     {
         #region Fields and Properties
 
-        // Singleton instance
-        public static GameManager Instance { get; private set; }
 
 
         // Managers
-        [ShowInInspector, ReadOnly] public PlayerManager PlayerManager { get; private set; }
-        [ShowInInspector, ReadOnly] public ScoreManager ScoreManager { get; private set; }
-        [ShowInInspector, ReadOnly] public DeckManager DeckManager { get; private set; }
-        [ShowInInspector, ReadOnly] public TurnManager TurnManager { get; private set; }
+        [Required] private PlayerManager PlayerManager => PlayerManager.Instance;
+        [Required] private ScoreManager ScoreManager => ScoreManager.Instance;
+        [Required] private DeckManager DeckManager => DeckManager.Instance;
+        [Required] private TurnManager TurnManager => TurnManager.Instance;
 
-        // Helpers
-        public AIHelper AIHelper { get; private set; }
+
         public CancellationTokenSource GlobalCancellationTokenSource { get; set; }
+
+
 
         #endregion
 
         #region Unity Lifecycle Methods
 
-        private void Awake()
+        protected override void Awake()
         {
-            if (Instance == null)
-            {
-                Instance = this;
-                DontDestroyOnLoad(gameObject);
-            }
-            else
-            {
-                Destroy(gameObject);
-            }
+            base.Awake();
+           
         }
 
-        private void Start()
+     
+
+        protected override void Start()
         {
             if (IsCancellationRequested()) return;
 
@@ -66,19 +58,11 @@ namespace OcentraAI.LLMGames.ThreeCardBrag.Manager
 
         #region Initialization
 
+
+
         private async Task InitializeGameAsync()
         {
             if (IsCancellationRequested()) return;
-
-            ScoreManager = new ScoreManager();
-
-            TurnManager = new TurnManager();
-
-            PlayerManager = new PlayerManager();
-
-            DeckManager = new DeckManager();
-
-            AIHelper = new AIHelper(GameInfo.Instance, this);
 
 
             await Task.WhenAll(
@@ -129,7 +113,7 @@ namespace OcentraAI.LLMGames.ThreeCardBrag.Manager
 
         #region Event Subscriptions
 
-        private void OnEnable()
+        protected override void OnEnable()
         {
             GlobalCancellationTokenSource = new CancellationTokenSource();
 #if UNITY_EDITOR
@@ -139,7 +123,7 @@ namespace OcentraAI.LLMGames.ThreeCardBrag.Manager
             SubscribeToEvents();
         }
 
-        private void OnDisable()
+        protected override void OnDisable()
         {
             GlobalCancellationTokenSource?.Cancel();
             GlobalCancellationTokenSource?.Dispose();
@@ -309,6 +293,8 @@ namespace OcentraAI.LLMGames.ThreeCardBrag.Manager
             await StartNewRoundAsync();
         }
 
+
+
         private async Task StartNewRoundAsync()
         {
             try
@@ -317,6 +303,8 @@ namespace OcentraAI.LLMGames.ThreeCardBrag.Manager
                 PlayerManager.ResetForNewRound();
                 ScoreManager.ResetForNewRound();
                 TurnManager.ResetForNewRound();
+
+                Log("Gamemanager Calling TurnManager.ResetForNewRound");
 
                 EventBus.Publish(new NewRoundEventArgs(this));
                 // Ensure the first turn is always started correctly
@@ -673,6 +661,4 @@ namespace OcentraAI.LLMGames.ThreeCardBrag.Manager
 
         #endregion
     }
-
-
 }

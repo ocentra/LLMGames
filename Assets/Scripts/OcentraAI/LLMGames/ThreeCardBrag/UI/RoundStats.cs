@@ -40,6 +40,7 @@ namespace OcentraAI.LLMGames
             }
         }
 
+
         public void ShowStat(RoundRecord roundRecord)
         {
             if (Pot != null)
@@ -57,9 +58,13 @@ namespace OcentraAI.LLMGames
             {
                 GameObject playerGameObject = Instantiate(PlayerPanel, transform);
 
-                var playerPanel = playerGameObject.GetComponent<PlayerPanel>();
+                PlayerPanel playerPanel = playerGameObject.GetComponent<PlayerPanel>();
+               
+
                 if (playerPanel != null)
                 {
+                    playerPanel.Init();
+
                     foreach (BaseBonusRule bonusRule in player.AppliedRules)
                     {
                         if (playerPanel.BonusRule != null && playerPanel.AppliedRules != null)
@@ -74,6 +79,8 @@ namespace OcentraAI.LLMGames
                             }
                         }
                     }
+
+                    playerPanel.SetWinner(roundRecord.Winner == player);
 
 
 

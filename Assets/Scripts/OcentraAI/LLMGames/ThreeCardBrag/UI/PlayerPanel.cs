@@ -2,6 +2,7 @@ using OcentraAI.LLMGames.Extensions;
 using Sirenix.OdinInspector;
 using TMPro;
 using UnityEngine;
+using UnityEngine.UI;
 
 namespace OcentraAI.LLMGames
 {
@@ -14,13 +15,25 @@ namespace OcentraAI.LLMGames
         [Required, ShowInInspector] public Transform AppliedRules;
         [Required, ShowInInspector] public TextMeshProUGUI HandView;
 
+        [Required, ShowInInspector] public Image[] Backgrounds;
+
+        [Required, ShowInInspector] public Color OriginalColor;
+        public Color WinnerColor = Color.cyan;
 
         void OnValidate()
         {
             Init();
         }
+
         public void Init()
         {
+            Backgrounds = GetComponentsInChildren<Image>();
+
+            if (Backgrounds.Length>0)
+            {
+                OriginalColor = Backgrounds[0].color;
+            }
+
             if (AppliedRules == null)
             {
                 AppliedRules = transform.FindChildRecursively<Transform>(nameof(AppliedRules));
@@ -61,5 +74,18 @@ namespace OcentraAI.LLMGames
 
 
         }
+
+        public void SetWinner(bool winner)
+        {
+            foreach (Image image in Backgrounds)
+            {
+
+                if (image != null)
+                {
+                    image.color = winner ? WinnerColor : OriginalColor;
+                }
+            }
+        }
+
     }
 }

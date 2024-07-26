@@ -1,3 +1,5 @@
+using OcentraAI.LLMGames.Scriptable.ScriptableSingletons;
+using OcentraAI.LLMGames.Scriptable;
 using OcentraAI.LLMGames.ThreeCardBrag.Players;
 using Sirenix.OdinInspector;
 using System.Collections.Generic;
@@ -6,9 +8,11 @@ using UnityEngine;
 
 namespace OcentraAI.LLMGames.ThreeCardBrag.Manager
 {
-    public class ScoreManager
+    public class ScoreManager : ManagerBase<ScoreManager>
     {
         #region Properties
+
+
 
         [ShowInInspector] public int InitialCoins { get; private set; } = 1000;
         [ShowInInspector, ReadOnly] public int CurrentBet { get; private set; }
@@ -19,15 +23,19 @@ namespace OcentraAI.LLMGames.ThreeCardBrag.Manager
         [ShowInInspector, ReadOnly] private List<RoundRecord> RoundRecords { get; set; } = new List<RoundRecord>();
 
 
-        private PlayerManager PlayerManager => GameManager.Instance.PlayerManager;
-        private TurnManager TurnManager => GameManager.Instance.TurnManager;
+        private PlayerManager PlayerManager => PlayerManager.Instance;
+        private TurnManager TurnManager => TurnManager.Instance;
 
 
         #endregion
 
         #region Initialization
 
-        public ScoreManager() { }
+        protected override void Awake()
+        {
+            base.Awake();
+           
+        }
 
         public void Init() { }
 
@@ -166,7 +174,7 @@ namespace OcentraAI.LLMGames.ThreeCardBrag.Manager
                 return false;
             }
 
-            RecordRound(winner.Id, potAmount);
+            RecordRound(winner, potAmount);
             return true;
         }
 
@@ -239,12 +247,13 @@ namespace OcentraAI.LLMGames.ThreeCardBrag.Manager
 
         #region Private Helper Methods
 
-        private void RecordRound(string winnerId, int potAmount)
+        private void RecordRound(Player winner, int potAmount)
         {
             var roundRecord = new RoundRecord
             {
                 RoundNumber = TurnManager.CurrentRound,
-                WinnerId = winnerId,
+                Winner = winner,
+                WinnerId = winner.Id,
                 PotAmount = potAmount,
                 Players = PlayerManager.GetAllPlayers()
 
@@ -261,6 +270,16 @@ namespace OcentraAI.LLMGames.ThreeCardBrag.Manager
         public RoundRecord GetLastRound()
         {
             return RoundRecords.Last();
+        }
+
+        public Player GetLastRoundWinner()
+        {
+            RoundRecord roundRecord = RoundRecords.Last();
+            if (roundRecord != null)
+            {
+                return roundRecord.Winner;
+            }
+            return null;
         }
 
         private bool ValidateBet(int betAmount)
@@ -322,7 +341,6 @@ namespace OcentraAI.LLMGames.ThreeCardBrag.Manager
         [ShowInInspector, ReadOnly] public List<Player> Players { get; set; } = new List<Player>();
         [ShowInInspector, ReadOnly] public string WinnerId { get; set; }
         [ShowInInspector, ReadOnly] public int PotAmount { get; set; }
-
-
+        [ShowInInspector, ReadOnly] public Player Winner { get; set; }
     }
 }

@@ -7,38 +7,43 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
+using UnityEngine;
 
 namespace OcentraAI.LLMGames.ThreeCardBrag.Manager
 {
-    [System.Serializable]
-    public class TurnManager
+    [Serializable]
+    public class TurnManager : ManagerBase<TurnManager>
     {
-        [ShowInInspector] private List<Player> Players { get; set; }
-        [ShowInInspector] public Player CurrentPlayer { get; private set; }
-        [ShowInInspector] public Player RoundStarter { get; private set; }
-        [ShowInInspector] public Player LastRoundWinner { get; private set; }
-        [ShowInInspector] public Player LastBettor { get; private set; }
-        [ShowInInspector] public bool IsShowdown { get; private set; }
-        [ShowInInspector] public int CurrentRound { get; private set; } = 0;
-        [ShowInInspector] public float TurnDuration { get; private set; } = 60f;
-        [ShowInInspector] public float RemainingTime { get; private set; }
+
+
+        public float TurnDuration = 60f;
+        public int MaxRounds = 10;
+
+        [ShowInInspector, ReadOnly] private List<Player> Players { get; set; }
+        [ShowInInspector, ReadOnly] public Player CurrentPlayer { get; private set; }
+        [ShowInInspector, ReadOnly] public Player RoundStarter { get; private set; }
+        [ShowInInspector, ReadOnly] public Player LastBettor { get; private set; }
+        [ShowInInspector, ReadOnly] public bool IsShowdown { get; private set; }
+        [ShowInInspector, ReadOnly] public int CurrentRound { get; private set; } = 0;
+        [ShowInInspector, ReadOnly] public float RemainingTime { get; private set; }
 
         public TaskCompletionSource<bool> ActionCompletionSource { get; private set; }
         public TaskCompletionSource<bool> TimerCompletionSource { get; private set; }
         private CancellationTokenSource TurnCancellationTokenSource { get; set; }
 
         private CancellationTokenSource GlobalCancellationTokenSource => GameManager.Instance.GlobalCancellationTokenSource;
-        private PlayerManager PlayerManager => GameManager.Instance.PlayerManager;
+        private PlayerManager PlayerManager => PlayerManager.Instance;
+        private ScoreManager ScoreManager => ScoreManager.Instance;
         private PlayerStartCountDown PlayerStartCountDown { get; set; }
 
-        [ShowInInspector] public int MaxRounds { get; private set; } = 10;
 
-
-        public TurnManager()
+        protected override void Awake()
         {
+            base.Awake();
             PlayerStartCountDown = new PlayerStartCountDown(this);
-
+           
         }
+
 
 
 
@@ -66,7 +71,6 @@ namespace OcentraAI.LLMGames.ThreeCardBrag.Manager
             CurrentRound = 0;
             IsShowdown = false;
             LastBettor = null;
-            LastRoundWinner = null;
             RoundStarter = null;
             CurrentPlayer = null;
             RemainingTime = TurnDuration;
@@ -74,7 +78,7 @@ namespace OcentraAI.LLMGames.ThreeCardBrag.Manager
             TimerCompletionSource = new TaskCompletionSource<bool>();
 
             Players = InitializePlayers();
-            Log("TurnManager reset for new game", nameof(ResetForNewGame));
+            Log("TurnManager reset for new game", "ResetForNewGame");
         }
 
         public void ResetForNewRound()
@@ -91,7 +95,11 @@ namespace OcentraAI.LLMGames.ThreeCardBrag.Manager
             else
             {
                 // Subsequent rounds
-                RoundStarter = LastRoundWinner ?? GetNextPlayerInOrder(RoundStarter);
+                RoundStarter = ScoreManager.GetLastRoundWinner();
+                if (RoundStarter == null)
+                {
+                    RoundStarter = GetNextPlayerInOrder(RoundStarter);
+                }
             }
 
             CurrentPlayer = RoundStarter;
@@ -99,12 +107,12 @@ namespace OcentraAI.LLMGames.ThreeCardBrag.Manager
             ActionCompletionSource = new TaskCompletionSource<bool>();
             TimerCompletionSource = new TaskCompletionSource<bool>();
 
-            Log($"TurnManager reset for round {CurrentRound}", nameof(ResetForNewRound));
+            Log($"TurnManager reset for round {CurrentRound}", "ResetForNewRound");
         }
 
         public void StartTurn()
         {
-            Log($"Turn started for {CurrentPlayer.GetType().Name}", nameof(StartTurn));
+            Log($"Turn started for {CurrentPlayer.GetType().Name}", "StartTurn");
             Reset();
             TurnCancellationTokenSource = CancellationTokenSource.CreateLinkedTokenSource(GlobalCancellationTokenSource.Token);
 
@@ -114,7 +122,7 @@ namespace OcentraAI.LLMGames.ThreeCardBrag.Manager
 
         private async void StartTimer()
         {
-            Log($"Timer started. Duration: {TurnDuration}", nameof(StartTimer));
+            Log($"Timer started. Duration: {TurnDuration}", "StartTimer");
             int remainingSeconds = (int)TurnDuration;
 
             try
@@ -131,7 +139,7 @@ namespace OcentraAI.LLMGames.ThreeCardBrag.Manager
                     }
                     else
                     {
-                        Log("Warning: PlayerStartCountDown is null", nameof(StartTimer));
+                        Log("Warning: PlayerStartCountDown is null", "StartTimer");
                     }
 
                     remainingSeconds--;
@@ -142,16 +150,16 @@ namespace OcentraAI.LLMGames.ThreeCardBrag.Manager
                 {
                     EventBus.Publish(PlayerStartCountDown);
                 }
-                Log("Timer completed", nameof(StartTimer));
+                Log("Timer completed", "StartTimer");
                 TimerCompletionSource?.TrySetResult(true);
             }
             catch (TaskCanceledException)
             {
-                Log("Timer task was canceled", nameof(StartTimer));
+                Log("Timer task was canceled", "StartTimer");
             }
             catch (Exception ex)
             {
-                LogError($"Exception in StartTimer: {ex.Message}", nameof(StartTurn));
+                LogError($"Exception in StartTimer: {ex.Message}", "StartTimer");
                 TimerCompletionSource?.TrySetException(ex);
             }
         }
@@ -159,14 +167,14 @@ namespace OcentraAI.LLMGames.ThreeCardBrag.Manager
         {
             if (GlobalCancellationTokenSource.IsCancellationRequested)
             {
-                Log("Turn switch cancelled due to global cancellation", nameof(SwitchTurn));
+                Log("Turn switch cancelled due to global cancellation", "SwitchTurn");
                 return;
             }
 
             await StopTurn();
 
             CurrentPlayer = GetNextPlayerInOrder(CurrentPlayer);
-            Log($"Switching turn to {CurrentPlayer.GetType().Name}", nameof(SwitchTurn));
+            Log($"Switching turn to {CurrentPlayer.GetType().Name}", "SwitchTurn");
 
             ActionCompletionSource = new TaskCompletionSource<bool>();
             TimerCompletionSource = new TaskCompletionSource<bool>();
@@ -184,7 +192,7 @@ namespace OcentraAI.LLMGames.ThreeCardBrag.Manager
 
             if (activePlayers.Count == 0)
             {
-                LogError("No active players found. Returning current player.", nameof(GetNextPlayerInOrder));
+                LogError("No active players found. Returning current player.", "GetNextPlayerInOrder");
                 return currentPlayer;
             }
 
@@ -194,18 +202,18 @@ namespace OcentraAI.LLMGames.ThreeCardBrag.Manager
                 Player nextPlayer = Players[nextIndex];
                 if (activePlayers.Contains(nextPlayer))
                 {
-                    Log($"Next player: {nextPlayer.PlayerName}", nameof(GetNextPlayerInOrder));
+                    Log($"Next player: {nextPlayer.PlayerName}", "GetNextPlayerInOrder");
                     return nextPlayer;
                 }
             }
 
-            Log("No next active player found. Returning first active player.", nameof(GetNextPlayerInOrder));
+            Log("No next active player found. Returning first active player.", "GetNextPlayerInOrder");
             return activePlayers[0];
         }
 
         public async Task StopTurn()
         {
-            Log("Stopping turn", nameof(StopTurn));
+            Log("Stopping turn", "StopTurn");
 
             try
             {
@@ -228,7 +236,7 @@ namespace OcentraAI.LLMGames.ThreeCardBrag.Manager
             }
             catch (Exception ex)
             {
-                LogError($"Error stopping turn: {ex.Message}", nameof(StopTurn));
+                LogError($"Error stopping turn: {ex.Message}", "StopTurn");
             }
         }
 
@@ -251,26 +259,22 @@ namespace OcentraAI.LLMGames.ThreeCardBrag.Manager
                 TurnCancellationTokenSource?.Dispose();
                 TurnCancellationTokenSource = CancellationTokenSource.CreateLinkedTokenSource(GlobalCancellationTokenSource.Token);
 
-                Log($"Reset completed. RemainingTime set to {RemainingTime}. New turn state initialized.", nameof(Reset));
+                Log($"Reset completed. RemainingTime set to {RemainingTime}. New turn state initialized.", "Reset");
             }
             catch (Exception ex)
             {
-                LogError($"Error during reset: {ex.Message}", nameof(Reset));
+                LogError($"Error during reset: {ex.Message}", "Reset");
             }
         }
 
-        public void SetLastRoundWinner(Player player)
-        {
 
-            LastRoundWinner = player;
-        }
 
         public void SetLastBettor()
         {
             LastBettor = CurrentPlayer;
             ActionCompletionSource.TrySetResult(true);
 
-            Log($"Last bettor set to {CurrentPlayer.PlayerName}", nameof(SetLastBettor));
+            Log($"Last bettor set to {CurrentPlayer.PlayerName}", "SetLastBettor");
         }
 
         public void CallShow()
@@ -285,23 +289,23 @@ namespace OcentraAI.LLMGames.ThreeCardBrag.Manager
 
             if (activePlayers.Count <= 1)
             {
-                Log("Round complete: Only one active player remaining", nameof(IsRoundComplete));
+                Log("Round complete: Only one active player remaining", "IsRoundComplete");
                 return true;
             }
 
             if (IsShowdown)
             {
-                Log("Round complete: Showdown initiated", nameof(IsRoundComplete));
+                Log("Round complete: Showdown initiated", "IsRoundComplete");
                 return true;
             }
 
             if (CurrentPlayer == LastBettor && activePlayers.Count > 1)
             {
-                Log("Round complete: All active players have had a turn since last bet", nameof(IsRoundComplete));
+                Log("Round complete: All active players have had a turn since last bet", "IsRoundComplete");
                 return true;
             }
 
-            Log("Round not complete: Continuing play", nameof(IsRoundComplete));
+            Log("Round not complete: Continuing play", "IsRoundComplete");
             return false;
         }
 
@@ -310,14 +314,14 @@ namespace OcentraAI.LLMGames.ThreeCardBrag.Manager
             return CurrentRound > MaxRounds;
         }
 
-        private void Log(string message, string method)
+        protected override void Log(string message, string method)
         {
-            GameLogger.Log($"[Turn {CurrentRound}] {message} in method {method}");
+            base.Log($"[Turn {CurrentRound}] {message}", method);
         }
 
-        private void LogError(string message, string method)
+        protected override void LogError(string message, string method)
         {
-            GameLogger.LogError($"[Turn {CurrentRound}] {message} in method {method}");
+            base.LogError($"[Turn {CurrentRound}] {message} ", method);
         }
 
 

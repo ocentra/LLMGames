@@ -14,7 +14,11 @@ namespace OcentraAI.LLMGames.ThreeCardBrag.UI.Controllers
 {
     public class UIController : MonoBehaviour
     {
-
+        [Required] private PlayerManager PlayerManager => PlayerManager.Instance;
+        [Required] private ScoreManager ScoreManager => ScoreManager.Instance;
+        [Required] private DeckManager DeckManager => DeckManager.Instance;
+        [Required] private TurnManager TurnManager => TurnManager.Instance;
+        [Required] private GameManager GameManager => GameManager.Instance;
         #region UI Elements
         [Required, ShowInInspector] private Button ShowPlayerHand { get; set; }
         [Required, ShowInInspector] private Button PlayBlind { get; set; }
@@ -306,10 +310,10 @@ namespace OcentraAI.LLMGames.ThreeCardBrag.UI.Controllers
         #region Event Handlers
         private void OnInitializeUIPlayers(InitializeUIPlayers e)
         {
-            HumanPlayerTimer.SetPlayer(e.GameManager.PlayerManager.HumanPlayer);
+            HumanPlayerTimer.SetPlayer(PlayerManager.HumanPlayer);
             HumanPlayerTimer.Show(false);
 
-            ComputerPlayerTimer.SetPlayer(e.GameManager.PlayerManager.ComputerPlayer);
+            ComputerPlayerTimer.SetPlayer(PlayerManager.ComputerPlayer);
             ComputerPlayerTimer.Show(false);
 
             FloorCardView.gameObject.SetActive(false);
@@ -324,7 +328,7 @@ namespace OcentraAI.LLMGames.ThreeCardBrag.UI.Controllers
             ShowMessage(e.Message);
             ResetAllCardViews();
             EnablePlayerActions();
-            UpdateUI(e.GameManager);
+            UpdateUI();
         }
 
         private void OnNewRound(NewRoundEventArgs e)
@@ -332,19 +336,19 @@ namespace OcentraAI.LLMGames.ThreeCardBrag.UI.Controllers
             SetupInitialUIState();
             ResetAllCardViews();
             EnablePlayerActions();
-            UpdateUI(e.GameManager);
+            UpdateUI();
         }
 
         private void OnUpdateGameState(UpdateGameState e)
         {
-            UpdateUI(e.GameManager);
+            UpdateUI();
         }
 
-        private void UpdateUI(GameManager gameManager)
+        private void UpdateUI()
         {
-            UpdateCoinsDisplay(gameManager.PlayerManager.HumanPlayer.Coins, gameManager.PlayerManager.ComputerPlayer.Coins);
-            UpdatePotDisplay(gameManager.ScoreManager.Pot);
-            UpdateCurrentBetDisplay(gameManager.ScoreManager.CurrentBet);
+            UpdateCoinsDisplay(PlayerManager.HumanPlayer.Coins, PlayerManager.ComputerPlayer.Coins);
+            UpdatePotDisplay(ScoreManager.Pot);
+            UpdateCurrentBetDisplay(ScoreManager.CurrentBet);
             EnablePlayerActions();
         }
 

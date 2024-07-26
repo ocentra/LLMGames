@@ -145,6 +145,7 @@
     <Compile Include="Assets\Scripts\OcentraAI\LLMGames\ThreeCardBrag\UI\Draggable.cs" />
     <Compile Include="Assets\Scripts\OcentraAI\LLMGames\Extensions\TransformExtensions.cs" />
     <Compile Include="Assets\Scripts\OcentraAI\LLMGames\GameScreens\UIScreen.cs" />
+    <Compile Include="Assets\Scripts\OcentraAI\LLMGames\ThreeCardBrag\Managers\ManagerBase.cs" />
     <Compile Include="Assets\Scripts\OcentraAI\LLMGames\ThreeCardBrag\EventBus\OfferContinuation.cs" />
     <Compile Include="Assets\Scripts\OcentraAI\LLMGames\ThreeCardBrag\Players\ComputerPlayer.cs" />
     <Compile Include="Assets\Scripts\OcentraAI\LLMGames\Utilities\CustomGlobalConfigUtility.cs" />

@@ -29,6 +29,8 @@ namespace OcentraAI.LLMGames.Screens
         [Required, ShowInInspector] private TextMeshProUGUI HeadingText { get; set; }
         
         [Required, ShowInInspector] private TextMeshProUGUI EndingText { get; set; }
+        private bool isButtonClicked = false;
+
 
         protected override void Awake()
         {
@@ -102,14 +104,16 @@ namespace OcentraAI.LLMGames.Screens
                 HeadingText.text = $"Round Over";
             }
 
-            RoundRecord roundRecord = e.GameManager.ScoreManager.GetLastRound();
+            RoundRecord roundRecord = ScoreManager.GetLastRound();
 
-            ShowStats(roundRecord);
+           
 
-            Player winner = roundRecord.WinnerId == e.GameManager.PlayerManager.HumanPlayer.Id ? e.GameManager.PlayerManager.HumanPlayer : e.GameManager.PlayerManager.ComputerPlayer;
+            Player winner = roundRecord.Winner;
 
             string message = ColouredMessage($"{winner.PlayerName} ", Color.green) + ColouredMessage($"Won the Round Pot: ", Color.white) + ColouredMessage($" {roundRecord.PotAmount} Coins ", Color.yellow) +
-                             $"{Environment.NewLine}" + ColouredMessage("Remaining Rounds : ", Color.white) + ColouredMessage($"{e.GameManager.TurnManager.MaxRounds - e.GameManager.TurnManager.CurrentRound} ", Color.cyan) + ColouredMessage(" Continue Next rounds ?", Color.white) ;
+                             $"{Environment.NewLine}" + ColouredMessage("Remaining Rounds : ", Color.white) + ColouredMessage($"{TurnManager.MaxRounds - TurnManager.CurrentRound} ", Color.cyan) + ColouredMessage(" Continue Next rounds ?", Color.white) ;
+
+            ShowStats(roundRecord);
 
             if (EndingText != null)
             {
@@ -120,12 +124,17 @@ namespace OcentraAI.LLMGames.Screens
             if (ContinueRound != null)
             {
                 ContinueRound.gameObject.SetActive(true);
+
             }
 
             if (NewGame != null)
             {
                 NewGame.gameObject.SetActive(false);
+
             }
+
+            isButtonClicked = false;
+
         }
 
 
@@ -139,10 +148,10 @@ namespace OcentraAI.LLMGames.Screens
                 HeadingText.text = $"Game Over";
             }
 
-            ShowStats(e.GameManager.ScoreManager.GetRoundRecords());
+            ShowStats(ScoreManager.GetRoundRecords());
 
-            (string winnerId, int winCount) = e.GameManager.ScoreManager.GetOverallWinner();
-            Player winner = winnerId == e.GameManager.PlayerManager.HumanPlayer.Id ? e.GameManager.PlayerManager.HumanPlayer : e.GameManager.PlayerManager.ComputerPlayer;
+            (string winnerId, int winCount) = ScoreManager.GetOverallWinner();
+            Player winner = winnerId == PlayerManager.HumanPlayer.Id ? PlayerManager.HumanPlayer : PlayerManager.ComputerPlayer;
 
             string message = ColouredMessage($"{winner.PlayerName}", Color.white, true) +
                              ColouredMessage($"wins the game with {winCount} rounds!", Color.cyan) +
@@ -157,13 +166,16 @@ namespace OcentraAI.LLMGames.Screens
             if (ContinueRound != null)
             {
                 ContinueRound.gameObject.SetActive(false);
+               
             }
 
             if (NewGame != null)
             {
                 NewGame.gameObject.SetActive(true);
+              
             }
 
+            isButtonClicked = false;
         }
 
         private void ShowStats(List<RoundRecord> roundRecords)
@@ -181,6 +193,7 @@ namespace OcentraAI.LLMGames.Screens
                 if (roundStats!=null)
                 {
                     roundStats.Init();
+
                     roundStats.ShowStat(roundRecord);
 
                 }
@@ -229,16 +242,24 @@ namespace OcentraAI.LLMGames.Screens
 
         private void OnContinueRound()
         {
-            PlaySelectionSound(); //todo
+            if (isButtonClicked) return;
+
+            isButtonClicked = true;
+            PlaySelectionSound();
             EventBus.Publish(new PlayerActionNewRound());
             HideScreen();
         }
 
         private void OnNewGame()
         {
+            if (isButtonClicked) return;
+
+            isButtonClicked = true;
             PlaySelectionSound();
             EventBus.Publish(new PlayerActionStartNewGame());
             HideScreen();
         }
+
+
     }
 }

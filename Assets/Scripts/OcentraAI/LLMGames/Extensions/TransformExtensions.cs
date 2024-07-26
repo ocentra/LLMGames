@@ -48,14 +48,21 @@ namespace OcentraAI.LLMGames.Extensions
         }
 
 
-        public static void DestroyChild(this Transform parent)
+        public static void DestroyChildren(this Transform transform)
         {
-            Transform[] transforms = parent.GetComponentsInChildren<Transform>();
-            foreach (Transform t in transforms)
+            List<Transform> children = new List<Transform>();
+
+            foreach (Transform child in transform)
             {
-                Object.DestroyImmediate(t.gameObject);
+                children.Add(child);
+            }
+
+            foreach (Transform child in children)
+            {
+                Object.DestroyImmediate(child.gameObject);
             }
         }
+
 
         /// <summary>
         /// Recursively searches for a child component of a specified type with a specified name.

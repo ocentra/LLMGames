@@ -12,6 +12,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: cd4b2cffdf356ee4793ad49ba3700792, type: 3}
   m_Name: Six_of_Spades
   m_EditorClassIdentifier: 
-  Suit: 3
+  Suit: 4
   Rank: 6
   Sprite: {fileID: 21300000, guid: 4b0f4d2ec109b0d49861aab50a80221d, type: 3}

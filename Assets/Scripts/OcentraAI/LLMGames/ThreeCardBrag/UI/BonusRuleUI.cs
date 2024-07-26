@@ -7,19 +7,16 @@ namespace OcentraAI.LLMGames
 {
     public class BonusRuleUI : MonoBehaviour
     {
-        [Required, ShowInInspector] private TextMeshProUGUI BonusRuleName { get; set; }
-        [Required, ShowInInspector] private TextMeshProUGUI BonusRuleValue { get; set; }
+        [Required, ShowInInspector] public TextMeshProUGUI BonusRuleName;
+        [Required, ShowInInspector] public TextMeshProUGUI BonusRuleValue;
 
         void OnValidate()
         {
             Init();
         }
 
-        void Start()
-        {
-            Init();
-        }
-        private void Init()
+
+        public void Init()
         {
             BonusRuleName = transform.FindChildRecursively<TextMeshProUGUI>(nameof(BonusRuleName));
             BonusRuleValue = transform.FindChildRecursively<TextMeshProUGUI>(nameof(BonusRuleValue));

@@ -12,6 +12,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: cd4b2cffdf356ee4793ad49ba3700792, type: 3}
   m_Name: Q_of_Hearts
   m_EditorClassIdentifier: 
-  Suit: 0
+  Suit: 1
   Rank: 12
   Sprite: {fileID: 21300000, guid: d4ffad2c82e5e7740a4c6c8e11bf2ea3, type: 3}

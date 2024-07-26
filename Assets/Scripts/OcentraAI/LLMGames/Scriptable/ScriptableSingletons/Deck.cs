@@ -52,8 +52,18 @@ namespace OcentraAI.LLMGames.Scriptable.ScriptableSingletons
 
             foreach (Suit suit in Enum.GetValues(typeof(Suit)))
             {
+                if (suit == Suit.None)
+                {
+                    continue;
+                }
+
                 foreach (Rank rank in Enum.GetValues(typeof(Rank)))
                 {
+                    if (rank == Rank.None)
+                    {
+                        continue;
+                    }
+
                     if (!CardTemplates.Any(card => card.Suit == suit && card.Rank == rank))
                     {
                         Debug.LogError($"Missing card: {rank} of {suit}");
@@ -81,8 +91,17 @@ namespace OcentraAI.LLMGames.Scriptable.ScriptableSingletons
 
             foreach (Suit suit in Enum.GetValues(typeof(Suit)))
             {
+                if (suit == Suit.None)
+                {
+                    continue;
+                }
+
                 foreach (Rank rank in Enum.GetValues(typeof(Rank)))
                 {
+                    if (rank == Rank.None)
+                    {
+                        continue;
+                    }
                     Card existingCard = CardTemplates.FirstOrDefault(card => card.Suit == suit && card.Rank == rank);
                     if (existingCard == null)
                     {
@@ -104,8 +123,17 @@ namespace OcentraAI.LLMGames.Scriptable.ScriptableSingletons
 
             foreach (Suit suit in Enum.GetValues(typeof(Suit)))
             {
+                if (suit == Suit.None)
+                {
+                    continue;
+                }
+
                 foreach (Rank rank in Enum.GetValues(typeof(Rank)))
                 {
+                    if (rank == Rank.None)
+                    {
+                        continue;
+                    }
                     CreateCard(suit, rank);
                 }
             }

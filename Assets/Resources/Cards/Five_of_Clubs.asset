@@ -12,6 +12,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: cd4b2cffdf356ee4793ad49ba3700792, type: 3}
   m_Name: Five_of_Clubs
   m_EditorClassIdentifier: 
-  Suit: 2
+  Suit: 3
   Rank: 5
   Sprite: {fileID: 21300000, guid: b24fb079edf3f61429e0491f65ee94de, type: 3}

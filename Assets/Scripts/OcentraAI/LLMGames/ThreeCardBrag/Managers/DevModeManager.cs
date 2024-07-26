@@ -128,7 +128,7 @@ namespace OcentraAI.LLMGames.ThreeCardBrag.Manager
             Card tempCard = ScriptableObject.CreateInstance<Card>();
             tempCard.Suit = Suit;
             tempCard.Rank = Rank;
-            string text = tempCard.GetRankSymbol();
+            string text = tempCard.RankSymbol;
             Object.DestroyImmediate(tempCard);
             return text;
         }

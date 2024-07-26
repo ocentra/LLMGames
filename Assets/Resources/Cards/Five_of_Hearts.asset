@@ -12,6 +12,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: cd4b2cffdf356ee4793ad49ba3700792, type: 3}
   m_Name: Five_of_Hearts
   m_EditorClassIdentifier: 
-  Suit: 0
+  Suit: 1
   Rank: 5
   Sprite: {fileID: 21300000, guid: a5c064e055b5ed640b936cae62416d7c, type: 3}

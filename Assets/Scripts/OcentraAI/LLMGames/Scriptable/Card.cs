@@ -3,6 +3,7 @@ using System;
 using UnityEditor;
 using UnityEngine;
 using static OcentraAI.LLMGames.Utility;
+using static UnityEngine.GraphicsBuffer;
 
 namespace OcentraAI.LLMGames.Scriptable
 {
@@ -15,6 +16,8 @@ namespace OcentraAI.LLMGames.Scriptable
 
         [Required] public Sprite Sprite;
 
+        [ShowInInspector] public string RankSymbol => GetRankSymbol();
+
         public string Id => $"{Suit}_{Rank}";
 
         public int GetRankValue()
@@ -24,54 +27,78 @@ namespace OcentraAI.LLMGames.Scriptable
 
         public string GetColorString()
         {
-            return Suit switch
+            if (Suit is Suit.Hearts or Suit.Diamonds)
             {
-                Suit.Hearts => "Red",
-                Suit.Diamonds => "Red",
-                Suit.Clubs => "Black",
-                Suit.Spades => "Black",
-                Suit.None => "Black",
+                return "Red";
+            }
 
-                _ => throw new ArgumentOutOfRangeException()
-            };
+            return "Black";
         }
 
         public Color GetColorValue()
         {
-            return Suit switch
+            if (Suit is Suit.Hearts or Suit.Diamonds)
             {
-                Suit.Hearts => Color.red,
-                Suit.Diamonds => Color.red,
-                Suit.Clubs => Color.black,
-                Suit.Spades => Color.black,
-                Suit.None => Color.black,
+                return Color.red;
+            }
 
-                _ => throw new ArgumentOutOfRangeException()
-            };
+            return Color.black;
         }
 
 
-        public string GetRankSymbol()
+        private string GetRankSymbol()
         {
-            string symbol = Suit switch
+            if (Suit == Suit.None || Rank == Rank.None)
             {
-                Suit.Clubs => ColouredMessage($"♣", Color.black),
-                Suit.Diamonds => ColouredMessage($"♦", Color.red),
-                Suit.Hearts => ColouredMessage($"♥", Color.red),
-                Suit.Spades => ColouredMessage($"♠", Color.black),
-                _ => ""
-            };
-
-            string formattedRank = Rank switch
+                return "None";
+            }
+            string symbol;
+            if (Suit == Suit.Hearts)
             {
-                Rank.A => "A",
-                Rank.K => "K",
-                Rank.Q => "Q",
-                Rank.J => "J",
-                _ => ((int)Rank).ToString()
-            };
+                symbol = ColouredMessage($"♥", Color.red);
+            }
+            else if (Suit == Suit.Diamonds)
+            {
+                symbol = ColouredMessage($"♦", Color.red);
+            }
+            else if (Suit == Suit.Clubs)
+            {
+                symbol = ColouredMessage($"♣", Color.black);
+            }
+            else if (Suit == Suit.Spades)
+            {
+                symbol = ColouredMessage($"♠", Color.black);
+            }
+            else
+            {
+                symbol = "";
+            }
 
-            return $"{ColouredMessage($"{formattedRank}", GetColorValue())}{symbol}";
+            string formattedRank;
+            if (Rank == Rank.A)
+            {
+                formattedRank = "A";
+            }
+            else if (Rank == Rank.K)
+            {
+                formattedRank = "K";
+            }
+            else if (Rank == Rank.Q)
+            {
+                formattedRank = "Q";
+            }
+            else if (Rank == Rank.J)
+            {
+                formattedRank = "J";
+            }
+            else
+            {
+                formattedRank = ((int)Rank).ToString();
+            }
+            string rankSymbol = $"{ColouredMessage($"{formattedRank}", GetColorValue())}{symbol}";
+
+            //Debug.Log($"GetRankSymbol {rankSymbol} Rank {Rank.ToString()} Suit {Suit} ");
+            return rankSymbol; 
         }
 
         public void Init(Suit suit, Rank rank)

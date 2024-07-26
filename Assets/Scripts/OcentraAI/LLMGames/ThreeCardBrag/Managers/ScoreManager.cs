@@ -1,4 +1,3 @@
-using OcentraAI.LLMGames.Authentication;
 using OcentraAI.LLMGames.ThreeCardBrag.Players;
 using Sirenix.OdinInspector;
 using System.Collections.Generic;
@@ -15,19 +14,14 @@ namespace OcentraAI.LLMGames.ThreeCardBrag.Manager
         [ShowInInspector, ReadOnly] public int CurrentBet { get; private set; }
         [ShowInInspector, ReadOnly] public int BlindMultiplier { get; private set; } = 1;
         [ShowInInspector, ReadOnly] private int BaseBet { get; set; } = 10;
-        [ShowInInspector] private int TotalCoinsInPlay { get; set; }
-        [ShowInInspector] public int Pot { get; private set; }
+        [ShowInInspector, ReadOnly] private int TotalCoinsInPlay { get; set; }
+        [ShowInInspector, ReadOnly] public int Pot { get; private set; }
+        [ShowInInspector, ReadOnly] private List<RoundRecord> RoundRecords { get; set; } = new List<RoundRecord>();
 
-        public int HumanTotalWins => GetPlayerWins(AuthenticationManager.Instance.PlayerData.PlayerID);
-        public int ComputerTotalWins => GetPlayerWins(PlayerManager.GetComputerPlayer().Id);
 
-        private Dictionary<string, int> PlayerWins { get; set; } = new Dictionary<string, int>();
-        private Dictionary<string, int> PlayerTotalWinnings { get; set; } = new Dictionary<string, int>();
-
-        private PlayerManager PlayerManager =>GameManager.Instance.PlayerManager;
+        private PlayerManager PlayerManager => GameManager.Instance.PlayerManager;
         private TurnManager TurnManager => GameManager.Instance.TurnManager;
 
-        private List<RoundRecord> RoundRecords { get; set; } = new List<RoundRecord>();
 
         #endregion
 
@@ -35,10 +29,7 @@ namespace OcentraAI.LLMGames.ThreeCardBrag.Manager
 
         public ScoreManager() { }
 
-        public void Init()
-        {
- 
-        }
+        public void Init() { }
 
         public void ResetForNewGame()
         {
@@ -46,16 +37,8 @@ namespace OcentraAI.LLMGames.ThreeCardBrag.Manager
             Pot = 0;
             CurrentBet = BaseBet;
             BlindMultiplier = 1;
-            PlayerWins.Clear();
-            PlayerTotalWinnings.Clear();
-            RoundRecords.Clear(); 
-            foreach (var player in PlayerManager.GetActivePlayers())
-            {
-                PlayerWins[player.Id] = 0;
-                PlayerTotalWinnings[player.Id] = 0;
-            }
+            RoundRecords.Clear();
         }
-
 
         public void ResetForNewRound()
         {
@@ -63,7 +46,6 @@ namespace OcentraAI.LLMGames.ThreeCardBrag.Manager
             CurrentBet = BaseBet;
             BlindMultiplier = 1;
         }
-
 
         #endregion
 
@@ -176,8 +158,6 @@ namespace OcentraAI.LLMGames.ThreeCardBrag.Manager
 
             int potAmount = Pot;
             winner.AdjustCoins(potAmount);
-            PlayerWins[winner.Id]++;
-            PlayerTotalWinnings[winner.Id] += potAmount;
             Pot = 0;
 
             if (!VerifyTotalCoins())
@@ -186,10 +166,9 @@ namespace OcentraAI.LLMGames.ThreeCardBrag.Manager
                 return false;
             }
 
-            RecordRound(winner.Id, potAmount);  
+            RecordRound(winner.Id, potAmount);
             return true;
         }
-
 
         public bool AwardTiedPot(List<Player> tiedPlayers)
         {
@@ -203,14 +182,12 @@ namespace OcentraAI.LLMGames.ThreeCardBrag.Manager
             foreach (var player in tiedPlayers)
             {
                 player.AdjustCoins(splitAmount);
-                PlayerTotalWinnings[player.Id] += splitAmount;
             }
 
             int remainder = Pot % tiedPlayers.Count;
             if (remainder > 0)
             {
                 tiedPlayers[0].AdjustCoins(remainder);
-                PlayerTotalWinnings[tiedPlayers[0].Id] += remainder;
             }
 
             Pot = 0;
@@ -221,69 +198,41 @@ namespace OcentraAI.LLMGames.ThreeCardBrag.Manager
                 return false;
             }
 
-            RecordRound(null, Pot); 
-            return true;
-        }
-
-
-        public bool AddToRoundScores(Player winner, int potAmount)
-        {
-            if (!VerifyTotalCoins())
-            {
-                HandleVerificationFailure("AddToRoundScores - Before");
-                return false;
-            }
-
-            PlayerWins[winner.Id]++;
-            PlayerTotalWinnings[winner.Id] += potAmount;
-
-            if (!VerifyTotalCoins())
-            {
-                HandleVerificationFailure("AddToRoundScores - After");
-                return false;
-            }
+            RecordRound(null, Pot);
             return true;
         }
 
         public int GetPlayerWins(string playerId)
         {
-            return PlayerWins.GetValueOrDefault(playerId, 0);
+            return RoundRecords.Count(r => r.WinnerId == playerId);
         }
 
         public int GetPlayerTotalWinnings(string playerId)
         {
-            return PlayerTotalWinnings.GetValueOrDefault(playerId, 0);
+            return RoundRecords
+                .Where(r => r.WinnerId == playerId)
+                .Sum(r => r.PotAmount);
         }
 
         public (string WinnerId, int WinCount) GetOverallWinner()
         {
-            string winnerId = null;
-            int maxWins = -1;
-            foreach (var kvp in PlayerWins)
-            {
-                if (kvp.Value > maxWins)
-                {
-                    maxWins = kvp.Value;
-                    winnerId = kvp.Key;
-                }
-            }
-            return (winnerId, maxWins);
+            var grouped = RoundRecords
+                .GroupBy(r => r.WinnerId)
+                .Select(g => new { WinnerId = g.Key, WinCount = g.Count() })
+                .OrderByDescending(g => g.WinCount)
+                .FirstOrDefault();
+
+            return (grouped?.WinnerId, grouped?.WinCount ?? 0);
         }
 
         public List<(string PlayerId, int Wins, int TotalWinnings)> GetLeaderboard()
         {
-            List<(string PlayerId, int Wins, int TotalWinnings)> leaderboard = new List<(string, int, int)>();
-            foreach (var playerId in PlayerWins.Keys)
-            {
-                leaderboard.Add((playerId, PlayerWins[playerId], PlayerTotalWinnings[playerId]));
-            }
-            leaderboard.Sort((a, b) =>
-            {
-                int winComparison = b.Wins.CompareTo(a.Wins);
-                if (winComparison != 0) return winComparison;
-                return b.TotalWinnings.CompareTo(a.TotalWinnings);
-            });
-            return leaderboard;
+            return RoundRecords
+                .GroupBy(r => r.WinnerId)
+                .Select(g => (PlayerId: g.Key, Wins: g.Count(), TotalWinnings: g.Sum(r => r.PotAmount)))
+                .OrderByDescending(p => p.Wins)
+                .ThenByDescending(p => p.TotalWinnings)
+                .ToList();
         }
 
         #endregion
@@ -297,9 +246,10 @@ namespace OcentraAI.LLMGames.ThreeCardBrag.Manager
                 RoundNumber = TurnManager.CurrentRound,
                 WinnerId = winnerId,
                 PotAmount = potAmount,
-                Players = PlayerManager.GetActivePlayers(),
+                Players = PlayerManager.GetAllPlayers()
+
             };
-            
+
             RoundRecords.Add(roundRecord);
         }
 
@@ -308,6 +258,10 @@ namespace OcentraAI.LLMGames.ThreeCardBrag.Manager
             return RoundRecords;
         }
 
+        public RoundRecord GetLastRound()
+        {
+            return RoundRecords.Last();
+        }
 
         private bool ValidateBet(int betAmount)
         {
@@ -358,14 +312,16 @@ namespace OcentraAI.LLMGames.ThreeCardBrag.Manager
         }
 
         #endregion
-    }
 
+ 
+    }
+    [System.Serializable]
     public class RoundRecord
     {
-        public int RoundNumber { get; set; }
-        public List<Player> Players { get; set; } = new List<Player>();
-        public string WinnerId { get; set; }
-        public int PotAmount { get; set; }
+        [ShowInInspector, ReadOnly] public int RoundNumber { get; set; }
+        [ShowInInspector, ReadOnly] public List<Player> Players { get; set; } = new List<Player>();
+        [ShowInInspector, ReadOnly] public string WinnerId { get; set; }
+        [ShowInInspector, ReadOnly] public int PotAmount { get; set; }
 
 
     }

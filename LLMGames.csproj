@@ -93,6 +93,7 @@
     <Compile Include="Assets\Scripts\OcentraAI\LLMGames\ThreeCardBrag\EventBus\UpdatePlayerHandDisplay.cs" />
     <Compile Include="Assets\Scripts\OcentraAI\LLMGames\LLMServices\LocalLLMService.cs" />
     <Compile Include="Assets\Scripts\OcentraAI\LLMGames\GameScreens\RoundLeaderboardScreen.cs" />
+    <Compile Include="Assets\Scripts\OcentraAI\LLMGames\Scriptable\CardEditor.cs" />
     <Compile Include="Assets\Scripts\OcentraAI\LLMGames\Utilities\ICustomGlobalConfigEvents.cs" />
     <Compile Include="Assets\Scripts\OcentraAI\LLMGames\ThreeCardBrag\Managers\DevModeManager.cs" />
     <Compile Include="Assets\Scripts\OcentraAI\LLMGames\ThreeCardBrag\Managers\PlayerManager.cs" />
@@ -110,6 +111,7 @@
     <Compile Include="Assets\Scripts\OcentraAI\LLMGames\ThreeCardBrag\UI\BonusRuleUI.cs" />
     <Compile Include="Assets\Scripts\OcentraAI\LLMGames\GameScreens\PauseScreen.cs" />
     <Compile Include="Assets\Scripts\OcentraAI\LLMGames\ThreeCardBrag\EventBus\SetFloorCard.cs" />
+    <Compile Include="Assets\Scripts\OcentraAI\LLMGames\ThreeCardBrag\UI\PlayerPanel.cs" />
     <Compile Include="Assets\Scripts\OcentraAI\LLMGames\LLMServices\Rules\SameColorsSequenceRule.cs" />
     <Compile Include="Assets\Scripts\OcentraAI\LLMGames\LLMServices\Rules\ThreeOfAKindRule.cs" />
     <Compile Include="Assets\Scripts\OcentraAI\LLMGames\ThreeCardBrag\Managers\TurnManager.cs" />

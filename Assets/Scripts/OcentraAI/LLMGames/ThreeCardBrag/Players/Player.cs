@@ -94,7 +94,7 @@ namespace OcentraAI.LLMGames.ThreeCardBrag.Players
 
         public string GetFormattedHand()
         {
-            return string.Join(" ", Hand.Select(card => card.GetRankSymbol()));
+            return string.Join(" ", Hand.Select(card => card.RankSymbol));
         }
 
 

@@ -1,10 +1,16 @@
 using OcentraAI.LLMGames.Extensions;
 using OcentraAI.LLMGames.ThreeCardBrag.Events;
+using OcentraAI.LLMGames.ThreeCardBrag.Manager;
+using OcentraAI.LLMGames.ThreeCardBrag.Players;
 using OcentraAI.LLMGames.Utilities;
 using Sirenix.OdinInspector;
+using System;
 using System.Collections;
+using System.Collections.Generic;
+using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
+using static OcentraAI.LLMGames.Utility;
 
 namespace OcentraAI.LLMGames.Screens
 {
@@ -20,6 +26,9 @@ namespace OcentraAI.LLMGames.Screens
 
         [Required, ShowInInspector] private Transform ScoreHolderContent { get; set; }
 
+        [Required, ShowInInspector] private TextMeshProUGUI HeadingText { get; set; }
+        
+        [Required, ShowInInspector] private TextMeshProUGUI EndingText { get; set; }
 
         protected override void Awake()
         {
@@ -48,6 +57,8 @@ namespace OcentraAI.LLMGames.Screens
 
         private void InitReferences()
         {
+            HeadingText = transform.FindChildRecursively<TextMeshProUGUI>(nameof(HeadingText));
+            EndingText = transform.transform.FindChildRecursively<TextMeshProUGUI>(nameof(EndingText));
             ScoreHolderContent = transform.FindChildRecursively<Transform>(nameof(ScoreHolderContent));
             NewGame = transform.FindChildRecursively<Button>(nameof(NewGame));
             ContinueRound = transform.FindChildRecursively<Button>(nameof(ContinueRound));
@@ -86,7 +97,26 @@ namespace OcentraAI.LLMGames.Screens
         {
             ShowScreen();
 
-            ShowStats(e);
+            if (HeadingText !=null)
+            {
+                HeadingText.text = $"Round Over";
+            }
+
+            RoundRecord roundRecord = e.GameManager.ScoreManager.GetLastRound();
+
+            ShowStats(roundRecord);
+
+            Player winner = roundRecord.WinnerId == e.GameManager.PlayerManager.HumanPlayer.Id ? e.GameManager.PlayerManager.HumanPlayer : e.GameManager.PlayerManager.ComputerPlayer;
+
+            string message = ColouredMessage($"{winner.PlayerName} ", Color.green) + ColouredMessage($"Won the Round Pot: ", Color.white) + ColouredMessage($" {roundRecord.PotAmount} Coins ", Color.yellow) +
+                             $"{Environment.NewLine}" + ColouredMessage("Remaining Rounds : ", Color.white) + ColouredMessage($"{e.GameManager.TurnManager.MaxRounds - e.GameManager.TurnManager.CurrentRound} ", Color.cyan) + ColouredMessage(" Continue Next rounds ?", Color.white) ;
+
+            if (EndingText != null)
+            {
+                EndingText.text = message;
+            }
+
+
             if (ContinueRound != null)
             {
                 ContinueRound.gameObject.SetActive(true);
@@ -104,7 +134,25 @@ namespace OcentraAI.LLMGames.Screens
         {
             ShowScreen();
 
-            ShowStats(e);
+            if (HeadingText != null)
+            {
+                HeadingText.text = $"Game Over";
+            }
+
+            ShowStats(e.GameManager.ScoreManager.GetRoundRecords());
+
+            (string winnerId, int winCount) = e.GameManager.ScoreManager.GetOverallWinner();
+            Player winner = winnerId == e.GameManager.PlayerManager.HumanPlayer.Id ? e.GameManager.PlayerManager.HumanPlayer : e.GameManager.PlayerManager.ComputerPlayer;
+
+            string message = ColouredMessage($"{winner.PlayerName}", Color.white, true) +
+                             ColouredMessage($"wins the game with {winCount} rounds!", Color.cyan) +
+                             $"{Environment.NewLine}" +
+                             ColouredMessage("Play New Game of 10 rounds ?", Color.red, true);
+
+            if (EndingText != null)
+            {
+                EndingText.text = message;
+            }
 
             if (ContinueRound != null)
             {
@@ -118,29 +166,26 @@ namespace OcentraAI.LLMGames.Screens
 
         }
 
-        private void ShowStats(OfferNewGame e)
+        private void ShowStats(List<RoundRecord> roundRecords)
         {
-            //string message = ColouredMessage("Game Over!", Color.red) +
-            //                 ColouredMessage($"{winner.PlayerName}", Color.white, true) +
-            //                 ColouredMessage($"wins the game with {winCount} rounds!", Color.cyan) +
-            //                 $"{Environment.NewLine}" +
-            //                 ColouredMessage("Play New Game of 10 rounds ?", Color.red, true);
-
-
-            ScoreHolderContent.DestroyChild();
-
-
+            
+            ScoreHolderContent.DestroyChildren();
             GameObject headers = Instantiate(Headers, ScoreHolderContent);
             headers.transform.SetAsFirstSibling();
 
 
-            //foreach (var VARIABLE in e.GameManager.ScoreManager)
-            //{
-                
-            //}
-            GameObject roundStatGameObject = Instantiate(RoundStats, ScoreHolderContent);
-            var roundStats = roundStatGameObject.GetComponent<RoundStats>();
-            roundStats.ShowStat(e);
+            foreach (RoundRecord roundRecord in roundRecords)
+            {
+                GameObject roundStatGameObject = Instantiate(RoundStats, ScoreHolderContent);
+                RoundStats roundStats = roundStatGameObject.GetComponent<RoundStats>();
+                if (roundStats!=null)
+                {
+                    roundStats.Init();
+                    roundStats.ShowStat(roundRecord);
+
+                }
+            }
+
 
             GameObject empty = Instantiate(Empty, ScoreHolderContent);
             empty.transform.SetAsLastSibling();
@@ -149,16 +194,23 @@ namespace OcentraAI.LLMGames.Screens
 
         }
 
-        private void ShowStats(OfferContinuation e)
+        private void ShowStats(RoundRecord roundRecord)
         {
-            ScoreHolderContent.DestroyChild();
+            ScoreHolderContent.DestroyChildren();
 
             GameObject headers = Instantiate(Headers, ScoreHolderContent);
             headers.transform.SetAsFirstSibling();
 
             GameObject roundStatGameObject = Instantiate(RoundStats, ScoreHolderContent);
-            var roundStats = roundStatGameObject.GetComponent<RoundStats>();
-            roundStats.ShowStat(e);
+            RoundStats roundStats = roundStatGameObject.GetComponent<RoundStats>();
+
+            if (roundStats != null)
+            {
+                roundStats.Init();
+                roundStats.ShowStat(roundRecord);
+
+            }
+
 
             GameObject empty = Instantiate(Empty, ScoreHolderContent);
             empty.transform.SetAsLastSibling();

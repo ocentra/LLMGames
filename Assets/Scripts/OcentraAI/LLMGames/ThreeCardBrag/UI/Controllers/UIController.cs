@@ -456,7 +456,8 @@ namespace OcentraAI.LLMGames.ThreeCardBrag.UI.Controllers
 
         private void OnUpdateRoundDisplay(UpdateRoundDisplay e)
         {
-            UpdateWinDisplay(e.ScoreManager.HumanTotalWins, e.ScoreManager.ComputerTotalWins);
+            // todo
+           // UpdateWinDisplay(e.ScoreManager.HumanTotalWins, e.ScoreManager.ComputerTotalWins);
         }
 
         private void OnOfferContinuation(OfferContinuation e)

@@ -612,8 +612,7 @@ namespace OcentraAI.LLMGames.ThreeCardBrag.Manager
 
         private async Task HandleSingleWinner(Player winner, bool showHand)
         {
-            if (ScoreManager.AddToRoundScores(winner, ScoreManager.Pot) &&
-                ScoreManager.AwardPotToWinner(winner))
+            if (ScoreManager.AwardPotToWinner(winner))
             {
                 EventBus.Publish(new UpdateRoundDisplay(ScoreManager));
                 EventBus.Publish(new UpdateGameState(this));
@@ -666,9 +665,6 @@ namespace OcentraAI.LLMGames.ThreeCardBrag.Manager
 
         private Task EndGame()
         {
-            var (winnerId, winCount) = ScoreManager.GetOverallWinner();
-            Player winner = winnerId == PlayerManager.HumanPlayer.Id ? PlayerManager.HumanPlayer : PlayerManager.ComputerPlayer;
-
             TurnManager.CallShow();
             PlayerManager.ShowHand(true);
             EventBus.Publish(new OfferNewGame(this, 60));

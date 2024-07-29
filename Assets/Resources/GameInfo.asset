@@ -299,71 +299,7 @@ MonoBehaviour:
       Data: 6
     - Name: 
       Entry: 7
-      Data: 7|OcentraAI.LLMGames.LLMServices.Rules.StraightFlushRule, LLMGames
-    - Name: RuleName
-      Entry: 1
-      Data: StraightFlushRule
-    - Name: Description
-      Entry: 1
-      Data: 'Straight Flush with Trump Wild Card. Example: 9, 10, J of Spades'
-    - Name: BonusValue
-      Entry: 3
-      Data: 12
-    - Name: 
-      Entry: 8
-      Data: 
-    - Name: 
-      Entry: 7
-      Data: 8|OcentraAI.LLMGames.LLMServices.Rules.DifferentColorsSequenceRule, LLMGames
-    - Name: RuleName
-      Entry: 1
-      Data: DifferentColorsSequenceRule
-    - Name: Description
-      Entry: 1
-      Data: 'Sequence of 3 cards of different colors with Trump Wild Card. Example:
-        4 of Hearts, 5 of Spades, 6 of Diamonds'
-    - Name: BonusValue
-      Entry: 3
-      Data: 5
-    - Name: 
-      Entry: 8
-      Data: 
-    - Name: 
-      Entry: 7
-      Data: 9|OcentraAI.LLMGames.LLMServices.Rules.PairInHandRule, LLMGames
-    - Name: RuleName
-      Entry: 1
-      Data: PairInHandRule
-    - Name: Description
-      Entry: 1
-      Data: 'Pair in hand with bonuses for trump card and same color. Example: 5
-        of Hearts, 5 of Spades, and any card'
-    - Name: BonusValue
-      Entry: 3
-      Data: 5
-    - Name: 
-      Entry: 8
-      Data: 
-    - Name: 
-      Entry: 7
-      Data: 10|OcentraAI.LLMGames.LLMServices.Rules.ThreeConsecutiveSameSuitRule,
-        LLMGames
-    - Name: RuleName
-      Entry: 1
-      Data: ThreeConsecutiveSameSuitRule
-    - Name: Description
-      Entry: 1
-      Data: 'Sequence of 3 cards of the same suit with Trump Wild Card. Example:
-        4, 5, 6 of Hearts'
-    - Name: BonusValue
-      Entry: 3
-      Data: 10
-    - Name: 
-      Entry: 8
-      Data: 
-    - Name: 
-      Entry: 7
-      Data: 11|OcentraAI.LLMGames.LLMServices.Rules.ThreeOfAKindRule, LLMGames
+      Data: 7|OcentraAI.LLMGames.LLMServices.Rules.ThreeOfAKindRule, LLMGames
     - Name: RuleName
       Entry: 1
       Data: ThreeOfAKindRule
@@ -372,23 +308,101 @@ MonoBehaviour:
       Data: 'Three of a Kind with Trump Wild Card. Example: AAA or KKK'
     - Name: BonusValue
       Entry: 3
-      Data: 15
+      Data: 30
+    - Name: Priority
+      Entry: 3
+      Data: 100
     - Name: 
       Entry: 8
       Data: 
     - Name: 
       Entry: 7
-      Data: 12|OcentraAI.LLMGames.LLMServices.Rules.SameColorsSequenceRule, LLMGames
+      Data: 8|OcentraAI.LLMGames.LLMServices.Rules.StraightFlushRule, LLMGames
+    - Name: RuleName
+      Entry: 1
+      Data: StraightFlushRule
+    - Name: Description
+      Entry: 1
+      Data: 'Straight Flush with Trump Wild Card. Example: 9, 10, J of Spades'
+    - Name: BonusValue
+      Entry: 3
+      Data: 25
+    - Name: Priority
+      Entry: 3
+      Data: 90
+    - Name: 
+      Entry: 8
+      Data: 
+    - Name: 
+      Entry: 7
+      Data: 9|OcentraAI.LLMGames.LLMServices.Rules.SameColorsSequenceRule, LLMGames
     - Name: RuleName
       Entry: 1
       Data: SameColorsSequenceRule
     - Name: Description
       Entry: 1
-      Data: 'Sequence of 3 cards of the same color with Trump Wild Card. Example:
-        7 of Hearts, 8 of Diamonds, 9 of Hearts'
+      Data: Sequence of cards of the same color with Trump Wild Card
+    - Name: BonusValue
+      Entry: 3
+      Data: 20
+    - Name: Priority
+      Entry: 3
+      Data: 80
+    - Name: 
+      Entry: 8
+      Data: 
+    - Name: 
+      Entry: 7
+      Data: 10|OcentraAI.LLMGames.LLMServices.Rules.DifferentColorsSequenceRule,
+        LLMGames
+    - Name: RuleName
+      Entry: 1
+      Data: DifferentColorsSequenceRule
+    - Name: Description
+      Entry: 1
+      Data: Sequence of 3 cards of different colors with Trump Wild Card
+    - Name: BonusValue
+      Entry: 3
+      Data: 15
+    - Name: Priority
+      Entry: 3
+      Data: 70
+    - Name: 
+      Entry: 8
+      Data: 
+    - Name: 
+      Entry: 7
+      Data: 11|OcentraAI.LLMGames.LLMServices.Rules.PairInHandRule, LLMGames
+    - Name: RuleName
+      Entry: 1
+      Data: PairInHandRule
+    - Name: Description
+      Entry: 1
+      Data: Pair in hand with bonuses for trump card and same color
     - Name: BonusValue
       Entry: 3
       Data: 10
+    - Name: Priority
+      Entry: 3
+      Data: 60
+    - Name: 
+      Entry: 8
+      Data: 
+    - Name: 
+      Entry: 7
+      Data: 12|OcentraAI.LLMGames.LLMServices.Rules.FlushRule, LLMGames
+    - Name: RuleName
+      Entry: 1
+      Data: FlushRule
+    - Name: Description
+      Entry: 1
+      Data: Cards of the same suit, not necessarily in sequence
+    - Name: BonusValue
+      Entry: 3
+      Data: 5
+    - Name: Priority
+      Entry: 3
+      Data: 70
     - Name: 
       Entry: 8
       Data: 
@@ -483,8 +497,12 @@ MonoBehaviour:
     Value: 3
   - CardName: 2
     Value: 2
-  CommonBonuses:
-    TrumpCardBonus: 5
-    SameColorBonus: 5
-    WildCardBonus: 5
+  TrumpBonusValues:
+    TrumpCardBonus: 10
     RankAdjacentBonus: 5
+    ThreeOfKindBonus: 15
+    SequenceBonus: 15
+    StraightFlushBonus: 15
+    CardInMiddleBonus: 5
+    WildCardBonus: 10
+    SameColorBonus: 5

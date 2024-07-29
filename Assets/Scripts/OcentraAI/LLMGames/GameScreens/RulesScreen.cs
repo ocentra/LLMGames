@@ -1,5 +1,5 @@
 using OcentraAI.LLMGames.Extensions;
-using OcentraAI.LLMGames.Scriptable.ScriptableSingletons;
+using OcentraAI.LLMGames.GameModes;
 using Sirenix.OdinInspector;
 using TMPro;
 using UnityEngine.UI;
@@ -14,12 +14,11 @@ namespace OcentraAI.LLMGames.Screens
         [ShowInInspector, Required]
         public Button BackButton { get; private set; }
 
-        private GameInfo GameInfo { get; set; }
 
         protected override void Awake()
         {
             base.Awake();
-            GameInfo = GameInfo.Instance;
+          
             InitReferences();
         }
 
@@ -42,7 +41,7 @@ namespace OcentraAI.LLMGames.Screens
 
         private void InitializeRulesScreen()
         {
-            RulesText.text = GameInfo.GameRules;
+            RulesText.text = GameMode.GameRules.Player;
             BackButton.onClick.AddListener(GoBack);
         }
 

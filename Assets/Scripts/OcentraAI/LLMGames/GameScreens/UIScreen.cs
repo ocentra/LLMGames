@@ -1,4 +1,5 @@
 using OcentraAI.LLMGames.Extensions;
+using OcentraAI.LLMGames.GameModes;
 using OcentraAI.LLMGames.ThreeCardBrag.Manager;
 using Sirenix.OdinInspector;
 using System.Collections;
@@ -14,6 +15,8 @@ namespace OcentraAI.LLMGames.Screens
         [Required] protected DeckManager DeckManager => DeckManager.Instance;
         [Required] protected TurnManager TurnManager => TurnManager.Instance;
         [Required] protected GameManager GameManager => GameManager.Instance;
+        [Required] public GameMode GameMode => GameManager.GameMode;
+
 
         [Required]
         public GameObject MainPanel;

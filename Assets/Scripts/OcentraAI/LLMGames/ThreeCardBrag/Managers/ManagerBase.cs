@@ -1,9 +1,10 @@
 using OcentraAI.LLMGames.Utilities;
+using Sirenix.OdinInspector;
 using UnityEngine;
 
 namespace OcentraAI.LLMGames.ThreeCardBrag.Manager
 {
-    public abstract class ManagerBase<T> : MonoBehaviour where T : Component
+    public abstract class ManagerBase<T> : SerializedMonoBehaviour where T : Component
     {
         protected static T instance;
         public static T Instance => instance;

@@ -34,12 +34,10 @@ namespace OcentraAI.LLMGames.Screens
         [ShowInInspector, Required]
         public TextMeshProUGUI TipsText { get; private set; }
 
-        private GameInfo GameInfo { get;  set; }
 
         protected override void Awake()
         {
             base.Awake();
-            GameInfo = GameInfo.Instance;
             InitReferences();
         }
 
@@ -73,9 +71,9 @@ namespace OcentraAI.LLMGames.Screens
             StartGameButton.interactable = true;
 
             WelcomeText.text = "Welcome to Three Card Brag!";
-            RulesText.text = GameInfo.GameRules;
-            DescriptionText.text = GameInfo.GameDescription;
-            TipsText.text = GameInfo.StrategyTips;
+            RulesText.text = GameMode.GameRules.Player;
+            DescriptionText.text = GameMode.GameDescription.Player;
+            TipsText.text = GameMode.StrategyTips.Player;
 
             ShowRulesButton.onClick.AddListener(ShowRules);
             StartGameButton.onClick.AddListener(StartGame);

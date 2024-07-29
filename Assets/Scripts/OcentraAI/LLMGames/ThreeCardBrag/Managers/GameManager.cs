@@ -2,7 +2,9 @@ using OcentraAI.LLMGames.Authentication;
 using OcentraAI.LLMGames.ThreeCardBrag.Events;
 using OcentraAI.LLMGames.ThreeCardBrag.Players;
 using OcentraAI.LLMGames.Utilities;
+using OcentraAI.LLMGames.GameModes;
 using Sirenix.OdinInspector;
+using Sirenix.Serialization;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -30,7 +32,8 @@ namespace OcentraAI.LLMGames.ThreeCardBrag.Manager
 
         public CancellationTokenSource GlobalCancellationTokenSource { get; set; }
 
-
+        [OdinSerialize,ShowInInspector,Required]
+        public GameMode GameMode { get; set; }
 
         #endregion
 
@@ -39,13 +42,18 @@ namespace OcentraAI.LLMGames.ThreeCardBrag.Manager
         protected override void Awake()
         {
             base.Awake();
-           
+
         }
 
-     
+
 
         protected override void Start()
         {
+            if (GameMode == null)
+            {
+                return;
+            }
+
             if (IsCancellationRequested()) return;
 
             AuthenticationManager.Instance.AuthenticationCompleted += async () =>
@@ -573,7 +581,16 @@ namespace OcentraAI.LLMGames.ThreeCardBrag.Manager
 
             if (winners.Count > 1)
             {
-                HandleTie(winners, showHand);
+                var winner = BreakTie(winners);
+                if (winner != null)
+                {
+                    await HandleSingleWinner(winner, showHand);
+                }
+                else
+                {
+                    HandleTie(winners, showHand);
+
+                }
             }
             else
             {
@@ -582,6 +599,43 @@ namespace OcentraAI.LLMGames.ThreeCardBrag.Manager
 
 
         }
+
+        public Player BreakTie(List<Player> tiedPlayers)
+        {
+            // First, compare the highest cards
+            var highestCards = tiedPlayers.Select(p => p.Hand.Max(c => c.GetRankValue())).ToList();
+            int maxHighCard = highestCards.Max();
+            var playersWithMaxHighCard = tiedPlayers.Where(p => p.Hand.Max(c => c.GetRankValue()) == maxHighCard).ToList();
+
+            if (playersWithMaxHighCard.Count == 1)
+            {
+                return playersWithMaxHighCard[0];
+            }
+
+            // If still tied, compare the second highest cards
+            var secondHighestCards = playersWithMaxHighCard.Select(p => p.Hand.OrderByDescending(c => c.GetRankValue()).Skip(1).First().GetRankValue()).ToList();
+            int maxSecondHighCard = secondHighestCards.Max();
+            var playersWithMaxSecondHighCard = playersWithMaxHighCard.Where(p => p.Hand.OrderByDescending(c => c.GetRankValue()).Skip(1).First().GetRankValue() == maxSecondHighCard).ToList();
+
+            if (playersWithMaxSecondHighCard.Count == 1)
+            {
+                return playersWithMaxSecondHighCard[0];
+            }
+
+            // If still tied, compare the lowest cards
+            var lowestCards = playersWithMaxSecondHighCard.Select(p => p.Hand.Min(c => c.GetRankValue())).ToList();
+            int maxLowestCard = lowestCards.Max();
+            var winnersWithMaxLowestCard = playersWithMaxSecondHighCard.Where(p => p.Hand.Min(c => c.GetRankValue()) == maxLowestCard).ToList();
+
+            // If still tied after comparing all cards, it's a true tie
+            if (winnersWithMaxLowestCard.Count > 1)
+            {
+                return null;
+            }
+
+            return winnersWithMaxLowestCard[0];
+        }
+
 
         private void HandleTie(List<Player> winners, bool showHand)
         {

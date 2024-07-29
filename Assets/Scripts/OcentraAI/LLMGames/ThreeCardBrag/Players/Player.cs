@@ -1,7 +1,6 @@
 using OcentraAI.LLMGames.Authentication;
-using OcentraAI.LLMGames.LLMServices;
+using OcentraAI.LLMGames.GameModes.Rules;
 using OcentraAI.LLMGames.Scriptable;
-using OcentraAI.LLMGames.Scriptable.ScriptableSingletons;
 using OcentraAI.LLMGames.ThreeCardBrag.Events;
 using OcentraAI.LLMGames.ThreeCardBrag.Manager;
 using OcentraAI.LLMGames.Utilities;
@@ -149,12 +148,12 @@ namespace OcentraAI.LLMGames.ThreeCardBrag.Players
             AppliedRules = new List<BaseBonusRule>();
             HandRankSum = Hand.Sum(card => card.GetRankValue());
             HandValue = HandRankSum;
-            BaseBonusRule[] bonusRules = GameInfo.Instance.BonusRules;
+            List<BaseBonusRule> bonusRules = GameManager.Instance.GameMode.BonusRules;
             foreach (BaseBonusRule rule in bonusRules)
             {
-                if (rule.Evaluate(Hand , out int bonusValue))
+                if (rule.Evaluate(Hand , out BonusDetails bonusDetails))
                 {
-                    HandValue += bonusValue;
+                    HandValue += bonusDetails.TotalBonus;
                     AppliedRules.Add(rule);
                 }
             }

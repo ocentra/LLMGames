@@ -7,7 +7,6 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
-using UnityEngine;
 
 namespace OcentraAI.LLMGames.ThreeCardBrag.Manager
 {
@@ -16,8 +15,8 @@ namespace OcentraAI.LLMGames.ThreeCardBrag.Manager
     {
 
 
-        public float TurnDuration = 60f;
-        public int MaxRounds = 10;
+        [ShowInInspector, ReadOnly] public float TurnDuration => GameManager.instance.GameMode.TurnDuration;
+        [ShowInInspector, ReadOnly] public int MaxRounds => GameManager.instance.GameMode.MaxRounds;
 
         [ShowInInspector, ReadOnly] private List<Player> Players { get; set; }
         [ShowInInspector, ReadOnly] public Player CurrentPlayer { get; private set; }
@@ -41,7 +40,7 @@ namespace OcentraAI.LLMGames.ThreeCardBrag.Manager
         {
             base.Awake();
             PlayerStartCountDown = new PlayerStartCountDown(this);
-           
+
         }
 
 

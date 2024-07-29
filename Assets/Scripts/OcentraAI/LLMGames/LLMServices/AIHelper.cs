@@ -1,4 +1,5 @@
-using OcentraAI.LLMGames.Scriptable.ScriptableSingletons;
+using OcentraAI.LLMGames.GameModes;
+using OcentraAI.LLMGames.GameModes.Rules;
 using OcentraAI.LLMGames.ThreeCardBrag.Manager;
 using System;
 using System.Collections.Generic;
@@ -9,12 +10,14 @@ namespace OcentraAI.LLMGames.LLMServices
     public class AIHelper : ManagerBase<AIHelper>
     {
         
-        private GameInfo GameInfo => GameInfo.Instance;
+      
         private GameManager GameManager => GameManager.Instance;
         private PlayerManager PlayerManager => PlayerManager.Instance;
         private ScoreManager ScoreManager => ScoreManager.Instance;
         private DeckManager DeckManager => DeckManager.Instance;
         private TurnManager TurnManager => TurnManager.Instance;
+        private GameMode GameMode => GameManager.GameMode;
+
 
         protected override void Awake()
         {
@@ -26,13 +29,13 @@ namespace OcentraAI.LLMGames.LLMServices
         {
             return $"You are an expert AI player in a Three Card Brag game. " +
                    $"Your goal is to make the best betting decisions based on the strength of your hand, the game rules, and the behavior of the human player. " +
-                   $"Game Rules: {GameInfo.GameRules}. " +
-                   $"Card Rankings: {GameInfo.CardRankings}. " +
-                   $"Bonus Rules: {GetBonusRules(GameInfo.BonusRules)}. " +
-                   $"Strategy Tips: {GameInfo.StrategyTips}. " +
-                   $"Bluffing Strategies: {BluffSetting(GameInfo.GetBluffSettingConditions())}. " +
-                   $"Example Hand Descriptions: {GetExampleHandDescriptions(GameInfo.GetExampleHandOdds())}. " +
-                   $"Possible Moves: {GetPossibleMoves(GameInfo.GetMoveValidityConditions())}. " +
+                   $"Game Rules: {GameMode.GameRules.LLM}. " +
+                   $"Card Rankings: {GameMode.CardRankings}. " +
+                   $"Bonus Rules: {GetBonusRules(GameMode.BonusRules)}. " +
+                   $"Strategy Tips: {GameMode.StrategyTips}. " +
+                   $"Bluffing Strategies: {BluffSetting(GameMode.GetBluffSettingConditions())}. " +
+                   $"Example Hand Descriptions: {GetExampleHandDescriptions(GameMode.GetExampleHandOdds())}. " +
+                   $"Possible Moves: {GetPossibleMoves(GameMode.GetMoveValidityConditions())}. " +
                    $"Difficulty Levels: {GetDifficultyLevel()}";
         }
 
@@ -46,10 +49,10 @@ namespace OcentraAI.LLMGames.LLMServices
                    $"Move Options: {GetMoveWord()}";
         }
 
-        private string GetBonusRules(BaseBonusRule[] rules)
+        private string GetBonusRules(List<BaseBonusRule> rules)
         {
             string bonusRules = $"BonusRule {Environment.NewLine}";
-            for (int index = 0; index < rules.Length; index++)
+            for (int index = 0; index < rules.Count; index++)
             {
                 BaseBonusRule bonusRule = rules[index];
                 bonusRules += $"bonusRule {index + 1}: {bonusRule.Description} Points {bonusRule.BonusValue} {Environment.NewLine}";

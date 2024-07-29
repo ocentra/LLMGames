@@ -1,9 +1,7 @@
 ﻿using Sirenix.OdinInspector;
-using System;
 using UnityEditor;
 using UnityEngine;
 using static OcentraAI.LLMGames.Utility;
-using static UnityEngine.GraphicsBuffer;
 
 namespace OcentraAI.LLMGames.Scriptable
 {
@@ -16,7 +14,7 @@ namespace OcentraAI.LLMGames.Scriptable
 
         [Required] public Sprite Sprite;
 
-        [ShowInInspector] public string RankSymbol => GetRankSymbol();
+        [ShowInInspector] public string RankSymbol => GetRankSymbol(Suit, Rank);
 
         public string Id => $"{Suit}_{Rank}";
 
@@ -35,9 +33,9 @@ namespace OcentraAI.LLMGames.Scriptable
             return "Black";
         }
 
-        public Color GetColorValue()
+        public static Color GetColorValue(Suit suit)
         {
-            if (Suit is Suit.Hearts or Suit.Diamonds)
+            if (suit is Suit.Hearts or Suit.Diamonds)
             {
                 return Color.red;
             }
@@ -46,26 +44,26 @@ namespace OcentraAI.LLMGames.Scriptable
         }
 
 
-        private string GetRankSymbol()
+        public static string GetRankSymbol(Suit suit, Rank rank)
         {
-            if (Suit == Suit.None || Rank == Rank.None)
+            if (suit == Suit.None || rank == Rank.None)
             {
                 return "None";
             }
             string symbol;
-            if (Suit == Suit.Hearts)
+            if (suit == Suit.Hearts)
             {
                 symbol = ColouredMessage($"♥", Color.red);
             }
-            else if (Suit == Suit.Diamonds)
+            else if (suit == Suit.Diamonds)
             {
                 symbol = ColouredMessage($"♦", Color.red);
             }
-            else if (Suit == Suit.Clubs)
+            else if (suit == Suit.Clubs)
             {
                 symbol = ColouredMessage($"♣", Color.black);
             }
-            else if (Suit == Suit.Spades)
+            else if (suit == Suit.Spades)
             {
                 symbol = ColouredMessage($"♠", Color.black);
             }
@@ -75,27 +73,27 @@ namespace OcentraAI.LLMGames.Scriptable
             }
 
             string formattedRank;
-            if (Rank == Rank.A)
+            if (rank == Rank.A)
             {
                 formattedRank = "A";
             }
-            else if (Rank == Rank.K)
+            else if (rank == Rank.K)
             {
                 formattedRank = "K";
             }
-            else if (Rank == Rank.Q)
+            else if (rank == Rank.Q)
             {
                 formattedRank = "Q";
             }
-            else if (Rank == Rank.J)
+            else if (rank == Rank.J)
             {
                 formattedRank = "J";
             }
             else
             {
-                formattedRank = ((int)Rank).ToString();
+                formattedRank = ((int)rank).ToString();
             }
-            string rankSymbol = $"{ColouredMessage($"{formattedRank}", GetColorValue())}{symbol}";
+            string rankSymbol = $"{ColouredMessage($"{formattedRank}", GetColorValue(suit))}{symbol}";
 
             //Debug.Log($"GetRankSymbol {rankSymbol} Rank {Rank.ToString()} Suit {Suit} ");
             return rankSymbol; 

@@ -25,6 +25,8 @@ namespace OcentraAI.LLMGames.GameModes
         [OdinSerialize, ShowInInspector, ReadOnly] public abstract int MaxPlayers { get; protected set; }
         [OdinSerialize, ShowInInspector, ReadOnly] public abstract int NumberOfCards { get; protected set; }
 
+        [OdinSerialize, ShowInInspector] public abstract bool UseTrump { get; protected set; } 
+
         // public props
 
         [OdinSerialize, ShowInInspector]
@@ -56,7 +58,7 @@ namespace OcentraAI.LLMGames.GameModes
         [OdinSerialize, ShowInInspector, ReadOnly]
         protected Dictionary<HandType, string> ExampleHandOdds { get; set; }
 
-
+       
 
         #endregion
 

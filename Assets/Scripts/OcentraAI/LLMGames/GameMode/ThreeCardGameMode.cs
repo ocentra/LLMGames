@@ -26,6 +26,8 @@ namespace OcentraAI.LLMGames.GameModes
 
         public override int NumberOfCards { get; protected set; } = 3;
 
+        public override bool UseTrump { get; protected set; } = true;
+
         [Button(ButtonSizes.Medium)]
         protected override void Initialize()
         {
@@ -42,11 +44,10 @@ namespace OcentraAI.LLMGames.GameModes
 
             BonusRules = new List<BaseBonusRule>
             {
-                new ThreeOfAKindRule(30, 100,this),
+                new NOfAKindRule(30, 100,this),
                 new StraightFlushRule(25, 90, this),
                 new SameColorsSequenceRule(20, 80, this),
                 new DifferentColorsSequenceRule(15, 70, this),
-                new PairInHandRule(10, 60, this),
                 new FlushRule(5, 70, this)
             };
         }

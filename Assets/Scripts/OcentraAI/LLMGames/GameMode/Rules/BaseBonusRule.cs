@@ -1,5 +1,7 @@
 using OcentraAI.LLMGames.Scriptable;
 using OcentraAI.LLMGames.ThreeCardBrag.Manager;
+using Sirenix.OdinInspector;
+using Sirenix.Serialization;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -9,11 +11,12 @@ namespace OcentraAI.LLMGames.GameModes.Rules
     [Serializable]
     public abstract class BaseBonusRule
     {
-        public string RuleName;
-        public string Description;
-        public int BonusValue;
-        public int Priority;
-        public GameMode GameMode;
+        [OdinSerialize, ShowInInspector] public string RuleName { get; protected set; }
+        [OdinSerialize, ShowInInspector] public string Description { get; protected set; }
+        [OdinSerialize, ShowInInspector] public int BonusValue { get; protected set; }
+        [OdinSerialize, ShowInInspector] public int Priority { get; protected set; }
+        [OdinSerialize, ShowInInspector] public GameMode GameMode { get; protected set; }
+        [OdinSerialize,ShowInInspector] public GameRulesContainer Examples { get; protected set; }
         protected BaseBonusRule(string ruleName, string description, int bonusValue, int priority, GameMode gameMode)
         {
             RuleName = ruleName;
@@ -23,6 +26,7 @@ namespace OcentraAI.LLMGames.GameModes.Rules
             GameMode = gameMode;
         }
 
+        public abstract void InitializeExamples();
         public abstract bool Evaluate(List<Card> hand, out BonusDetails bonusDetails);
 
         protected Card GetTrumpCard() => DeckManager.Instance.WildCards.GetValueOrDefault("TrumpCard");
@@ -102,15 +106,5 @@ namespace OcentraAI.LLMGames.GameModes.Rules
                 .SelectMany(t => list.Where(e => !t.Contains(e)),
                             (t1, t2) => t1.Concat(new List<Card> { t2 }).ToList());
         }
-    }
-
-    public class BonusDetails
-    {
-        public string RuleName { get; set; }
-        public int BaseBonus { get; set; }
-        public int AdditionalBonus { get; set; }
-        public List<string> BonusDescriptions { get; set; } = new List<string>();
-        public int Priority { get; set; }
-        public int TotalBonus => BaseBonus + AdditionalBonus;
     }
 }

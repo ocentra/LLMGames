@@ -39,6 +39,14 @@ namespace OcentraAI.LLMGames.ThreeCardBrag.Rules
         [Tooltip("Bonus for Five of a Kind with Trump card")]
         public int FiveOfKindBonus = 25;
 
+        [Tooltip("Bonus for FullHouseBonus")] 
+        public int FullHouseBonus = 35;
+
+        public int StraightBonus = 25;
+        public int FlushBonus = 20;
+        public int RoyalFlushBonus = 35;
+        public int HighCardBonus = 10;
+
         public int GetBonusForSet(int setSize)
         {
             switch (setSize)

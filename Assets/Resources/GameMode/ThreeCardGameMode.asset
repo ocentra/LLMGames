@@ -1,5 +1,113 @@
 %YAML 1.1
 %TAG !u! tag:unity3d.com,2011:
+--- !u!114 &-5427668408012080204
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 711d9dbdbf7372d4fbef04aa9d5d0aea, type: 3}
+  m_Name: RoyalFlush
+  m_EditorClassIdentifier: 
+  serializationData:
+    SerializedFormat: 2
+    SerializedBytes: 
+    ReferencedUnityObjects:
+    - {fileID: 11400000}
+    SerializedBytesString: 
+    Prefab: {fileID: 0}
+    PrefabModificationsReferencedUnityObjects: []
+    PrefabModifications: []
+    SerializationNodes:
+    - Name: BonusValue
+      Entry: 3
+      Data: 30
+    - Name: Priority
+      Entry: 3
+      Data: 80
+    - Name: RuleName
+      Entry: 1
+      Data: RoyalFlush
+    - Name: Description
+      Entry: 1
+      Data: A sequence of cards from Q to A in the same suit
+    - Name: GameMode
+      Entry: 10
+      Data: 0
+    - Name: Examples
+      Entry: 7
+      Data: 0|OcentraAI.LLMGames.GameModes.GameRulesContainer, LLMGames
+    - Name: Player
+      Entry: 1
+      Data: "RoyalFlush A sequence of cards from Q to A in the same suit\r\nRoyalFlush
+        Bonus: 30\r\nExamples:\r\n<color=#000000>Q</color><color=#000000>\u2660</color>,
+        <color=#000000>K</color><color=#000000>\u2660</color>, <color=#000000>A</color><color=#000000>\u2660</color>\r\nTrump
+        Examples:\r\n<color=#FF0000>Q</color><color=#FF0000>\u2665</color>, <color=#FF0000>K</color><color=#FF0000>\u2665</color>,
+        <color=#FF0000>6</color><color=#FF0000>\u2665</color> (Trump: <color=#FF0000>6</color><color=#FF0000>\u2665</color>)\r\n"
+    - Name: LLM
+      Entry: 1
+      Data: "RoyalFlush A sequence of cards from Q to A in the same suit\r\nRoyalFlush
+        Bonus: 30\r\nExamples:\r\nQ\u2660, K\u2660, A\u2660\r\nTrump Examples:\r\nQ\u2665,
+        K\u2665, 6\u2665 (Trump: 6\u2665)\r\n"
+    - Name: 
+      Entry: 8
+      Data: 
+--- !u!114 &-5231532391801996686
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 8fdcdae1e5677fa418934671eb85e409, type: 3}
+  m_Name: FullHouseRule
+  m_EditorClassIdentifier: 
+  serializationData:
+    SerializedFormat: 2
+    SerializedBytes: 
+    ReferencedUnityObjects:
+    - {fileID: 11400000}
+    SerializedBytesString: 
+    Prefab: {fileID: 0}
+    PrefabModificationsReferencedUnityObjects: []
+    PrefabModifications: []
+    SerializationNodes:
+    - Name: BonusValue
+      Entry: 3
+      Data: 30
+    - Name: Priority
+      Entry: 3
+      Data: 80
+    - Name: RuleName
+      Entry: 1
+      Data: FullHouseRule
+    - Name: Description
+      Entry: 6
+      Data: 
+    - Name: GameMode
+      Entry: 10
+      Data: 0
+    - Name: Examples
+      Entry: 7
+      Data: 0|OcentraAI.LLMGames.GameModes.GameRulesContainer, LLMGames
+    - Name: Player
+      Entry: 1
+      Data: "FullHouseRule \r\nFullHouseRule Bonus: 30\r\nExamples:\r\nA\u2660, A\u2666,
+        A\u2660\r\nTrump Examples:\r\nA\u2660, A\u2666, A\u2660\r\n6\u2660, 6\u2666,
+        6\u2665\r\n"
+    - Name: LLM
+      Entry: 1
+      Data: "FullHouseRule \r\nFullHouseRule Bonus: 30\r\nExamples:\r\nA\u2660, A\u2666,
+        A\u2660\r\nTrump Examples:\r\nA\u2660, A\u2666, A\u2660\r\n6\u2660, 6\u2666,
+        6\u2665\r\n"
+    - Name: 
+      Entry: 8
+      Data: 
 --- !u!114 &11400000
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -29,7 +137,7 @@ MonoBehaviour:
       Data: 60
     - Name: InitialPlayerCoins
       Entry: 3
-      Data: 1000
+      Data: 10000
     - Name: GameName
       Entry: 1
       Data: Three Card Brag
@@ -42,6 +150,9 @@ MonoBehaviour:
     - Name: NumberOfCards
       Entry: 3
       Data: 3
+    - Name: UseTrump
+      Entry: 5
+      Data: true
     - Name: GameRules
       Entry: 7
       Data: 0|OcentraAI.LLMGames.GameModes.GameRulesContainer, LLMGames
@@ -54,14 +165,14 @@ MonoBehaviour:
         can choose to fold, call, or raise at their turn.\r\n5. Players can draw
         a new card to the floor.\r\n6. Players can pick and swap a card from the
         floor. After picking and swapping, the player must decide to bet, fold, call,
-        or raise.\r\n7. The highest hand value wins (Ace high). In case of a tie,
-        the highest card wins.\r\n8. The game ends when a player runs out of coins
-        or after a set number of rounds.\r\n9. The trailing player can continue if
-        they have more coins.\r\n10. Players start with 1000 coins.\r\nSpecial Rules
+        or raise.\r\n7. The highest hand value wins (A high). In case of a tie, the
+        highest card wins.\r\n8. The game ends when a player runs out of coins or
+        after a set number of rounds.\r\n9. The trailing player can continue if they
+        have more coins.\r\n10. Players start with 10000 coins.\r\nSpecial Rules
         for Three Card Brag:\r\n11. Three of a Kind: Three cards of the same rank.
         Example: <color=#FF0000>J</color><color=#FF0000>\u2666</color>, <color=#FF0000>J</color><color=#FF0000>\u2665</color>,
         <color=#000000>J</color><color=#000000>\u2663</color>\r\n12. Royal Flush:
-        Three cards in sequence of the same suit, starting from Ace. Example: <color=#000000>A</color><color=#000000>\u2660</color>,
+        Three cards in sequence of the same suit, starting from A. Example: <color=#000000>A</color><color=#000000>\u2660</color>,
         <color=#000000>K</color><color=#000000>\u2660</color>, <color=#000000>Q</color><color=#000000>\u2660</color>\r\n13.
         Straight Flush: Three cards in sequence of the same suit. Example: <color=#000000>9</color><color=#000000>\u2660</color>,
         <color=#000000>10</color><color=#000000>\u2660</color>, <color=#000000>J</color><color=#000000>\u2660</color>\r\n14.
@@ -74,7 +185,7 @@ MonoBehaviour:
         <color=#FF0000>Q</color><color=#FF0000>\u2666</color>, <color=#000000>7</color><color=#000000>\u2663</color>\r\n17.
         High Card: When no other hand is achieved, the highest card plays. Example:
         <color=#000000>A</color><color=#000000>\u2660</color>, <color=#FF0000>7</color><color=#FF0000>\u2666</color>,
-        <color=#000000>4</color><color=#000000>\u2663</color> (Ace high)\r\n18. Trump
+        <color=#000000>4</color><color=#000000>\u2663</color> (A high)\r\n18. Trump
         Card: A designated card that can replace any card to complete a sequence
         or set. Example: Trump card is <color=#FF0000>6</color><color=#FF0000>\u2665</color>.
         Hand: <color=#000000>2</color><color=#000000>\u2660</color>, <color=#000000>3</color><color=#000000>\u2660</color>,
@@ -97,13 +208,13 @@ MonoBehaviour:
       Data: "Three Card Brag: 3 cards dealt each round. Bet blind or see hand. Blind
         bet doubles, seen hand bet doubles current bet. Choose to fold, call, raise.
         Draw new card to floor. Pick and swap card, then bet, fold, call, or raise.
-        Highest hand wins (Ace high). Tie: highest card wins. Game ends when player
+        Highest hand wins (A high). Tie: highest card wins. Game ends when player
         runs out of coins or after set rounds. Trailing player can continue if more
-        coins. Start with 1000 coins.Special Rules: Three of a Kind: J\u2660, J\u2666,
+        coins. Start with 10000 coins.Special Rules: Three of a Kind: J\u2660, J\u2666,
         J\u2663. Royal Flush: A\u2660, K\u2660, Q\u2660. Straight Flush: 9\u2660,
         10\u2660, J\u2660. Straight: 4\u2660, 5\u2663, 6\u2666. Flush: 2\u2660, 5\u2660,
         9\u2660. Pair: Q\u2660, Q\u2666, 7\u2663. High Card: A\u2660, 7\u2666, 4\u2663
-        (Ace high).Trump: 6\u2665 can replace any card. Ex: 2\u2660, 3\u2660, 6\u2665
+        (A high).Trump: 6\u2665 can replace any card. Ex: 2\u2660, 3\u2660, 6\u2665
         (6\u2665 becomes 4\u2660 for straight flush: 2\u2660, 3\u2660, 4\u2660).
         Trump in Middle: 5\u2660, 6\u2665, 7\u2660 (6\u2665 in middle). Adjacent
         to Trump: 2\u2660, 3\u2660, 7\u2665 (7\u2665 next to 6\u2665 gets points,

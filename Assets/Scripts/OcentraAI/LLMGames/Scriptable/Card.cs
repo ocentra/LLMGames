@@ -43,29 +43,62 @@ namespace OcentraAI.LLMGames.Scriptable
             return Color.black;
         }
 
+        public static Rank GetRankFromChar(char rankChar)
+        {
+            return rankChar switch
+            {
+                '2' => Rank.Two,
+                '3' => Rank.Three,
+                '4' => Rank.Four,
+                '5' => Rank.Five,
+                '6' => Rank.Six,
+                '7' => Rank.Seven,
+                '8' => Rank.Eight,
+                '9' => Rank.Nine,
+                'J' => Rank.J,
+                'Q' => Rank.Q,
+                'K' => Rank.K,
+                'A' => Rank.A,
+                _ => Rank.None // Default to None for invalid ranks
+            };
+        }
 
-        public static string GetRankSymbol(Suit suit, Rank rank)
+        public static Suit GetSuitFromChar(char suitChar)
+        {
+            return suitChar switch
+            {
+                '♠' => Suit.Spades,
+                '♥' => Suit.Hearts,
+                '♦' => Suit.Diamonds,
+                '♣' => Suit.Clubs,
+                _ => Suit.None // Default to None for invalid suits
+            };
+        }
+
+
+        public static string GetRankSymbol(Suit suit, Rank rank, bool coloured = true)
         {
             if (suit == Suit.None || rank == Rank.None)
             {
                 return "None";
             }
+
             string symbol;
             if (suit == Suit.Hearts)
             {
-                symbol = ColouredMessage($"♥", Color.red);
+                symbol = coloured ? ColouredMessage("♥", Color.red) : "♥";
             }
             else if (suit == Suit.Diamonds)
             {
-                symbol = ColouredMessage($"♦", Color.red);
+                symbol = coloured ? ColouredMessage("♦", Color.red) : "♦";
             }
             else if (suit == Suit.Clubs)
             {
-                symbol = ColouredMessage($"♣", Color.black);
+                symbol = coloured ? ColouredMessage("♣", Color.black) : "♣";
             }
             else if (suit == Suit.Spades)
             {
-                symbol = ColouredMessage($"♠", Color.black);
+                symbol = coloured ? ColouredMessage("♠", Color.black) : "♠";
             }
             else
             {
@@ -93,10 +126,11 @@ namespace OcentraAI.LLMGames.Scriptable
             {
                 formattedRank = ((int)rank).ToString();
             }
-            string rankSymbol = $"{ColouredMessage($"{formattedRank}", GetColorValue(suit))}{symbol}";
 
-            //Debug.Log($"GetRankSymbol {rankSymbol} Rank {Rank.ToString()} Suit {Suit} ");
-            return rankSymbol; 
+            string rankSymbol = coloured ? $"{ColouredMessage($"{formattedRank}", GetColorValue(suit))}{symbol}" : $"{formattedRank}{symbol}";
+
+            // Debug.Log($"GetRankSymbol {rankSymbol} Rank {Rank.ToString()} Suit {Suit} ");
+            return rankSymbol;
         }
 
         public void Init(Suit suit, Rank rank)
@@ -112,10 +146,10 @@ namespace OcentraAI.LLMGames.Scriptable
         {
             string formattedRank = Rank switch
             {
-                Rank.A => "Ace",
-                Rank.K => "King",
-                Rank.Q => "Queen",
-                Rank.J => "Jack",
+                Rank.A => "A",
+                Rank.K => "K",
+                Rank.Q => "Q",
+                Rank.J => "J",
                 _ => ((int)Rank).ToString()
             };
 
@@ -141,6 +175,6 @@ namespace OcentraAI.LLMGames.Scriptable
             AssetDatabase.Refresh();
         }
 
-  
+
     }
 }

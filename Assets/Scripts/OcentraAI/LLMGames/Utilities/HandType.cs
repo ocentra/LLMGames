@@ -28,10 +28,10 @@ namespace OcentraAI.LLMGames
         Eight,
         Nine,
         Ten,
-        J,  // Jack
-        Q,  // Queen
-        K,  // King
-        A   // Ace
+        J,  // J
+        Q,  // Q
+        K,  // K
+        A   // A
     }
 
 

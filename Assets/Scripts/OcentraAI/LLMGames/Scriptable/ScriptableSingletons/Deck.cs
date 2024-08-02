@@ -169,5 +169,11 @@ namespace OcentraAI.LLMGames.Scriptable.ScriptableSingletons
             AssetDatabase.Refresh();
 #endif
         }
+
+        public Card GetCard(Suit suit, Rank rank)
+        {
+            return CardTemplates.FirstOrDefault(card => card.Suit == suit && card.Rank == rank);
+
+        }
     }
 }

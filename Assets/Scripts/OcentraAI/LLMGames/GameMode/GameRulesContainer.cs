@@ -1,5 +1,6 @@
 using Sirenix.OdinInspector;
 using Sirenix.Serialization;
+using UnityEngine;
 
 namespace OcentraAI.LLMGames.GameModes
 {
@@ -11,6 +12,13 @@ namespace OcentraAI.LLMGames.GameModes
 
         [OdinSerialize, HideLabel]
         public string LLM;
+
+
+
+        public GameRulesContainer()
+        {
+           
+        }
     }
 
 

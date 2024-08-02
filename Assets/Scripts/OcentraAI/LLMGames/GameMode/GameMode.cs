@@ -2,8 +2,11 @@ using OcentraAI.LLMGames.GameModes.Rules;
 using OcentraAI.LLMGames.ThreeCardBrag.Rules;
 using Sirenix.OdinInspector;
 using Sirenix.Serialization;
+using System;
 using System.Collections.Generic;
 using System.Linq;
+using UnityEditor;
+using static UnityEngine.GraphicsBuffer;
 
 namespace OcentraAI.LLMGames.GameModes
 {
@@ -30,15 +33,15 @@ namespace OcentraAI.LLMGames.GameModes
         // public props
 
         [OdinSerialize, ShowInInspector]
-        public GameRulesContainer GameRules { get; protected set; } = new GameRulesContainer();
+        public GameRulesContainer GameRules { get; protected set; } 
 
         [OdinSerialize, ShowInInspector]
-        public GameRulesContainer GameDescription { get; protected set; } = new GameRulesContainer();
+        public GameRulesContainer GameDescription { get; protected set; } 
 
         [OdinSerialize, ShowInInspector]
-        public GameRulesContainer StrategyTips { get; protected set; } = new GameRulesContainer();
+        public GameRulesContainer StrategyTips { get; protected set; } 
 
-        [ShowInInspector, ReadOnly]
+        [ShowInInspector]
         public List<BaseBonusRule> BonusRules { get; protected set; } = new List<BaseBonusRule>();
 
         [ShowInInspector, ReadOnly]
@@ -58,21 +61,75 @@ namespace OcentraAI.LLMGames.GameModes
         [OdinSerialize, ShowInInspector, ReadOnly]
         protected Dictionary<HandType, string> ExampleHandOdds { get; set; }
 
-       
+
 
         #endregion
 
         #region Initialization Methods
 
-        protected abstract void Initialize();
 
-        protected virtual void InitializeBonusRules() { }
+    
+        public abstract void Initialize(List<BaseBonusRule> bonusRulesTemplate);
 
-        protected virtual void InitializeGameRules() { }
+        protected virtual void InitializeBonusRules(List<BaseBonusRule> bonusRulesTemplate)
+        {
+            string gameModePath = AssetDatabase.GetAssetPath(this);
+            UnityEngine.Object[] assets = AssetDatabase.LoadAllAssetsAtPath(gameModePath);
+            List<BaseBonusRule> existingChildRules = assets.OfType<BaseBonusRule>().Where(r => r.name != string.Empty).ToList();
 
-        protected virtual void InitializeGameDescription() { }
+            Dictionary<string, BaseBonusRule> existingRulesDict = existingChildRules.ToDictionary(r => r.name);
+            Dictionary<string, BaseBonusRule> templateRulesDict = bonusRulesTemplate.ToDictionary(r => r.name);
 
-        protected virtual void InitializeStrategyTips() { }
+            List<BaseBonusRule> updatedRules = new List<BaseBonusRule>();
+
+            foreach (BaseBonusRule templateRule in bonusRulesTemplate)
+            {
+                if (existingRulesDict.TryGetValue(templateRule.name, out BaseBonusRule existingRule))
+                {
+                    existingRule.UpdateRule(templateRule);
+                    updatedRules.Add(existingRule);
+                }
+                else
+                {
+                    BaseBonusRule newRule = Instantiate(templateRule);
+                    newRule.name = templateRule.RuleName;
+                    newRule.SetGameMode(this);
+                    updatedRules.Add(newRule);
+                    AssetDatabase.AddObjectToAsset(newRule, this);
+                }
+            }
+
+            foreach (BaseBonusRule existingRule in existingChildRules)
+            {
+                if (!templateRulesDict.ContainsKey(existingRule.name))
+                {
+                    DestroyImmediate(existingRule, true);
+                }
+            }
+
+            BonusRules = updatedRules;
+            AssetDatabase.SaveAssets();
+            AssetDatabase.Refresh();
+        }
+
+
+
+
+
+        protected virtual void InitializeGameRules()
+        {
+            GameRules = new GameRulesContainer();
+        }
+
+        protected virtual void InitializeGameDescription()
+        {
+            GameDescription = new GameRulesContainer();
+        }
+
+        protected virtual void InitializeStrategyTips()
+        {
+            StrategyTips = new GameRulesContainer();
+        }
 
         protected virtual void InitializeMoveValidityConditions()
         {
@@ -93,10 +150,10 @@ namespace OcentraAI.LLMGames.GameModes
         {
             CardRankings = new CardRanking[]
             {
-                new CardRanking { CardName = "Ace", Value = 14 },
-                new CardRanking { CardName = "King", Value = 13 },
-                new CardRanking { CardName = "Queen", Value = 12 },
-                new CardRanking { CardName = "Jack", Value = 11 },
+                new CardRanking { CardName = "A", Value = 14 },
+                new CardRanking { CardName = "K", Value = 13 },
+                new CardRanking { CardName = "Q", Value = 12 },
+                new CardRanking { CardName = "J", Value = 11 },
                 new CardRanking { CardName = "10", Value = 10 },
                 new CardRanking { CardName = "9", Value = 9 },
                 new CardRanking { CardName = "8", Value = 8 },
@@ -109,9 +166,9 @@ namespace OcentraAI.LLMGames.GameModes
             };
         }
 
-        protected void InitializeGameMode()
+        protected void InitializeGameMode(List<BaseBonusRule> bonusRulesTemplate)
         {
-            InitializeBonusRules();
+            InitializeBonusRules(bonusRulesTemplate);
             InitializeGameRules();
             InitializeGameDescription();
             InitializeStrategyTips();
@@ -151,12 +208,11 @@ namespace OcentraAI.LLMGames.GameModes
         #region Utility Methods
 
 #if UNITY_EDITOR
-        [Button(ButtonSizes.Medium)]
-        protected virtual void SaveChanges()
+        public virtual void SaveChanges()
         {
-            UnityEditor.EditorUtility.SetDirty(this);
-            UnityEditor.AssetDatabase.SaveAssets();
-            UnityEditor.AssetDatabase.Refresh();
+            EditorUtility.SetDirty(this);
+            AssetDatabase.SaveAssets();
+            AssetDatabase.Refresh();
         }
 #endif
 

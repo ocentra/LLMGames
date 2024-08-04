@@ -5,9 +5,10 @@ using UnityEngine;
 
 namespace OcentraAI.LLMGames.GameModes.Rules
 {
-    [CreateAssetMenu(fileName = nameof(StraightFlush), menuName = "Rules/StraightFlush")]
+    [CreateAssetMenu(fileName = nameof(StraightFlush), menuName = "GameMode/Rules/StraightFlush")]
     public class StraightFlush : BaseBonusRule
     {
+        public override int MinNumberOfCard { get; protected set; } = 3;
         public override string RuleName { get; protected set; } = $"{nameof(StraightFlush)}";
         public override int BonusValue { get; protected set; } = 30;
         public override int Priority { get; protected set; } = 80;
@@ -15,11 +16,21 @@ namespace OcentraAI.LLMGames.GameModes.Rules
         public override bool Evaluate(List<Card> hand, out BonusDetails bonusDetails)
         {
             bonusDetails = null;
+            if (GameMode == null || (GameMode != null && GameMode.NumberOfCards > MinNumberOfCard))
+                return false;
 
             var ranks = hand.Select(card => (int)card.Rank).ToList();
+            var suit = hand[0].Suit;
+            List<int> royalSequence = GetRoyalSequence();
+
+            // Check for royal flush
+            if (IsSequence(ranks, royalSequence))
+            {
+                return false;
+            }
 
             // Check for natural straight flush
-            if (hand.All(card => card.Suit == hand[0].Suit) && IsSequence(ranks))
+            if (hand.All(card => card.Suit == suit) && IsSequence(ranks))
             {
                 bonusDetails = CalculateBonus(hand, false);
                 return true;
@@ -33,8 +44,8 @@ namespace OcentraAI.LLMGames.GameModes.Rules
                 if (hasTrumpCard)
                 {
                     var nonTrumpCards = hand.Where(c => c != trumpCard).ToList();
-                    bool canFormStraightFlush = (hand.All(card => card.Suit == hand[0].Suit) && CanFormSequenceWithWild(nonTrumpCards.Select(c => c.GetRankValue()).ToList())) ||
-                                                (IsSequence(ranks) && nonTrumpCards.All(c => c.Suit == nonTrumpCards[0].Suit));
+                    bool canFormStraightFlush = (nonTrumpCards.All(card => card.Suit == suit) && CanFormSequenceWithWild(nonTrumpCards.Select(c => (int)c.Rank).ToList())) ||
+                                                (IsSequence(ranks) && nonTrumpCards.All(c => c.Suit == suit));
 
                     if (canFormStraightFlush)
                     {
@@ -58,7 +69,7 @@ namespace OcentraAI.LLMGames.GameModes.Rules
                 additionalBonus += GameMode.TrumpBonusValues.StraightFlushBonus;
                 descriptions.Add($"Trump Card Bonus: +{GameMode.TrumpBonusValues.StraightFlushBonus}");
 
-                var orderedHand = hand.OrderBy(card => card.GetRankValue()).ToList();
+                var orderedHand = hand.OrderBy(card => (int)card.Rank).ToList();
                 var trumpCard = GetTrumpCard();
 
                 // Check for CardInMiddleBonus
@@ -79,10 +90,8 @@ namespace OcentraAI.LLMGames.GameModes.Rules
             return CreateBonusDetails(RuleName, baseBonus, Priority, descriptions, additionalBonus);
         }
 
-       
-        public override void Initialize(GameMode gameMode)
+        public override bool Initialize(GameMode gameMode)
         {
-            RuleName = "Straight Flush Rule";
             Description = "A sequence of cards in rank and all of the same suit, optionally considering Trump Wild Card.";
 
             List<string> playerExamples = new List<string>();
@@ -115,7 +124,7 @@ namespace OcentraAI.LLMGames.GameModes.Rules
                 llmTrumpExamples.Add($"{llmTrumpExample} (Trump: {llmTrumpCardSymbol})");
             }
 
-            CreateExample(RuleName, Description, BonusValue, playerExamples, llmExamples, playerTrumpExamples, llmTrumpExamples, gameMode.UseTrump);
+            return TryCreateExample(RuleName, Description, BonusValue, playerExamples, llmExamples, playerTrumpExamples, llmTrumpExamples, gameMode.UseTrump);
         }
     }
 }

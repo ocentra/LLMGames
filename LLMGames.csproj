@@ -103,7 +103,6 @@
     <Compile Include="Assets\Scripts\OcentraAI\LLMGames\Scriptable\CardEditor.cs" />
     <Compile Include="Assets\Scripts\OcentraAI\LLMGames\GameMode\GameRulesContainer.cs" />
     <Compile Include="Assets\Scripts\OcentraAI\LLMGames\Utilities\ICustomGlobalConfigEvents.cs" />
-    <Compile Include="Assets\Scripts\OcentraAI\LLMGames\GameMode\GameRulesContainerDrawer.cs" />
     <Compile Include="Assets\Scripts\OcentraAI\LLMGames\ThreeCardBrag\Managers\DevModeManager.cs" />
     <Compile Include="Assets\Scripts\OcentraAI\LLMGames\ThreeCardBrag\Managers\PlayerManager.cs" />
     <Compile Include="Assets\Scripts\OcentraAI\LLMGames\LLMServices\AzureOpenAIService.cs" />
@@ -132,7 +131,6 @@
     <Compile Include="Assets\Scripts\OcentraAI\LLMGames\LLMServices\CardRanking.cs" />
     <Compile Include="Assets\Scripts\OcentraAI\LLMGames\Utilities\DifficultyLevels.cs" />
     <Compile Include="Assets\Scripts\OcentraAI\LLMGames\LLMServices\LLMConfig.cs" />
-    <Compile Include="Assets\Scripts\OcentraAI\LLMGames\GameMode\Rules\ColoredFlush.cs" />
     <Compile Include="Assets\Scripts\OcentraAI\LLMGames\GameScreens\GameOverScreen.cs" />
     <Compile Include="Assets\Scripts\OcentraAI\LLMGames\Utilities\Utility.cs" />
     <Compile Include="Assets\Scripts\OcentraAI\LLMGames\ThreeCardBrag\EventBus\PurchaseCoins.cs" />
@@ -145,7 +143,6 @@
     <Compile Include="Assets\Scripts\OcentraAI\LLMGames\GameMode\Rules\ThreeOfAKind.cs" />
     <Compile Include="Assets\Scripts\OcentraAI\LLMGames\GameMode\Rules\Flush.cs" />
     <Compile Include="Assets\Scripts\OcentraAI\LLMGames\ThreeCardBrag\Managers\GameManager.cs" />
-    <Compile Include="Assets\Scripts\OcentraAI\LLMGames\GameMode\Rules\Straight.cs" />
     <Compile Include="Assets\Scripts\OcentraAI\LLMGames\Scriptable\ScriptableSingletons\Deck.cs" />
     <Compile Include="Assets\Scripts\OcentraAI\LLMGames\ThreeCardBrag\EventBus\PlayerActionStartNewGame.cs" />
     <Compile Include="Assets\Scripts\OcentraAI\LLMGames\Editor\CardAssetPostprocessor.cs" />
@@ -170,13 +167,14 @@
     <Compile Include="Assets\Scripts\OcentraAI\LLMGames\GameMode\Rules\FourOfAKind.cs" />
     <Compile Include="Assets\Scripts\OcentraAI\LLMGames\ThreeCardBrag\EventBus\NewGameEventArgs.cs" />
     <Compile Include="Assets\Scripts\OcentraAI\LLMGames\GameScreens\HomeScreen.cs" />
+    <Compile Include="Assets\Scripts\OcentraAI\LLMGames\Editor\GameModeEditor.cs" />
     <Compile Include="Assets\Scripts\OcentraAI\LLMGames\LLMServices\Result.cs" />
+    <Compile Include="Assets\Scripts\OcentraAI\LLMGames\Editor\GameRulesContainerDrawer.cs" />
     <Compile Include="Assets\Scripts\OcentraAI\LLMGames\Authentication\UnityServicesManager.cs" />
     <Compile Include="Assets\Scripts\OcentraAI\LLMGames\ThreeCardBrag\EventBus\UpdateFloorCardList.cs" />
     <Compile Include="Assets\Scripts\OcentraAI\LLMGames\ThreeCardBrag\UI\BragSelectable.cs" />
     <Compile Include="Assets\Scripts\OcentraAI\LLMGames\ThreeCardBrag\EventBus\EventBus.cs" />
     <Compile Include="Assets\Scripts\OcentraAI\LLMGames\Utilities\CustomGlobalConfigAttribute.cs" />
-    <Compile Include="Assets\Scripts\OcentraAI\LLMGames\GameMode\GameModeEditor.cs" />
     <Compile Include="Assets\Scripts\OcentraAI\LLMGames\GameMode\Rules\FiveOfAKind.cs" />
   </ItemGroup>
   <ItemGroup>

@@ -8,7 +8,7 @@ using UnityEngine;
 
 namespace OcentraAI.LLMGames.GameModes
 {
-    [CreateAssetMenu(fileName = nameof(TestGameMode), menuName = "GameModes/TestGameMode")]
+    [CreateAssetMenu(fileName = nameof(TestGameMode), menuName = "GameMode/TestGameMode")]
     public class TestGameMode : GameMode
     {
         [OdinSerialize, ShowInInspector] public Card TrumpCard => Deck.Instance.GetCard(Suit.Hearts, Rank.Six);
@@ -37,10 +37,10 @@ namespace OcentraAI.LLMGames.GameModes
         [OdinSerialize, ShowInInspector]
         public override bool UseTrump { get; protected set; } = true;
 
-        public override void Initialize(List<BaseBonusRule> bonusRulesTemplate)
+        public override bool TryInitialize(List<BaseBonusRule> bonusRulesTemplate)
         {
             // Initialize any additional properties or configurations specific to the TestGameMode
-            InitializeGameMode(BonusRules);
+          return  TryInitializeGameMode(BonusRules);
         }
 
         public void SetNumberOfCards(int numberOfCards)

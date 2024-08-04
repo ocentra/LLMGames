@@ -7,9 +7,10 @@ using UnityEngine;
 
 namespace OcentraAI.LLMGames.GameModes.Rules
 {
-    [CreateAssetMenu(fileName = nameof(HighCard), menuName = "Rules/HighCard")]
+    [CreateAssetMenu(fileName = nameof(HighCard), menuName = "GameMode/Rules/HighCard")]
     public class HighCard : BaseBonusRule
     {
+        public override int MinNumberOfCard { get; protected set; } = 3;
         public override string RuleName { get; protected set; } = $"{nameof(HighCard)}";
         public override int BonusValue { get; protected set; } = 30;
         public override int Priority { get; protected set; } = 50;
@@ -17,7 +18,34 @@ namespace OcentraAI.LLMGames.GameModes.Rules
         public override bool Evaluate(List<Card> hand, out BonusDetails bonusDetails)
         {
             bonusDetails = null;
-            var trumpCard = GetTrumpCard();
+            if (GameMode == null || (GameMode != null && GameMode.NumberOfCards < MinNumberOfCard))
+                return false;
+
+            Card trumpCard = GetTrumpCard();
+            var rankCounts = GetRankCounts(hand);
+            var ranks = hand.Select(card => (int)card.Rank).ToList();
+
+            // Check for pairs, three of a kind, or four of a kind
+            for (int i = 2; i <= 4; i++)
+            {
+                Rank? rank = FindNOfAKind(rankCounts, i);
+                if (rank.HasValue)
+                {
+                    return false;
+                }
+            }
+
+            // Check for sequence
+            if (IsSequence(ranks))
+            {
+                return false;
+            }
+
+            // Check for TrumpOfAKind or full house rule
+            if (IsFullHouseOrTrumpOfKind(rankCounts, trumpCard))
+            {
+                return false;
+            }
 
             // Check if hand contains the trump card
             if (hand.Contains(trumpCard))
@@ -26,8 +54,10 @@ namespace OcentraAI.LLMGames.GameModes.Rules
                 return true;
             }
 
-            // If no trump card is found, check for the highest card
-            var highCard = hand.OrderByDescending(card => card.Rank).FirstOrDefault();
+            // Check for highest card from ranks J, Q, K, A
+            Card highCard = hand.OrderByDescending(card => card.Rank)
+                                .FirstOrDefault(card => card.Rank == Rank.J || card.Rank == Rank.Q || card.Rank == Rank.K || card.Rank == Rank.A);
+
             if (highCard != null)
             {
                 bonusDetails = CalculateBonus(highCard, false);
@@ -41,7 +71,7 @@ namespace OcentraAI.LLMGames.GameModes.Rules
         {
             int baseBonus = BonusValue;
             int additionalBonus = isTrump ? GameMode.TrumpBonusValues.HighCardBonus : 0;
-            var descriptions = new List<string> { $"High Card: {Card.GetRankSymbol(highCard.Suit, highCard.Rank)}" };
+            List<string> descriptions = new List<string> { $"High Card: {Card.GetRankSymbol(highCard.Suit, highCard.Rank)}" };
 
             if (isTrump)
             {
@@ -51,9 +81,8 @@ namespace OcentraAI.LLMGames.GameModes.Rules
             return CreateBonusDetails(RuleName, baseBonus, Priority, descriptions, additionalBonus);
         }
 
-        public override void Initialize(GameMode gameMode)
+        public override bool Initialize(GameMode gameMode)
         {
-            RuleName = "High Card Rule";
             Description = "The highest card in the hand, with the trump card being the highest possible.";
 
             List<string> playerExamples = new List<string>();
@@ -63,22 +92,22 @@ namespace OcentraAI.LLMGames.GameModes.Rules
 
             for (int cardCount = 3; cardCount <= gameMode.NumberOfCards; cardCount++)
             {
-                var playerExample = CreateExampleString(cardCount, true);
-                var llmExample = CreateExampleString(cardCount, false);
+                string playerExample = CreateExampleString(cardCount, true);
+                string llmExample = CreateExampleString(cardCount, false);
 
                 playerExamples.Add(playerExample);
                 llmExamples.Add(llmExample);
 
                 if (gameMode.UseTrump)
                 {
-                    var playerTrumpExample = CreateExampleString(cardCount, true, true);
-                    var llmTrumpExample = CreateExampleString(cardCount, false, true);
+                    string playerTrumpExample = CreateExampleString(cardCount, true, true);
+                    string llmTrumpExample = CreateExampleString(cardCount, false, true);
                     playerTrumpExamples.Add(playerTrumpExample);
                     llmTrumpExamples.Add(llmTrumpExample);
                 }
             }
 
-            CreateExample(RuleName, Description, BonusValue, playerExamples, llmExamples, playerTrumpExamples, llmTrumpExamples, gameMode.UseTrump);
+            return TryCreateExample(RuleName, Description, BonusValue, playerExamples, llmExamples, playerTrumpExamples, llmTrumpExamples, gameMode.UseTrump);
         }
 
         private string CreateExampleString(int cardCount, bool isPlayer, bool useTrump = false)
@@ -119,13 +148,11 @@ namespace OcentraAI.LLMGames.GameModes.Rules
                     break;
             }
 
-            var exampleStrings = examples.Select(example =>
+            IEnumerable<string> exampleStrings = examples.Select(example =>
                 string.Join(" ", isPlayer ? ConvertCardSymbols(example) : example)
             );
 
             return string.Join(Environment.NewLine, exampleStrings);
         }
-
-
     }
 }

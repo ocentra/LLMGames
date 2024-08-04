@@ -7,9 +7,10 @@ using UnityEngine;
 
 namespace OcentraAI.LLMGames.GameModes.Rules
 {
-    [CreateAssetMenu(fileName = nameof(MultipleTriplets), menuName = "Rules/MultipleTriplets")]
+    [CreateAssetMenu(fileName = nameof(MultipleTriplets), menuName = "GameMode/Rules/MultipleTriplets")]
     public class MultipleTriplets : BaseBonusRule
     {
+        public override int MinNumberOfCard { get; protected set; } = 6;
         public override string RuleName { get; protected set; } = $"{nameof(MultipleTriplets)}";
         public override int BonusValue { get; protected set; } = 30;
         public override int Priority { get; protected set; } = 80;
@@ -17,6 +18,8 @@ namespace OcentraAI.LLMGames.GameModes.Rules
         public override bool Evaluate(List<Card> hand, out BonusDetails bonusDetails)
         {
             bonusDetails = null;
+            if (GameMode == null || (GameMode != null && GameMode.NumberOfCards > MinNumberOfCard))
+                return false;
 
             // Check for valid hand size (6 to 9 cards)
             if (hand.Count < 6)
@@ -45,9 +48,8 @@ namespace OcentraAI.LLMGames.GameModes.Rules
         }
 
         [Button(ButtonSizes.Large), PropertyOrder(-1)]
-        public override void Initialize(GameMode gameMode)
+        public override bool Initialize(GameMode gameMode)
         {
-            RuleName = "Multiple Triplets Rule";
             Description = "Two or more triplets of cards with different ranks.";
 
             List<string> playerExamples = new List<string>();
@@ -72,7 +74,7 @@ namespace OcentraAI.LLMGames.GameModes.Rules
                 }
             }
 
-            CreateExample(RuleName, Description, BonusValue, playerExamples, llmExamples, playerTrumpExamples, llmTrumpExamples, gameMode.UseTrump);
+            return TryCreateExample(RuleName, Description, BonusValue, playerExamples, llmExamples, playerTrumpExamples, llmTrumpExamples, gameMode.UseTrump);
         }
 
         private string CreateExampleString(int cardCount, bool isPlayer, bool useTrump = false)

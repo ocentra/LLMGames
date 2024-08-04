@@ -1,5 +1,4 @@
-﻿using Codice.Client.BaseCommands;
-using OcentraAI.LLMGames.Scriptable;
+﻿using OcentraAI.LLMGames.Scriptable;
 using OcentraAI.LLMGames.ThreeCardBrag.Manager;
 using Sirenix.OdinInspector;
 using Sirenix.Serialization;
@@ -11,6 +10,7 @@ namespace OcentraAI.LLMGames.GameModes.Rules
 {
     public abstract class BaseBonusRule : SerializedScriptableObject
     {
+        [OdinSerialize, ShowInInspector, ReadOnly] public abstract int MinNumberOfCard { get; protected set; }
         [OdinSerialize, ShowInInspector] public abstract int BonusValue { get; protected set; }
         [OdinSerialize, ShowInInspector] public abstract int Priority { get; protected set; }
         [OdinSerialize, ShowInInspector, ReadOnly] public abstract string RuleName { get; protected set; }
@@ -24,16 +24,16 @@ namespace OcentraAI.LLMGames.GameModes.Rules
             Priority = rule.Priority;
         }
 
-        public void SetGameMode(GameMode gameMode)
+        public bool SetGameMode(GameMode gameMode)
         {
             GameMode = gameMode;
-            Initialize(gameMode);
+            return Initialize(gameMode);
         }
 
         public abstract bool Evaluate(List<Card> hand, out BonusDetails bonusDetails);
 
 
-        public abstract void Initialize(GameMode gameMode);
+        public abstract bool Initialize(GameMode gameMode);
 
         protected Card GetTrumpCard() => DeckManager.Instance.WildCards.GetValueOrDefault("TrumpCard");
 
@@ -70,9 +70,38 @@ namespace OcentraAI.LLMGames.GameModes.Rules
                 .FirstOrDefault();
         }
 
+
+        protected bool IsNOfAKind(Dictionary<Rank, int> rankCounts, Rank rank, int n)
+        {
+            return rankCounts.TryGetValue(rank, out int count) && count == n;
+        }
+
+
         protected bool IsNOfAKind(Dictionary<Rank, int> rankCounts)
         {
             return FindNOfAKind(rankCounts).HasValue;
+        }
+
+        protected bool IsNOfAKind(Dictionary<Rank, int> rankCounts,Rank rank)
+        {
+            return FindNOfAKind(rankCounts) == rank;
+        }
+
+        protected bool IsFullHouseOrTrumpOfKind(Dictionary<Rank, int> rankCounts, Card trumpCard)
+        {
+            if (GameMode.UseTrump && rankCounts.TryGetValue(trumpCard.Rank, out int trumpRankCount) && trumpRankCount == GameMode.NumberOfCards)
+            {
+                return true;
+
+            }
+
+
+            return rankCounts.TryGetValue(Rank.A, out int aceCount) && aceCount == GameMode.NumberOfCards;
+        }
+
+        protected bool IsNOfAKindOfTrump(Dictionary<Rank, int> rankCounts, Card trumpCard, int n)
+        {
+            return rankCounts.TryGetValue(trumpCard.Rank, out int trumpCount) && trumpCount == n;
         }
 
         protected bool IsNOfAKindOfTrump(Dictionary<Rank, int> rankCounts, Card trumpCard)
@@ -220,43 +249,70 @@ namespace OcentraAI.LLMGames.GameModes.Rules
             return baseSequence.Skip(baseSequence.Count - numberOfCards).ToList();
         }
 
+        protected List<int> GetRoyalSequence()
+        {
+            List<int> royalRanks = new List<int>
+            {
+                (int)Rank.A, (int)Rank.K, (int)Rank.Q, (int)Rank.J, (int)Rank.Ten,
+                (int)Rank.Nine, (int)Rank.Eight, (int)Rank.Seven, (int)Rank.Six
+            };
+
+            return royalRanks.Take(GameMode.NumberOfCards).ToList();
+        }
         protected bool IsSequence(List<int> ranks, List<int> sequence)
         {
             return !sequence.Except(ranks).Any();
         }
 
-        protected void CreateExample(string ruleName, string description, int bonusValue, List<string> playerExamples,
+        protected bool TryCreateExample(string ruleName, string description, int bonusValue, List<string> playerExamples,
             List<string> llmExamples, List<string> playerTrumpExamples,
             List<string> llmTrumpExamples, bool useTrump)
         {
-            var playerDescription = useTrump
-                ? $"{ruleName} {description}{Environment.NewLine}" +
-                  $"{ruleName} Bonus: {bonusValue}{Environment.NewLine}" +
-                  $"Examples:{Environment.NewLine}" +
-                  $"{string.Join($"{Environment.NewLine}", playerExamples)}{Environment.NewLine}" +
-                  $"Trump Examples:{Environment.NewLine}" +
-                  $"{string.Join($"{Environment.NewLine}", playerTrumpExamples)}{Environment.NewLine}"
+            bool IsApplicable(List<string> examplesList)
+            {
+                return examplesList != null && examplesList.Count > 0;
+            }
 
-                : $"{ruleName} {description}{Environment.NewLine}" +
-                  $"{ruleName} Bonus: {bonusValue}{Environment.NewLine}" +
-                  $"Examples:{Environment.NewLine}" +
-                  $"{string.Join($"{Environment.NewLine}", playerExamples)}{Environment.NewLine}";
+            string GetExamplesDescription(List<string> examples, List<string> trumpExamples, bool useTrumpExamples)
+            {
+                if (!IsApplicable(examples))
+                {
+                    return "Rule Not Applicable to this gamemode";
+                }
 
-            var llmDescription = useTrump
-                ? $"{ruleName} {description}{Environment.NewLine}" +
-                  $"{ruleName} Bonus: {bonusValue}{Environment.NewLine}" +
-                  $"Examples:{Environment.NewLine}" +
-                  $"{string.Join($"{Environment.NewLine}", llmExamples)}{Environment.NewLine}" +
-                  $"Trump Examples:{Environment.NewLine}" +
-                  $"{string.Join($"{Environment.NewLine}", llmTrumpExamples)}{Environment.NewLine}"
+                string examplesDescription = string.Join($"{Environment.NewLine}", examples);
+                if (useTrumpExamples && IsApplicable(trumpExamples))
+                {
+                    examplesDescription += $"{Environment.NewLine}Trump Examples:{Environment.NewLine}" +
+                                           $"{string.Join($"{Environment.NewLine}", trumpExamples)}{Environment.NewLine}";
+                }
 
-                : $"{ruleName} {description}{Environment.NewLine}" +
-                  $"{ruleName} Bonus: {bonusValue}{Environment.NewLine}" +
-                  $"Examples:{Environment.NewLine}" +
-                  $"{string.Join($"{Environment.NewLine}", llmExamples)}{Environment.NewLine}";
+                return examplesDescription;
+            }
+
+            bool hasPlayerExamples = IsApplicable(playerExamples);
+            bool hasLlmExamples = IsApplicable(llmExamples);
+
+            if (!hasPlayerExamples && !hasLlmExamples)
+            {
+                return false;
+            }
+
+            var playerDescription = $"{ruleName} {description}{Environment.NewLine}" +
+                                    $"{ruleName} Bonus: {bonusValue}{Environment.NewLine}" +
+                                    $"Examples:{Environment.NewLine}" +
+                                    $"{GetExamplesDescription(playerExamples, playerTrumpExamples, useTrump)}";
+
+            var llmDescription = $"{ruleName} {description}{Environment.NewLine}" +
+                                 $"{ruleName} Bonus: {bonusValue}{Environment.NewLine}" +
+                                 $"Examples:{Environment.NewLine}" +
+                                 $"{GetExamplesDescription(llmExamples, llmTrumpExamples, useTrump)}";
 
             Examples = new GameRulesContainer { Player = playerDescription, LLM = llmDescription };
+            return true;
         }
+
+
 
     }
 

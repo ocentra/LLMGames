@@ -6,9 +6,10 @@ using UnityEngine;
 
 namespace OcentraAI.LLMGames.GameModes.Rules
 {
-    [CreateAssetMenu(fileName = nameof(ThreeOfAKind), menuName = "Rules/ThreeOfAKind")]
+    [CreateAssetMenu(fileName = nameof(ThreeOfAKind), menuName = "GameMode/Rules/ThreeOfAKind")]
     public class ThreeOfAKind : BaseBonusRule
     {
+        public override int MinNumberOfCard { get; protected set; } = 3;
         public override string RuleName { get; protected set; } = $"{nameof(ThreeOfAKind)}";
         public override int BonusValue { get; protected set; } = 30;
         public override int Priority { get; protected set; } = 80;
@@ -17,15 +18,20 @@ namespace OcentraAI.LLMGames.GameModes.Rules
         {
             bonusDetails = null;
 
+            if (GameMode == null || (GameMode != null && GameMode.NumberOfCards > MinNumberOfCard))
+                return false;
+
             var rankCounts = GetRankCounts(hand);
             var threeOfAKind = FindNOfAKind(rankCounts, 3);
             var trumpCard = GetTrumpCard();
 
-            // Check for TrumpOfAKind rule
-            if (rankCounts.TryGetValue(trumpCard.Rank, out int trumpRankCount) && trumpRankCount >= 3)
+            // Check for TrumpOfAKind or full house rule
+            if (IsFullHouseOrTrumpOfKind(rankCounts, trumpCard))
             {
-                return false; // TrumpOfAKind will handle this
+                return false; // TrumpOfAKind or FullHouse will handle this
             }
+
+
 
             if (threeOfAKind.HasValue)
             {
@@ -43,6 +49,8 @@ namespace OcentraAI.LLMGames.GameModes.Rules
 
             return false;
         }
+
+
 
         private BonusDetails CalculateBonus(List<Card> hand, Rank rank)
         {
@@ -65,9 +73,8 @@ namespace OcentraAI.LLMGames.GameModes.Rules
             return CreateBonusDetails(RuleName, baseBonus, Priority, descriptions, additionalBonus);
         }
 
-        public override void Initialize(GameMode gameMode)
+        public override bool Initialize(GameMode gameMode)
         {
-            RuleName = "Three of a Kind Rule";
             Description = "Three cards of the same rank, optionally considering Trump Wild Card.";
 
             List<string> playerExamples = new List<string>();
@@ -92,7 +99,7 @@ namespace OcentraAI.LLMGames.GameModes.Rules
                 }
             }
 
-            CreateExample(RuleName, Description, BonusValue, playerExamples, llmExamples, playerTrumpExamples, llmTrumpExamples, gameMode.UseTrump);
+            return TryCreateExample(RuleName, Description, BonusValue, playerExamples, llmExamples, playerTrumpExamples, llmTrumpExamples, gameMode.UseTrump);
         }
 
 

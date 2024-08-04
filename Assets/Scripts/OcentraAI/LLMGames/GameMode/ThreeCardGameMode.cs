@@ -29,21 +29,21 @@ namespace OcentraAI.LLMGames.GameModes
         public override bool UseTrump { get; protected set; } = true;
 
         
-        public override void Initialize(List<BaseBonusRule> bonusRulesTemplate)
+        public override bool TryInitialize(List<BaseBonusRule> bonusRulesTemplate)
         {
-            InitializeGameMode(bonusRulesTemplate);
+           return TryInitializeGameMode(bonusRulesTemplate);
         }
 
         #endregion
 
         #region Initialization Methods - Bonus Rules
 
-        protected override void InitializeBonusRules(List<BaseBonusRule> bonusRulesTemplate)
+        protected override bool TryInitializeBonusRules(List<BaseBonusRule> bonusRulesTemplate)
         {
-            base.InitializeBonusRules(bonusRulesTemplate);
+           
             TrumpBonusValues = new TrumpBonusValues();
 
-
+           return base.TryInitializeBonusRules(bonusRulesTemplate);
         }
 
         #endregion

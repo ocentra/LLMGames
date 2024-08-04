@@ -6,9 +6,11 @@ using UnityEngine;
 
 namespace OcentraAI.LLMGames.GameModes.Rules
 {
-    [CreateAssetMenu(fileName = nameof(FullHouse), menuName = "Rules/FullHouse")]
+    [CreateAssetMenu(fileName = nameof(FullHouse), menuName = "GameMode/Rules/FullHouse")]
     public class FullHouse : BaseBonusRule
     {
+        public override int MinNumberOfCard { get; protected set; } = 3;
+
         public override string RuleName { get; protected set; } = $"{nameof(FullHouse)}";
         public override int BonusValue { get; protected set; } = 30;
         public override int Priority { get; protected set; } = 80;
@@ -16,20 +18,23 @@ namespace OcentraAI.LLMGames.GameModes.Rules
         public override bool Evaluate(List<Card> hand, out BonusDetails bonusDetails)
         {
             bonusDetails = null;
+            if (GameMode == null || (GameMode != null && GameMode.NumberOfCards > MinNumberOfCard))
+                return false;
+
             var rankCounts = GetRankCounts(hand);
             var trumpCard = GetTrumpCard();
 
             switch (hand.Count)
             {
                 case 3:
-                    if (IsNOfAKind(rankCounts) || (GameMode.UseTrump && IsNOfAKindOfTrump(rankCounts, trumpCard)))
+                    if (IsFullHouseOrTrumpOfKind(rankCounts, trumpCard))
                     {
                         bonusDetails = CalculateBonus(hand);
                         return true;
                     }
                     break;
                 case 4:
-                    if (IsNOfAKind(rankCounts) || (GameMode.UseTrump && IsNOfAKindOfTrump(rankCounts, trumpCard)))
+                    if (IsFullHouseOrTrumpOfKind(rankCounts, trumpCard))
                     {
                         bonusDetails = CalculateBonus(hand);
                         return true;
@@ -78,43 +83,39 @@ namespace OcentraAI.LLMGames.GameModes.Rules
         }
 
 
-
-
-
-
         private bool IsFiveCardFullHouse(Dictionary<Rank, int> rankCounts, Card trumpCard)
         {
-            return (IsNOfAKind(rankCounts) && rankCounts.Values.Count(v => v == 1) == 1) ||
-                   (IsNOfAKindOfTrump(rankCounts, trumpCard) && rankCounts.Values.Count(v => v == 1) == 1);
+            return (IsNOfAKind(rankCounts, Rank.A, 4) && rankCounts.Values.Count(v => v == 1) == 1) ||
+                   (IsNOfAKindOfTrump(rankCounts, trumpCard, 4) && rankCounts.Values.Count(v => v == 1) == 1);
         }
 
         private bool IsSixCardFullHouse(Dictionary<Rank, int> rankCounts, Card trumpCard)
         {
-            return (IsNOfAKind(rankCounts) && rankCounts.Values.Count(v => v == 2) == 1) ||
-                   (IsNOfAKindOfTrump(rankCounts, trumpCard) && rankCounts.Values.Count(v => v == 2) == 1);
+            return (IsNOfAKind(rankCounts, Rank.A, 4) && rankCounts.Values.Count(v => v == 2) == 1) ||
+                   (IsNOfAKindOfTrump(rankCounts, trumpCard, 4) && rankCounts.Values.Count(v => v == 2) == 1);
         }
 
         private bool IsSevenCardFullHouse(Dictionary<Rank, int> rankCounts, Card trumpCard)
         {
-            return (IsNOfAKind(rankCounts) && rankCounts.Values.Count(v => v == 3) == 1) ||
-                   (IsNOfAKindOfTrump(rankCounts, trumpCard) && rankCounts.Values.Count(v => v == 3) == 1);
+            return (IsNOfAKind(rankCounts, Rank.A, 4) && rankCounts.Values.Count(v => v == 3) == 1) ||
+                   (IsNOfAKindOfTrump(rankCounts, trumpCard, 4) && rankCounts.Values.Count(v => v == 3) == 1);
         }
 
         private bool IsEightCardFullHouse(Dictionary<Rank, int> rankCounts, Card trumpCard)
         {
-            return (IsNOfAKind(rankCounts) && rankCounts.Values.Count(v => v == 4) == 1) ||
-                   (IsNOfAKindOfTrump(rankCounts, trumpCard) && rankCounts.Values.Count(v => v == 4) == 1);
+            return (IsNOfAKind(rankCounts, Rank.A, 4) && rankCounts.Values.Count(v => v == 4) == 1) ||
+                   (IsNOfAKindOfTrump(rankCounts, trumpCard, 4) && rankCounts.Values.Count(v => v == 4) == 1);
         }
 
         private bool IsNineCardFullHouse(Dictionary<Rank, int> rankCounts, Card trumpCard)
         {
-            return (IsNOfAKind(rankCounts) && rankCounts.Values.Count(v => v == 5) == 1) ||
-                   (IsNOfAKindOfTrump(rankCounts, trumpCard) && rankCounts.Values.Count(v => v == 5) == 1);
+            return (IsNOfAKind(rankCounts, Rank.A, 4) && rankCounts.Values.Count(v => v == 5) == 1) ||
+                   (IsNOfAKindOfTrump(rankCounts, trumpCard, 4) && rankCounts.Values.Count(v => v == 5) == 1);
         }
 
         private BonusDetails CalculateBonus(List<Card> hand)
         {
-            int baseBonus = BonusValue * hand.Count;
+            int baseBonus = BonusValue;
             int additionalBonus = 0;
             var descriptions = new List<string> { "Full House" };
 
@@ -133,8 +134,8 @@ namespace OcentraAI.LLMGames.GameModes.Rules
             return CreateBonusDetails(RuleName, baseBonus, Priority, descriptions, additionalBonus);
         }
 
-      
-        public override void Initialize(GameMode gameMode)
+
+        public override bool Initialize(GameMode gameMode)
         {
             List<string> playerExamples = new List<string>();
             List<string> llmExamples = new List<string>();
@@ -156,7 +157,7 @@ namespace OcentraAI.LLMGames.GameModes.Rules
                 llmTrumpExamples.Add(llmTrumpExample);
             }
 
-            CreateExample(RuleName, Description, BonusValue, playerExamples, llmExamples, playerTrumpExamples, llmTrumpExamples, gameMode.UseTrump);
+            return TryCreateExample(RuleName, Description, BonusValue, playerExamples, llmExamples, playerTrumpExamples, llmTrumpExamples, gameMode.UseTrump);
         }
 
         private string CreateExampleString(int cardCount, bool isPlayer, bool useTrump = false)

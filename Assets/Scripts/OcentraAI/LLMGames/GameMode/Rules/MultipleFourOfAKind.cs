@@ -7,9 +7,11 @@ using UnityEngine;
 
 namespace OcentraAI.LLMGames.GameModes.Rules
 {
-    [CreateAssetMenu(fileName = nameof(MultipleFourOfAKind), menuName = "Rules/MultipleFourOfAKind")]
+    [CreateAssetMenu(fileName = nameof(MultipleFourOfAKind), menuName = "GameMode/Rules/MultipleFourOfAKind")]
     public class MultipleFourOfAKind : BaseBonusRule
     {
+        public override int MinNumberOfCard { get; protected set; } = 8;
+
         public override string RuleName { get; protected set; } = $"{nameof(MultipleFourOfAKind)}";
         public override int BonusValue { get; protected set; } = 30;
         public override int Priority { get; protected set; } = 80;
@@ -17,6 +19,8 @@ namespace OcentraAI.LLMGames.GameModes.Rules
         public override bool Evaluate(List<Card> hand, out BonusDetails bonusDetails)
         {
             bonusDetails = null;
+            if (GameMode == null || (GameMode != null && GameMode.NumberOfCards > MinNumberOfCard))
+                return false;
 
             // Check for valid hand size (8 or 9 cards)
             if (hand.Count < 8)
@@ -45,9 +49,8 @@ namespace OcentraAI.LLMGames.GameModes.Rules
         }
 
         [Button(ButtonSizes.Large), PropertyOrder(-1)]
-        public override void Initialize(GameMode gameMode)
+        public override bool Initialize(GameMode gameMode)
         {
-            RuleName = "Multiple Four of a Kind Rule";
             Description = "Two or more sets of four cards with the same rank.";
 
             List<string> playerExamples = new List<string>();
@@ -72,7 +75,7 @@ namespace OcentraAI.LLMGames.GameModes.Rules
                 }
             }
 
-            CreateExample(RuleName, Description, BonusValue, playerExamples, llmExamples, playerTrumpExamples, llmTrumpExamples, gameMode.UseTrump);
+            return TryCreateExample(RuleName, Description, BonusValue, playerExamples, llmExamples, playerTrumpExamples, llmTrumpExamples, gameMode.UseTrump);
         }
 
         private string CreateExampleString(int cardCount, bool isPlayer, bool useTrump = false)

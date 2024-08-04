@@ -6,16 +6,22 @@ using UnityEngine;
 
 namespace OcentraAI.LLMGames.GameModes.Rules
 {
-    [CreateAssetMenu(fileName = nameof(TrumpOfAKind), menuName = "Rules/TrumpOfAKind")]
+    [CreateAssetMenu(fileName = nameof(TrumpOfAKind), menuName = "GameMode/Rules/TrumpOfAKind")]
     public class TrumpOfAKind : BaseBonusRule
     {
         public override string RuleName { get; protected set; } = $"{nameof(TrumpOfAKind)}";
+
+        public override int MinNumberOfCard { get; protected set; } = 3;
+
         public override int BonusValue { get; protected set; } = 30;
-        public override int Priority { get; protected set; } = 85; 
+        public override int Priority { get; protected set; } = 85;
 
         public override bool Evaluate(List<Card> hand, out BonusDetails bonusDetails)
         {
             bonusDetails = null;
+
+            if (GameMode == null || (GameMode != null && GameMode.NumberOfCards > MinNumberOfCard))
+                return false;
 
             if (!GameMode.UseTrump || hand.Count > 4)
                 return false;
@@ -40,13 +46,11 @@ namespace OcentraAI.LLMGames.GameModes.Rules
             return CreateBonusDetails(RuleName, baseBonus, Priority, descriptions);
         }
 
- 
-        public override void Initialize(GameMode gameMode)
-        {
-            if (!gameMode.UseTrump)
-                return;
 
-            RuleName = "Trump of a Kind Rule";
+        public override bool Initialize(GameMode gameMode)
+        {
+            if (!gameMode.UseTrump) return false;
+
             Description = "Multiple Trump cards in the hand.";
 
             List<string> playerExamples = new List<string>();
@@ -61,7 +65,7 @@ namespace OcentraAI.LLMGames.GameModes.Rules
                 llmExamples.Add(llmExample);
             }
 
-            CreateExample(RuleName, Description, BonusValue, playerExamples, llmExamples, null, null, gameMode.UseTrump);
+            return TryCreateExample(RuleName, Description, BonusValue, playerExamples, llmExamples, null, null, gameMode.UseTrump);
         }
 
         private string CreateExampleString(int cardCount, bool isPlayer)

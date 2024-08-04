@@ -6,9 +6,11 @@ using UnityEngine;
 
 namespace OcentraAI.LLMGames.GameModes.Rules
 {
-    [CreateAssetMenu(fileName = nameof(FourOfAKind), menuName = "Rules/FourOfAKind")]
+    [CreateAssetMenu(fileName = nameof(FourOfAKind), menuName = "GameMode/Rules/FourOfAKind")]
     public class FourOfAKind : BaseBonusRule
     {
+        public override int MinNumberOfCard { get; protected set; } = 4;
+
         public override string RuleName { get; protected set; } = $"{nameof(FourOfAKind)}";
         public override int BonusValue { get; protected set; } = 30;
         public override int Priority { get; protected set; } = 80;
@@ -16,15 +18,17 @@ namespace OcentraAI.LLMGames.GameModes.Rules
         public override bool Evaluate(List<Card> hand, out BonusDetails bonusDetails)
         {
             bonusDetails = null;
+            if (GameMode == null || (GameMode != null && GameMode.NumberOfCards > MinNumberOfCard))
+                return false;
 
             var rankCounts = GetRankCounts(hand);
             var fourOfAKind = FindNOfAKind(rankCounts, 4);
             var trumpCard = GetTrumpCard();
 
-            // Check for TrumpOfAKind rule
-            if (rankCounts.TryGetValue(trumpCard.Rank, out int trumpRankCount) && trumpRankCount >= 4)
+            // Check for TrumpOfAKind or full house rule
+            if (IsFullHouseOrTrumpOfKind(rankCounts, trumpCard))
             {
-                return false; // TrumpOfAKind will handle this
+                return false; // TrumpOfAKind or FullHouse will handle this
             }
 
             if (fourOfAKind.HasValue)
@@ -46,7 +50,7 @@ namespace OcentraAI.LLMGames.GameModes.Rules
 
         private BonusDetails CalculateBonus(List<Card> hand, Rank rank)
         {
-            int baseBonus = BonusValue ;
+            int baseBonus = BonusValue;
             int additionalBonus = 0;
             var descriptions = new List<string> { $"Four of a Kind: {Card.GetRankSymbol(Suit.Spades, rank)}" };
 
@@ -65,9 +69,8 @@ namespace OcentraAI.LLMGames.GameModes.Rules
             return CreateBonusDetails(RuleName, baseBonus, Priority, descriptions, additionalBonus);
         }
 
-        public override void Initialize(GameMode gameMode)
+        public override bool Initialize(GameMode gameMode)
         {
-            RuleName = "Four of a Kind Rule";
             Description = "Four cards of the same rank, optionally considering Trump Wild Card.";
 
             List<string> playerExamples = new List<string>();
@@ -92,7 +95,7 @@ namespace OcentraAI.LLMGames.GameModes.Rules
                 }
             }
 
-            CreateExample(RuleName, Description, BonusValue, playerExamples, llmExamples, playerTrumpExamples, llmTrumpExamples, gameMode.UseTrump);
+            return TryCreateExample(RuleName, Description, BonusValue, playerExamples, llmExamples, playerTrumpExamples, llmTrumpExamples, gameMode.UseTrump);
         }
 
         private string CreateExampleString(int cardCount, bool isPlayer, bool useTrump = false)

@@ -7,9 +7,10 @@ using UnityEngine;
 
 namespace OcentraAI.LLMGames.GameModes.Rules
 {
-    [CreateAssetMenu(fileName = nameof(PairRule), menuName = "Rules/PairRule")]
+    [CreateAssetMenu(fileName = nameof(PairRule), menuName = "GameMode/Rules/PairRule")]
     public class PairRule : BaseBonusRule
     {
+        public override int MinNumberOfCard { get; protected set; } = 2;
         public override string RuleName { get; protected set; } = $"{nameof(PairRule)}";
         public override int BonusValue { get; protected set; } = 30;
         public override int Priority { get; protected set; } = 80;
@@ -17,6 +18,9 @@ namespace OcentraAI.LLMGames.GameModes.Rules
         public override bool Evaluate(List<Card> hand, out BonusDetails bonusDetails)
         {
             bonusDetails = null;
+            if (GameMode == null || (GameMode != null && GameMode.NumberOfCards > MinNumberOfCard))
+                return false;
+
             var rankCounts = GetRankCounts(hand);
             var pair = FindHighestPair(rankCounts);
 
@@ -65,9 +69,8 @@ namespace OcentraAI.LLMGames.GameModes.Rules
         }
 
         [Button(ButtonSizes.Large), PropertyOrder(-1)]
-        public override void Initialize(GameMode gameMode)
+        public override bool Initialize(GameMode gameMode)
         {
-            RuleName = "Pair Rule";
             Description = "Pair of cards with the same rank, optionally considering Trump Wild Card.";
 
             List<string> playerExamples = new List<string>();
@@ -92,7 +95,7 @@ namespace OcentraAI.LLMGames.GameModes.Rules
                 }
             }
 
-            CreateExample(RuleName, Description, BonusValue, playerExamples, llmExamples, playerTrumpExamples, llmTrumpExamples, gameMode.UseTrump);
+            return TryCreateExample(RuleName, Description, BonusValue, playerExamples, llmExamples, playerTrumpExamples, llmTrumpExamples, gameMode.UseTrump);
         }
 
         private string CreateExampleString(int cardCount, bool isPlayer, bool useTrump = false)

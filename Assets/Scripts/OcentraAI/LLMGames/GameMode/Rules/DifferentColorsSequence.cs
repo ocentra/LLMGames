@@ -6,9 +6,11 @@ using UnityEngine;
 
 namespace OcentraAI.LLMGames.GameModes.Rules
 {
-    [CreateAssetMenu(fileName = nameof(DifferentColorsSequence), menuName = "Rules/DifferentColorsSequence")]
+    [CreateAssetMenu(fileName = nameof(DifferentColorsSequence), menuName = "GameMode/Rules/DifferentColorsSequence")]
     public class DifferentColorsSequence : BaseBonusRule
     {
+        public override int MinNumberOfCard { get; protected set; } = 3;
+
         public override string RuleName { get; protected set; } = $"{nameof(DifferentColorsSequence)}";
         public override int BonusValue { get; protected set; } = 30;
         public override int Priority { get; protected set; } = 80;
@@ -16,6 +18,8 @@ namespace OcentraAI.LLMGames.GameModes.Rules
         public override bool Evaluate(List<Card> hand, out BonusDetails bonusDetails)
         {
             bonusDetails = null;
+            if (GameMode == null || (GameMode != null && GameMode.NumberOfCards > MinNumberOfCard))
+                return false;
 
             for (int combinationSize = 3; combinationSize <= hand.Count; combinationSize++)
             {
@@ -102,9 +106,8 @@ namespace OcentraAI.LLMGames.GameModes.Rules
         }
 
         [Button(ButtonSizes.Large), PropertyOrder(-1)]
-        public override void Initialize(GameMode gameMode)
+        public override bool Initialize(GameMode gameMode)
         {
-            RuleName = "Different Colors Sequence Rule";
             Description = "A sequence of 3 to 9 cards of different colors, optionally considering Trump Wild Card.";
 
             List<string> playerExamples = new List<string>();
@@ -137,7 +140,7 @@ namespace OcentraAI.LLMGames.GameModes.Rules
                 llmTrumpExamples.Add($"{llmTrumpExample} (Trump: {llmTrumpCardSymbol})");
             }
 
-            CreateExample(RuleName, Description, BonusValue, playerExamples, llmExamples, playerTrumpExamples, llmTrumpExamples, gameMode.UseTrump);
+            return TryCreateExample(RuleName, Description, BonusValue, playerExamples, llmExamples, playerTrumpExamples, llmTrumpExamples, gameMode.UseTrump);
         }
     }
 }

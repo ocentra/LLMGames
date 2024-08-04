@@ -1,6 +1,6 @@
 %YAML 1.1
 %TAG !u! tag:unity3d.com,2011:
---- !u!114 &-5427668408012080204
+--- !u!114 &-7882735371361317138
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -9,8 +9,8 @@ MonoBehaviour:
   m_GameObject: {fileID: 0}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 711d9dbdbf7372d4fbef04aa9d5d0aea, type: 3}
-  m_Name: RoyalFlush
+  m_Script: {fileID: 11500000, guid: 7da50d7fc9afcc148bbcba22533b82bd, type: 3}
+  m_Name: SameColorsSequence
   m_EditorClassIdentifier: 
   serializationData:
     SerializedFormat: 2
@@ -22,6 +22,9 @@ MonoBehaviour:
     PrefabModificationsReferencedUnityObjects: []
     PrefabModifications: []
     SerializationNodes:
+    - Name: MinNumberOfCard
+      Entry: 3
+      Data: 3
     - Name: BonusValue
       Entry: 3
       Data: 30
@@ -30,10 +33,10 @@ MonoBehaviour:
       Data: 80
     - Name: RuleName
       Entry: 1
-      Data: RoyalFlush
+      Data: SameColorsSequence
     - Name: Description
       Entry: 1
-      Data: A sequence of cards from Q to A in the same suit
+      Data: A sequence of cards from Q to A, all of the same color.
     - Name: GameMode
       Entry: 10
       Data: 0
@@ -42,20 +45,76 @@ MonoBehaviour:
       Data: 0|OcentraAI.LLMGames.GameModes.GameRulesContainer, LLMGames
     - Name: Player
       Entry: 1
-      Data: "RoyalFlush A sequence of cards from Q to A in the same suit\r\nRoyalFlush
-        Bonus: 30\r\nExamples:\r\n<color=#000000>Q</color><color=#000000>\u2660</color>,
+      Data: "SameColorsSequence A sequence of cards from Q to A, all of the same
+        color.\r\nSameColorsSequence Bonus: 30\r\nExamples:\r\n<color=#000000>Q</color><color=#000000>\u2660</color>,
         <color=#000000>K</color><color=#000000>\u2660</color>, <color=#000000>A</color><color=#000000>\u2660</color>\r\nTrump
         Examples:\r\n<color=#FF0000>Q</color><color=#FF0000>\u2665</color>, <color=#FF0000>K</color><color=#FF0000>\u2665</color>,
         <color=#FF0000>6</color><color=#FF0000>\u2665</color> (Trump: <color=#FF0000>6</color><color=#FF0000>\u2665</color>)\r\n"
     - Name: LLM
       Entry: 1
-      Data: "RoyalFlush A sequence of cards from Q to A in the same suit\r\nRoyalFlush
-        Bonus: 30\r\nExamples:\r\nQ\u2660, K\u2660, A\u2660\r\nTrump Examples:\r\nQ\u2665,
-        K\u2665, 6\u2665 (Trump: 6\u2665)\r\n"
+      Data: "SameColorsSequence A sequence of cards from Q to A, all of the same
+        color.\r\nSameColorsSequence Bonus: 30\r\nExamples:\r\nQ\u2660, K\u2660,
+        A\u2660\r\nTrump Examples:\r\nQ\u2665, K\u2665, 6\u2665 (Trump: 6\u2665)\r\n"
     - Name: 
       Entry: 8
       Data: 
---- !u!114 &-5231532391801996686
+--- !u!114 &-6449711593830527440
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: a40e3c78c72b5bb4ca15a54febbe1ae2, type: 3}
+  m_Name: ThreeOfAKind
+  m_EditorClassIdentifier: 
+  serializationData:
+    SerializedFormat: 2
+    SerializedBytes: 
+    ReferencedUnityObjects:
+    - {fileID: 11400000}
+    SerializedBytesString: 
+    Prefab: {fileID: 0}
+    PrefabModificationsReferencedUnityObjects: []
+    PrefabModifications: []
+    SerializationNodes:
+    - Name: MinNumberOfCard
+      Entry: 3
+      Data: 3
+    - Name: BonusValue
+      Entry: 3
+      Data: 30
+    - Name: Priority
+      Entry: 3
+      Data: 80
+    - Name: RuleName
+      Entry: 1
+      Data: ThreeOfAKind
+    - Name: Description
+      Entry: 1
+      Data: Three cards of the same rank, optionally considering Trump Wild Card.
+    - Name: GameMode
+      Entry: 10
+      Data: 0
+    - Name: Examples
+      Entry: 7
+      Data: 0|OcentraAI.LLMGames.GameModes.GameRulesContainer, LLMGames
+    - Name: Player
+      Entry: 1
+      Data: "ThreeOfAKind Three cards of the same rank, optionally considering Trump
+        Wild Card.\r\nThreeOfAKind Bonus: 30\r\nExamples:\r\n5\u2660, 5\u2666, 5\u2663\r\nTrump
+        Examples:\r\n5\u2660, 5\u2666, 5\u2663\r\n5\u2660, 5\u2666, 6\u2665\r\n"
+    - Name: LLM
+      Entry: 1
+      Data: "ThreeOfAKind Three cards of the same rank, optionally considering Trump
+        Wild Card.\r\nThreeOfAKind Bonus: 30\r\nExamples:\r\n5\u2660, 5\u2666, 5\u2663\r\nTrump
+        Examples:\r\n5\u2660, 5\u2666, 5\u2663\r\n5\u2660, 5\u2666, 6\u2665\r\n"
+    - Name: 
+      Entry: 8
+      Data: 
+--- !u!114 &-4264189510699311352
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -65,7 +124,7 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 8fdcdae1e5677fa418934671eb85e409, type: 3}
-  m_Name: FullHouseRule
+  m_Name: FullHouse
   m_EditorClassIdentifier: 
   serializationData:
     SerializedFormat: 2
@@ -77,6 +136,9 @@ MonoBehaviour:
     PrefabModificationsReferencedUnityObjects: []
     PrefabModifications: []
     SerializationNodes:
+    - Name: MinNumberOfCard
+      Entry: 3
+      Data: 3
     - Name: BonusValue
       Entry: 3
       Data: 30
@@ -85,7 +147,7 @@ MonoBehaviour:
       Data: 80
     - Name: RuleName
       Entry: 1
-      Data: FullHouseRule
+      Data: FullHouse
     - Name: Description
       Entry: 6
       Data: 
@@ -97,14 +159,126 @@ MonoBehaviour:
       Data: 0|OcentraAI.LLMGames.GameModes.GameRulesContainer, LLMGames
     - Name: Player
       Entry: 1
-      Data: "FullHouseRule \r\nFullHouseRule Bonus: 30\r\nExamples:\r\nA\u2660, A\u2666,
+      Data: "FullHouse \r\nFullHouse Bonus: 30\r\nExamples:\r\nA\u2660, A\u2666,
         A\u2660\r\nTrump Examples:\r\nA\u2660, A\u2666, A\u2660\r\n6\u2660, 6\u2666,
         6\u2665\r\n"
     - Name: LLM
       Entry: 1
-      Data: "FullHouseRule \r\nFullHouseRule Bonus: 30\r\nExamples:\r\nA\u2660, A\u2666,
+      Data: "FullHouse \r\nFullHouse Bonus: 30\r\nExamples:\r\nA\u2660, A\u2666,
         A\u2660\r\nTrump Examples:\r\nA\u2660, A\u2666, A\u2660\r\n6\u2660, 6\u2666,
         6\u2665\r\n"
+    - Name: 
+      Entry: 8
+      Data: 
+--- !u!114 &-2678737856045464863
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: e1616805e6ffa0a47926e52946b0430c, type: 3}
+  m_Name: TrumpOfAKind
+  m_EditorClassIdentifier: 
+  serializationData:
+    SerializedFormat: 2
+    SerializedBytes: 
+    ReferencedUnityObjects:
+    - {fileID: 11400000}
+    SerializedBytesString: 
+    Prefab: {fileID: 0}
+    PrefabModificationsReferencedUnityObjects: []
+    PrefabModifications: []
+    SerializationNodes:
+    - Name: MinNumberOfCard
+      Entry: 3
+      Data: 3
+    - Name: BonusValue
+      Entry: 3
+      Data: 30
+    - Name: Priority
+      Entry: 3
+      Data: 85
+    - Name: RuleName
+      Entry: 1
+      Data: TrumpOfAKind
+    - Name: Description
+      Entry: 1
+      Data: Multiple Trump cards in the hand.
+    - Name: GameMode
+      Entry: 10
+      Data: 0
+    - Name: Examples
+      Entry: 7
+      Data: 0|OcentraAI.LLMGames.GameModes.GameRulesContainer, LLMGames
+    - Name: Player
+      Entry: 1
+      Data: "TrumpOfAKind Multiple Trump cards in the hand.\r\nTrumpOfAKind Bonus:
+        30\r\nExamples:\r\n6\u2665 6\u2665 6\u2665"
+    - Name: LLM
+      Entry: 1
+      Data: "TrumpOfAKind Multiple Trump cards in the hand.\r\nTrumpOfAKind Bonus:
+        30\r\nExamples:\r\n6\u2665 6\u2665 6\u2665"
+    - Name: 
+      Entry: 8
+      Data: 
+--- !u!114 &-1908204570630903620
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 436a5f16b26108448b30a8b1c7380029, type: 3}
+  m_Name: DifferentColorsSequence
+  m_EditorClassIdentifier: 
+  serializationData:
+    SerializedFormat: 2
+    SerializedBytes: 
+    ReferencedUnityObjects:
+    - {fileID: 11400000}
+    SerializedBytesString: 
+    Prefab: {fileID: 0}
+    PrefabModificationsReferencedUnityObjects: []
+    PrefabModifications: []
+    SerializationNodes:
+    - Name: MinNumberOfCard
+      Entry: 3
+      Data: 3
+    - Name: BonusValue
+      Entry: 3
+      Data: 30
+    - Name: Priority
+      Entry: 3
+      Data: 80
+    - Name: RuleName
+      Entry: 1
+      Data: DifferentColorsSequence
+    - Name: Description
+      Entry: 1
+      Data: A sequence of cards from Q to A, all of different colors.
+    - Name: GameMode
+      Entry: 10
+      Data: 0
+    - Name: Examples
+      Entry: 7
+      Data: 0|OcentraAI.LLMGames.GameModes.GameRulesContainer, LLMGames
+    - Name: Player
+      Entry: 1
+      Data: "DifferentColorsSequence A sequence of cards from Q to A, all of different
+        colors.\r\nDifferentColorsSequence Bonus: 30\r\nExamples:\r\n<color=#000000>Q</color><color=#000000>\u2660</color>,
+        <color=#000000>K</color><color=#000000>\u2660</color>, <color=#000000>A</color><color=#000000>\u2660</color>\r\nTrump
+        Examples:\r\n<color=#FF0000>Q</color><color=#FF0000>\u2665</color>, <color=#FF0000>K</color><color=#FF0000>\u2665</color>,
+        <color=#FF0000>6</color><color=#FF0000>\u2665</color> (Trump: <color=#FF0000>6</color><color=#FF0000>\u2665</color>)\r\n"
+    - Name: LLM
+      Entry: 1
+      Data: "DifferentColorsSequence A sequence of cards from Q to A, all of different
+        colors.\r\nDifferentColorsSequence Bonus: 30\r\nExamples:\r\nQ\u2660, K\u2660,
+        A\u2660\r\nTrump Examples:\r\nQ\u2665, K\u2665, 6\u2665 (Trump: 6\u2665)\r\n"
     - Name: 
       Entry: 8
       Data: 
@@ -123,7 +297,17 @@ MonoBehaviour:
   serializationData:
     SerializedFormat: 2
     SerializedBytes: 
-    ReferencedUnityObjects: []
+    ReferencedUnityObjects:
+    - {fileID: -1908204570630903620}
+    - {fileID: 7230144649035760650}
+    - {fileID: -4264189510699311352}
+    - {fileID: 4703428729571862376}
+    - {fileID: 5461044640133521858}
+    - {fileID: 3166929916749217404}
+    - {fileID: -7882735371361317138}
+    - {fileID: 5895103266358442261}
+    - {fileID: -6449711593830527440}
+    - {fileID: -2678737856045464863}
     SerializedBytesString: 
     Prefab: {fileID: 0}
     PrefabModificationsReferencedUnityObjects: []
@@ -138,6 +322,9 @@ MonoBehaviour:
     - Name: InitialPlayerCoins
       Entry: 3
       Data: 10000
+    - Name: UseTrump
+      Entry: 5
+      Data: true
     - Name: GameName
       Entry: 1
       Data: Three Card Brag
@@ -150,9 +337,6 @@ MonoBehaviour:
     - Name: NumberOfCards
       Entry: 3
       Data: 3
-    - Name: UseTrump
-      Entry: 5
-      Data: true
     - Name: GameRules
       Entry: 7
       Data: 0|OcentraAI.LLMGames.GameModes.GameRulesContainer, LLMGames
@@ -279,13 +463,278 @@ MonoBehaviour:
     - Name: 
       Entry: 8
       Data: 
+    - Name: BonusRules
+      Entry: 7
+      Data: 3|System.Collections.Generic.List`1[[OcentraAI.LLMGames.GameModes.Rules.BaseBonusRule,
+        LLMGames]], mscorlib
+    - Name: 
+      Entry: 12
+      Data: 10
+    - Name: 
+      Entry: 10
+      Data: 0
+    - Name: 
+      Entry: 10
+      Data: 1
+    - Name: 
+      Entry: 10
+      Data: 2
+    - Name: 
+      Entry: 10
+      Data: 3
+    - Name: 
+      Entry: 10
+      Data: 4
+    - Name: 
+      Entry: 10
+      Data: 5
+    - Name: 
+      Entry: 10
+      Data: 6
+    - Name: 
+      Entry: 10
+      Data: 7
+    - Name: 
+      Entry: 10
+      Data: 8
+    - Name: 
+      Entry: 10
+      Data: 9
+    - Name: 
+      Entry: 13
+      Data: 
+    - Name: 
+      Entry: 8
+      Data: 
+    - Name: CardRankings
+      Entry: 7
+      Data: 4|OcentraAI.LLMGames.CardRanking[], LLMGames
+    - Name: 
+      Entry: 12
+      Data: 13
+    - Name: 
+      Entry: 7
+      Data: OcentraAI.LLMGames.CardRanking, LLMGames
+    - Name: CardName
+      Entry: 1
+      Data: A
+    - Name: Value
+      Entry: 3
+      Data: 14
+    - Name: 
+      Entry: 8
+      Data: 
+    - Name: 
+      Entry: 7
+      Data: OcentraAI.LLMGames.CardRanking, LLMGames
+    - Name: CardName
+      Entry: 1
+      Data: K
+    - Name: Value
+      Entry: 3
+      Data: 13
+    - Name: 
+      Entry: 8
+      Data: 
+    - Name: 
+      Entry: 7
+      Data: OcentraAI.LLMGames.CardRanking, LLMGames
+    - Name: CardName
+      Entry: 1
+      Data: Q
+    - Name: Value
+      Entry: 3
+      Data: 12
+    - Name: 
+      Entry: 8
+      Data: 
+    - Name: 
+      Entry: 7
+      Data: OcentraAI.LLMGames.CardRanking, LLMGames
+    - Name: CardName
+      Entry: 1
+      Data: J
+    - Name: Value
+      Entry: 3
+      Data: 11
+    - Name: 
+      Entry: 8
+      Data: 
+    - Name: 
+      Entry: 7
+      Data: OcentraAI.LLMGames.CardRanking, LLMGames
+    - Name: CardName
+      Entry: 1
+      Data: 10
+    - Name: Value
+      Entry: 3
+      Data: 10
+    - Name: 
+      Entry: 8
+      Data: 
+    - Name: 
+      Entry: 7
+      Data: OcentraAI.LLMGames.CardRanking, LLMGames
+    - Name: CardName
+      Entry: 1
+      Data: 9
+    - Name: Value
+      Entry: 3
+      Data: 9
+    - Name: 
+      Entry: 8
+      Data: 
+    - Name: 
+      Entry: 7
+      Data: OcentraAI.LLMGames.CardRanking, LLMGames
+    - Name: CardName
+      Entry: 1
+      Data: 8
+    - Name: Value
+      Entry: 3
+      Data: 8
+    - Name: 
+      Entry: 8
+      Data: 
+    - Name: 
+      Entry: 7
+      Data: OcentraAI.LLMGames.CardRanking, LLMGames
+    - Name: CardName
+      Entry: 1
+      Data: 7
+    - Name: Value
+      Entry: 3
+      Data: 7
+    - Name: 
+      Entry: 8
+      Data: 
+    - Name: 
+      Entry: 7
+      Data: OcentraAI.LLMGames.CardRanking, LLMGames
+    - Name: CardName
+      Entry: 1
+      Data: 6
+    - Name: Value
+      Entry: 3
+      Data: 6
+    - Name: 
+      Entry: 8
+      Data: 
+    - Name: 
+      Entry: 7
+      Data: OcentraAI.LLMGames.CardRanking, LLMGames
+    - Name: CardName
+      Entry: 1
+      Data: 5
+    - Name: Value
+      Entry: 3
+      Data: 5
+    - Name: 
+      Entry: 8
+      Data: 
+    - Name: 
+      Entry: 7
+      Data: OcentraAI.LLMGames.CardRanking, LLMGames
+    - Name: CardName
+      Entry: 1
+      Data: 4
+    - Name: Value
+      Entry: 3
+      Data: 4
+    - Name: 
+      Entry: 8
+      Data: 
+    - Name: 
+      Entry: 7
+      Data: OcentraAI.LLMGames.CardRanking, LLMGames
+    - Name: CardName
+      Entry: 1
+      Data: 3
+    - Name: Value
+      Entry: 3
+      Data: 3
+    - Name: 
+      Entry: 8
+      Data: 
+    - Name: 
+      Entry: 7
+      Data: OcentraAI.LLMGames.CardRanking, LLMGames
+    - Name: CardName
+      Entry: 1
+      Data: 2
+    - Name: Value
+      Entry: 3
+      Data: 2
+    - Name: 
+      Entry: 8
+      Data: 
+    - Name: 
+      Entry: 13
+      Data: 
+    - Name: 
+      Entry: 8
+      Data: 
+    - Name: TrumpBonusValues
+      Entry: 7
+      Data: 5|OcentraAI.LLMGames.ThreeCardBrag.Rules.TrumpBonusValues, LLMGames
+    - Name: TrumpCardBonus
+      Entry: 3
+      Data: 10
+    - Name: RankAdjacentBonus
+      Entry: 3
+      Data: 5
+    - Name: ThreeOfKindBonus
+      Entry: 3
+      Data: 15
+    - Name: SequenceBonus
+      Entry: 3
+      Data: 15
+    - Name: StraightFlushBonus
+      Entry: 3
+      Data: 15
+    - Name: CardInMiddleBonus
+      Entry: 3
+      Data: 5
+    - Name: WildCardBonus
+      Entry: 3
+      Data: 10
+    - Name: SameColorBonus
+      Entry: 3
+      Data: 5
+    - Name: PairBonus
+      Entry: 3
+      Data: 5
+    - Name: FourOfKindBonus
+      Entry: 3
+      Data: 20
+    - Name: FiveOfKindBonus
+      Entry: 3
+      Data: 25
+    - Name: FullHouseBonus
+      Entry: 3
+      Data: 35
+    - Name: StraightBonus
+      Entry: 3
+      Data: 25
+    - Name: FlushBonus
+      Entry: 3
+      Data: 20
+    - Name: RoyalFlushBonus
+      Entry: 3
+      Data: 35
+    - Name: HighCardBonus
+      Entry: 3
+      Data: 10
+    - Name: 
+      Entry: 8
+      Data: 
     - Name: MoveValidityConditions
       Entry: 7
-      Data: 3|System.Collections.Generic.Dictionary`2[[OcentraAI.LLMGames.PossibleMoves,
+      Data: 6|System.Collections.Generic.Dictionary`2[[OcentraAI.LLMGames.PossibleMoves,
         LLMGames],[System.String, mscorlib]], mscorlib
     - Name: comparer
       Entry: 7
-      Data: 4|System.Collections.Generic.EnumEqualityComparer`1[[OcentraAI.LLMGames.PossibleMoves,
+      Data: 7|System.Collections.Generic.EnumEqualityComparer`1[[OcentraAI.LLMGames.PossibleMoves,
         LLMGames]], mscorlib
     - Name: 
       Entry: 12
@@ -427,11 +876,11 @@ MonoBehaviour:
       Data: 
     - Name: BluffSettingConditions
       Entry: 7
-      Data: 5|System.Collections.Generic.Dictionary`2[[OcentraAI.LLMGames.DifficultyLevels,
+      Data: 8|System.Collections.Generic.Dictionary`2[[OcentraAI.LLMGames.DifficultyLevels,
         LLMGames],[System.String, mscorlib]], mscorlib
     - Name: comparer
       Entry: 7
-      Data: 6|System.Collections.Generic.EnumEqualityComparer`1[[OcentraAI.LLMGames.DifficultyLevels,
+      Data: 9|System.Collections.Generic.EnumEqualityComparer`1[[OcentraAI.LLMGames.DifficultyLevels,
         LLMGames]], mscorlib
     - Name: 
       Entry: 12
@@ -489,11 +938,11 @@ MonoBehaviour:
       Data: 
     - Name: ExampleHandOdds
       Entry: 7
-      Data: 7|System.Collections.Generic.Dictionary`2[[OcentraAI.LLMGames.HandType,
+      Data: 10|System.Collections.Generic.Dictionary`2[[OcentraAI.LLMGames.HandType,
         LLMGames],[System.String, mscorlib]], mscorlib
     - Name: comparer
       Entry: 7
-      Data: 8|System.Collections.Generic.EnumEqualityComparer`1[[OcentraAI.LLMGames.HandType,
+      Data: 11|System.Collections.Generic.EnumEqualityComparer`1[[OcentraAI.LLMGames.HandType,
         LLMGames]], mscorlib
     - Name: 
       Entry: 12
@@ -546,6 +995,299 @@ MonoBehaviour:
     - Name: 
       Entry: 13
       Data: 
+    - Name: 
+      Entry: 8
+      Data: 
+--- !u!114 &3166929916749217404
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 711d9dbdbf7372d4fbef04aa9d5d0aea, type: 3}
+  m_Name: RoyalFlush
+  m_EditorClassIdentifier: 
+  serializationData:
+    SerializedFormat: 2
+    SerializedBytes: 
+    ReferencedUnityObjects:
+    - {fileID: 11400000}
+    SerializedBytesString: 
+    Prefab: {fileID: 0}
+    PrefabModificationsReferencedUnityObjects: []
+    PrefabModifications: []
+    SerializationNodes:
+    - Name: MinNumberOfCard
+      Entry: 3
+      Data: 3
+    - Name: BonusValue
+      Entry: 3
+      Data: 30
+    - Name: Priority
+      Entry: 3
+      Data: 80
+    - Name: RuleName
+      Entry: 1
+      Data: RoyalFlush
+    - Name: Description
+      Entry: 1
+      Data: A sequence of cards from A to Q in the same suit
+    - Name: GameMode
+      Entry: 10
+      Data: 0
+    - Name: Examples
+      Entry: 7
+      Data: 0|OcentraAI.LLMGames.GameModes.GameRulesContainer, LLMGames
+    - Name: Player
+      Entry: 1
+      Data: "RoyalFlush A sequence of cards from A to Q in the same suit\r\nRoyalFlush
+        Bonus: 30\r\nExamples:\r\n<color=#000000>A</color><color=#000000>\u2660</color>,
+        <color=#000000>K</color><color=#000000>\u2660</color>, <color=#000000>Q</color><color=#000000>\u2660</color>"
+    - Name: LLM
+      Entry: 1
+      Data: "RoyalFlush A sequence of cards from A to Q in the same suit\r\nRoyalFlush
+        Bonus: 30\r\nExamples:\r\nA\u2660, K\u2660, Q\u2660"
+    - Name: 
+      Entry: 8
+      Data: 
+--- !u!114 &4703428729571862376
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 96cee2ef85ecd7842b7c6fabe8a9ce61, type: 3}
+  m_Name: HighCard
+  m_EditorClassIdentifier: 
+  serializationData:
+    SerializedFormat: 2
+    SerializedBytes: 
+    ReferencedUnityObjects:
+    - {fileID: 11400000}
+    SerializedBytesString: 
+    Prefab: {fileID: 0}
+    PrefabModificationsReferencedUnityObjects: []
+    PrefabModifications: []
+    SerializationNodes:
+    - Name: MinNumberOfCard
+      Entry: 3
+      Data: 1
+    - Name: BonusValue
+      Entry: 3
+      Data: 30
+    - Name: Priority
+      Entry: 3
+      Data: 50
+    - Name: RuleName
+      Entry: 1
+      Data: HighCard
+    - Name: Description
+      Entry: 1
+      Data: The highest card in the hand, with the trump card being the highest possible.
+    - Name: GameMode
+      Entry: 10
+      Data: 0
+    - Name: Examples
+      Entry: 7
+      Data: 0|OcentraAI.LLMGames.GameModes.GameRulesContainer, LLMGames
+    - Name: Player
+      Entry: 1
+      Data: "HighCard The highest card in the hand, with the trump card being the
+        highest possible.\r\nHighCard Bonus: 30\r\nExamples:\r\n2\u2660 3\u2665 J\u2666\r\nTrump
+        Examples:\r\n2\u2660 3\u2665 J\u2666\r\n2\u2660 3\u2665 6\u2665\r\n"
+    - Name: LLM
+      Entry: 1
+      Data: "HighCard The highest card in the hand, with the trump card being the
+        highest possible.\r\nHighCard Bonus: 30\r\nExamples:\r\n2\u2660 3\u2665 J\u2666\r\nTrump
+        Examples:\r\n2\u2660 3\u2665 J\u2666\r\n2\u2660 3\u2665 6\u2665\r\n"
+    - Name: 
+      Entry: 8
+      Data: 
+--- !u!114 &5461044640133521858
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 1dff87cd98f2d2b45bae85447592d44e, type: 3}
+  m_Name: PairRule
+  m_EditorClassIdentifier: 
+  serializationData:
+    SerializedFormat: 2
+    SerializedBytes: 
+    ReferencedUnityObjects:
+    - {fileID: 11400000}
+    SerializedBytesString: 
+    Prefab: {fileID: 0}
+    PrefabModificationsReferencedUnityObjects: []
+    PrefabModifications: []
+    SerializationNodes:
+    - Name: MinNumberOfCard
+      Entry: 3
+      Data: 2
+    - Name: BonusValue
+      Entry: 3
+      Data: 30
+    - Name: Priority
+      Entry: 3
+      Data: 80
+    - Name: RuleName
+      Entry: 1
+      Data: PairRule
+    - Name: Description
+      Entry: 1
+      Data: Pair of cards with the same rank, optionally considering Trump Wild Card.
+    - Name: GameMode
+      Entry: 10
+      Data: 0
+    - Name: Examples
+      Entry: 7
+      Data: 0|OcentraAI.LLMGames.GameModes.GameRulesContainer, LLMGames
+    - Name: Player
+      Entry: 1
+      Data: "PairRule Pair of cards with the same rank, optionally considering Trump
+        Wild Card.\r\nPairRule Bonus: 30\r\nExamples:\r\nA\u2660, A\u2665, 7\u2663\r\nTrump
+        Examples:\r\nA\u2660, A\u2665, 7\u2663\r\n6\u2665, 6\u2660, 9\u2663\r\n"
+    - Name: LLM
+      Entry: 1
+      Data: "PairRule Pair of cards with the same rank, optionally considering Trump
+        Wild Card.\r\nPairRule Bonus: 30\r\nExamples:\r\nA\u2660, A\u2665, 7\u2663\r\nTrump
+        Examples:\r\nA\u2660, A\u2665, 7\u2663\r\n6\u2665, 6\u2660, 9\u2663\r\n"
+    - Name: 
+      Entry: 8
+      Data: 
+--- !u!114 &5895103266358442261
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 5846a15a8bab664449bda5ddfb3e8961, type: 3}
+  m_Name: StraightFlush
+  m_EditorClassIdentifier: 
+  serializationData:
+    SerializedFormat: 2
+    SerializedBytes: 
+    ReferencedUnityObjects:
+    - {fileID: 11400000}
+    SerializedBytesString: 
+    Prefab: {fileID: 0}
+    PrefabModificationsReferencedUnityObjects: []
+    PrefabModifications: []
+    SerializationNodes:
+    - Name: MinNumberOfCard
+      Entry: 3
+      Data: 3
+    - Name: BonusValue
+      Entry: 3
+      Data: 30
+    - Name: Priority
+      Entry: 3
+      Data: 80
+    - Name: RuleName
+      Entry: 1
+      Data: StraightFlush
+    - Name: Description
+      Entry: 1
+      Data: A sequence of cards from Q to A in the same suit
+    - Name: GameMode
+      Entry: 10
+      Data: 0
+    - Name: Examples
+      Entry: 7
+      Data: 0|OcentraAI.LLMGames.GameModes.GameRulesContainer, LLMGames
+    - Name: Player
+      Entry: 1
+      Data: "StraightFlush A sequence of cards from Q to A in the same suit\r\nStraightFlush
+        Bonus: 30\r\nExamples:\r\n<color=#000000>Q</color><color=#000000>\u2660</color>,
+        <color=#000000>K</color><color=#000000>\u2660</color>, <color=#000000>A</color><color=#000000>\u2660</color>\r\nTrump
+        Examples:\r\n<color=#FF0000>Q</color><color=#FF0000>\u2665</color>, <color=#FF0000>K</color><color=#FF0000>\u2665</color>,
+        <color=#FF0000>6</color><color=#FF0000>\u2665</color> (Trump: <color=#FF0000>6</color><color=#FF0000>\u2665</color>)\r\n"
+    - Name: LLM
+      Entry: 1
+      Data: "StraightFlush A sequence of cards from Q to A in the same suit\r\nStraightFlush
+        Bonus: 30\r\nExamples:\r\nQ\u2660, K\u2660, A\u2660\r\nTrump Examples:\r\nQ\u2665,
+        K\u2665, 6\u2665 (Trump: 6\u2665)\r\n"
+    - Name: 
+      Entry: 8
+      Data: 
+--- !u!114 &7230144649035760650
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 5ccef95841ba0a941a61c0f3ee161943, type: 3}
+  m_Name: Flush
+  m_EditorClassIdentifier: 
+  serializationData:
+    SerializedFormat: 2
+    SerializedBytes: 
+    ReferencedUnityObjects:
+    - {fileID: 11400000}
+    SerializedBytesString: 
+    Prefab: {fileID: 0}
+    PrefabModificationsReferencedUnityObjects: []
+    PrefabModifications: []
+    SerializationNodes:
+    - Name: MinNumberOfCard
+      Entry: 3
+      Data: 3
+    - Name: BonusValue
+      Entry: 3
+      Data: 30
+    - Name: Priority
+      Entry: 3
+      Data: 80
+    - Name: RuleName
+      Entry: 1
+      Data: Flush
+    - Name: Description
+      Entry: 1
+      Data: All cards of the same suit, optionally considering Trump Wild Card.
+    - Name: GameMode
+      Entry: 10
+      Data: 0
+    - Name: Examples
+      Entry: 7
+      Data: 0|OcentraAI.LLMGames.GameModes.GameRulesContainer, LLMGames
+    - Name: Player
+      Entry: 1
+      Data: "Flush All cards of the same suit, optionally considering Trump Wild
+        Card.\r\nFlush Bonus: 30\r\nExamples:\r\n<color=#000000>2</color><color=#000000>\u2660</color>,
+        <color=#000000>3</color><color=#000000>\u2660</color>, <color=#000000>4</color><color=#000000>\u2660</color>,
+        <color=#000000>5</color><color=#000000>\u2660</color>, <color=#000000>6</color><color=#000000>\u2660</color>\r\n<color=#FF0000>2</color><color=#FF0000>\u2665</color>,
+        <color=#FF0000>3</color><color=#FF0000>\u2665</color>, <color=#FF0000>4</color><color=#FF0000>\u2665</color>,
+        <color=#FF0000>5</color><color=#FF0000>\u2665</color>, <color=#FF0000>6</color><color=#FF0000>\u2665</color>\r\n<color=#FF0000>2</color><color=#FF0000>\u2666</color>,
+        <color=#FF0000>3</color><color=#FF0000>\u2666</color>, <color=#FF0000>4</color><color=#FF0000>\u2666</color>,
+        <color=#FF0000>5</color><color=#FF0000>\u2666</color>, <color=#FF0000>6</color><color=#FF0000>\u2666</color>\r\n<color=#000000>2</color><color=#000000>\u2663</color>,
+        <color=#000000>3</color><color=#000000>\u2663</color>, <color=#000000>4</color><color=#000000>\u2663</color>,
+        <color=#000000>5</color><color=#000000>\u2663</color>, <color=#000000>6</color><color=#000000>\u2663</color>\r\nTrump
+        Examples:\r\n<color=#FF0000>2</color><color=#FF0000>\u2665</color>, <color=#FF0000>3</color><color=#FF0000>\u2665</color>,
+        <color=#FF0000>4</color><color=#FF0000>\u2665</color>, <color=#FF0000>6</color><color=#FF0000>\u2665</color>,
+        <color=#FF0000>7</color><color=#FF0000>\u2665</color> (Trump: <color=#FF0000>6</color><color=#FF0000>\u2665</color>)\r\n"
+    - Name: LLM
+      Entry: 1
+      Data: "Flush All cards of the same suit, optionally considering Trump Wild
+        Card.\r\nFlush Bonus: 30\r\nExamples:\r\n2\u2660, 3\u2660, 4\u2660, 5\u2660,
+        6\u2660\r\n2\u2665, 3\u2665, 4\u2665, 5\u2665, 6\u2665\r\n2\u2666, 3\u2666,
+        4\u2666, 5\u2666, 6\u2666\r\n2\u2663, 3\u2663, 4\u2663, 5\u2663, 6\u2663\r\nTrump
+        Examples:\r\n2\u2665, 3\u2665, 4\u2665, 6\u2665, 7\u2665 (Trump: 6\u2665)\r\n"
     - Name: 
       Entry: 8
       Data: 

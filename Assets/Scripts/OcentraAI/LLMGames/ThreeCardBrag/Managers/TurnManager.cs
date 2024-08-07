@@ -15,8 +15,31 @@ namespace OcentraAI.LLMGames.ThreeCardBrag.Manager
     {
 
 
-        [ShowInInspector, ReadOnly] public float TurnDuration => GameManager.instance.GameMode.TurnDuration;
-        [ShowInInspector, ReadOnly] public int MaxRounds => GameManager.instance.GameMode.MaxRounds;
+        [ShowInInspector, ReadOnly] public float TurnDuration
+        {
+            get
+            {
+                if (GameManager.instance !=null && GameManager.instance.GameMode !=null)
+                {
+                    return GameManager.instance.GameMode.TurnDuration;
+
+                }
+                return 60;
+            }
+        }
+
+        [ShowInInspector, ReadOnly] public int MaxRounds
+        {
+            get
+            {
+                if (GameManager.instance != null && GameManager.instance.GameMode != null)
+                {
+                    return GameManager.instance.GameMode.MaxRounds;
+
+                }
+                return 10;
+            }
+        }
 
         [ShowInInspector, ReadOnly] private List<Player> Players { get; set; }
         [ShowInInspector, ReadOnly] public Player CurrentPlayer { get; private set; }

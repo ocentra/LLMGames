@@ -92,9 +92,11 @@
     <Compile Include="Assets\Scripts\OcentraAI\LLMGames\ThreeCardBrag\EventBus\PlayerActionPickAndSwap.cs" />
     <Compile Include="Assets\Scripts\OcentraAI\LLMGames\ThreeCardBrag\Managers\DevModeManagerEditor.cs" />
     <Compile Include="Assets\Scripts\OcentraAI\LLMGames\GameMode\Rules\MultipleFourOfAKind.cs" />
+    <Compile Include="Assets\Scripts\OcentraAI\LLMGames\GameMode\CustomRuleState.cs" />
     <Compile Include="Assets\Scripts\OcentraAI\LLMGames\GameMode\Rules\StraightFlush.cs" />
     <Compile Include="Assets\Scripts\OcentraAI\LLMGames\ThreeCardBrag\EventBus\PlayerStopCountDown.cs" />
     <Compile Include="Assets\Scripts\OcentraAI\LLMGames\GameMode\Rules\FullHouse.cs" />
+    <Compile Include="Assets\Scripts\OcentraAI\LLMGames\Editor\SortingCriteria.cs" />
     <Compile Include="Assets\Scripts\OcentraAI\LLMGames\ThreeCardBrag\EventBus\UpdatePlayerHandDisplay.cs" />
     <Compile Include="Assets\Scripts\OcentraAI\LLMGames\Utilities\HandType.cs" />
     <Compile Include="Assets\Scripts\OcentraAI\LLMGames\LLMServices\LocalLLMService.cs" />
@@ -122,8 +124,8 @@
     <Compile Include="Assets\Scripts\OcentraAI\LLMGames\LLMServices\LLMProviderConfig.cs" />
     <Compile Include="Assets\Scripts\OcentraAI\LLMGames\ThreeCardBrag\UI\BonusRuleUI.cs" />
     <Compile Include="Assets\Scripts\OcentraAI\LLMGames\GameScreens\PauseScreen.cs" />
-    <Compile Include="Assets\Scripts\OcentraAI\LLMGames\ThreeCardBrag\EventBus\SetFloorCard.cs" />
     <Compile Include="Assets\Scripts\OcentraAI\LLMGames\ThreeCardBrag\UI\PlayerPanel.cs" />
+    <Compile Include="Assets\Scripts\OcentraAI\LLMGames\ThreeCardBrag\EventBus\SetFloorCard.cs" />
     <Compile Include="Assets\Scripts\OcentraAI\LLMGames\GameMode\Rules\BaseBonusRule.cs" />
     <Compile Include="Assets\Scripts\OcentraAI\LLMGames\ThreeCardBrag\Managers\TurnManager.cs" />
     <Compile Include="Assets\Scripts\OcentraAI\LLMGames\Authentication\ConfigManager.cs" />

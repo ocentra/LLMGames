@@ -6,12 +6,20 @@ using System.Collections.Generic;
 using System.Linq;
 using UnityEditor;
 using UnityEngine;
+using static System.String;
 
 namespace OcentraAI.LLMGames.GameModes
 {
     public abstract class GameMode : SerializedScriptableObject
     {
         #region Fields and Properties
+        [OdinSerialize, HideInInspector] public Dictionary<BaseBonusRule, CustomRuleState> BaseBonusRulesTemplate { get; set; } = new Dictionary<BaseBonusRule, CustomRuleState>();
+        [OdinSerialize, HideInInspector] public float Height { get; set; } = 100;
+        [OdinSerialize, HideInInspector] public SortingCriteria CurrentSortingCriteria { get; set; } = SortingCriteria.PriorityAscending;
+       
+        [FolderPath(AbsolutePath = true), ReadOnly]
+        [OdinSerialize, ShowInInspector] public string RulesTemplatePath { get; set; } = "Assets/Resources/GameMode";
+        [OdinSerialize, HideInInspector] public bool Foldout { get; set; } = false;
 
         // abstract props
         [OdinSerialize, ShowInInspector] public abstract int MaxRounds { get; protected set; }
@@ -33,18 +41,18 @@ namespace OcentraAI.LLMGames.GameModes
         // public props
 
         [OdinSerialize, ShowInInspector]
-        public GameRulesContainer GameRules { get; protected set; } 
+        public GameRulesContainer GameRules { get; protected set; }
 
         [OdinSerialize, ShowInInspector]
-        public GameRulesContainer GameDescription { get; protected set; } 
+        public GameRulesContainer GameDescription { get; protected set; }
 
         [OdinSerialize, ShowInInspector]
-        public GameRulesContainer StrategyTips { get; protected set; } 
+        public GameRulesContainer StrategyTips { get; protected set; }
 
-        [OdinSerialize,ShowInInspector]
+        [OdinSerialize, ShowInInspector]
         public List<BaseBonusRule> BonusRules { get; protected set; } = new List<BaseBonusRule>();
 
-        [OdinSerialize,ShowInInspector, ReadOnly]
+        [OdinSerialize, ShowInInspector, ReadOnly]
         public CardRanking[] CardRankings { get; protected set; }
 
         [OdinSerialize, ShowInInspector, ReadOnly]
@@ -68,14 +76,44 @@ namespace OcentraAI.LLMGames.GameModes
         #region Initialization Methods
 
 
-    
-        public abstract bool TryInitialize(List<BaseBonusRule> bonusRulesTemplate);
 
-        protected virtual bool TryInitializeBonusRules(List<BaseBonusRule> bonusRulesTemplate)
+        public abstract bool TryInitialize();
+
+        protected virtual bool TryInitializeBonusRules()
         {
+
+            List<BaseBonusRule> bonusRulesTemplate = new List<BaseBonusRule>();
+            foreach (var ruleStatePair in BaseBonusRulesTemplate)
+            {
+                if (ruleStatePair.Value.IsSelected)
+                {
+                    bonusRulesTemplate.Add(ruleStatePair.Key);
+                }
+            }
+
             string gameModePath = AssetDatabase.GetAssetPath(this);
             Object[] assets = AssetDatabase.LoadAllAssetsAtPath(gameModePath);
-            List<BaseBonusRule> existingChildRules = assets.OfType<BaseBonusRule>().Where(r => r.RuleName != string.Empty).ToList();
+
+            // Remove any corrupt or invalid assets
+            foreach (Object asset in assets)
+            {
+                if (asset is BaseBonusRule baseBonusRule)
+                {
+                    if (baseBonusRule.GameMode == null)
+                    {
+                        DestroyImmediate(asset, true);
+                    }
+                }
+                if (asset == null || asset.GetType() == typeof(MonoScript) || IsNullOrEmpty(asset.name))
+                {
+                    Debug.LogWarning($"Found and removing invalid asset: {asset}");
+                    DestroyImmediate(asset, true);
+                }
+            }
+
+            assets = AssetDatabase.LoadAllAssetsAtPath(gameModePath);
+
+            List<BaseBonusRule> existingChildRules = assets.OfType<BaseBonusRule>().Where(r => r.RuleName != Empty).ToList();
 
             // Ensure unique keys for existing rules
             Dictionary<string, BaseBonusRule> existingRulesDict = new Dictionary<string, BaseBonusRule>();
@@ -103,7 +141,7 @@ namespace OcentraAI.LLMGames.GameModes
             {
                 if (existingRulesDict.TryGetValue(templateRule.RuleName, out BaseBonusRule existingRule))
                 {
-                    existingRule.UpdateRule(templateRule);
+                    existingRule.UpdateRule(templateRule.BonusValue,templateRule.Priority);
                     updatedRules.Add(existingRule);
                 }
                 else
@@ -194,14 +232,14 @@ namespace OcentraAI.LLMGames.GameModes
             };
         }
 
-        protected bool TryInitializeGameMode(List<BaseBonusRule> bonusRulesTemplate)
+        protected bool TryInitializeGameMode()
         {
-            if (!TryInitializeBonusRules(bonusRulesTemplate))
+            if (!TryInitializeBonusRules())
             {
                 return false;
             }
 
-            
+
             InitializeGameRules();
             InitializeGameDescription();
             InitializeStrategyTips();

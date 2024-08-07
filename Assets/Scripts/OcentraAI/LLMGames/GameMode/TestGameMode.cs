@@ -1,9 +1,7 @@
-using OcentraAI.LLMGames.GameModes.Rules;
 using OcentraAI.LLMGames.Scriptable;
 using OcentraAI.LLMGames.Scriptable.ScriptableSingletons;
 using Sirenix.OdinInspector;
 using Sirenix.Serialization;
-using System.Collections.Generic;
 using UnityEngine;
 
 namespace OcentraAI.LLMGames.GameModes
@@ -37,10 +35,10 @@ namespace OcentraAI.LLMGames.GameModes
         [OdinSerialize, ShowInInspector]
         public override bool UseTrump { get; protected set; } = true;
 
-        public override bool TryInitialize(List<BaseBonusRule> bonusRulesTemplate)
+        public override bool TryInitialize()
         {
             // Initialize any additional properties or configurations specific to the TestGameMode
-          return  TryInitializeGameMode(BonusRules);
+          return  TryInitializeGameMode();
         }
 
         public void SetNumberOfCards(int numberOfCards)

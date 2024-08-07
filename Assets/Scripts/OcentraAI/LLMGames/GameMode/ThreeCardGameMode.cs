@@ -1,8 +1,5 @@
-﻿using OcentraAI.LLMGames.GameModes.Rules;
-using OcentraAI.LLMGames.Scriptable;
+﻿using OcentraAI.LLMGames.Scriptable;
 using OcentraAI.LLMGames.ThreeCardBrag.Rules;
-using Sirenix.OdinInspector;
-using System.Collections.Generic;
 using UnityEngine;
 
 namespace OcentraAI.LLMGames.GameModes
@@ -29,21 +26,21 @@ namespace OcentraAI.LLMGames.GameModes
         public override bool UseTrump { get; protected set; } = true;
 
         
-        public override bool TryInitialize(List<BaseBonusRule> bonusRulesTemplate)
+        public override bool TryInitialize()
         {
-           return TryInitializeGameMode(bonusRulesTemplate);
+           return TryInitializeGameMode();
         }
 
         #endregion
 
         #region Initialization Methods - Bonus Rules
 
-        protected override bool TryInitializeBonusRules(List<BaseBonusRule> bonusRulesTemplate)
+        protected override bool TryInitializeBonusRules()
         {
            
             TrumpBonusValues = new TrumpBonusValues();
 
-           return base.TryInitializeBonusRules(bonusRulesTemplate);
+           return base.TryInitializeBonusRules();
         }
 
         #endregion

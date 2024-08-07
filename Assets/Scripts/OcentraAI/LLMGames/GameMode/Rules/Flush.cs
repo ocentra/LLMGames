@@ -79,7 +79,7 @@ namespace OcentraAI.LLMGames.GameModes.Rules
             return CreateBonusDetails(RuleName, baseBonus, Priority, descriptions, additionalBonus);
         }
 
-        [Button(ButtonSizes.Large), PropertyOrder(-1)]
+       
         public override bool Initialize(GameMode gameMode)
         {
             Description = "All cards of the same suit, optionally considering Trump Wild Card.";

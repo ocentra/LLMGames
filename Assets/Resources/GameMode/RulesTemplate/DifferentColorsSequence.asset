@@ -9,7 +9,7 @@ MonoBehaviour:
   m_GameObject: {fileID: 0}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 436a5f16b26108448b30a8b1c7380029, type: 3}
+  m_Script: {fileID: 11500000, guid: da2bf3ccd36ebbb4095ceb373d9fa902, type: 3}
   m_Name: DifferentColorsSequence
   m_EditorClassIdentifier: 
   serializationData:
@@ -21,6 +21,9 @@ MonoBehaviour:
     PrefabModificationsReferencedUnityObjects: []
     PrefabModifications: []
     SerializationNodes:
+    - Name: MinNumberOfCard
+      Entry: 3
+      Data: 3
     - Name: BonusValue
       Entry: 3
       Data: 30
@@ -37,5 +40,14 @@ MonoBehaviour:
       Entry: 6
       Data: 
     - Name: Examples
+      Entry: 7
+      Data: 0|OcentraAI.LLMGames.GameModes.GameRulesContainer, LLMGames
+    - Name: Player
       Entry: 6
+      Data: 
+    - Name: LLM
+      Entry: 6
+      Data: 
+    - Name: 
+      Entry: 8
       Data: 

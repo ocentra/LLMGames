@@ -12,16 +12,12 @@ namespace OcentraAI.LLMGames.GameModes
     [CustomEditor(typeof(GameMode), true)]
     public class GameModeEditor : OdinEditor
     {
-        [OdinSerialize] public List<BaseBonusRule> BaseBonusRulesTemplate { get; set; } = new List<BaseBonusRule>();
-        [OdinSerialize] public Dictionary<string, bool> RuleSelectionState { get; set; } = new Dictionary<string, bool>();
-        [OdinSerialize] public Dictionary<string, bool> RuleCompatibilityState { get; set; } = new Dictionary<string, bool>();
         [OdinSerialize] public GameMode GameMode { get; set; }
 
-        [FolderPath(AbsolutePath = true), ReadOnly]
-        [OdinSerialize] public string RulesTemplatePath = "Assets/Resources/GameMode";
 
-        [OdinSerialize] public Vector2 scrollPosition;
-        [OdinSerialize] public float Height { get; set; } = 100;
+
+        [OdinSerialize] public Vector2 ScrollPosition { get; set; }
+
 
         protected override void OnEnable()
         {
@@ -29,29 +25,38 @@ namespace OcentraAI.LLMGames.GameModes
             GameMode = (GameMode)target;
             LoadRuleTemplates();
             SyncSelectedRules();
+            ApplySorting();
+        }
+
+        protected override void OnDisable()
+        {
+            base.OnDisable();
         }
 
         private void LoadRuleTemplates()
         {
-            BaseBonusRulesTemplate.Clear();
-            RuleSelectionState.Clear();
-            RuleCompatibilityState.Clear();
-            if (!string.IsNullOrEmpty(RulesTemplatePath))
+            Dictionary<BaseBonusRule, CustomRuleState> loadedTemplates = new Dictionary<BaseBonusRule, CustomRuleState>();
+            if (!string.IsNullOrEmpty(GameMode.RulesTemplatePath))
             {
-                string relativePath = GetRelativePath(RulesTemplatePath);
-                string[] assetGuids = AssetDatabase.FindAssets("t:BaseBonusRule", new[] { relativePath });
+                string[] assetGuids = AssetDatabase.FindAssets("t:BaseBonusRule", new[] { GameMode.RulesTemplatePath });
                 foreach (string guid in assetGuids)
                 {
                     string assetPath = AssetDatabase.GUIDToAssetPath(guid);
                     BaseBonusRule rule = AssetDatabase.LoadAssetAtPath<BaseBonusRule>(assetPath);
                     if (rule != null && GameMode.NumberOfCards >= rule.MinNumberOfCard && !AssetDatabase.IsSubAsset(rule))
                     {
-                        BaseBonusRulesTemplate.Add(rule);
-                        RuleSelectionState[rule.name] = false;
-                        RuleCompatibilityState[rule.name] = true;
+                        if (GameMode.BaseBonusRulesTemplate != null && GameMode.BaseBonusRulesTemplate.TryGetValue(rule, out CustomRuleState existingCustomRuleState))
+                        {
+                            loadedTemplates[rule] = existingCustomRuleState;
+                        }
+                        else
+                        {
+                            loadedTemplates[rule] = new CustomRuleState(rule);
+                        }
                     }
                 }
             }
+            GameMode.BaseBonusRulesTemplate = loadedTemplates;
         }
 
         private string GetRelativePath(string absolutePath)
@@ -67,93 +72,108 @@ namespace OcentraAI.LLMGames.GameModes
         {
             if (GameMode.BonusRules != null)
             {
-                foreach (var rule in BaseBonusRulesTemplate)
+                foreach (KeyValuePair<BaseBonusRule, CustomRuleState> ruleStatePair in GameMode.BaseBonusRulesTemplate)
                 {
-                    RuleSelectionState[rule.name] = GameMode.BonusRules.Any(r => r.name == rule.name);
+                    BaseBonusRule rule = ruleStatePair.Key;
+                    CustomRuleState customRuleState = ruleStatePair.Value;
+                    customRuleState.IsSelected = GameMode.BonusRules.Any(r => r.name == rule.name);
+
+                    foreach (BaseBonusRule baseBonusRule in GameMode.BonusRules)
+                    {
+                        if (rule.RuleName == baseBonusRule.RuleName)
+                        {
+                            baseBonusRule.UpdateRule(rule.BonusValue, rule.Priority);
+                        }
+                    }
                 }
             }
         }
 
         public override void OnInspectorGUI()
         {
-            EditorGUILayout.BeginHorizontal();
-            RulesTemplatePath = EditorGUILayout.TextField("Path to Rule Templates", RulesTemplatePath);
-            if (GUILayout.Button("Browse", GUILayout.Width(70)))
+            GameMode.Foldout = EditorGUILayout.Foldout(GameMode.Foldout, "Additional Settings");
+            if (GameMode.Foldout)
             {
-                string selectedPath = EditorUtility.OpenFolderPanel("Select Rule Templates Folder", RulesTemplatePath, "");
-                if (!string.IsNullOrEmpty(selectedPath))
+                EditorGUILayout.BeginVertical(GUI.skin.box);
+
+                EditorGUILayout.BeginHorizontal();
+                GameMode.RulesTemplatePath = EditorGUILayout.TextField("Path to Rule Templates", GameMode.RulesTemplatePath);
+                if (GUILayout.Button("Browse", GUILayout.Width(70)))
                 {
-                    RulesTemplatePath = selectedPath;
-                    LoadRuleTemplates();
-                    SyncSelectedRules();
+                    string selectedPath = EditorUtility.OpenFolderPanel("Select Rule Templates Folder", GameMode.RulesTemplatePath, "");
+                    if (!string.IsNullOrEmpty(selectedPath))
+                    {
+                        GameMode.RulesTemplatePath = GetRelativePath(selectedPath);
+                        LoadRuleTemplates();
+                        SyncSelectedRules();
+                    }
                 }
-            }
-            EditorGUILayout.EndHorizontal();
+                EditorGUILayout.EndHorizontal();
 
-            EditorGUILayout.Space();
+                EditorGUILayout.Space();
 
-            EditorGUILayout.BeginHorizontal();
-
-            EditorGUILayout.LabelField("Available Rule Templates", EditorStyles.boldLabel, GUILayout.Width(170));
-            if (GUILayout.Button("Select All", GUILayout.Width(80)))
-            {
-                SelectAllRules();
-                TryInitialize();
-            }
-            if (GUILayout.Button("Deselect All", GUILayout.Width(80)))
-            {
-                DeselectAllRules();
-                TryInitialize();
-            }
-            EditorGUILayout.Space(10);
-            Height = EditorGUILayout.Slider(Height, 50,500 );
-            EditorGUILayout.Space(10);
-            EditorGUILayout.EndHorizontal();
-
-
-
-            EditorGUILayout.BeginVertical(GUI.skin.box);
-
-            if (BaseBonusRulesTemplate.Count > 0)
-            {
-                // Sort the rules so that selected ones come on top
-                var sortedRules = BaseBonusRulesTemplate.OrderByDescending(rule => RuleSelectionState[rule.name]).ToList();
-
-                scrollPosition = EditorGUILayout.BeginScrollView(scrollPosition, GUILayout.Height(Height), GUILayout.ExpandHeight(true));
-                foreach (var rule in sortedRules)
+                EditorGUILayout.BeginHorizontal();
+                EditorGUILayout.LabelField("Available Rule Templates", EditorStyles.boldLabel, GUILayout.Width(170));
+                if (GUILayout.Button("Select All", GUILayout.Width(80)))
                 {
-                    EditorGUILayout.BeginHorizontal();
-
-                    bool isSelected = RuleSelectionState[rule.name];
-                    bool newSelectionState = EditorGUILayout.Toggle(isSelected, GUILayout.Width(20));
-
-                    if (newSelectionState != isSelected)
-                    {
-                        RuleSelectionState[rule.name] = newSelectionState;
-                        RuleSelectionState[rule.name] = TryInitialize();
-                    }
-
-                    if (RuleCompatibilityState[rule.name])
-                    {
-                        EditorGUILayout.ObjectField(rule, typeof(BaseBonusRule), false);
-                    }
-                    else
-                    {
-                        GUI.enabled = false;
-                        EditorGUILayout.ObjectField(rule, typeof(BaseBonusRule), false);
-                        GUI.enabled = true;
-                        EditorGUILayout.HelpBox("Incompatible rule for this game mode", MessageType.Warning);
-                    }
-
-                    EditorGUILayout.EndHorizontal();
+                    SelectAllRules();
+                    TryInitialize();
                 }
-                EditorGUILayout.EndScrollView();
+                if (GUILayout.Button("Deselect All", GUILayout.Width(80)))
+                {
+                    DeselectAllRules();
+                    TryInitialize();
+                }
+                EditorGUILayout.Space(10);
+                GameMode.Height = EditorGUILayout.Slider(GameMode.Height, 50, 500);
+                EditorGUILayout.Space(10);
+                EditorGUILayout.EndHorizontal();
+
+                DrawSortingToolbar();
+
+                if (GameMode.BaseBonusRulesTemplate.Count > 0)
+                {
+                    ScrollPosition = EditorGUILayout.BeginScrollView(ScrollPosition, GUILayout.Height(GameMode.Height), GUILayout.ExpandHeight(true));
+
+                    foreach (KeyValuePair<BaseBonusRule, CustomRuleState> ruleStatePair in GameMode.BaseBonusRulesTemplate)
+                    {
+                        BaseBonusRule rule = ruleStatePair.Key;
+                        CustomRuleState customRuleState = ruleStatePair.Value;
+
+                        EditorGUI.BeginChangeCheck();
+                        EditorGUILayout.BeginHorizontal();
+
+                        bool isSelected = customRuleState.IsSelected;
+                        bool newSelectionState = EditorGUILayout.Toggle(isSelected, GUILayout.Width(20));
+
+                        if (newSelectionState != isSelected)
+                        {
+                            customRuleState.IsSelected = newSelectionState;
+                            TryInitialize();
+                        }
+
+                        EditorGUILayout.ObjectField(rule, typeof(BaseBonusRule), false, GUILayout.Width(300));
+                        EditorGUILayout.LabelField(nameof(customRuleState.Priority), GUILayout.Width(50));
+                        customRuleState.Priority = EditorGUILayout.Slider(customRuleState.Priority, 0, 100);
+                        EditorGUILayout.LabelField(nameof(customRuleState.BonusValue), GUILayout.Width(75));
+                        customRuleState.BonusValue = EditorGUILayout.Slider(customRuleState.BonusValue, 0, 100);
+
+                        EditorGUILayout.EndHorizontal();
+
+                        if (EditorGUI.EndChangeCheck())
+                        {
+                            rule.UpdateRule(bonusValue: (int)customRuleState.BonusValue, priority: (int)customRuleState.Priority);
+                            SyncSelectedRules();
+                        }
+                    }
+                    EditorGUILayout.EndScrollView();
+                }
+                else
+                {
+                    EditorGUILayout.HelpBox("No rule templates found in the selected folder.", MessageType.Info);
+                }
+                EditorGUILayout.EndVertical();
             }
-            else
-            {
-                EditorGUILayout.HelpBox("No rule templates found in the selected folder.", MessageType.Info);
-            }
-            EditorGUILayout.EndVertical();
 
             base.OnInspectorGUI();
 
@@ -163,35 +183,143 @@ namespace OcentraAI.LLMGames.GameModes
             }
         }
 
+        private void DrawSortingToolbar()
+        {
+            EditorGUILayout.Space(10);
+            EditorGUILayout.BeginHorizontal(EditorStyles.toolbar);
+            if (DrawSortButton("Sort by Name", SortingCriteria.NameAscending, SortingCriteria.NameDescending))
+            {
+                ToggleSortingOrder(SortingCriteria.NameAscending, SortingCriteria.NameDescending);
+                ApplySorting();
+            }
+            if (DrawSortButton("Sort by Priority", SortingCriteria.PriorityAscending, SortingCriteria.PriorityDescending))
+            {
+                ToggleSortingOrder(SortingCriteria.PriorityAscending, SortingCriteria.PriorityDescending);
+                ApplySorting();
+            }
+            if (DrawSortButton("Sort by Bonus Value", SortingCriteria.BonusValueAscending, SortingCriteria.BonusValueDescending))
+            {
+                ToggleSortingOrder(SortingCriteria.BonusValueAscending, SortingCriteria.BonusValueDescending);
+                ApplySorting();
+            }
+            EditorGUILayout.EndHorizontal();
+            EditorGUILayout.Space(10);
+        }
+
+        private bool DrawSortButton(string label, SortingCriteria ascendingCriteria, SortingCriteria descendingCriteria)
+        {
+            GUIStyle style = GetCustomButtonStyle(ascendingCriteria, descendingCriteria);
+            return GUILayout.Button(label, style);
+        }
+
+        private void ToggleSortingOrder(SortingCriteria ascendingCriteria, SortingCriteria descendingCriteria)
+        {
+            if (GameMode.CurrentSortingCriteria == ascendingCriteria)
+            {
+                GameMode.CurrentSortingCriteria = descendingCriteria;
+            }
+            else if (GameMode.CurrentSortingCriteria == descendingCriteria)
+            {
+                GameMode.CurrentSortingCriteria = ascendingCriteria;
+            }
+            else
+            {
+                GameMode.CurrentSortingCriteria = ascendingCriteria;
+            }
+        }
+
+        private void ApplySorting()
+        {
+            switch (GameMode.CurrentSortingCriteria)
+            {
+                case SortingCriteria.NameAscending:
+                    GameMode.BaseBonusRulesTemplate = GameMode.BaseBonusRulesTemplate
+                        .OrderBy(pair => pair.Key.name)
+                        .ToDictionary(pair => pair.Key, pair => pair.Value);
+                    break;
+                case SortingCriteria.NameDescending:
+                    GameMode.BaseBonusRulesTemplate = GameMode.BaseBonusRulesTemplate
+                        .OrderByDescending(pair => pair.Key.name)
+                        .ToDictionary(pair => pair.Key, pair => pair.Value);
+                    break;
+                case SortingCriteria.PriorityAscending:
+                    GameMode.BaseBonusRulesTemplate = GameMode.BaseBonusRulesTemplate
+                        .OrderBy(pair => pair.Value.Priority)
+                        .ToDictionary(pair => pair.Key, pair => pair.Value);
+                    break;
+                case SortingCriteria.PriorityDescending:
+                    GameMode.BaseBonusRulesTemplate = GameMode.BaseBonusRulesTemplate
+                        .OrderByDescending(pair => pair.Value.Priority)
+                        .ToDictionary(pair => pair.Key, pair => pair.Value);
+                    break;
+                case SortingCriteria.BonusValueAscending:
+                    GameMode.BaseBonusRulesTemplate = GameMode.BaseBonusRulesTemplate
+                        .OrderBy(pair => pair.Value.BonusValue)
+                        .ToDictionary(pair => pair.Key, pair => pair.Value);
+                    break;
+                case SortingCriteria.BonusValueDescending:
+                    GameMode.BaseBonusRulesTemplate = GameMode.BaseBonusRulesTemplate
+                        .OrderByDescending(pair => pair.Value.BonusValue)
+                        .ToDictionary(pair => pair.Key, pair => pair.Value);
+                    break;
+            }
+        }
+
         private void SelectAllRules()
         {
-            foreach (var rule in BaseBonusRulesTemplate)
+            foreach (KeyValuePair<BaseBonusRule, CustomRuleState> ruleStatePair in GameMode.BaseBonusRulesTemplate)
             {
-                RuleSelectionState[rule.name] = true;
-                TryInitialize();
+                ruleStatePair.Value.IsSelected = true;
             }
+            TryInitialize();
         }
 
         private void DeselectAllRules()
         {
-            foreach (var rule in BaseBonusRulesTemplate)
+            foreach (KeyValuePair<BaseBonusRule, CustomRuleState> ruleStatePair in GameMode.BaseBonusRulesTemplate)
             {
-                RuleSelectionState[rule.name] = false;
-                TryInitialize();
+                ruleStatePair.Value.IsSelected = false;
             }
+            TryInitialize();
         }
 
         private bool TryInitialize()
         {
-            List<BaseBonusRule> selectedBonusRules = new List<BaseBonusRule>();
-            foreach (var rule in BaseBonusRulesTemplate)
+            return GameMode.TryInitialize();
+        }
+
+        private GUIStyle GetCustomButtonStyle(SortingCriteria ascendingCriteria, SortingCriteria descendingCriteria)
+        {
+            GUIStyle style = new GUIStyle(EditorStyles.toolbarButton)
             {
-                if (RuleSelectionState[rule.name])
-                {
-                    selectedBonusRules.Add(rule);
-                }
+                normal = { background = MakeTex(2, 2, Color.clear), textColor = Color.white },
+                hover = { background = MakeTex(2, 2, Color.gray), textColor = Color.white }
+            };
+
+            if (GameMode.CurrentSortingCriteria == ascendingCriteria || GameMode.CurrentSortingCriteria == descendingCriteria)
+            {
+                style.normal.textColor = Color.green;
             }
-            return GameMode.TryInitialize(selectedBonusRules);
+            else
+            {
+                style.normal.textColor = Color.white;
+            }
+
+            return style;
+        }
+
+        private Texture2D MakeTex(int width, int height, Color col)
+        {
+            Color[] pix = new Color[width * height];
+            for (int i = 0; i < pix.Length; i++)
+                pix[i] = col;
+            Texture2D result = new Texture2D(width, height);
+            result.SetPixels(pix);
+            result.Apply();
+            return result;
         }
     }
+
+
+
 }

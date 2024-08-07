@@ -15,7 +15,7 @@ namespace OcentraAI.LLMGames.GameModes.Rules.Tests
         public void Setup()
         {
             _gameMode = ScriptableObject.CreateInstance<TestGameMode>();
-            _gameMode.TryInitialize(_gameMode.BonusRules);
+            _gameMode.TryInitialize();
             _rule = ScriptableObject.CreateInstance<T>();
             _rule.SetGameMode(_gameMode);
         }

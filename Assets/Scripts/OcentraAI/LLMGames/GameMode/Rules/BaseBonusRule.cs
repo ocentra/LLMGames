@@ -18,10 +18,10 @@ namespace OcentraAI.LLMGames.GameModes.Rules
         [OdinSerialize, ShowInInspector, ReadOnly] public GameMode GameMode { get; protected set; }
         [OdinSerialize, ShowInInspector] public GameRulesContainer Examples { get; protected set; }
 
-        public void UpdateRule(BaseBonusRule rule)
+        public void UpdateRule(int bonusValue,int priority)
         {
-            BonusValue = rule.BonusValue;
-            Priority = rule.Priority;
+            BonusValue =bonusValue;
+            Priority = priority;
         }
 
         public bool SetGameMode(GameMode gameMode)

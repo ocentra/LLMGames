@@ -1,5 +1,4 @@
 using OcentraAI.LLMGames.Scriptable;
-using Sirenix.OdinInspector;
 using System.Collections.Generic;
 using System.Linq;
 using UnityEngine;
@@ -105,7 +104,7 @@ namespace OcentraAI.LLMGames.GameModes.Rules
             return CreateBonusDetails(RuleName, baseBonus, Priority, descriptions, additionalBonus);
         }
 
-        [Button(ButtonSizes.Large), PropertyOrder(-1)]
+       
         public override bool Initialize(GameMode gameMode)
         {
             Description = "A sequence of 3 to 9 cards of different colors, optionally considering Trump Wild Card.";

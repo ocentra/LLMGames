@@ -77,7 +77,7 @@ namespace OcentraAI.LLMGames.GameModes.Rules
             return CreateBonusDetails(RuleName, baseBonus, Priority, descriptions, additionalBonus);
         }
 
-        [Button(ButtonSizes.Large), PropertyOrder(-1)]
+       
         public override bool Initialize(GameMode gameMode)
         {
             Description = "Two or more pairs of cards with different ranks.";

@@ -9,8 +9,8 @@ MonoBehaviour:
   m_GameObject: {fileID: 0}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 50bf4eefd9d686645a87ee6b58a49dd0, type: 3}
-  m_Name: MultiplePairsRule
+  m_Script: {fileID: 11500000, guid: 7d199c22b00877e46972dfa47eaed80f, type: 3}
+  m_Name: MultiplePairs
   m_EditorClassIdentifier: 
   serializationData:
     SerializedFormat: 2
@@ -21,6 +21,9 @@ MonoBehaviour:
     PrefabModificationsReferencedUnityObjects: []
     PrefabModifications: []
     SerializationNodes:
+    - Name: MinNumberOfCard
+      Entry: 3
+      Data: 4
     - Name: BonusValue
       Entry: 3
       Data: 30

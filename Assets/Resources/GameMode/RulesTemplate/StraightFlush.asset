@@ -26,10 +26,10 @@ MonoBehaviour:
       Data: 3
     - Name: BonusValue
       Entry: 3
-      Data: 30
+      Data: 180
     - Name: Priority
       Entry: 3
-      Data: 80
+      Data: 98
     - Name: RuleName
       Entry: 1
       Data: StraightFlush

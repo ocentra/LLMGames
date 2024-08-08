@@ -26,10 +26,10 @@ MonoBehaviour:
       Data: 3
     - Name: BonusValue
       Entry: 3
-      Data: 30
+      Data: 115
     - Name: Priority
       Entry: 3
-      Data: 80
+      Data: 89
     - Name: RuleName
       Entry: 1
       Data: DifferentColorsSequence

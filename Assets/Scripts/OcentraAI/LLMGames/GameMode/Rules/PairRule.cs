@@ -12,17 +12,21 @@ namespace OcentraAI.LLMGames.GameModes.Rules
     {
         public override int MinNumberOfCard { get; protected set; } = 2;
         public override string RuleName { get; protected set; } = $"{nameof(PairRule)}";
-        public override int BonusValue { get; protected set; } = 30;
-        public override int Priority { get; protected set; } = 80;
+        public override int BonusValue { get; protected set; } = 100;
+        public override int Priority { get; protected set; } = 87;
 
         public override bool Evaluate(List<Card> hand, out BonusDetails bonusDetails)
         {
             bonusDetails = null;
-            if (GameMode == null || (GameMode != null && GameMode.NumberOfCards > MinNumberOfCard))
+            if (!VerifyNumberOfCards(hand)) return false;
+            
+            
+            if (IsNOfAKind(hand, GameMode.NumberOfCards))
+            {
                 return false;
+            }
 
-            var rankCounts = GetRankCounts(hand);
-            var pair = FindHighestPair(rankCounts);
+            Rank? pair = FindNOfAKind(hand, 2);
 
             if (pair.HasValue)
             {
@@ -33,32 +37,27 @@ namespace OcentraAI.LLMGames.GameModes.Rules
             return false;
         }
 
-        private Rank? FindHighestPair(Dictionary<Rank, int> rankCounts)
-        {
-            return rankCounts.Where(kv => kv.Value >= 2)
-                             .OrderByDescending(kv => kv.Key)
-                             .Select(kv => (Rank?)kv.Key)
-                             .FirstOrDefault();
-        }
 
-        private BonusDetails CalculateBonus(List<Card> hand, Rank pairRank)
+
+
+        private BonusDetails CalculateBonus(List<Card> hand, Rank rank)
         {
-            int baseBonus = BonusValue;
+            int baseBonus = BonusValue * (int)rank;
             int additionalBonus = 0;
-            var descriptions = new List<string> { $"Pair of {Card.GetRankSymbol(Suit.Spades, pairRank)}" };
+            List<string> descriptions = new List<string> { $"Pair of {Card.GetRankSymbol(Suit.Spades, rank)}" };
 
             if (GameMode.UseTrump)
             {
-                var trumpCard = GetTrumpCard();
+                Card trumpCard = GetTrumpCard();
                 bool hasTrumpCard = HasTrumpCard(hand);
 
-                if (hasTrumpCard && pairRank == trumpCard.Rank)
+                if (hasTrumpCard && rank == trumpCard.Rank)
                 {
                     additionalBonus += GameMode.TrumpBonusValues.PairBonus;
                     descriptions.Add($"Trump Card Bonus: +{GameMode.TrumpBonusValues.PairBonus}");
                 }
 
-                if (hasTrumpCard && IsRankAdjacent(trumpCard.Rank, pairRank))
+                if (hasTrumpCard && IsRankAdjacent(trumpCard.Rank, rank))
                 {
                     additionalBonus += GameMode.TrumpBonusValues.RankAdjacentBonus;
                     descriptions.Add($"Trump Rank Adjacent Bonus: +{GameMode.TrumpBonusValues.RankAdjacentBonus}");
@@ -80,16 +79,16 @@ namespace OcentraAI.LLMGames.GameModes.Rules
 
             for (int cardCount = 3; cardCount <= gameMode.NumberOfCards; cardCount++)
             {
-                var playerExample = CreateExampleString(cardCount, true);
-                var llmExample = CreateExampleString(cardCount, false);
+                string playerExample = CreateExampleString(cardCount, true);
+                string llmExample = CreateExampleString(cardCount, false);
 
                 playerExamples.Add(playerExample);
                 llmExamples.Add(llmExample);
 
                 if (gameMode.UseTrump)
                 {
-                    var playerTrumpExample = CreateExampleString(cardCount, true, true);
-                    var llmTrumpExample = CreateExampleString(cardCount, false, true);
+                    string playerTrumpExample = CreateExampleString(cardCount, true, true);
+                    string llmTrumpExample = CreateExampleString(cardCount, false, true);
                     playerTrumpExamples.Add(playerTrumpExample);
                     llmTrumpExamples.Add(llmTrumpExample);
                 }
@@ -136,7 +135,7 @@ namespace OcentraAI.LLMGames.GameModes.Rules
                     break;
             }
 
-            var exampleStrings = examples.Select(example =>
+            IEnumerable<string> exampleStrings = examples.Select(example =>
                 string.Join(", ", isPlayer ? ConvertCardSymbols(example) : example)
             );
 

@@ -26,10 +26,10 @@ MonoBehaviour:
       Data: 4
     - Name: BonusValue
       Entry: 3
-      Data: 30
+      Data: 130
     - Name: Priority
       Entry: 3
-      Data: 80
+      Data: 92
     - Name: RuleName
       Entry: 1
       Data: MultiplePairsRule
@@ -40,5 +40,14 @@ MonoBehaviour:
       Entry: 6
       Data: 
     - Name: Examples
+      Entry: 7
+      Data: 0|OcentraAI.LLMGames.GameModes.GameRulesContainer, LLMGames
+    - Name: Player
       Entry: 6
+      Data: 
+    - Name: LLM
+      Entry: 6
+      Data: 
+    - Name: 
+      Entry: 8
       Data: 

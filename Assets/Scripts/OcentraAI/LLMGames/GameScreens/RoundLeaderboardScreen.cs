@@ -4,6 +4,7 @@ using OcentraAI.LLMGames.ThreeCardBrag.Manager;
 using OcentraAI.LLMGames.ThreeCardBrag.Players;
 using OcentraAI.LLMGames.Utilities;
 using Sirenix.OdinInspector;
+using Sirenix.Serialization;
 using System;
 using System.Collections;
 using System.Collections.Generic;
@@ -27,10 +28,13 @@ namespace OcentraAI.LLMGames.Screens
         [Required, ShowInInspector] private Transform ScoreHolderContent { get; set; }
 
         [Required, ShowInInspector] private TextMeshProUGUI HeadingText { get; set; }
-        
+
         [Required, ShowInInspector] private TextMeshProUGUI EndingText { get; set; }
         private bool isButtonClicked = false;
 
+        [OdinSerialize, ShowInInspector] private float SpacerHeight { get; set; } = 25f;
+
+        [OdinSerialize, ShowInInspector] private float RoundStatHeight { get; set; } = 150f;
 
         protected override void Awake()
         {
@@ -69,6 +73,16 @@ namespace OcentraAI.LLMGames.Screens
             Empty = Resources.Load<GameObject>($"Prefabs/{nameof(Empty)}");
 
 
+            VerticalLayoutGroup verticalLayout = ScoreHolderContent.GetComponent<VerticalLayoutGroup>();
+            if (verticalLayout == null)
+            {
+                verticalLayout = ScoreHolderContent.gameObject.AddComponent<VerticalLayoutGroup>();
+            }
+
+            verticalLayout.spacing = SpacerHeight;
+            verticalLayout.childForceExpandHeight = false;
+            verticalLayout.childControlHeight = true;
+
             if (NewGame != null)
             {
                 NewGame.onClick.AddListener(OnNewGame);
@@ -99,19 +113,17 @@ namespace OcentraAI.LLMGames.Screens
         {
             ShowScreen();
 
-            if (HeadingText !=null)
+            if (HeadingText != null)
             {
                 HeadingText.text = $"Round Over";
             }
 
             RoundRecord roundRecord = ScoreManager.GetLastRound();
 
-           
-
-            Player winner = roundRecord.Winner;
+            Player winner = PlayerManager.GetPlayerById(roundRecord.WinnerId);
 
             string message = ColouredMessage($"{winner.PlayerName} ", Color.green) + ColouredMessage($"Won the Round Pot: ", Color.white) + ColouredMessage($" {roundRecord.PotAmount} Coins ", Color.yellow) +
-                             $"{Environment.NewLine}" + ColouredMessage("Remaining Rounds : ", Color.white) + ColouredMessage($"{TurnManager.MaxRounds - TurnManager.CurrentRound} ", Color.cyan) + ColouredMessage(" Continue Next rounds ?", Color.white) ;
+                             $"{Environment.NewLine}" + ColouredMessage("Remaining Rounds : ", Color.white) + ColouredMessage($"{TurnManager.MaxRounds - TurnManager.CurrentRound} ", Color.cyan) + ColouredMessage(" Continue Next rounds ?", Color.white);
 
             ShowStats(roundRecord);
 
@@ -151,7 +163,7 @@ namespace OcentraAI.LLMGames.Screens
             ShowStats(ScoreManager.GetRoundRecords());
 
             (string winnerId, int winCount) = ScoreManager.GetOverallWinner();
-            Player winner = winnerId == PlayerManager.HumanPlayer.Id ? PlayerManager.HumanPlayer : PlayerManager.ComputerPlayer;
+            Player winner = PlayerManager.Instance.GetPlayerById(winnerId);
 
             string message = ColouredMessage($"{winner.PlayerName}", Color.white, true) +
                              ColouredMessage($"wins the game with {winCount} rounds!", Color.cyan) +
@@ -166,13 +178,13 @@ namespace OcentraAI.LLMGames.Screens
             if (ContinueRound != null)
             {
                 ContinueRound.gameObject.SetActive(false);
-               
+
             }
 
             if (NewGame != null)
             {
                 NewGame.gameObject.SetActive(true);
-              
+
             }
 
             isButtonClicked = false;
@@ -180,7 +192,7 @@ namespace OcentraAI.LLMGames.Screens
 
         private void ShowStats(List<RoundRecord> roundRecords)
         {
-            
+
             ScoreHolderContent.DestroyChildren();
             GameObject headers = Instantiate(Headers, ScoreHolderContent);
             headers.transform.SetAsFirstSibling();
@@ -190,11 +202,22 @@ namespace OcentraAI.LLMGames.Screens
             {
                 GameObject roundStatGameObject = Instantiate(RoundStats, ScoreHolderContent);
                 RoundStats roundStats = roundStatGameObject.GetComponent<RoundStats>();
-                if (roundStats!=null)
+                if (roundStats != null)
                 {
-                    roundStats.Init();
 
+                    GameObject spacer = new GameObject("Spacer");
+                    RectTransform spacerRect = spacer.AddComponent<RectTransform>();
+                    spacerRect.SetParent(ScoreHolderContent, false);
+                    spacerRect.sizeDelta = new Vector2(0, SpacerHeight);
+
+                    roundStats.Init();
                     roundStats.ShowStat(roundRecord);
+
+                    RectTransform rectTransform = roundStatGameObject.GetComponent<RectTransform>();
+                    if (rectTransform != null)
+                    {
+                        rectTransform.sizeDelta = new Vector2(rectTransform.sizeDelta.x, RoundStatHeight);
+                    }
 
                 }
             }
@@ -219,8 +242,19 @@ namespace OcentraAI.LLMGames.Screens
 
             if (roundStats != null)
             {
+                GameObject spacer = new GameObject("Spacer");
+                RectTransform spacerRect = spacer.AddComponent<RectTransform>();
+                spacerRect.SetParent(ScoreHolderContent, false);
+                spacerRect.sizeDelta = new Vector2(0, SpacerHeight);
+
                 roundStats.Init();
                 roundStats.ShowStat(roundRecord);
+
+                RectTransform rectTransform = roundStatGameObject.GetComponent<RectTransform>();
+                if (rectTransform != null)
+                {
+                    rectTransform.sizeDelta = new Vector2(rectTransform.sizeDelta.x, RoundStatHeight);
+                }
 
             }
 

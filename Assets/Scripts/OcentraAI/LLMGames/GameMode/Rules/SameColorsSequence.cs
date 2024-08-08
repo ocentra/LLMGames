@@ -11,21 +11,25 @@ namespace OcentraAI.LLMGames.GameModes.Rules
     {
         public override int MinNumberOfCard { get; protected set; } = 3;
         public override string RuleName { get; protected set; } = $"{nameof(SameColorsSequence)}";
-        public override int BonusValue { get; protected set; } = 30;
-        public override int Priority { get; protected set; } = 80;
+        public override int BonusValue { get; protected set; } = 120;
+        public override int Priority { get; protected set; } = 90;
 
         public override bool Evaluate(List<Card> hand, out BonusDetails bonusDetails)
         {
             bonusDetails = null;
 
-            if (GameMode == null || (GameMode != null && GameMode.NumberOfCards > MinNumberOfCard))
+            if (!VerifyNumberOfCards(hand)) return false;
+
+            if (!IsSequence(hand)) return false;
+
+
+            // Check for royal flush
+            if (IsRoyalSequence(hand))
+            {
                 return false;
+            }
 
-            var ranks = hand.Select(card => (int)card.Rank).ToList();
-            bool sameColor = hand.All(card => Card.GetColorValue(card.Suit) == Card.GetColorValue(hand[0].Suit));
-
-            // Check for natural same color sequence
-            if (sameColor && IsSequence(ranks))
+            if (IsSameColorAndDifferentSuits(hand))
             {
                 bonusDetails = CalculateBonus(hand, false);
                 return true;
@@ -34,11 +38,11 @@ namespace OcentraAI.LLMGames.GameModes.Rules
             // Check for trump-assisted same color sequence
             if (GameMode.UseTrump)
             {
-                var trumpCard = GetTrumpCard();
+                Card trumpCard = GetTrumpCard();
                 bool hasTrumpCard = HasTrumpCard(hand);
                 if (hasTrumpCard)
                 {
-                    var nonTrumpCards = hand.Where(c => c != trumpCard).ToList();
+                    List<Card> nonTrumpCards = hand.Where(c => c != trumpCard).ToList();
                     bool canFormSequence = CanFormSequenceWithWild(nonTrumpCards.Select(c => c.GetRankValue()).ToList());
                     bool sameColorNonTrump = nonTrumpCards.All(card => Card.GetColorValue(card.Suit) == Card.GetColorValue(nonTrumpCards[0].Suit));
 
@@ -55,17 +59,17 @@ namespace OcentraAI.LLMGames.GameModes.Rules
 
         private BonusDetails CalculateBonus(List<Card> hand, bool isTrumpAssisted)
         {
-            int baseBonus = BonusValue;
+            int baseBonus = BonusValue * CalculateHandValue(hand);
             int additionalBonus = 0;
-            var descriptions = new List<string> { $"Same Colors Sequence:" };
+            List<string> descriptions = new List<string> { $"Same Colors Sequence:" };
 
             if (isTrumpAssisted)
             {
                 additionalBonus += GameMode.TrumpBonusValues.SequenceBonus;
                 descriptions.Add($"Trump Card Bonus: +{GameMode.TrumpBonusValues.SequenceBonus}");
 
-                var orderedHand = hand.OrderBy(card => card.GetRankValue()).ToList();
-                var trumpCard = GetTrumpCard();
+                List<Card> orderedHand = hand.OrderBy(card => card.GetRankValue()).ToList();
+                Card trumpCard = GetTrumpCard();
 
                 // Check for CardInMiddleBonus
                 if (IsTrumpInMiddle(orderedHand, trumpCard))
@@ -85,10 +89,8 @@ namespace OcentraAI.LLMGames.GameModes.Rules
             return CreateBonusDetails(RuleName, baseBonus, Priority, descriptions, additionalBonus);
         }
 
-       
         public override bool Initialize(GameMode gameMode)
         {
-            Description = "A sequence of 3 to 9 cards of the same color, optionally considering Trump Wild Card.";
 
             List<string> playerExamples = new List<string>();
             List<string> llmExamples = new List<string>();
@@ -101,7 +103,7 @@ namespace OcentraAI.LLMGames.GameModes.Rules
             List<int> sequence = GetSequence(gameMode.NumberOfCards);
             Rank fromRank = (Rank)sequence.First();
             Rank toRank = (Rank)sequence.Last();
-            Description = $"A sequence of cards from {fromRank} to {toRank}, all of the same color.";
+            Description = $"A sequence of {gameMode.NumberOfCards} cards from {fromRank} to {toRank}, all of the same color.";
 
             string playerExample = string.Join(", ", sequence.Select(rank => Card.GetRankSymbol(Suit.Spades, (Rank)rank)));
             string llmExample = string.Join(", ", sequence.Select(rank => Card.GetRankSymbol(Suit.Spades, (Rank)rank, false)));

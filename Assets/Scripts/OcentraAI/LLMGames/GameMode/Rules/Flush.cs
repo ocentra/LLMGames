@@ -12,14 +12,13 @@ namespace OcentraAI.LLMGames.GameModes.Rules
         public override int MinNumberOfCard { get; protected set; } = 3;
 
         public override string RuleName { get; protected set; } = $"{nameof(Flush)}";
-        public override int BonusValue { get; protected set; } = 30;
-        public override int Priority { get; protected set; } = 80;
+        public override int BonusValue { get; protected set; } = 110;
+        public override int Priority { get; protected set; } = 88;
 
         public override bool Evaluate(List<Card> hand, out BonusDetails bonusDetails)
         {
             bonusDetails = null;
-            if (GameMode == null || (GameMode != null && GameMode.NumberOfCards > MinNumberOfCard))
-                return false;
+            if (!VerifyNumberOfCards(hand)) return false;
 
             // Check for natural flush
             if (hand.All(card => card.Suit == hand[0].Suit))
@@ -31,11 +30,11 @@ namespace OcentraAI.LLMGames.GameModes.Rules
             // Check for trump-assisted flush
             if (GameMode.UseTrump)
             {
-                var trumpCard = GetTrumpCard();
+                Card trumpCard = GetTrumpCard();
                 bool hasTrumpCard = HasTrumpCard(hand);
                 if (hasTrumpCard)
                 {
-                    var nonTrumpCards = hand.Where(c => c != trumpCard).ToList();
+                    List<Card> nonTrumpCards = hand.Where(c => c != trumpCard).ToList();
                     if (nonTrumpCards.All(card => card.Suit == nonTrumpCards[0].Suit))
                     {
                         bonusDetails = CalculateBonus(hand, true);
@@ -49,17 +48,17 @@ namespace OcentraAI.LLMGames.GameModes.Rules
 
         private BonusDetails CalculateBonus(List<Card> hand, bool isTrumpAssisted)
         {
-            int baseBonus = BonusValue;
+            int baseBonus = BonusValue * CalculateHandValue(hand);
             int additionalBonus = 0;
-            var descriptions = new List<string> { $"Flush:" };
+            List<string> descriptions = new List<string> { $"Flush:" };
 
             if (isTrumpAssisted)
             {
                 additionalBonus += GameMode.TrumpBonusValues.FlushBonus;
                 descriptions.Add($"Trump Card Bonus: +{GameMode.TrumpBonusValues.FlushBonus}");
 
-                var orderedHand = hand.OrderBy(card => card.GetRankValue()).ToList();
-                var trumpCard = GetTrumpCard();
+                List<Card> orderedHand = hand.OrderBy(card => card.GetRankValue()).ToList();
+                Card trumpCard = GetTrumpCard();
 
                 // Check for CardInMiddleBonus
                 if (IsTrumpInMiddle(orderedHand, trumpCard))
@@ -92,8 +91,8 @@ namespace OcentraAI.LLMGames.GameModes.Rules
             string playerTrumpCardSymbol = Card.GetRankSymbol(Suit.Hearts, Rank.Six);
             string llmTrumpCardSymbol = Card.GetRankSymbol(Suit.Hearts, Rank.Six, false);
 
-            var suits = new[] { Suit.Spades, Suit.Hearts, Suit.Diamonds, Suit.Clubs };
-            foreach (var suit in suits)
+            Suit[] suits = new[] { Suit.Spades, Suit.Hearts, Suit.Diamonds, Suit.Clubs };
+            foreach (Suit suit in suits)
             {
                 string playerExample = string.Join(", ", Enumerable.Range(2, 5).Select(rank => Card.GetRankSymbol(suit, (Rank)rank)));
                 playerExamples.Add(playerExample);

@@ -187,7 +187,7 @@ namespace OcentraAI.LLMGames.ThreeCardBrag.Manager
             }
 
             int splitAmount = Pot / tiedPlayers.Count;
-            foreach (var player in tiedPlayers)
+            foreach (Player player in tiedPlayers)
             {
                 player.AdjustCoins(splitAmount);
             }
@@ -249,18 +249,21 @@ namespace OcentraAI.LLMGames.ThreeCardBrag.Manager
 
         private void RecordRound(Player winner, int potAmount)
         {
-            var roundRecord = new RoundRecord
+            RoundRecord roundRecord = new RoundRecord
             {
                 RoundNumber = TurnManager.CurrentRound,
-                Winner = winner,
-                WinnerId = winner.Id,
+                WinnerId = winner?.Id,
                 PotAmount = potAmount,
-                Players = PlayerManager.GetAllPlayers()
-
+                Players = PlayerManager.GetAllPlayers().Select(player => new PlayerRecord(player)).ToList()
             };
 
-            RoundRecords.Add(roundRecord);
+            if (!RoundRecords.Contains(roundRecord))
+            {
+                RoundRecords.Add(roundRecord);
+
+            }
         }
+
 
         public List<RoundRecord> GetRoundRecords()
         {
@@ -277,7 +280,8 @@ namespace OcentraAI.LLMGames.ThreeCardBrag.Manager
             RoundRecord roundRecord = RoundRecords.Last();
             if (roundRecord != null)
             {
-                return roundRecord.Winner;
+
+                return PlayerManager.GetPlayerById(roundRecord.WinnerId);
             }
             return null;
         }
@@ -313,7 +317,7 @@ namespace OcentraAI.LLMGames.ThreeCardBrag.Manager
         private bool VerifyTotalCoins()
         {
             int currentTotal = Pot;
-            foreach (var player in PlayerManager.GetAllPlayers())
+            foreach (Player player in PlayerManager.GetAllPlayers())
             {
                 currentTotal += player.Coins;
             }
@@ -333,14 +337,5 @@ namespace OcentraAI.LLMGames.ThreeCardBrag.Manager
         #endregion
 
  
-    }
-    [System.Serializable]
-    public class RoundRecord
-    {
-        [ShowInInspector, ReadOnly] public int RoundNumber { get; set; }
-        [ShowInInspector, ReadOnly] public List<Player> Players { get; set; } = new List<Player>();
-        [ShowInInspector, ReadOnly] public string WinnerId { get; set; }
-        [ShowInInspector, ReadOnly] public int PotAmount { get; set; }
-        [ShowInInspector, ReadOnly] public Player Winner { get; set; }
     }
 }

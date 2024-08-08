@@ -34,8 +34,8 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 1}
   m_AnchorMax: {x: 0, y: 1}
-  m_AnchoredPosition: {x: 513.43506, y: -18.75}
-  m_SizeDelta: {x: 1026.8701, y: 37.5}
+  m_AnchoredPosition: {x: 165.72139, y: -12.5}
+  m_SizeDelta: {x: 331.44278, y: 25}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!222 &1530411869031704045
 CanvasRenderer:
@@ -92,7 +92,7 @@ MonoBehaviour:
   m_faceColor:
     serializedVersion: 2
     rgba: 4294967295
-  m_fontSize: 33.55
+  m_fontSize: 22.35
   m_fontSizeBase: 36
   m_fontWeight: 400
   m_enableAutoSizing: 1
@@ -168,8 +168,8 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 1}
   m_AnchorMax: {x: 0, y: 1}
-  m_AnchoredPosition: {x: 1352.3352, y: -18.75}
-  m_SizeDelta: {x: 650.93005, y: 37.5}
+  m_AnchoredPosition: {x: 415.72137, y: -12.5}
+  m_SizeDelta: {x: 168.55719, y: 25}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!222 &4042352827481845563
 CanvasRenderer:
@@ -226,7 +226,7 @@ MonoBehaviour:
   m_faceColor:
     serializedVersion: 2
     rgba: 4294967295
-  m_fontSize: 33.55
+  m_fontSize: 22.35
   m_fontSizeBase: 36
   m_fontWeight: 400
   m_enableAutoSizing: 1
@@ -476,7 +476,7 @@ RectTransform:
   m_AnchorMin: {x: 0, y: 0}
   m_AnchorMax: {x: 0, y: 0}
   m_AnchoredPosition: {x: 0, y: 0}
-  m_SizeDelta: {x: 0, y: 0}
+  m_SizeDelta: {x: 500, y: 100}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!222 &2416076120558723849
 CanvasRenderer:
@@ -520,15 +520,8 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   PlayerPanel: {fileID: 7411583498768057555, guid: e780256813a3b4244a1562904364fc65,
     type: 3}
-  BonusRule: {fileID: 8670731718587902942, guid: a681169fd3e2a9d419a1356a7a60a163,
-    type: 3}
-  PlayerName: {fileID: 0}
-  HandRankSum: {fileID: 0}
-  HandValue: {fileID: 0}
   RoundNumber: {fileID: 1313915264551525302}
   Pot: {fileID: 8655669226417799924}
-  AppliedRules: {fileID: 0}
-  HandView: {fileID: 0}
 --- !u!114 &4163939593723339810
 MonoBehaviour:
   m_ObjectHideFlags: 0

@@ -26,10 +26,10 @@ MonoBehaviour:
       Data: 8
     - Name: BonusValue
       Entry: 3
-      Data: 30
+      Data: 190
     - Name: Priority
       Entry: 3
-      Data: 80
+      Data: 99
     - Name: RuleName
       Entry: 1
       Data: MultipleFourOfAKind

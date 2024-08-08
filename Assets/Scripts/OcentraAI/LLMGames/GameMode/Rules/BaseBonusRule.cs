@@ -5,6 +5,7 @@ using Sirenix.Serialization;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using UnityEngine;
 
 namespace OcentraAI.LLMGames.GameModes.Rules
 {
@@ -16,7 +17,7 @@ namespace OcentraAI.LLMGames.GameModes.Rules
         [OdinSerialize, ShowInInspector, ReadOnly] public abstract string RuleName { get; protected set; }
         [OdinSerialize, ShowInInspector, ReadOnly] public string Description { get; protected set; }
         [OdinSerialize, ShowInInspector, ReadOnly] public GameMode GameMode { get; protected set; }
-        [OdinSerialize, ShowInInspector] public GameRulesContainer Examples { get; protected set; }
+        [OdinSerialize, ShowInInspector] public GameRulesContainer Examples { get; protected set; } = new GameRulesContainer();
 
         public void UpdateRule(int bonusValue,int priority)
         {
@@ -35,7 +36,7 @@ namespace OcentraAI.LLMGames.GameModes.Rules
 
         public abstract bool Initialize(GameMode gameMode);
 
-        protected Card GetTrumpCard() => DeckManager.Instance.WildCards.GetValueOrDefault("TrumpCard");
+        protected Card GetTrumpCard() => DeckManager.Instance.WildCards.GetValueOrDefault("TrumpCard"); //todo put it in some const class no string literals
 
         protected int CalculateHandValue(List<Card> hand) => hand.Sum(card => card.GetRankValue());
 
@@ -53,61 +54,47 @@ namespace OcentraAI.LLMGames.GameModes.Rules
                    (rank1 == Rank.Two && rank2 == Rank.A);
         }
 
-
-        protected Rank? FindNOfAKind(Dictionary<Rank, int> rankCounts)
+        
+        protected Rank? FindNOfAKind(List<Card> hand, int numberOfCards)
         {
-            return rankCounts.Where(kv => kv.Value >= GameMode.NumberOfCards)
+            return GetRankCounts(hand).Where(kv => kv.Value >= numberOfCards)
                 .OrderByDescending(kv => kv.Key)
                 .Select(kv => (Rank?)kv.Key)
                 .FirstOrDefault();
         }
 
-        protected Rank? FindNOfAKind(Dictionary<Rank, int> rankCounts, int numberOfCards)
+        
+
+        protected bool IsNOfAKind(List<Card> hand, Rank rank, int numberOfCards)
         {
-            return rankCounts.Where(kv => kv.Value >= numberOfCards)
-                .OrderByDescending(kv => kv.Key)
-                .Select(kv => (Rank?)kv.Key)
-                .FirstOrDefault();
+            return GetRankCounts(hand).TryGetValue(rank, out int count) && count == numberOfCards;
         }
 
-
-        protected bool IsNOfAKind(Dictionary<Rank, int> rankCounts, Rank rank, int n)
+        protected bool IsNOfAKind(List<Card> hand, int numberOfCards)
         {
-            return rankCounts.TryGetValue(rank, out int count) && count == n;
+            return FindNOfAKind(hand, numberOfCards).HasValue;
         }
 
-
-        protected bool IsNOfAKind(Dictionary<Rank, int> rankCounts)
+        
+        protected bool IsFullHouseOrTrumpOfKind(List<Card> hand)
         {
-            return FindNOfAKind(rankCounts).HasValue;
-        }
-
-        protected bool IsNOfAKind(Dictionary<Rank, int> rankCounts,Rank rank)
-        {
-            return FindNOfAKind(rankCounts) == rank;
-        }
-
-        protected bool IsFullHouseOrTrumpOfKind(Dictionary<Rank, int> rankCounts, Card trumpCard)
-        {
-            if (GameMode.UseTrump && rankCounts.TryGetValue(trumpCard.Rank, out int trumpRankCount) && trumpRankCount == GameMode.NumberOfCards)
+            Dictionary<Rank, int> rankCounts = GetRankCounts(hand);
+            if (GameMode.UseTrump && rankCounts.TryGetValue(GetTrumpCard().Rank, out int trumpRankCount) && trumpRankCount == GameMode.NumberOfCards)
             {
                 return true;
 
             }
-
-
             return rankCounts.TryGetValue(Rank.A, out int aceCount) && aceCount == GameMode.NumberOfCards;
         }
 
-        protected bool IsNOfAKindOfTrump(Dictionary<Rank, int> rankCounts, Card trumpCard, int n)
+
+
+        
+        protected bool IsNOfAKindOfTrump(List<Card> hand, int n)
         {
-            return rankCounts.TryGetValue(trumpCard.Rank, out int trumpCount) && trumpCount == n;
+            return GetRankCounts(hand).TryGetValue(GetTrumpCard().Rank, out int trumpCount) && trumpCount == n;
         }
 
-        protected bool IsNOfAKindOfTrump(Dictionary<Rank, int> rankCounts, Card trumpCard)
-        {
-            return FindNOfAKind(rankCounts) == trumpCard.Rank;
-        }
 
         protected string[] ConvertCardSymbols(string[] cardSymbols)
         {
@@ -140,13 +127,33 @@ namespace OcentraAI.LLMGames.GameModes.Rules
             return convertedSymbols.ToArray();
         }
 
-
-
-        protected bool IsSequence(List<int> ranks)
+        protected bool IsRoyalSequence(List<Card> hand)
         {
-            var sortedRanks = ranks.OrderBy(r => r).ToList();
-            return IsAscendingSequence(sortedRanks) || IsWraparoundSequence(sortedRanks);
+            if (IsSameSuits(hand))
+            {
+                List<int> ranks = hand.Select(card => (int)card.Rank).OrderBy(rank => rank).ToList();
+                List<int> royalSequence = GetRoyalSequence();
+                return ranks.SequenceEqual(royalSequence.Take(ranks.Count));
+            }
+
+            return false;
         }
+
+        protected static bool IsSameSuits(List<Card> hand)
+        {
+            return hand.All(card => card.Suit == hand[0].Suit);
+        }
+
+
+
+        protected bool IsSequence(List<Card> hand)
+        {
+            if (hand == null || hand.Count < 2) return false;
+
+            List<int> ranks = hand.Select(card => card.GetRankValue()).OrderBy(rank => rank).ToList();
+            return IsAscendingSequence(ranks) || IsWraparoundSequence(ranks);
+        }
+        
 
         private bool IsAscendingSequence(List<int> sortedRanks)
         {
@@ -162,7 +169,7 @@ namespace OcentraAI.LLMGames.GameModes.Rules
 
         protected bool CanFormSequenceWithWild(List<int> ranks)
         {
-            var sortedRanks = ranks.OrderBy(r => r).ToList();
+            List<int> sortedRanks = ranks.OrderBy(r => r).ToList();
             return CheckWildSequence(sortedRanks) || CheckWraparoundWildSequence(sortedRanks);
         }
 
@@ -173,10 +180,35 @@ namespace OcentraAI.LLMGames.GameModes.Rules
 
         private bool CheckWraparoundWildSequence(List<int> sortedRanks)
         {
+            if (sortedRanks.Count < 3)
+            {
+                Debug.LogWarning("sortedRanks list has fewer than 3 elements.");
+                return false;
+            }
+
             return (sortedRanks[0] == 2 && sortedRanks[1] <= 4) || // x-2-3, x-2-4
                    (sortedRanks[0] == 2 && sortedRanks[2] == 14) || // 2-x-A
                    (sortedRanks[1] == 13 && sortedRanks[2] == 14) || // Q-K-x, x-K-A
                    (sortedRanks[0] == 12 && sortedRanks[2] == 14); // Q-x-A
+        }
+
+        protected bool IsSameColorAndDifferentSuits(List<Card> hand)
+        {
+            if (hand == null || hand.Count == 0) return false;
+
+            Color firstCardColor = Card.GetColorValue(hand[0].Suit);
+
+
+            foreach (Card card in hand)
+            {
+                if (Card.GetColorValue(card.Suit) != firstCardColor)
+                {
+                    return false;
+                }
+                
+            }
+
+            return IsSameSuits(hand);
         }
 
         protected bool IsTrumpInMiddle(List<Card> orderedHand, Card trumpCard)
@@ -199,7 +231,7 @@ namespace OcentraAI.LLMGames.GameModes.Rules
 
         protected bool IsRankAdjacentToTrump(List<Card> orderedHand, Card trumpCard)
         {
-            foreach (var card in orderedHand)
+            foreach (Card card in orderedHand)
             {
                 if (IsRankAdjacent(card.Rank, trumpCard.Rank))
                 {
@@ -210,26 +242,14 @@ namespace OcentraAI.LLMGames.GameModes.Rules
         }
         protected int GetOptimalWildCardValue(List<int> ranks)
         {
-            var sortedRanks = ranks.OrderBy(r => r).ToList();
+            List<int> sortedRanks = ranks.OrderBy(r => r).ToList();
             if (sortedRanks[0] == 2 && sortedRanks[1] == 3) return 4; // A-2-3
             if (sortedRanks[0] == 2 && sortedRanks[1] == 13) return 14; // K-A-2
             if (sortedRanks[0] == 12 && sortedRanks[1] == 13) return 14; // Q-K-A
             if (sortedRanks[1] == sortedRanks[0] + 1) return Math.Min(sortedRanks[1] + 1, 14);
             return sortedRanks[0] + 1;
         }
-
-        protected List<List<Card>> GetAllCombinations(List<Card> hand, int combinationSize)
-        {
-            return GetCombinations(hand, combinationSize).ToList();
-        }
-
-        private IEnumerable<List<Card>> GetCombinations(List<Card> list, int length)
-        {
-            if (length == 1) return list.Select(t => new List<Card> { t });
-            return GetCombinations(list, length - 1)
-                .SelectMany(t => list.Where(e => !t.Contains(e)),
-                    (t1, t2) => t1.Concat(new List<Card> { t2 }).ToList());
-        }
+        
 
         protected BonusDetails CreateBonusDetails(string ruleName, int baseBonus, int priority, List<string> descriptions, int additionalBonus = 0)
         {
@@ -243,9 +263,15 @@ namespace OcentraAI.LLMGames.GameModes.Rules
             };
         }
 
+        protected bool VerifyNumberOfCards(List<Card> hand)
+        {
+            return GameMode != null && GameMode.NumberOfCards >= MinNumberOfCard && hand.Count == GameMode.NumberOfCards;
+        }
+
+        
         protected List<int> GetSequence(int numberOfCards)
         {
-            var baseSequence = new List<int> { 6, 7, 8, 9, 10, 11, 12, 13, 14 }; // 6, 7, 8, 9, 10, J, Q, K, A
+            List<int> baseSequence = new List<int> { 6, 7, 8, 9, 10, 11, 12, 13, 14 }; 
             return baseSequence.Skip(baseSequence.Count - numberOfCards).ToList();
         }
 
@@ -259,10 +285,7 @@ namespace OcentraAI.LLMGames.GameModes.Rules
 
             return royalRanks.Take(GameMode.NumberOfCards).ToList();
         }
-        protected bool IsSequence(List<int> ranks, List<int> sequence)
-        {
-            return !sequence.Except(ranks).Any();
-        }
+
 
         protected bool TryCreateExample(string ruleName, string description, int bonusValue, List<string> playerExamples,
             List<string> llmExamples, List<string> playerTrumpExamples,
@@ -270,14 +293,14 @@ namespace OcentraAI.LLMGames.GameModes.Rules
         {
             bool IsApplicable(List<string> examplesList)
             {
-                return examplesList != null && examplesList.Count > 0;
+                return examplesList is { Count: > 0 };
             }
 
             string GetExamplesDescription(List<string> examples, List<string> trumpExamples, bool useTrumpExamples)
             {
                 if (!IsApplicable(examples))
                 {
-                    return "Rule Not Applicable to this gamemode";
+                    return "Rule Not Applicable to this GameMode";
                 }
 
                 string examplesDescription = string.Join($"{Environment.NewLine}", examples);
@@ -298,15 +321,15 @@ namespace OcentraAI.LLMGames.GameModes.Rules
                 return false;
             }
 
-            var playerDescription = $"{ruleName} {description}{Environment.NewLine}" +
+            string playerDescription = $"{ruleName} {description}{Environment.NewLine}" +
+                                       $"{ruleName} Bonus: {bonusValue}{Environment.NewLine}" +
+                                       $"Examples:{Environment.NewLine}" +
+                                       $"{GetExamplesDescription(playerExamples, playerTrumpExamples, useTrump)}";
+
+            string llmDescription = $"{ruleName} {description}{Environment.NewLine}" +
                                     $"{ruleName} Bonus: {bonusValue}{Environment.NewLine}" +
                                     $"Examples:{Environment.NewLine}" +
-                                    $"{GetExamplesDescription(playerExamples, playerTrumpExamples, useTrump)}";
-
-            var llmDescription = $"{ruleName} {description}{Environment.NewLine}" +
-                                 $"{ruleName} Bonus: {bonusValue}{Environment.NewLine}" +
-                                 $"Examples:{Environment.NewLine}" +
-                                 $"{GetExamplesDescription(llmExamples, llmTrumpExamples, useTrump)}";
+                                    $"{GetExamplesDescription(llmExamples, llmTrumpExamples, useTrump)}";
 
             Examples = new GameRulesContainer { Player = playerDescription, LLM = llmDescription };
             return true;

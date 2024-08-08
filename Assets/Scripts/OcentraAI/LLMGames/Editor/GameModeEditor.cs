@@ -1,5 +1,4 @@
 using OcentraAI.LLMGames.GameModes.Rules;
-using Sirenix.OdinInspector;
 using Sirenix.OdinInspector.Editor;
 using Sirenix.Serialization;
 using System.Collections.Generic;
@@ -13,11 +12,7 @@ namespace OcentraAI.LLMGames.GameModes
     public class GameModeEditor : OdinEditor
     {
         [OdinSerialize] public GameMode GameMode { get; set; }
-
-
-
         [OdinSerialize] public Vector2 ScrollPosition { get; set; }
-
 
         protected override void OnEnable()
         {
@@ -33,8 +28,13 @@ namespace OcentraAI.LLMGames.GameModes
             base.OnDisable();
         }
 
-        private void LoadRuleTemplates()
+        private void LoadRuleTemplates(bool loadFresh = false)
         {
+            if (loadFresh)
+            {
+                GameMode.BaseBonusRulesTemplate = new Dictionary<BaseBonusRule, CustomRuleState>();
+            }
+
             Dictionary<BaseBonusRule, CustomRuleState> loadedTemplates = new Dictionary<BaseBonusRule, CustomRuleState>();
             if (!string.IsNullOrEmpty(GameMode.RulesTemplatePath))
             {
@@ -114,6 +114,14 @@ namespace OcentraAI.LLMGames.GameModes
 
                 EditorGUILayout.BeginHorizontal();
                 EditorGUILayout.LabelField("Available Rule Templates", EditorStyles.boldLabel, GUILayout.Width(170));
+
+                if (GUILayout.Button("Refresh Rules", GUILayout.Width(100)))
+                {
+                    LoadRuleTemplates(true);
+                    SyncSelectedRules();
+                    ApplySorting();
+                }
+
                 if (GUILayout.Button("Select All", GUILayout.Width(80)))
                 {
                     SelectAllRules();
@@ -156,7 +164,7 @@ namespace OcentraAI.LLMGames.GameModes
                         EditorGUILayout.LabelField(nameof(customRuleState.Priority), GUILayout.Width(50));
                         customRuleState.Priority = EditorGUILayout.Slider(customRuleState.Priority, 0, 100);
                         EditorGUILayout.LabelField(nameof(customRuleState.BonusValue), GUILayout.Width(75));
-                        customRuleState.BonusValue = EditorGUILayout.Slider(customRuleState.BonusValue, 0, 100);
+                        customRuleState.BonusValue = EditorGUILayout.Slider(customRuleState.BonusValue, 0, 200);
 
                         EditorGUILayout.EndHorizontal();
 

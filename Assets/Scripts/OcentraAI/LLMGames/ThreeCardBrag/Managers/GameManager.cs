@@ -32,7 +32,7 @@ namespace OcentraAI.LLMGames.ThreeCardBrag.Manager
 
         public CancellationTokenSource GlobalCancellationTokenSource { get; set; }
 
-        [OdinSerialize,ShowInInspector,Required]
+        [OdinSerialize, ShowInInspector, Required]
         public GameMode GameMode { get; set; }
 
         #endregion
@@ -91,23 +91,16 @@ namespace OcentraAI.LLMGames.ThreeCardBrag.Manager
             return Task.CompletedTask;
         }
 
+        // todo look on this after multiplayer
         private Task InitializePlayers()
         {
-
             PlayerManager.AddPlayer(AuthenticationManager.Instance.PlayerData, PlayerType.Human);
-
             PlayerData playerData = new PlayerData { PlayerID = Guid.NewGuid().ToString(), PlayerName = nameof(ComputerPlayer) };
             PlayerManager.AddPlayer(playerData, PlayerType.Computer);
-
-
-
             return Task.CompletedTask;
         }
 
-
-
-
-
+        
         private Task InitializeUIPlayers()
         {
             TaskCompletionSource<bool> initializedUIPlayersSource = new TaskCompletionSource<bool>();
@@ -307,12 +300,18 @@ namespace OcentraAI.LLMGames.ThreeCardBrag.Manager
         {
             try
             {
+                if (TurnManager.IsFixedRoundsOver())
+                {
+                    await CheckForContinuation(true);
+                    return;
+                }
+
                 DeckManager.ResetForNewRound();
                 PlayerManager.ResetForNewRound();
                 ScoreManager.ResetForNewRound();
                 TurnManager.ResetForNewRound();
 
-                Log("Gamemanager Calling TurnManager.ResetForNewRound");
+               // Log("GameManager Calling TurnManager.ResetForNewRound");
 
                 EventBus.Publish(new NewRoundEventArgs(this));
                 // Ensure the first turn is always started correctly
@@ -665,7 +664,7 @@ namespace OcentraAI.LLMGames.ThreeCardBrag.Manager
                 }
                 else
                 {
-                    await CheckForContinuation(winner, showHand);
+                    await CheckForContinuation(showHand);
                 }
             }
             else
@@ -674,10 +673,8 @@ namespace OcentraAI.LLMGames.ThreeCardBrag.Manager
             }
         }
 
-        private async Task CheckForContinuation(Player winner, bool showHand)
+        private async Task CheckForContinuation(bool showHand)
         {
-
-
 
             if (TurnManager.IsFixedRoundsOver())
             {

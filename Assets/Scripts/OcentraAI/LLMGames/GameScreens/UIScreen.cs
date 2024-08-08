@@ -8,7 +8,7 @@ using UnityEngine;
 
 namespace OcentraAI.LLMGames.Screens
 {
-    public abstract class UIScreen : MonoBehaviour
+    public abstract class UIScreen : SerializedMonoBehaviour
     {
         [Required] protected PlayerManager PlayerManager => PlayerManager.Instance;
         [Required] protected ScoreManager ScoreManager => ScoreManager.Instance;

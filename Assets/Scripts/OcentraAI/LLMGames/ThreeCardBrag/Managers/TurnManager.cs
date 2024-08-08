@@ -46,7 +46,7 @@ namespace OcentraAI.LLMGames.ThreeCardBrag.Manager
         [ShowInInspector, ReadOnly] public Player RoundStarter { get; private set; }
         [ShowInInspector, ReadOnly] public Player LastBettor { get; private set; }
         [ShowInInspector, ReadOnly] public bool IsShowdown { get; private set; }
-        [ShowInInspector, ReadOnly] public int CurrentRound { get; private set; } = 0;
+        [ShowInInspector, ReadOnly] public int CurrentRound { get; private set; } = 1;
         [ShowInInspector, ReadOnly] public float RemainingTime { get; private set; }
 
         public TaskCompletionSource<bool> ActionCompletionSource { get; private set; }
@@ -333,7 +333,7 @@ namespace OcentraAI.LLMGames.ThreeCardBrag.Manager
 
         public bool IsFixedRoundsOver()
         {
-            return CurrentRound > MaxRounds;
+            return CurrentRound >= MaxRounds;
         }
 
         protected override void Log(string message, string method)

@@ -1,5 +1,6 @@
 ﻿using OcentraAI.LLMGames.Scriptable;
-using Sirenix.OdinInspector;
+using OcentraAI.LLMGames.ThreeCardBrag.Manager;
+using OcentraAI.LLMGames.ThreeCardBrag.Players;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -12,23 +13,20 @@ namespace OcentraAI.LLMGames.GameModes.Rules
     {
         public override int MinNumberOfCard { get; protected set; } = 3;
         public override string RuleName { get; protected set; } = $"{nameof(HighCard)}";
-        public override int BonusValue { get; protected set; } = 30;
-        public override int Priority { get; protected set; } = 50;
+        public override int BonusValue { get; protected set; } = 90;
+        public override int Priority { get; protected set; } = 86;
 
         public override bool Evaluate(List<Card> hand, out BonusDetails bonusDetails)
         {
             bonusDetails = null;
-            if (GameMode == null || (GameMode != null && GameMode.NumberOfCards < MinNumberOfCard))
-                return false;
+            if (!VerifyNumberOfCards(hand)) return false;
 
             Card trumpCard = GetTrumpCard();
-            var rankCounts = GetRankCounts(hand);
-            var ranks = hand.Select(card => (int)card.Rank).ToList();
 
             // Check for pairs, three of a kind, or four of a kind
             for (int i = 2; i <= 4; i++)
             {
-                Rank? rank = FindNOfAKind(rankCounts, i);
+                Rank? rank = FindNOfAKind(hand, i);
                 if (rank.HasValue)
                 {
                     return false;
@@ -36,13 +34,13 @@ namespace OcentraAI.LLMGames.GameModes.Rules
             }
 
             // Check for sequence
-            if (IsSequence(ranks))
+            if (IsSequence(hand))
             {
                 return false;
             }
 
             // Check for TrumpOfAKind or full house rule
-            if (IsFullHouseOrTrumpOfKind(rankCounts, trumpCard))
+            if (IsFullHouseOrTrumpOfKind(hand))
             {
                 return false;
             }
@@ -55,17 +53,49 @@ namespace OcentraAI.LLMGames.GameModes.Rules
             }
 
             // Check for highest card from ranks J, Q, K, A
-            Card highCard = hand.OrderByDescending(card => card.Rank)
-                                .FirstOrDefault(card => card.Rank == Rank.J || card.Rank == Rank.Q || card.Rank == Rank.K || card.Rank == Rank.A);
+            Card highCard = FindHighestCard(hand);
 
             if (highCard != null)
             {
-                bonusDetails = CalculateBonus(highCard, false);
-                return true;
+                List<Player> activePlayers = PlayerManager.Instance.GetActivePlayers();
+                bool isHighestCard = true;
+
+                foreach (Player player in activePlayers)
+                {
+                    if (player.Hand != hand)
+                    {
+                        Card otherPlayerHighCard = FindHighestCard(player.Hand);
+                        if (otherPlayerHighCard != null && otherPlayerHighCard.Rank > highCard.Rank)
+                        {
+                            isHighestCard = false;
+                            break;
+                        }
+                    }
+                }
+
+                if (isHighestCard)
+                {
+                    bonusDetails = CalculateBonus(highCard, false);
+                    return true;
+                }
             }
 
             return false;
         }
+
+        private Card FindHighestCard(List<Card> cards)
+        {
+            Card highestCard = null;
+            foreach (Card card in cards)
+            {
+                if (card.Rank >= Rank.J && (highestCard == null || card.Rank > highestCard.Rank))
+                {
+                    highestCard = card;
+                }
+            }
+            return highestCard;
+        }
+
 
         private BonusDetails CalculateBonus(Card highCard, bool isTrump)
         {

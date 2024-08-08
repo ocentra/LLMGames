@@ -880,6 +880,14 @@ MonoBehaviour:
   HandValue: {fileID: 7358480212695806697}
   AppliedRules: {fileID: 1293277127791084504}
   HandView: {fileID: 6587344793956009174}
+  Backgrounds:
+  - {fileID: 5357603172031974771}
+  - {fileID: 6427639854401255436}
+  - {fileID: 7972426103508624941}
+  - {fileID: 1945628860393246076}
+  - {fileID: 4397168545726854765}
+  OriginalColor: {r: 0, g: 0.44190088, b: 0.6037736, a: 0.84705883}
+  WinnerColor: {r: 0, g: 1, b: 1, a: 1}
 --- !u!1 &7861838491719543287
 GameObject:
   m_ObjectHideFlags: 0

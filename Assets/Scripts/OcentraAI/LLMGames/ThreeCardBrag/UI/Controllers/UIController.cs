@@ -445,6 +445,7 @@ namespace OcentraAI.LLMGames.ThreeCardBrag.UI.Controllers
             LeftPanelController.AddCard(e.Card, e.Reset);
         }
 
+        // todo only update current local players hand
         private void OnUpdatePlayerHandDisplay(UpdatePlayerHandDisplay e)
         {
             switch (e.Player)

@@ -26,10 +26,10 @@ MonoBehaviour:
       Data: 5
     - Name: BonusValue
       Entry: 3
-      Data: 30
+      Data: 140
     - Name: Priority
       Entry: 3
-      Data: 80
+      Data: 94
     - Name: RuleName
       Entry: 1
       Data: FiveOfAKind

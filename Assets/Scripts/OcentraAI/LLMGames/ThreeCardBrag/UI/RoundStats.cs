@@ -53,7 +53,7 @@ namespace OcentraAI.LLMGames
                 RoundNumber.text = $"   Round : {roundRecord.RoundNumber}";
             }
 
-            foreach (Player player in roundRecord.Players)
+            foreach (PlayerRecord player in roundRecord.Players)
             {
                 GameObject playerGameObject = Instantiate(PlayerPanel, transform);
 
@@ -79,7 +79,7 @@ namespace OcentraAI.LLMGames
                         }
                     }
 
-                    playerPanel.SetWinner(roundRecord.Winner == player);
+                    playerPanel.SetWinner(roundRecord.WinnerId == player.PlayerId);
 
 
 
@@ -100,7 +100,7 @@ namespace OcentraAI.LLMGames
 
                     if (playerPanel.HandView != null)
                     {
-                        playerPanel.HandView.text = player.GetFormattedHand();
+                        playerPanel.HandView.text = Player.GetFormattedHand(player.Hand);
                     }
                 }
 

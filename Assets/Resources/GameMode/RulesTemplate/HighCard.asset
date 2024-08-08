@@ -26,10 +26,10 @@ MonoBehaviour:
       Data: 3
     - Name: BonusValue
       Entry: 3
-      Data: 30
+      Data: 90
     - Name: Priority
       Entry: 3
-      Data: 50
+      Data: 86
     - Name: RuleName
       Entry: 1
       Data: HighCard
@@ -40,14 +40,5 @@ MonoBehaviour:
       Entry: 6
       Data: 
     - Name: Examples
-      Entry: 7
-      Data: 0|OcentraAI.LLMGames.GameModes.GameRulesContainer, LLMGames
-    - Name: Player
       Entry: 6
-      Data: 
-    - Name: LLM
-      Entry: 6
-      Data: 
-    - Name: 
-      Entry: 8
       Data: 

@@ -10,149 +10,91 @@ namespace OcentraAI.LLMGames.GameModes.Rules
     public class FullHouse : BaseBonusRule
     {
         public override int MinNumberOfCard { get; protected set; } = 3;
-
         public override string RuleName { get; protected set; } = $"{nameof(FullHouse)}";
-        public override int BonusValue { get; protected set; } = 30;
-        public override int Priority { get; protected set; } = 80;
+        public override int BonusValue { get; protected set; } = 150;
+        public override int Priority { get; protected set; } = 95;
+
+        private readonly Rank[] ranksInOrder = { Rank.A, Rank.K, Rank.Q };
 
         public override bool Evaluate(List<Card> hand, out BonusDetails bonusDetails)
         {
             bonusDetails = null;
-            if (GameMode == null || (GameMode != null && GameMode.NumberOfCards > MinNumberOfCard))
-                return false;
+            if (!VerifyNumberOfCards(hand)) return false;
 
-            var rankCounts = GetRankCounts(hand);
-            var trumpCard = GetTrumpCard();
+            Dictionary<Rank, int> rankCounts = GetRankCounts(hand);
+            Card trumpCard = GameMode.UseTrump ? GetTrumpCard() : null;
+            bool hasTrump = trumpCard != null && hand.Contains(trumpCard);
 
-            switch (hand.Count)
+            int requiredCount = Math.Min(4, hand.Count);
+            int availableSlots = hand.Count;
+
+            foreach (Rank rank in ranksInOrder)
             {
-                case 3:
-                    if (IsFullHouseOrTrumpOfKind(rankCounts, trumpCard))
+                int count = rankCounts.GetValueOrDefault(rank);
+                if (count > requiredCount)
+                    count = requiredCount;
+
+                if (count < requiredCount && hasTrump)
+                {
+                    count++;
+                    hasTrump = false; // Use trump card only once
+                }
+
+                if (count == requiredCount)
+                {
+                    availableSlots -= count;
+                    requiredCount = Math.Min(4, availableSlots);
+
+                    if (availableSlots == 0)
                     {
                         bonusDetails = CalculateBonus(hand);
                         return true;
                     }
-                    break;
-                case 4:
-                    if (IsFullHouseOrTrumpOfKind(rankCounts, trumpCard))
-                    {
-                        bonusDetails = CalculateBonus(hand);
-                        return true;
-                    }
-                    break;
-                case 5:
-                    if (IsFiveCardFullHouse(rankCounts, trumpCard))
-                    {
-                        bonusDetails = CalculateBonus(hand);
-                        return true;
-                    }
-                    break;
-                case 6:
-                    if (IsSixCardFullHouse(rankCounts, trumpCard))
-                    {
-                        bonusDetails = CalculateBonus(hand);
-                        return true;
-                    }
-                    break;
-                case 7:
-                    if (IsSevenCardFullHouse(rankCounts, trumpCard))
-                    {
-                        bonusDetails = CalculateBonus(hand);
-                        return true;
-                    }
-                    break;
-                case 8:
-                    if (IsEightCardFullHouse(rankCounts, trumpCard))
-                    {
-                        bonusDetails = CalculateBonus(hand);
-                        return true;
-                    }
-                    break;
-                case 9:
-                    if (IsNineCardFullHouse(rankCounts, trumpCard))
-                    {
-                        bonusDetails = CalculateBonus(hand);
-                        return true;
-                    }
-                    break;
-                default:
-                    break;
+                }
+                else
+                {
+                    return false; // Not enough cards of this rank, and can't form Full House
+                }
             }
 
-            return false;
-        }
-
-
-        private bool IsFiveCardFullHouse(Dictionary<Rank, int> rankCounts, Card trumpCard)
-        {
-            return (IsNOfAKind(rankCounts, Rank.A, 4) && rankCounts.Values.Count(v => v == 1) == 1) ||
-                   (IsNOfAKindOfTrump(rankCounts, trumpCard, 4) && rankCounts.Values.Count(v => v == 1) == 1);
-        }
-
-        private bool IsSixCardFullHouse(Dictionary<Rank, int> rankCounts, Card trumpCard)
-        {
-            return (IsNOfAKind(rankCounts, Rank.A, 4) && rankCounts.Values.Count(v => v == 2) == 1) ||
-                   (IsNOfAKindOfTrump(rankCounts, trumpCard, 4) && rankCounts.Values.Count(v => v == 2) == 1);
-        }
-
-        private bool IsSevenCardFullHouse(Dictionary<Rank, int> rankCounts, Card trumpCard)
-        {
-            return (IsNOfAKind(rankCounts, Rank.A, 4) && rankCounts.Values.Count(v => v == 3) == 1) ||
-                   (IsNOfAKindOfTrump(rankCounts, trumpCard, 4) && rankCounts.Values.Count(v => v == 3) == 1);
-        }
-
-        private bool IsEightCardFullHouse(Dictionary<Rank, int> rankCounts, Card trumpCard)
-        {
-            return (IsNOfAKind(rankCounts, Rank.A, 4) && rankCounts.Values.Count(v => v == 4) == 1) ||
-                   (IsNOfAKindOfTrump(rankCounts, trumpCard, 4) && rankCounts.Values.Count(v => v == 4) == 1);
-        }
-
-        private bool IsNineCardFullHouse(Dictionary<Rank, int> rankCounts, Card trumpCard)
-        {
-            return (IsNOfAKind(rankCounts, Rank.A, 4) && rankCounts.Values.Count(v => v == 5) == 1) ||
-                   (IsNOfAKindOfTrump(rankCounts, trumpCard, 4) && rankCounts.Values.Count(v => v == 5) == 1);
+            return false; // Shouldn't reach here, but just in case
         }
 
         private BonusDetails CalculateBonus(List<Card> hand)
         {
-            int baseBonus = BonusValue;
+            int baseBonus = BonusValue * CalculateHandValue(hand);
             int additionalBonus = 0;
-            var descriptions = new List<string> { "Full House" };
+            List<string> descriptions = new List<string> { "Full House" };
 
-            if (GameMode.UseTrump)
+            if (GameMode.UseTrump && HasTrumpCard(hand))
             {
-                var trumpCard = GetTrumpCard();
-                bool hasTrumpCard = HasTrumpCard(hand);
-
-                if (hasTrumpCard)
-                {
-                    additionalBonus += GameMode.TrumpBonusValues.FullHouseBonus;
-                    descriptions.Add($"Trump Card Bonus: +{GameMode.TrumpBonusValues.FullHouseBonus}");
-                }
+                additionalBonus += GameMode.TrumpBonusValues.FullHouseBonus;
+                descriptions.Add($"Trump Card Bonus: +{GameMode.TrumpBonusValues.FullHouseBonus}");
             }
 
             return CreateBonusDetails(RuleName, baseBonus, Priority, descriptions, additionalBonus);
         }
 
-
         public override bool Initialize(GameMode gameMode)
         {
+            Description = "Full House with exactly A, K, Q in order, using trump as replacement if available";
+
             List<string> playerExamples = new List<string>();
             List<string> llmExamples = new List<string>();
             List<string> playerTrumpExamples = new List<string>();
             List<string> llmTrumpExamples = new List<string>();
 
-            var cardCount = gameMode.NumberOfCards;
-            var playerExample = CreateExampleString(cardCount, true);
-            var llmExample = CreateExampleString(cardCount, false);
+            int cardCount = gameMode.NumberOfCards;
+            string playerExample = CreateExampleString(cardCount, true);
+            string llmExample = CreateExampleString(cardCount, false);
 
             playerExamples.Add(playerExample);
             llmExamples.Add(llmExample);
 
             if (gameMode.UseTrump)
             {
-                var playerTrumpExample = CreateExampleString(cardCount, true, true);
-                var llmTrumpExample = CreateExampleString(cardCount, false, true);
+                string playerTrumpExample = CreateExampleString(cardCount, true, true);
+                string llmTrumpExample = CreateExampleString(cardCount, false, true);
                 playerTrumpExamples.Add(playerTrumpExample);
                 llmTrumpExamples.Add(llmTrumpExample);
             }
@@ -167,61 +109,38 @@ namespace OcentraAI.LLMGames.GameModes.Rules
             switch (cardCount)
             {
                 case 3:
-                    examples.Add(new[] { "A♠", "A♦", "A♠" });
-                    if (useTrump) examples.Add(new[] { "6♠", "6♦", "6♥" });
+                    examples.Add(new[] { "A♠", "A♦", "A♣" });
+                    if (useTrump) examples.Add(new[] { "A♠", "A♦", "6♥" });
                     break;
                 case 4:
-                    examples.Add(new[] { "A♠", "A♦", "A♣", "A♠" });
-                    if (useTrump) examples.Add(new[] { "6♠", "6♦", "6♣", "6♥" });
+                    examples.Add(new[] { "A♠", "A♦", "A♣", "A♥" });
+                    if (useTrump) examples.Add(new[] { "A♠", "A♦", "A♣", "6♥" });
                     break;
                 case 5:
-                    examples.Add(new[] { "6♠", "6♦", "6♣", "6♥", "A♦" });
-                    examples.Add(new[] { "A♠", "A♦", "A♣", "A♠", "6♥" });
-                    if (useTrump) examples.Add(new[] { "A♠", "A♦", "A♣", "A♠", "K♥" });
+                    examples.Add(new[] { "A♠", "A♦", "A♣", "A♥", "K♠" });
+                    if (useTrump) examples.Add(new[] { "A♠", "A♦", "A♣", "A♥", "6♥" });
                     break;
                 case 6:
-                    examples.Add(new[] { "6♠", "6♦", "6♣", "6♥", "A♦", "A♣" });
-                    examples.Add(new[] { "A♠", "A♦", "A♣", "A♠", "6♣", "6♥" });
-                    if (useTrump)
-                    {
-                        examples.Add(new[] { "A♠", "A♦", "A♣", "A♠", "K♠", "6♥" });
-                        examples.Add(new[] { "A♠", "A♦", "A♣", "A♠", "K♠", "K♥" });
-                    }
+                    examples.Add(new[] { "A♠", "A♦", "A♣", "A♥", "K♠", "K♦" });
+                    if (useTrump) examples.Add(new[] { "A♠", "A♦", "A♣", "A♥", "K♠", "6♥" });
                     break;
                 case 7:
-                    examples.Add(new[] { "A♠", "A♦", "A♣", "A♠", "6♥", "6♣", "6♦" });
-                    examples.Add(new[] { "A♠", "A♦", "A♣", "A♠", "K♠", "6♣", "6♥" });
-                    if (useTrump)
-                    {
-                        examples.Add(new[] { "A♠", "A♦", "A♣", "A♠", "K♠", "K♣", "6♥" });
-                        examples.Add(new[] { "A♠", "A♦", "A♣", "6♠", "6♦", "6♣", "6♥" });
-                        examples.Add(new[] { "A♠", "A♦", "A♣", "A♠", "K♠", "K♣", "K♥" });
-                    }
+                    examples.Add(new[] { "A♠", "A♦", "A♣", "A♥", "K♠", "K♦", "K♣" });
+                    if (useTrump) examples.Add(new[] { "A♠", "A♦", "A♣", "A♥", "K♠", "K♦", "6♥" });
                     break;
                 case 8:
-                    examples.Add(new[] { "A♠", "A♦", "A♣", "A♠", "6♠", "6♦", "6♣", "6♥" });
-                    examples.Add(new[] { "A♠", "A♦", "A♣", "A♠", "K♠", "K♦", "6♣", "6♥" });
-                    if (useTrump)
-                    {
-                        examples.Add(new[] { "A♠", "A♦", "A♣", "A♠", "K♠", "K♦", "K♥", "6♥" });
-                        examples.Add(new[] { "A♠", "A♦", "A♣", "A♠", "K♠", "K♦", "K♥", "K♣" });
-                    }
+                    examples.Add(new[] { "A♠", "A♦", "A♣", "A♥", "K♠", "K♦", "K♣", "K♥" });
+                    if (useTrump) examples.Add(new[] { "A♠", "A♦", "A♣", "A♥", "K♠", "K♦", "K♣", "6♥" });
                     break;
                 case 9:
-                    examples.Add(new[] { "A♠", "A♦", "A♣", "A♠", "6♠", "6♦", "6♣", "6♥", "K♠" });
-                    examples.Add(new[] { "A♠", "A♦", "A♣", "A♠", "K♠", "K♦", "6♣", "6♣", "6♥" });
-                    if (useTrump)
-                    {
-                        examples.Add(new[] { "A♠", "A♦", "A♣", "A♠", "K♠", "K♦", "K♥", "6♣", "6♥" });
-                        examples.Add(new[] { "A♠", "A♦", "A♣", "A♠", "K♠", "K♦", "K♥", "K♣", "6♥" });
-                        examples.Add(new[] { "A♠", "A♦", "A♣", "A♠", "K♠", "K♦", "K♥", "K♣", "Q♥" });
-                    }
+                    examples.Add(new[] { "A♠", "A♦", "A♣", "A♥", "K♠", "K♦", "K♣", "K♥", "Q♠" });
+                    if (useTrump) examples.Add(new[] { "A♠", "A♦", "A♣", "A♥", "K♠", "K♦", "K♣", "K♥", "6♥" });
                     break;
                 default:
                     break;
             }
 
-            var exampleStrings = examples.Select(example =>
+            IEnumerable<string> exampleStrings = examples.Select(example =>
                 string.Join(", ", isPlayer ? ConvertCardSymbols(example) : example)
             );
 

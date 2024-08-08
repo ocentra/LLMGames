@@ -26,10 +26,10 @@ MonoBehaviour:
       Data: 6
     - Name: BonusValue
       Entry: 3
-      Data: 30
+      Data: 170
     - Name: Priority
       Entry: 3
-      Data: 80
+      Data: 97
     - Name: RuleName
       Entry: 1
       Data: MultipleTriplets

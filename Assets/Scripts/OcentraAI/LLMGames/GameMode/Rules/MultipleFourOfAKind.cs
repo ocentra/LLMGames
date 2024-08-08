@@ -1,8 +1,8 @@
 ﻿using OcentraAI.LLMGames.Scriptable;
-using Sirenix.OdinInspector;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Security.Cryptography;
 using UnityEngine;
 
 namespace OcentraAI.LLMGames.GameModes.Rules
@@ -13,14 +13,13 @@ namespace OcentraAI.LLMGames.GameModes.Rules
         public override int MinNumberOfCard { get; protected set; } = 8;
 
         public override string RuleName { get; protected set; } = $"{nameof(MultipleFourOfAKind)}";
-        public override int BonusValue { get; protected set; } = 30;
-        public override int Priority { get; protected set; } = 80;
+        public override int BonusValue { get; protected set; } = 190;
+        public override int Priority { get; protected set; } = 99;
 
         public override bool Evaluate(List<Card> hand, out BonusDetails bonusDetails)
         {
             bonusDetails = null;
-            if (GameMode == null || (GameMode != null && GameMode.NumberOfCards > MinNumberOfCard))
-                return false;
+            if (!VerifyNumberOfCards(hand)) return false;
 
             // Check for valid hand size (8 or 9 cards)
             if (hand.Count < 8)
@@ -28,11 +27,19 @@ namespace OcentraAI.LLMGames.GameModes.Rules
                 return false;
             }
 
-            var rankCounts = GetRankCounts(hand);
-            var fourOfAKinds = rankCounts.Where(kv => kv.Value >= 4).Select(kv => kv.Key).ToList();
+            Dictionary<Rank, int> rankCounts = GetRankCounts(hand);
+            List<Rank> fourOfAKinds = rankCounts.Where(kv => kv.Value >= 4).Select(kv => kv.Key).ToList();
 
             if (fourOfAKinds.Count >= 2)
             {
+                foreach (Rank rank in fourOfAKinds)
+                {
+                    if (rank is Rank.A or Rank.K)
+                    {
+                        return false; // full house will deal this
+                    }
+                }
+ 
                 bonusDetails = CalculateBonus(fourOfAKinds);
                 return true;
             }
@@ -42,8 +49,14 @@ namespace OcentraAI.LLMGames.GameModes.Rules
 
         private BonusDetails CalculateBonus(List<Rank> fourOfAKinds)
         {
-            int baseBonus = BonusValue * fourOfAKinds.Count * 4;
-            var descriptions = new List<string> { $"Multiple Four of a Kinds: {string.Join(", ", fourOfAKinds.Select(rank => Card.GetRankSymbol(Suit.Spades, rank)))}" };
+            var value = 0;
+            foreach (var rank in fourOfAKinds)
+            {
+                value += (int)rank;
+            }
+
+            int baseBonus = BonusValue * fourOfAKinds.Count * value;
+            List<string> descriptions = new List<string> { $"Multiple Four of a Kinds: {string.Join(", ", fourOfAKinds.Select(rank => Card.GetRankSymbol(Suit.Spades, rank)))}" };
 
             return CreateBonusDetails(RuleName, baseBonus, Priority, descriptions);
         }
@@ -60,16 +73,16 @@ namespace OcentraAI.LLMGames.GameModes.Rules
 
             for (int cardCount = 8; cardCount <= gameMode.NumberOfCards; cardCount++)
             {
-                var playerExample = CreateExampleString(cardCount, true);
-                var llmExample = CreateExampleString(cardCount, false);
+                string playerExample = CreateExampleString(cardCount, true);
+                string llmExample = CreateExampleString(cardCount, false);
 
                 playerExamples.Add(playerExample);
                 llmExamples.Add(llmExample);
 
                 if (gameMode.UseTrump)
                 {
-                    var playerTrumpExample = CreateExampleString(cardCount, true, true);
-                    var llmTrumpExample = CreateExampleString(cardCount, false, true);
+                    string playerTrumpExample = CreateExampleString(cardCount, true, true);
+                    string llmTrumpExample = CreateExampleString(cardCount, false, true);
                     playerTrumpExamples.Add(playerTrumpExample);
                     llmTrumpExamples.Add(llmTrumpExample);
                 }
@@ -96,7 +109,7 @@ namespace OcentraAI.LLMGames.GameModes.Rules
                     break;
             }
 
-            var exampleStrings = examples.Select(example =>
+            IEnumerable<string> exampleStrings = examples.Select(example =>
                 string.Join(", ", isPlayer ? ConvertCardSymbols(example) : example)
             );
 

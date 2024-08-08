@@ -10,27 +10,25 @@ namespace OcentraAI.LLMGames.GameModes.Rules
     {
         public override int MinNumberOfCard { get; protected set; } = 3;
         public override string RuleName { get; protected set; } = $"{nameof(StraightFlush)}";
-        public override int BonusValue { get; protected set; } = 30;
-        public override int Priority { get; protected set; } = 80;
+        public override int BonusValue { get; protected set; } = 180;
+        public override int Priority { get; protected set; } = 98;
 
         public override bool Evaluate(List<Card> hand, out BonusDetails bonusDetails)
         {
             bonusDetails = null;
-            if (GameMode == null || (GameMode != null && GameMode.NumberOfCards > MinNumberOfCard))
-                return false;
+            if (!VerifyNumberOfCards(hand)) return false;
 
-            var ranks = hand.Select(card => (int)card.Rank).ToList();
-            var suit = hand[0].Suit;
-            List<int> royalSequence = GetRoyalSequence();
+            List<int> ranks = hand.Select(card => (int)card.Rank).ToList();
+            Suit suit = hand[0].Suit;
 
             // Check for royal flush
-            if (IsSequence(ranks, royalSequence))
+            if (IsRoyalSequence(hand))
             {
                 return false;
             }
 
             // Check for natural straight flush
-            if (hand.All(card => card.Suit == suit) && IsSequence(ranks))
+            if (hand.All(card => card.Suit == suit) && IsSequence(hand))
             {
                 bonusDetails = CalculateBonus(hand, false);
                 return true;
@@ -39,13 +37,13 @@ namespace OcentraAI.LLMGames.GameModes.Rules
             // Check for trump-assisted straight flush
             if (GameMode.UseTrump)
             {
-                var trumpCard = GetTrumpCard();
+                Card trumpCard = GetTrumpCard();
                 bool hasTrumpCard = HasTrumpCard(hand);
                 if (hasTrumpCard)
                 {
-                    var nonTrumpCards = hand.Where(c => c != trumpCard).ToList();
+                    List<Card> nonTrumpCards = hand.Where(c => c != trumpCard).ToList();
                     bool canFormStraightFlush = (nonTrumpCards.All(card => card.Suit == suit) && CanFormSequenceWithWild(nonTrumpCards.Select(c => (int)c.Rank).ToList())) ||
-                                                (IsSequence(ranks) && nonTrumpCards.All(c => c.Suit == suit));
+                                                (IsSequence(hand) && nonTrumpCards.All(c => c.Suit == suit));
 
                     if (canFormStraightFlush)
                     {
@@ -60,17 +58,17 @@ namespace OcentraAI.LLMGames.GameModes.Rules
 
         private BonusDetails CalculateBonus(List<Card> hand, bool isTrumpAssisted)
         {
-            int baseBonus = BonusValue;
+            int baseBonus = BonusValue * CalculateHandValue(hand);
             int additionalBonus = 0;
-            var descriptions = new List<string> { $"Straight Flush:" };
+            List<string> descriptions = new List<string> { $"Straight Flush:" };
 
             if (isTrumpAssisted)
             {
                 additionalBonus += GameMode.TrumpBonusValues.StraightFlushBonus;
                 descriptions.Add($"Trump Card Bonus: +{GameMode.TrumpBonusValues.StraightFlushBonus}");
 
-                var orderedHand = hand.OrderBy(card => (int)card.Rank).ToList();
-                var trumpCard = GetTrumpCard();
+                List<Card> orderedHand = hand.OrderBy(card => (int)card.Rank).ToList();
+                Card trumpCard = GetTrumpCard();
 
                 // Check for CardInMiddleBonus
                 if (IsTrumpInMiddle(orderedHand, trumpCard))

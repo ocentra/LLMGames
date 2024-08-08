@@ -1,8 +1,8 @@
 ﻿using OcentraAI.LLMGames.Scriptable;
-using Sirenix.OdinInspector;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Security.Cryptography;
 using UnityEngine;
 
 namespace OcentraAI.LLMGames.GameModes.Rules
@@ -12,14 +12,13 @@ namespace OcentraAI.LLMGames.GameModes.Rules
     {
         public override int MinNumberOfCard { get; protected set; } = 4;
         public override string RuleName { get; protected set; } = $"{nameof(MultiplePairsRule)}";
-        public override int BonusValue { get; protected set; } = 30;
-        public override int Priority { get; protected set; } = 80;
+        public override int BonusValue { get; protected set; } = 130;
+        public override int Priority { get; protected set; } = 92;
 
         public override bool Evaluate(List<Card> hand, out BonusDetails bonusDetails)
         {
             bonusDetails = null;
-            if (GameMode == null || (GameMode != null && GameMode.NumberOfCards > MinNumberOfCard))
-                return false;
+            if (!VerifyNumberOfCards(hand)) return false;
 
             // Check for valid hand size (4 to 9 cards)
             if (hand.Count < 4)
@@ -27,8 +26,8 @@ namespace OcentraAI.LLMGames.GameModes.Rules
                 return false;
             }
 
-            var rankCounts = GetRankCounts(hand);
-            var pairs = FindPairs(rankCounts);
+            Dictionary<Rank, int> rankCounts = GetRankCounts(hand);
+            List<Rank> pairs = FindPairs(rankCounts);
 
             if (pairs.Count >= 2)
             {
@@ -49,13 +48,20 @@ namespace OcentraAI.LLMGames.GameModes.Rules
 
         private BonusDetails CalculateBonus(List<Card> hand, List<Rank> pairs)
         {
-            int baseBonus = BonusValue * pairs.Count * 2;
+            var value = 0;
+            foreach (var rank in pairs)
+            {
+                value += (int)rank;
+            }
+
+            int baseBonus = BonusValue * pairs.Count * value;
+
             int additionalBonus = 0;
-            var descriptions = new List<string> { $"Multiple Pairs: {string.Join(", ", pairs.Select(rank => Card.GetRankSymbol(Suit.Spades, rank)))}" };
+            List<string> descriptions = new List<string> { $"Multiple Pairs: {string.Join(", ", pairs.Select(rank => Card.GetRankSymbol(Suit.Spades, rank)))}" };
 
             if (GameMode.UseTrump)
             {
-                var trumpCard = GetTrumpCard();
+                Card trumpCard = GetTrumpCard();
                 bool hasTrumpCard = HasTrumpCard(hand);
 
                 if (hasTrumpCard)
@@ -89,16 +95,16 @@ namespace OcentraAI.LLMGames.GameModes.Rules
 
             for (int cardCount = 4; cardCount <= gameMode.NumberOfCards; cardCount++)
             {
-                var playerExample = CreateExampleString(cardCount, true);
-                var llmExample = CreateExampleString(cardCount, false);
+                string playerExample = CreateExampleString(cardCount, true);
+                string llmExample = CreateExampleString(cardCount, false);
 
                 playerExamples.Add(playerExample);
                 llmExamples.Add(llmExample);
 
                 if (gameMode.UseTrump)
                 {
-                    var playerTrumpExample = CreateExampleString(cardCount, true, true);
-                    var llmTrumpExample = CreateExampleString(cardCount, false, true);
+                    string playerTrumpExample = CreateExampleString(cardCount, true, true);
+                    string llmTrumpExample = CreateExampleString(cardCount, false, true);
                     playerTrumpExamples.Add(playerTrumpExample);
                     llmTrumpExamples.Add(llmTrumpExample);
                 }
@@ -141,7 +147,7 @@ namespace OcentraAI.LLMGames.GameModes.Rules
                     break;
             }
 
-            var exampleStrings = examples.Select(example =>
+            IEnumerable<string> exampleStrings = examples.Select(example =>
                 string.Join(", ", isPlayer ? ConvertCardSymbols(example) : example)
             );
 

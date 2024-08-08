@@ -10,19 +10,15 @@ namespace OcentraAI.LLMGames.GameModes.Rules
     {
         public override int MinNumberOfCard { get; protected set; } = 3;
         public override string RuleName { get; protected set; } = $"{nameof(RoyalFlush)}";
-        public override int BonusValue { get; protected set; } = 30;
-        public override int Priority { get; protected set; } = 80;
+        public override int BonusValue { get; protected set; } = 200;
+        public override int Priority { get; protected set; } = 100;
 
         public override bool Evaluate(List<Card> hand, out BonusDetails bonusDetails)
         {
             bonusDetails = null;
-            if (GameMode == null || (GameMode != null && GameMode.NumberOfCards > MinNumberOfCard))
-                return false;
-
-            List<int> ranks = hand.Select(card => (int)card.Rank).ToList();
-            List<int> royalSequence = GetRoyalSequence();
-
-            if (hand.All(card => card.Suit == hand[0].Suit) && IsSequence(ranks, royalSequence))
+            if (!VerifyNumberOfCards(hand)) return false;
+            
+            if (IsRoyalSequence(hand))
             {
                 bonusDetails = CalculateBonus(hand);
                 return true;
@@ -33,7 +29,7 @@ namespace OcentraAI.LLMGames.GameModes.Rules
 
         private BonusDetails CalculateBonus(List<Card> hand)
         {
-            int baseBonus = BonusValue;
+            int baseBonus = BonusValue * CalculateHandValue(hand);
             int additionalBonus = 0;
             List<string> descriptions = new List<string> { $"Royal Flush" };
 

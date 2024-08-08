@@ -91,9 +91,9 @@ namespace OcentraAI.LLMGames.ThreeCardBrag.Players
             HasSeenHand = true;
         }
 
-        public string GetFormattedHand()
+        public static string GetFormattedHand(List<Card> cards)
         {
-            return string.Join(" ", Hand.Select(card => card.RankSymbol));
+            return string.Join(" ", cards.Select(card => card.RankSymbol));
         }
 
 
@@ -176,12 +176,12 @@ namespace OcentraAI.LLMGames.ThreeCardBrag.Players
 
         public virtual void ResetForNewRound(DeckManager deckManager, List<Card> customHand = null)
         {
-            Hand.Clear();
+            Hand = new List<Card>();
             AppliedRules = new List<BaseBonusRule>();
             HandRankSum = 0;
 
             // this is temp solution for quick testing on dev mode 
-            if (customHand is { Count: 3 })
+            if (customHand is { Count: >= 3 })
             {
                 Hand = new List<Card>(customHand);
                 deckManager.RemoveCardsFromDeck(customHand);
@@ -189,12 +189,14 @@ namespace OcentraAI.LLMGames.ThreeCardBrag.Players
             }
             else
             {
-                for (int i = 0; i < 3; i++)
+                for (int i = 0; i < GameManager.Instance.GameMode.NumberOfCards; i++)
                 {
                     Hand.Add(deckManager.DrawCard());
                 }
                
             }
+
+            Hand = Hand.OrderByDescending(card => card.Rank).ToList();
 
             CheckForWildCardsInHand();
             HasBetOnBlind = false;

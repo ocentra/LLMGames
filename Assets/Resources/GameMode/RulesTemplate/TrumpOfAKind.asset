@@ -26,10 +26,10 @@ MonoBehaviour:
       Data: 3
     - Name: BonusValue
       Entry: 3
-      Data: 30
+      Data: 160
     - Name: Priority
       Entry: 3
-      Data: 85
+      Data: 96
     - Name: RuleName
       Entry: 1
       Data: TrumpOfAKind

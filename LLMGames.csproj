@@ -139,6 +139,7 @@
     <Compile Include="Assets\Scripts\OcentraAI\LLMGames\ThreeCardBrag\EventBus\InitializeUIPlayers.cs" />
     <Compile Include="Assets\Scripts\OcentraAI\LLMGames\LLMServices\LocalLLMResponse.cs" />
     <Compile Include="Assets\Scripts\OcentraAI\LLMGames\Utilities\GameLogger.cs" />
+    <Compile Include="Assets\Scripts\OcentraAI\LLMGames\ThreeCardBrag\Managers\RoundRecord.cs" />
     <Compile Include="Assets\Scripts\OcentraAI\LLMGames\GameMode\Rules\TrumpOfAKind.cs" />
     <Compile Include="Assets\Scripts\OcentraAI\LLMGames\ThreeCardBrag\Scores\RoundScore.cs" />
     <Compile Include="Assets\Scripts\OcentraAI\LLMGames\LLMServices\Choice.cs" />

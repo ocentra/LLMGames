@@ -12,14 +12,13 @@ namespace OcentraAI.LLMGames.GameModes.Rules
     {
         public override int MinNumberOfCard { get; protected set; } = 6;
         public override string RuleName { get; protected set; } = $"{nameof(MultipleTriplets)}";
-        public override int BonusValue { get; protected set; } = 30;
-        public override int Priority { get; protected set; } = 80;
+        public override int BonusValue { get; protected set; } = 170;
+        public override int Priority { get; protected set; } = 97;
 
         public override bool Evaluate(List<Card> hand, out BonusDetails bonusDetails)
         {
             bonusDetails = null;
-            if (GameMode == null || (GameMode != null && GameMode.NumberOfCards > MinNumberOfCard))
-                return false;
+            if (!VerifyNumberOfCards(hand)) return false;
 
             // Check for valid hand size (6 to 9 cards)
             if (hand.Count < 6)
@@ -27,11 +26,18 @@ namespace OcentraAI.LLMGames.GameModes.Rules
                 return false;
             }
 
-            var rankCounts = GetRankCounts(hand);
-            var triplets = rankCounts.Where(kv => kv.Value >= 3).Select(kv => kv.Key).ToList();
+            Dictionary<Rank, int> rankCounts = GetRankCounts(hand);
+            List<Rank> triplets = rankCounts.Where(kv => kv.Value >= 3).Select(kv => kv.Key).ToList();
 
             if (triplets.Count >= 2)
             {
+                foreach (Rank rank in triplets)
+                {
+                    if (rank is Rank.A or Rank.K)
+                    {
+                        return false;
+                    }
+                }
                 bonusDetails = CalculateBonus(triplets);
                 return true;
             }
@@ -41,8 +47,14 @@ namespace OcentraAI.LLMGames.GameModes.Rules
 
         private BonusDetails CalculateBonus(List<Rank> triplets)
         {
-            int baseBonus = BonusValue * triplets.Count * 3;
-            var descriptions = new List<string> { $"Multiple Triplets: {string.Join(", ", triplets.Select(rank => Card.GetRankSymbol(Suit.Spades, rank)))}" };
+            int value = 0;
+            foreach (Rank rank in triplets)
+            {
+                value += (int)rank;
+            }
+            int baseBonus = BonusValue * triplets.Count * value;
+
+            List<string> descriptions = new List<string> { $"Multiple Triplets: {string.Join(", ", triplets.Select(rank => Card.GetRankSymbol(Suit.Spades, rank)))}" };
 
             return CreateBonusDetails(RuleName, baseBonus, Priority, descriptions);
         }
@@ -59,16 +71,16 @@ namespace OcentraAI.LLMGames.GameModes.Rules
 
             for (int cardCount = 6; cardCount <= gameMode.NumberOfCards; cardCount++)
             {
-                var playerExample = CreateExampleString(cardCount, true);
-                var llmExample = CreateExampleString(cardCount, false);
+                string playerExample = CreateExampleString(cardCount, true);
+                string llmExample = CreateExampleString(cardCount, false);
 
                 playerExamples.Add(playerExample);
                 llmExamples.Add(llmExample);
 
                 if (gameMode.UseTrump)
                 {
-                    var playerTrumpExample = CreateExampleString(cardCount, true, true);
-                    var llmTrumpExample = CreateExampleString(cardCount, false, true);
+                    string playerTrumpExample = CreateExampleString(cardCount, true, true);
+                    string llmTrumpExample = CreateExampleString(cardCount, false, true);
                     playerTrumpExamples.Add(playerTrumpExample);
                     llmTrumpExamples.Add(llmTrumpExample);
                 }
@@ -103,7 +115,7 @@ namespace OcentraAI.LLMGames.GameModes.Rules
                     break;
             }
 
-            var exampleStrings = examples.Select(example =>
+            IEnumerable<string> exampleStrings = examples.Select(example =>
                 string.Join(", ", isPlayer ? ConvertCardSymbols(example) : example)
             );
 

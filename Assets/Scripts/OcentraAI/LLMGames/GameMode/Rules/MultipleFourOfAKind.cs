@@ -16,9 +16,9 @@ namespace OcentraAI.LLMGames.GameModes.Rules
         public override int BonusValue { get; protected set; } = 190;
         public override int Priority { get; protected set; } = 99;
 
-        public override bool Evaluate(List<Card> hand, out BonusDetails bonusDetails)
+        public override bool Evaluate(List<Card> hand, out BonusDetail bonusDetail)
         {
-            bonusDetails = null;
+            bonusDetail = null;
             if (!VerifyNumberOfCards(hand)) return false;
 
             // Check for valid hand size (8 or 9 cards)
@@ -40,14 +40,14 @@ namespace OcentraAI.LLMGames.GameModes.Rules
                     }
                 }
  
-                bonusDetails = CalculateBonus(fourOfAKinds);
+                bonusDetail = CalculateBonus(fourOfAKinds);
                 return true;
             }
 
             return false;
         }
 
-        private BonusDetails CalculateBonus(List<Rank> fourOfAKinds)
+        private BonusDetail CalculateBonus(List<Rank> fourOfAKinds)
         {
             var value = 0;
             foreach (var rank in fourOfAKinds)
@@ -56,9 +56,11 @@ namespace OcentraAI.LLMGames.GameModes.Rules
             }
 
             int baseBonus = BonusValue * fourOfAKinds.Count * value;
+            string bonusCalculationDescriptions = $"{BonusValue} * {fourOfAKinds.Count} * {value}";
+
             List<string> descriptions = new List<string> { $"Multiple Four of a Kinds: {string.Join(", ", fourOfAKinds.Select(rank => Card.GetRankSymbol(Suit.Spades, rank)))}" };
 
-            return CreateBonusDetails(RuleName, baseBonus, Priority, descriptions);
+            return CreateBonusDetails(RuleName, baseBonus, Priority, descriptions, bonusCalculationDescriptions);
         }
 
        

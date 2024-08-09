@@ -1,9 +1,11 @@
+using OcentraAI.LLMGames.GameModes;
 using OcentraAI.LLMGames.Scriptable;
 using OcentraAI.LLMGames.Scriptable.ScriptableSingletons;
 using OcentraAI.LLMGames.ThreeCardBrag.Events;
 using OcentraAI.LLMGames.Utilities;
 using Sirenix.OdinInspector;
 using System.Collections.Generic;
+using System.Linq;
 using UnityEngine;
 
 namespace OcentraAI.LLMGames.ThreeCardBrag.Manager
@@ -12,7 +14,7 @@ namespace OcentraAI.LLMGames.ThreeCardBrag.Manager
     {
 
 
-        [ShowInInspector,ReadOnly] public List<Card> DeckCards { get; private set; } = new List<Card>();
+        [ShowInInspector, ReadOnly] public List<Card> DeckCards { get; private set; } = new List<Card>();
         [ShowInInspector, ReadOnly] public List<Card> FloorCards { get; private set; } = new List<Card>();
         [ShowInInspector, ReadOnly] public Card BackCard => Deck.Instance.BackCard;
         [ShowInInspector, ReadOnly] public int TotalCards => Deck.Instance.CardTemplates.Count;
@@ -24,13 +26,14 @@ namespace OcentraAI.LLMGames.ThreeCardBrag.Manager
         [ShowInInspector, ReadOnly] private Queue<Card> LastDrawnWildCards { get; set; } = new Queue<Card>();
 
         private TurnManager TurnManager => TurnManager.Instance;
-
+        private GameManager GameManager => GameManager.Instance;
+        private GameMode GameMode => GameManager.GameMode;
 
         protected override void Awake()
         {
             base.Awake();
             DeckCards = new List<Card>(Deck.Instance.CardTemplates);
-           
+
         }
 
         public void OnSetFloorCard(SetFloorCard e)
@@ -93,19 +96,36 @@ namespace OcentraAI.LLMGames.ThreeCardBrag.Manager
 
             // Select Trump Card
             Card trumpCard = null;
-            bool validCardFound = false;
-            while (!validCardFound)
+            if (DevModeManager.Instance.IsDevModeActive)
             {
-                int randomIndex = Random.Range(0, cards.Count);
-                trumpCard = cards[randomIndex];
-
-                if (!selectedCards.Contains(trumpCard) && !LastDrawnWildCards.Contains(trumpCard))
+                DevCard devTrumpCard = DevModeManager.Instance.TrumpDevCard;
+                if (devTrumpCard != null)
                 {
-                    validCardFound = true;
-                    selectedCards.Add(trumpCard);
-                    WildCards["TrumpCard"] = trumpCard;
+                    trumpCard = cards.FirstOrDefault(c => c.Suit == devTrumpCard.Suit && c.Rank == devTrumpCard.Rank);
+                    if (trumpCard != null)
+                    {
+                        WildCards["TrumpCard"] = trumpCard;
+                    }
                 }
             }
+            else
+            {
+                bool validCardFound = false;
+                while (!validCardFound)
+                {
+                    int randomIndex = Random.Range(0, cards.Count);
+                    trumpCard = cards[randomIndex];
+
+                    if (!selectedCards.Contains(trumpCard) && !LastDrawnWildCards.Contains(trumpCard))
+                    {
+                        validCardFound = true;
+                        selectedCards.Add(trumpCard);
+                        WildCards["TrumpCard"] = trumpCard;
+                    }
+                }
+            }
+
+
 
             // Select Magic Cards
             List<Card> magicCards = new List<Card>();
@@ -139,7 +159,7 @@ namespace OcentraAI.LLMGames.ThreeCardBrag.Manager
                 LastDrawnWildCards.Dequeue();
             }
 
-            EventBus.Publish(new UpdateWildCards(WildCards));
+            EventBus.Publish(new UpdateWildCards(WildCards, GameMode));
         }
 
 

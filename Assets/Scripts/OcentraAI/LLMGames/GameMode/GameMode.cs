@@ -27,12 +27,19 @@ namespace OcentraAI.LLMGames.GameModes
         [OdinSerialize, ShowInInspector] public abstract float TurnDuration { get; protected set; }
 
         [OdinSerialize, ShowInInspector] public abstract int InitialPlayerCoins { get; protected set; }
+        
+        [OdinSerialize, ShowInInspector] public abstract int BaseBet { get; protected set; }
+
+        [OdinSerialize, ShowInInspector] public abstract int BaseBlindMultiplier { get; protected set; }
+
         [OdinSerialize, ShowInInspector] public abstract bool UseTrump { get; protected set; }
 
+        [OdinSerialize, ShowInInspector] public abstract bool UseMagicCards { get; protected set; }
+
+        [OdinSerialize, ShowInInspector] public abstract bool DrawFromDeckAllowed { get; protected set; }
+
+
         [OdinSerialize, ShowInInspector, ReadOnly] public abstract string GameName { get; protected set; }
-
-        [OdinSerialize, ShowInInspector, ReadOnly] public abstract int MinPlayers { get; protected set; }
-
         [OdinSerialize, ShowInInspector, ReadOnly] public abstract int MaxPlayers { get; protected set; }
         [OdinSerialize, ShowInInspector, ReadOnly] public abstract int NumberOfCards { get; protected set; }
 
@@ -281,6 +288,7 @@ namespace OcentraAI.LLMGames.GameModes
         #region Utility Methods
 
 #if UNITY_EDITOR
+        [Button]
         public virtual void SaveChanges()
         {
             EditorUtility.SetDirty(this);

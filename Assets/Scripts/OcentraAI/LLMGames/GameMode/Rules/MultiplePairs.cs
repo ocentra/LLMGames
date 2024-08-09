@@ -15,9 +15,9 @@ namespace OcentraAI.LLMGames.GameModes.Rules
         public override int BonusValue { get; protected set; } = 130;
         public override int Priority { get; protected set; } = 92;
 
-        public override bool Evaluate(List<Card> hand, out BonusDetails bonusDetails)
+        public override bool Evaluate(List<Card> hand, out BonusDetail bonusDetail)
         {
-            bonusDetails = null;
+            bonusDetail = null;
             if (!VerifyNumberOfCards(hand)) return false;
 
             // Check for valid hand size (4 to 9 cards)
@@ -31,7 +31,7 @@ namespace OcentraAI.LLMGames.GameModes.Rules
 
             if (pairs.Count >= 2)
             {
-                bonusDetails = CalculateBonus(hand, pairs);
+                bonusDetail = CalculateBonus(hand, pairs);
                 return true;
             }
 
@@ -46,7 +46,7 @@ namespace OcentraAI.LLMGames.GameModes.Rules
                              .ToList();
         }
 
-        private BonusDetails CalculateBonus(List<Card> hand, List<Rank> pairs)
+        private BonusDetail CalculateBonus(List<Card> hand, List<Rank> pairs)
         {
             var value = 0;
             foreach (var rank in pairs)
@@ -55,6 +55,9 @@ namespace OcentraAI.LLMGames.GameModes.Rules
             }
 
             int baseBonus = BonusValue * pairs.Count * value;
+
+            string bonusCalculationDescriptions = $"{BonusValue} * {pairs.Count} * {value}";
+
 
             int additionalBonus = 0;
             List<string> descriptions = new List<string> { $"Multiple Pairs: {string.Join(", ", pairs.Select(rank => Card.GetRankSymbol(Suit.Spades, rank)))}" };
@@ -79,8 +82,13 @@ namespace OcentraAI.LLMGames.GameModes.Rules
                     }
                 }
             }
+            if (additionalBonus > 0)
+            {
+                bonusCalculationDescriptions = $"{BonusValue} * {pairs.Count} * {value} + {additionalBonus} ";
+            }
 
-            return CreateBonusDetails(RuleName, baseBonus, Priority, descriptions, additionalBonus);
+
+            return CreateBonusDetails(RuleName, baseBonus, Priority, descriptions, bonusCalculationDescriptions, additionalBonus);
         }
 
        

@@ -19,9 +19,15 @@ namespace OcentraAI.LLMGames.GameModes.Rules
         [OdinSerialize, ShowInInspector, ReadOnly] public GameMode GameMode { get; protected set; }
         [OdinSerialize, ShowInInspector] public GameRulesContainer Examples { get; protected set; } = new GameRulesContainer();
 
-        public void UpdateRule(int bonusValue,int priority)
+
+        public virtual string[] CreateExampleHand(int handSize, string trumpCard = null, bool coloured = true)
         {
-            BonusValue =bonusValue;
+            return new[] { String.Empty, };
+        }
+
+        public void UpdateRule(int bonusValue, int priority)
+        {
+            BonusValue = bonusValue;
             Priority = priority;
         }
 
@@ -31,14 +37,17 @@ namespace OcentraAI.LLMGames.GameModes.Rules
             return Initialize(gameMode);
         }
 
-        public abstract bool Evaluate(List<Card> hand, out BonusDetails bonusDetails);
+        public abstract bool Evaluate(List<Card> hand, out BonusDetail bonusDetail);
 
 
         public abstract bool Initialize(GameMode gameMode);
 
         protected Card GetTrumpCard() => DeckManager.Instance.WildCards.GetValueOrDefault("TrumpCard"); //todo put it in some const class no string literals
 
-        protected int CalculateHandValue(List<Card> hand) => hand.Sum(card => card.GetRankValue());
+        protected int CalculateHandValue(List<Card> hand)
+        {
+            return hand.Sum(card => card.GetRankValue());
+        }
 
         protected bool HasTrumpCard(List<Card> hand) => hand.Any(card => card.Equals(GetTrumpCard()));
 
@@ -54,7 +63,7 @@ namespace OcentraAI.LLMGames.GameModes.Rules
                    (rank1 == Rank.Two && rank2 == Rank.A);
         }
 
-        
+
         protected Rank? FindNOfAKind(List<Card> hand, int numberOfCards)
         {
             return GetRankCounts(hand).Where(kv => kv.Value >= numberOfCards)
@@ -63,7 +72,7 @@ namespace OcentraAI.LLMGames.GameModes.Rules
                 .FirstOrDefault();
         }
 
-        
+
 
         protected bool IsNOfAKind(List<Card> hand, Rank rank, int numberOfCards)
         {
@@ -75,7 +84,7 @@ namespace OcentraAI.LLMGames.GameModes.Rules
             return FindNOfAKind(hand, numberOfCards).HasValue;
         }
 
-        
+
         protected bool IsFullHouseOrTrumpOfKind(List<Card> hand)
         {
             Dictionary<Rank, int> rankCounts = GetRankCounts(hand);
@@ -89,7 +98,7 @@ namespace OcentraAI.LLMGames.GameModes.Rules
 
 
 
-        
+
         protected bool IsNOfAKindOfTrump(List<Card> hand, int n)
         {
             return GetRankCounts(hand).TryGetValue(GetTrumpCard().Rank, out int trumpCount) && trumpCount == n;
@@ -153,7 +162,7 @@ namespace OcentraAI.LLMGames.GameModes.Rules
             List<int> ranks = hand.Select(card => card.GetRankValue()).OrderBy(rank => rank).ToList();
             return IsAscendingSequence(ranks) || IsWraparoundSequence(ranks);
         }
-        
+
 
         private bool IsAscendingSequence(List<int> sortedRanks)
         {
@@ -205,7 +214,7 @@ namespace OcentraAI.LLMGames.GameModes.Rules
                 {
                     return false;
                 }
-                
+
             }
 
             return IsSameSuits(hand);
@@ -249,17 +258,18 @@ namespace OcentraAI.LLMGames.GameModes.Rules
             if (sortedRanks[1] == sortedRanks[0] + 1) return Math.Min(sortedRanks[1] + 1, 14);
             return sortedRanks[0] + 1;
         }
-        
 
-        protected BonusDetails CreateBonusDetails(string ruleName, int baseBonus, int priority, List<string> descriptions, int additionalBonus = 0)
+
+        protected BonusDetail CreateBonusDetails(string ruleName, int baseBonus, int priority, List<string> descriptions, string bonusCalculationDescriptions, int additionalBonus = 0)
         {
-            return new BonusDetails
+            return new BonusDetail
             {
                 RuleName = ruleName,
                 BaseBonus = baseBonus,
                 AdditionalBonus = additionalBonus,
                 BonusDescriptions = descriptions,
-                Priority = priority
+                Priority = priority,
+                BonusCalculationDescriptions = bonusCalculationDescriptions
             };
         }
 
@@ -268,10 +278,10 @@ namespace OcentraAI.LLMGames.GameModes.Rules
             return GameMode != null && GameMode.NumberOfCards >= MinNumberOfCard && hand.Count == GameMode.NumberOfCards;
         }
 
-        
+
         protected List<int> GetSequence(int numberOfCards)
         {
-            List<int> baseSequence = new List<int> { 6, 7, 8, 9, 10, 11, 12, 13, 14 }; 
+            List<int> baseSequence = new List<int> { 6, 7, 8, 9, 10, 11, 12, 13, 14 };
             return baseSequence.Skip(baseSequence.Count - numberOfCards).ToList();
         }
 

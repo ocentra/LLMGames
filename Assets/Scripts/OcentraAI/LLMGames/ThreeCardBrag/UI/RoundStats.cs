@@ -53,7 +53,7 @@ namespace OcentraAI.LLMGames
                 RoundNumber.text = $"   Round : {roundRecord.RoundNumber}";
             }
 
-            foreach (PlayerRecord player in roundRecord.Players)
+            foreach (PlayerRecord player in roundRecord.PlayerRecords)
             {
                 GameObject playerGameObject = Instantiate(PlayerPanel, transform);
 
@@ -64,7 +64,7 @@ namespace OcentraAI.LLMGames
                 {
                     playerPanel.Init();
 
-                    foreach (BaseBonusRule bonusRule in player.AppliedRules)
+                    foreach (BonusDetail bonusDetail in player.AppliedBonusDetails)
                     {
                         if (playerPanel.BonusRule != null && playerPanel.AppliedRules != null)
                         {
@@ -73,7 +73,7 @@ namespace OcentraAI.LLMGames
                             if (bonusRuleUI != null)
                             {
                                 bonusRuleUI.Init();
-                                bonusRuleUI.SetBonus(bonusRule.RuleName, bonusRule.BonusValue.ToString());
+                                bonusRuleUI.SetBonus(bonusDetail);
 
                             }
                         }

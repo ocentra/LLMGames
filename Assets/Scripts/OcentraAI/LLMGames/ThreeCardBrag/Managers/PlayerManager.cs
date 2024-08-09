@@ -1,4 +1,5 @@
 using OcentraAI.LLMGames.Authentication;
+using OcentraAI.LLMGames.GameModes;
 using OcentraAI.LLMGames.ThreeCardBrag.Players;
 using Sirenix.OdinInspector;
 using System.Collections.Generic;
@@ -19,6 +20,8 @@ namespace OcentraAI.LLMGames.ThreeCardBrag.Manager
         private DeckManager DeckManager => DeckManager.Instance;
         private ScoreManager ScoreManager => ScoreManager.Instance;
         private TurnManager TurnManager => TurnManager.Instance;
+        private GameManager GameManager => GameManager.Instance;
+        private GameMode GameMode => GameManager.GameMode;
 
         protected override void Awake()
         {
@@ -33,11 +36,11 @@ namespace OcentraAI.LLMGames.ThreeCardBrag.Manager
             switch (playerType)
             {
                 case PlayerType.Human:
-                    player = new HumanPlayer(playerData, ScoreManager.InitialCoins);
+                    player = new HumanPlayer(playerData, GameMode.InitialPlayerCoins);
                     HumanPlayer = (HumanPlayer)player; // todo temp for now 2 player setup need to think once multiplayer
                     break;
                 case PlayerType.Computer:
-                    player = new ComputerPlayer(playerData, ScoreManager.InitialCoins);
+                    player = new ComputerPlayer(playerData, GameMode.InitialPlayerCoins);
                     ComputerPlayer = (ComputerPlayer)player; // todo temp for now 2 player setup need to think once multiplayer
                     break;
             }
@@ -51,9 +54,9 @@ namespace OcentraAI.LLMGames.ThreeCardBrag.Manager
         public void ResetForNewGame()
         {
             foldedPlayers.Clear();
-            foreach (var player in Players)
+            foreach (Player player in Players)
             {
-                player.SetInitialCoins(ScoreManager.InitialCoins);
+                player.SetInitialCoins(GameMode.InitialPlayerCoins);
             }
         }
 
@@ -63,7 +66,7 @@ namespace OcentraAI.LLMGames.ThreeCardBrag.Manager
         {
             foldedPlayers.Clear();
 
-            foreach (var player in Players)
+            foreach (Player player in Players)
             {
                 if (DevModeManager.Instance != null)
                 {

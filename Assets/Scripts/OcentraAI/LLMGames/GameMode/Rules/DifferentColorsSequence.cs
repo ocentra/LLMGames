@@ -14,9 +14,9 @@ namespace OcentraAI.LLMGames.GameModes.Rules
         public override int BonusValue { get; protected set; } = 115;
         public override int Priority { get; protected set; } = 89;
 
-        public override bool Evaluate(List<Card> hand, out BonusDetails bonusDetails)
+        public override bool Evaluate(List<Card> hand, out BonusDetail bonusDetail)
         {
-            bonusDetails = null;
+            bonusDetail = null;
 
             if (!VerifyNumberOfCards(hand)) return false;
 
@@ -24,7 +24,7 @@ namespace OcentraAI.LLMGames.GameModes.Rules
 
             if (!IsSameColorAndDifferentSuits(hand))
             {
-                bonusDetails = CalculateBonus(hand, false);
+                bonusDetail = CalculateBonus(hand, false);
                 return true;
             }
 
@@ -40,7 +40,7 @@ namespace OcentraAI.LLMGames.GameModes.Rules
 
                     if (canFormSequence && differentColorsNonTrump)
                     {
-                        bonusDetails = CalculateBonus(hand, true);
+                        bonusDetail = CalculateBonus(hand, true);
                         return true;
                     }
                 }
@@ -49,11 +49,12 @@ namespace OcentraAI.LLMGames.GameModes.Rules
             return false;
         }
 
-        private BonusDetails CalculateBonus(List<Card> hand, bool isTrumpAssisted)
+        private BonusDetail CalculateBonus(List<Card> hand, bool isTrumpAssisted)
         {
-            int baseBonus = BonusValue;
+            int baseBonus = BonusValue * CalculateHandValue(hand);
             int additionalBonus = 0;
             List<string> descriptions = new List<string> { $"Different Colors Sequence:" };
+            string bonusCalculationDescriptions = $"{BonusValue} * {CalculateHandValue(hand)}";
 
             if (isTrumpAssisted)
             {
@@ -78,7 +79,12 @@ namespace OcentraAI.LLMGames.GameModes.Rules
                 }
             }
 
-            return CreateBonusDetails(RuleName, baseBonus, Priority, descriptions, additionalBonus);
+            if (additionalBonus > 0)
+            {
+                bonusCalculationDescriptions = $"{BonusValue} * {CalculateHandValue(hand)} + {additionalBonus} ";
+            }
+
+            return CreateBonusDetails(RuleName, baseBonus, Priority, descriptions, bonusCalculationDescriptions, additionalBonus);
         }
 
         public override bool Initialize(GameMode gameMode)

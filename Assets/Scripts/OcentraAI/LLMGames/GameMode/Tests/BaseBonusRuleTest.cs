@@ -26,7 +26,7 @@ namespace OcentraAI.LLMGames.GameModes.Rules.Tests
             _gameMode.SetNumberOfCards(handSize);
             var hand = CreateRandomHand(handSize);
 
-            bool result = _rule.Evaluate(hand, out BonusDetails bonusDetails);
+            bool result = _rule.Evaluate(hand, out BonusDetail bonusDetails);
 
             Assert.IsTrue(result);
             Assert.IsNotNull(bonusDetails);

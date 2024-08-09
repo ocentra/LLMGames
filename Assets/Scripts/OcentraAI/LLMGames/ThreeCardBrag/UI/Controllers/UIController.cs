@@ -395,29 +395,29 @@ namespace OcentraAI.LLMGames.ThreeCardBrag.UI.Controllers
         }
         private void OnUpdateWildCards(UpdateWildCards e)
         {
-            if (e.WildCards.TryGetValue("TrumpCard", out Card trumpCard))
+            void Update(CardView cardView, string cardViewName, bool useCondition)
             {
-                UpdateCardView(TrumpCardView, trumpCard);
-            }
-            if (e.WildCards.TryGetValue(nameof(MagicCard0), out Card magicCard0))
-            {
-                UpdateCardView(MagicCard0, magicCard0);
-            }
-            if (e.WildCards.TryGetValue(nameof(MagicCard1), out Card magicCard1))
-            {
-                UpdateCardView(MagicCard1, magicCard1);
+                if (useCondition)
+                {
 
-            }
-            if (e.WildCards.TryGetValue(nameof(MagicCard2), out Card magicCard2))
-            {
-                UpdateCardView(MagicCard2, magicCard2);
+                    if (e.WildCards.TryGetValue(cardViewName, out Card card))
+                    {
+                        UpdateCardView(cardView, card);
+                    }
 
+                }
+                else
+                {
+                    cardView.Hide();
+                }
             }
-            if (e.WildCards.TryGetValue(nameof(MagicCard3), out Card magicCard3))
-            {
-                UpdateCardView(MagicCard3, magicCard3);
 
-            }
+            Update(TrumpCardView,"TrumpCard", e.GameMode.UseTrump);
+            Update(MagicCard0,nameof(MagicCard0), e.GameMode.UseMagicCards);
+            Update(MagicCard1,nameof(MagicCard1), e.GameMode.UseMagicCards);
+            Update(MagicCard2,nameof(MagicCard2), e.GameMode.UseMagicCards);
+            Update(MagicCard3,nameof(MagicCard3), e.GameMode.UseMagicCards);
+
         }
 
 
@@ -428,7 +428,7 @@ namespace OcentraAI.LLMGames.ThreeCardBrag.UI.Controllers
             MagicCard1.SetHighlight(e.WildCardsInHand.TryGetValue(nameof(MagicCard1), out Card _));
             MagicCard2.SetHighlight(e.WildCardsInHand.TryGetValue(nameof(MagicCard2), out Card _));
             MagicCard3.SetHighlight(e.WildCardsInHand.TryGetValue(nameof(MagicCard3), out Card _));
-            
+
         }
 
 
@@ -462,7 +462,7 @@ namespace OcentraAI.LLMGames.ThreeCardBrag.UI.Controllers
         private void OnUpdateRoundDisplay(UpdateRoundDisplay e)
         {
             // todo
-           // UpdateWinDisplay(e.ScoreManager.HumanTotalWins, e.ScoreManager.ComputerTotalWins);
+            // UpdateWinDisplay(e.ScoreManager.HumanTotalWins, e.ScoreManager.ComputerTotalWins);
         }
 
         private void OnOfferContinuation(OfferContinuation e)
@@ -579,8 +579,10 @@ namespace OcentraAI.LLMGames.ThreeCardBrag.UI.Controllers
         private void UpdateCardView(CardView cardView, Card card)
         {
 
+
             if (cardView != null)
             {
+
                 cardView.SetCard(card);
                 cardView.UpdateCardView();
             }

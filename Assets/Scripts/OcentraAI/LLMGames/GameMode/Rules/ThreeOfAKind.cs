@@ -14,9 +14,9 @@ namespace OcentraAI.LLMGames.GameModes.Rules
         public override int BonusValue { get; protected set; } = 125;
         public override int Priority { get; protected set; } = 91;
 
-        public override bool Evaluate(List<Card> hand, out BonusDetails bonusDetails)
+        public override bool Evaluate(List<Card> hand, out BonusDetail bonusDetail)
         {
-            bonusDetails = null;
+            bonusDetail = null;
 
             if (!VerifyNumberOfCards(hand)) return false;
 
@@ -33,7 +33,7 @@ namespace OcentraAI.LLMGames.GameModes.Rules
 
             if (threeOfAKind.HasValue)
             {
-                bonusDetails = CalculateBonus(hand, threeOfAKind.Value);
+                bonusDetail = CalculateBonus(hand, threeOfAKind.Value);
                 return true;
             }
 
@@ -41,7 +41,7 @@ namespace OcentraAI.LLMGames.GameModes.Rules
 
             if (twoOfAKind.HasValue && HasTrumpCard(hand))
             {
-                bonusDetails = CalculateBonus(hand, twoOfAKind.Value);
+                bonusDetail = CalculateBonus(hand, twoOfAKind.Value);
                 return true;
             }
 
@@ -50,9 +50,13 @@ namespace OcentraAI.LLMGames.GameModes.Rules
 
 
 
-        private BonusDetails CalculateBonus(List<Card> hand, Rank rank)
+        private BonusDetail CalculateBonus(List<Card> hand, Rank rank)
         {
-            int baseBonus = BonusValue * (int)rank;
+            int baseBonus = BonusValue * ((int)rank * 3);
+
+            string bonusCalculationDescriptions = $"{BonusValue} * ({(int)rank} * 3)";
+
+
             int additionalBonus = 0;
             List<string> descriptions = new List<string> { $"Three of a Kind: {Card.GetRankSymbol(Suit.Spades, rank)}" };
 
@@ -68,7 +72,12 @@ namespace OcentraAI.LLMGames.GameModes.Rules
                 }
             }
 
-            return CreateBonusDetails(RuleName, baseBonus, Priority, descriptions, additionalBonus);
+            if (additionalBonus > 0)
+            {
+                bonusCalculationDescriptions = $"{BonusValue} * ({(int)rank} * 3) + {additionalBonus} ";
+            }
+
+            return CreateBonusDetails(RuleName, baseBonus, Priority, descriptions, bonusCalculationDescriptions, additionalBonus);
         }
 
         public override bool Initialize(GameMode gameMode)
@@ -101,44 +110,51 @@ namespace OcentraAI.LLMGames.GameModes.Rules
         }
 
 
+        public override string[] CreateExampleHand(int handSize, string trumpCard = null, bool coloured = true)
+        {
+            if (handSize < 3)
+                throw new ArgumentException("Hand size must be at least 3 for Three of a Kind.");
+
+            List<string> hand = new List<string>();
+
+            Rank threeOfAKindRank = (Rank)UnityEngine.Random.Range(2, 15);
+
+            hand.Add($"{Card.GetRankSymbol(Suit.Hearts, threeOfAKindRank, coloured)}");
+            hand.Add($"{Card.GetRankSymbol(Suit.Diamonds, threeOfAKindRank, coloured)}");
+
+            hand.Add(!string.IsNullOrEmpty(trumpCard)
+                ? trumpCard
+                : $"{Card.GetRankSymbol(Suit.Clubs, threeOfAKindRank, coloured)}");
+
+            for (int i = 3; i < handSize; i++)
+            {
+                Rank randomRank;
+
+                do
+                {
+                    randomRank = (Rank)UnityEngine.Random.Range(2, 15);
+                } while (randomRank == threeOfAKindRank);
+
+                Suit randomSuit = (Suit)UnityEngine.Random.Range(0, 4);
+
+                hand.Add($"{Card.GetRankSymbol(randomSuit, randomRank, coloured)}");
+            }
+
+            return hand.ToArray();
+        }
+
 
 
         private string CreateExampleString(int cardCount, bool isPlayer, bool useTrump = false)
         {
             List<string[]> examples = new List<string[]>();
+            string trumpCard = useTrump ? "6♥" : null;
 
-            switch (cardCount)
+            examples.Add(CreateExampleHand(cardCount, null));
+
+            if (useTrump)
             {
-                case 3:
-                    examples.Add(new[] { "5♠", "5♦", "5♣" });
-                    if (useTrump) examples.Add(new[] { "5♠", "5♦", "6♥" });
-                    break;
-                case 4:
-                    examples.Add(new[] { "5♠", "5♦", "5♣", "K♥" });
-                    if (useTrump) examples.Add(new[] { "5♠", "5♦", "6♥", "8♥" });
-                    break;
-                case 5:
-                    examples.Add(new[] { "5♠", "5♦", "5♣", "10♠", "8♦" });
-                    if (useTrump) examples.Add(new[] { "5♠", "5♦", "6♥", "8♦", "10♠" });
-                    break;
-                case 6:
-                    examples.Add(new[] { "5♠", "5♦", "5♣", "10♠", "8♦", "J♣" });
-                    if (useTrump) examples.Add(new[] { "5♠", "5♦", "6♥", "8♦", "J♣", "10♠" });
-                    break;
-                case 7:
-                    examples.Add(new[] { "5♠", "5♦", "5♣", "10♠", "8♦", "J♣", "Q♠" });
-                    if (useTrump) examples.Add(new[] { "5♠", "5♦", "6♥", "8♦", "J♣", "Q♠", "10♠" });
-                    break;
-                case 8:
-                    examples.Add(new[] { "5♠", "5♦", "5♣", "10♠", "8♦", "J♣", "Q♠", "9♣" });
-                    if (useTrump) examples.Add(new[] { "5♠", "5♦", "6♥", "8♦", "J♣", "Q♠", "9♣", "10♠" });
-                    break;
-                case 9:
-                    examples.Add(new[] { "5♠", "5♦", "5♣", "10♠", "8♦", "J♣", "Q♠", "9♣", "K♥" });
-                    if (useTrump) examples.Add(new[] { "5♠", "5♦", "6♥", "8♦", "J♣", "Q♠", "9♣", "10♠", "K♥" });
-                    break;
-                default:
-                    break;
+                examples.Add(CreateExampleHand(cardCount, trumpCard));
             }
 
             IEnumerable<string> exampleStrings = examples.Select(example =>
@@ -147,5 +163,6 @@ namespace OcentraAI.LLMGames.GameModes.Rules
 
             return string.Join(Environment.NewLine, exampleStrings);
         }
+
     }
 }

@@ -13,27 +13,26 @@ namespace OcentraAI.LLMGames.GameModes.Rules
         public override int BonusValue { get; protected set; } = 200;
         public override int Priority { get; protected set; } = 100;
 
-        public override bool Evaluate(List<Card> hand, out BonusDetails bonusDetails)
+        public override bool Evaluate(List<Card> hand, out BonusDetail bonusDetail)
         {
-            bonusDetails = null;
+            bonusDetail = null;
             if (!VerifyNumberOfCards(hand)) return false;
             
             if (IsRoyalSequence(hand))
             {
-                bonusDetails = CalculateBonus(hand);
+                bonusDetail = CalculateBonus(hand);
                 return true;
             }
 
             return false;
         }
 
-        private BonusDetails CalculateBonus(List<Card> hand)
+        private BonusDetail CalculateBonus(List<Card> hand)
         {
             int baseBonus = BonusValue * CalculateHandValue(hand);
-            int additionalBonus = 0;
             List<string> descriptions = new List<string> { $"Royal Flush" };
-
-            return CreateBonusDetails(RuleName, baseBonus, Priority, descriptions, additionalBonus);
+            string bonusCalculationDescriptions = $"{BonusValue} * {CalculateHandValue(hand)}";
+            return CreateBonusDetails(RuleName, baseBonus, Priority, descriptions, bonusCalculationDescriptions);
         }
 
         public override bool Initialize(GameMode gameMode)

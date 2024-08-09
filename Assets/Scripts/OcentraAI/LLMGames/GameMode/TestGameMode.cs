@@ -17,23 +17,21 @@ namespace OcentraAI.LLMGames.GameModes
         [OdinSerialize, ShowInInspector]
         public override float TurnDuration { get; protected set; } = 30.0f;
 
-        [OdinSerialize, ShowInInspector]
         public override int InitialPlayerCoins { get; protected set; } = 100;
 
-        [OdinSerialize, ShowInInspector, ReadOnly]
-        public override string GameName { get; protected set; } = "Test Game Mode";
+        public override string GameName { get; protected set; } = $"{nameof(TestGameMode)}";
 
-        [OdinSerialize, ShowInInspector, ReadOnly]
-        public override int MinPlayers { get; protected set; } = 2;
-
-        [OdinSerialize, ShowInInspector, ReadOnly]
         public override int MaxPlayers { get; protected set; } = 4;
 
-        [OdinSerialize, ShowInInspector, ReadOnly]
         public override int NumberOfCards { get; protected set; } = 3;
-
-        [OdinSerialize, ShowInInspector]
         public override bool UseTrump { get; protected set; } = true;
+
+        public override int BaseBet { get; protected set; } = 5;
+        public override int BaseBlindMultiplier { get; protected set; } = 1;
+
+        public override bool UseMagicCards { get; protected set; } = true;
+
+        public override bool DrawFromDeckAllowed { get; protected set; } = true;
 
         public override bool TryInitialize()
         {

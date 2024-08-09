@@ -1379,14 +1379,78 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 6a5d8133d7cc9234ebba1ce32d948976, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  DevHand:
-  - Suit: 1
-    Rank: 14
-  - Suit: 2
-    Rank: 14
-  - Suit: 4
-    Rank: 14
-  isDevModeActive: 1
+  serializationData:
+    SerializedFormat: 2
+    SerializedBytes: 
+    ReferencedUnityObjects: []
+    SerializedBytesString: 
+    Prefab: {fileID: 0}
+    PrefabModificationsReferencedUnityObjects: []
+    PrefabModifications: []
+    SerializationNodes:
+    - Name: DevHand
+      Entry: 7
+      Data: 0|OcentraAI.LLMGames.ThreeCardBrag.Manager.DevCard[], LLMGames
+    - Name: 
+      Entry: 12
+      Data: 3
+    - Name: 
+      Entry: 7
+      Data: 1|OcentraAI.LLMGames.ThreeCardBrag.Manager.DevCard, LLMGames
+    - Name: Suit
+      Entry: 3
+      Data: 1
+    - Name: Rank
+      Entry: 3
+      Data: 14
+    - Name: 
+      Entry: 8
+      Data: 
+    - Name: 
+      Entry: 7
+      Data: 2|OcentraAI.LLMGames.ThreeCardBrag.Manager.DevCard, LLMGames
+    - Name: Suit
+      Entry: 3
+      Data: 2
+    - Name: Rank
+      Entry: 3
+      Data: 14
+    - Name: 
+      Entry: 8
+      Data: 
+    - Name: 
+      Entry: 7
+      Data: 3|OcentraAI.LLMGames.ThreeCardBrag.Manager.DevCard, LLMGames
+    - Name: Suit
+      Entry: 3
+      Data: 4
+    - Name: Rank
+      Entry: 3
+      Data: 14
+    - Name: 
+      Entry: 8
+      Data: 
+    - Name: 
+      Entry: 13
+      Data: 
+    - Name: 
+      Entry: 8
+      Data: 
+    - Name: TrumpDevCard
+      Entry: 7
+      Data: 4|OcentraAI.LLMGames.ThreeCardBrag.Manager.DevCard, LLMGames
+    - Name: Suit
+      Entry: 3
+      Data: 2
+    - Name: Rank
+      Entry: 3
+      Data: 14
+    - Name: 
+      Entry: 8
+      Data: 
+    - Name: IsDevModeActive
+      Entry: 5
+      Data: false
 --- !u!1 &196705494
 GameObject:
   m_ObjectHideFlags: 0
@@ -12193,11 +12257,11 @@ RectTransform:
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
-  m_Father: {fileID: 2635122488316619935}
+  m_Father: {fileID: 4168011320010310459}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0.5, y: 1}
   m_AnchorMax: {x: 0.5, y: 1}
-  m_AnchoredPosition: {x: 0, y: -12.5}
+  m_AnchoredPosition: {x: 0, y: -4}
   m_SizeDelta: {x: 138.81747, y: 25}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &1553668144
@@ -17819,7 +17883,6 @@ RectTransform:
   m_ConstrainProportionsScale: 0
   m_Children:
   - {fileID: 4168011320010310459}
-  - {fileID: 1553668143}
   m_Father: {fileID: 800793669}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 0}
@@ -18150,6 +18213,7 @@ RectTransform:
   m_ConstrainProportionsScale: 0
   m_Children:
   - {fileID: 1294925945}
+  - {fileID: 1553668143}
   m_Father: {fileID: 2635122488316619935}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 0}

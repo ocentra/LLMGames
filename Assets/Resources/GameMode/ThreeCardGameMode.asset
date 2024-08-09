@@ -540,22 +540,31 @@ MonoBehaviour:
       Data: true
     - Name: MaxRounds
       Entry: 3
-      Data: 3
+      Data: 10
     - Name: TurnDuration
       Entry: 4
       Data: 60
     - Name: InitialPlayerCoins
       Entry: 3
       Data: 10000
+    - Name: BaseBet
+      Entry: 3
+      Data: 5
+    - Name: BaseBlindMultiplier
+      Entry: 3
+      Data: 1
     - Name: UseTrump
+      Entry: 5
+      Data: true
+    - Name: UseMagicCards
+      Entry: 5
+      Data: true
+    - Name: DrawFromDeckAllowed
       Entry: 5
       Data: true
     - Name: GameName
       Entry: 1
       Data: Three Card Brag
-    - Name: MinPlayers
-      Entry: 3
-      Data: 2
     - Name: MaxPlayers
       Entry: 3
       Data: 6

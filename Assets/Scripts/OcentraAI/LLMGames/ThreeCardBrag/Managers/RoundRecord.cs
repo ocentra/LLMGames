@@ -2,8 +2,8 @@ using OcentraAI.LLMGames.GameModes.Rules;
 using OcentraAI.LLMGames.Scriptable;
 using OcentraAI.LLMGames.ThreeCardBrag.Players;
 using Sirenix.OdinInspector;
+using Sirenix.Serialization;
 using System.Collections.Generic;
-using System.Linq;
 
 namespace OcentraAI.LLMGames.ThreeCardBrag.Manager
 {
@@ -11,7 +11,7 @@ namespace OcentraAI.LLMGames.ThreeCardBrag.Manager
     public class RoundRecord
     {
         [ShowInInspector, ReadOnly] public int RoundNumber { get; set; }
-        [ShowInInspector, ReadOnly] public List<PlayerRecord> Players { get; set; } = new List<PlayerRecord>();
+        [ShowInInspector, ReadOnly] public List<PlayerRecord> PlayerRecords { get; set; } = new List<PlayerRecord>();
         [ShowInInspector, ReadOnly] public string WinnerId { get; set; }
         [ShowInInspector, ReadOnly] public int PotAmount { get; set; }
     }
@@ -24,7 +24,9 @@ namespace OcentraAI.LLMGames.ThreeCardBrag.Manager
         [ShowInInspector, ReadOnly] public List<Card> Hand { get; set; }
         [ShowInInspector, ReadOnly] public int HandValue { get; set; }
         [ShowInInspector, ReadOnly] public int HandRankSum { get; set; }
-        [ShowInInspector, ReadOnly] public List<BaseBonusRule> AppliedRules { get; set; }
+
+        [ShowInInspector, ReadOnly]
+        public List<BonusDetail> AppliedBonusDetails { get; set; } = new List<BonusDetail>();
 
         public PlayerRecord(Player player)
         {
@@ -33,8 +35,23 @@ namespace OcentraAI.LLMGames.ThreeCardBrag.Manager
             Hand = new List<Card>(player.Hand);
             HandValue = player.HandValue;
             HandRankSum = player.HandRankSum;
-            AppliedRules = new List<BaseBonusRule>(player.AppliedRules);
+
+            foreach (BonusDetail bonusDetail in player.BonusDetails)
+            {
+                if (!AppliedBonusDetails.Contains(bonusDetail))
+                {
+                    AppliedBonusDetails.Add(bonusDetail);
+                }
+            }
+
+
+
+
         }
+
+
     }
+
+
 
 }

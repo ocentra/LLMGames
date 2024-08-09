@@ -2,6 +2,8 @@ using OcentraAI.LLMGames.Extensions;
 using OcentraAI.LLMGames.Scriptable;
 using OcentraAI.LLMGames.Scriptable.ScriptableSingletons;
 using Sirenix.OdinInspector;
+using Sirenix.Utilities;
+using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
 
@@ -86,6 +88,20 @@ namespace OcentraAI.LLMGames.ThreeCardBrag.UI
             {
                 Parent.gameObject.SetActive(value);
             }
+        }
+
+        public void Hide()
+        {
+            GameObject sourceObject = gameObject;
+            if (Parent != null)
+            {
+                sourceObject= Parent.gameObject;
+            }
+
+            sourceObject.GetComponentsInChildren<Image>().ForEach(i=> i.color = Color.clear) ;
+
+            sourceObject.GetComponentsInChildren<TextMeshProUGUI>().ForEach(i => i.enabled = false);
+
         }
 
         public void ResetCardView()

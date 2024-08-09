@@ -16,14 +16,21 @@ namespace OcentraAI.LLMGames.GameModes.Rules
 
         private readonly Rank[] ranksInOrder = { Rank.A, Rank.K, Rank.Q };
 
-        public override bool Evaluate(List<Card> hand, out BonusDetails bonusDetails)
+        public override bool Evaluate(List<Card> hand, out BonusDetail bonusDetail)
         {
-            bonusDetails = null;
+            bonusDetail = null;
             if (!VerifyNumberOfCards(hand)) return false;
+
+            if (IsNOfAKindOfTrump(hand, GameMode.NumberOfCards))
+            {
+                return false; // trump of kind will handle this
+            }
 
             Dictionary<Rank, int> rankCounts = GetRankCounts(hand);
             Card trumpCard = GameMode.UseTrump ? GetTrumpCard() : null;
             bool hasTrump = trumpCard != null && hand.Contains(trumpCard);
+
+
 
             int requiredCount = Math.Min(4, hand.Count);
             int availableSlots = hand.Count;
@@ -47,7 +54,7 @@ namespace OcentraAI.LLMGames.GameModes.Rules
 
                     if (availableSlots == 0)
                     {
-                        bonusDetails = CalculateBonus(hand);
+                        bonusDetail = CalculateBonus(hand);
                         return true;
                     }
                 }
@@ -60,9 +67,11 @@ namespace OcentraAI.LLMGames.GameModes.Rules
             return false; // Shouldn't reach here, but just in case
         }
 
-        private BonusDetails CalculateBonus(List<Card> hand)
+        private BonusDetail CalculateBonus(List<Card> hand)
         {
             int baseBonus = BonusValue * CalculateHandValue(hand);
+            string bonusCalculationDescriptions = $"{BonusValue} * {CalculateHandValue(hand)}";
+
             int additionalBonus = 0;
             List<string> descriptions = new List<string> { "Full House" };
 
@@ -71,8 +80,11 @@ namespace OcentraAI.LLMGames.GameModes.Rules
                 additionalBonus += GameMode.TrumpBonusValues.FullHouseBonus;
                 descriptions.Add($"Trump Card Bonus: +{GameMode.TrumpBonusValues.FullHouseBonus}");
             }
-
-            return CreateBonusDetails(RuleName, baseBonus, Priority, descriptions, additionalBonus);
+            if (additionalBonus > 0)
+            {
+                bonusCalculationDescriptions = $"{BonusValue} * {CalculateHandValue(hand)} + {additionalBonus} ";
+            }
+            return CreateBonusDetails(RuleName, baseBonus, Priority, descriptions, bonusCalculationDescriptions, additionalBonus);
         }
 
         public override bool Initialize(GameMode gameMode)

@@ -1,4 +1,7 @@
-﻿using Sirenix.OdinInspector;
+﻿using OcentraAI.LLMGames.Scriptable.ScriptableSingletons;
+using OcentraAI.LLMGames.ThreeCardBrag.Manager;
+using Sirenix.OdinInspector;
+using System.Collections.Generic;
 using UnityEditor;
 using UnityEngine;
 using static OcentraAI.LLMGames.Utility;
@@ -62,6 +65,33 @@ namespace OcentraAI.LLMGames.Scriptable
                 _ => Rank.None // Default to None for invalid ranks
             };
         }
+
+        public static Card[] ConvertToCardFromSymbols(string[] cardSymbols)
+        {
+            List<Card> cards = new List<Card>();
+
+            foreach (string symbol in cardSymbols)
+            {
+                Rank rank = Rank.Nine;
+                Suit suit = Suit.None;
+
+                if (symbol.Length == 3) // For "10♠" type symbols
+                {
+                    rank = Rank.Ten;
+                    suit = GetSuitFromChar(symbol[2]);
+                }
+                else if (symbol.Length == 2) // For "2♠", "J♠" type symbols
+                {
+                    rank = GetRankFromChar(symbol[0]);
+                    suit = GetSuitFromChar(symbol[1]);
+                }
+
+                cards.Add(Deck.Instance.GetCard(suit, rank));
+            }
+
+            return cards.ToArray();
+        }
+
 
         public static Suit GetSuitFromChar(char suitChar)
         {

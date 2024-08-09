@@ -12,7 +12,7 @@ namespace OcentraAI.LLMGames.ThreeCardBrag.Events
         {
             GameManager = gameManager;
             Message = message;
-            InitialCoins = ScoreManager.Instance.InitialCoins;
+            InitialCoins = gameManager.GameMode.InitialPlayerCoins;
         }
     }
 

@@ -1,5 +1,4 @@
-using OcentraAI.LLMGames.Scriptable.ScriptableSingletons;
-using OcentraAI.LLMGames.Scriptable;
+using OcentraAI.LLMGames.GameModes;
 using OcentraAI.LLMGames.ThreeCardBrag.Players;
 using Sirenix.OdinInspector;
 using System.Collections.Generic;
@@ -12,20 +11,21 @@ namespace OcentraAI.LLMGames.ThreeCardBrag.Manager
     {
         #region Properties
 
-
-
-        [ShowInInspector] public int InitialCoins { get; private set; } = 1000;
-        [ShowInInspector, ReadOnly] public int CurrentBet { get; private set; }
-        [ShowInInspector, ReadOnly] public int BlindMultiplier { get; private set; } = 1;
-        [ShowInInspector, ReadOnly] private int BaseBet { get; set; } = 10;
-        [ShowInInspector, ReadOnly] private int TotalCoinsInPlay { get; set; }
         [ShowInInspector, ReadOnly] public int Pot { get; private set; }
+        [ShowInInspector, ReadOnly] public int CurrentBet { get; private set; }
+
+        
+        [ShowInInspector, ReadOnly] private int BlindMultiplier { get;  set; }
+     
+        [ShowInInspector, ReadOnly] private int TotalCoinsInPlay { get; set; }
+      
         [ShowInInspector, ReadOnly] private List<RoundRecord> RoundRecords { get; set; } = new List<RoundRecord>();
 
 
         private PlayerManager PlayerManager => PlayerManager.Instance;
         private TurnManager TurnManager => TurnManager.Instance;
-
+        private GameManager GameManager => GameManager.Instance;
+        private GameMode GameMode => GameManager.GameMode;
 
         #endregion
 
@@ -37,22 +37,34 @@ namespace OcentraAI.LLMGames.ThreeCardBrag.Manager
            
         }
 
-        public void Init() { }
+
 
         public void ResetForNewGame()
         {
-            TotalCoinsInPlay = InitialCoins * PlayerManager.GetActivePlayers().Count;
+            if (GameMode == null)
+            {
+                Debug.LogError($" GameMode is null !! cant proceed ");
+                return;
+            }
+
+            TotalCoinsInPlay = GameMode.InitialPlayerCoins * PlayerManager.GetActivePlayers().Count;
             Pot = 0;
-            CurrentBet = BaseBet;
-            BlindMultiplier = 1;
+            CurrentBet = GameMode.BaseBet;
+            BlindMultiplier = GameMode.BaseBlindMultiplier;
             RoundRecords.Clear();
         }
 
         public void ResetForNewRound()
         {
+            if (GameMode == null)
+            {
+                Debug.LogError($" GameMode is null !! cant proceed ");
+                return;
+            }
+
             Pot = 0;
-            CurrentBet = BaseBet;
-            BlindMultiplier = 1;
+            CurrentBet = GameMode.BaseBet;
+            BlindMultiplier = GameMode.BaseBlindMultiplier;
         }
 
         #endregion
@@ -87,14 +99,7 @@ namespace OcentraAI.LLMGames.ThreeCardBrag.Manager
                 return (false, $"Not enough coins ({TurnManager.CurrentPlayer.Coins}). Current bet is {betAmount}.");
             }
 
-            if (ProcessBet(betAmount))
-            {
-                return (true, string.Empty);
-            }
-            else
-            {
-                return (false, "Error processing bet");
-            }
+            return ProcessBet(betAmount) ? (true, string.Empty) : (false, "Error processing bet");
         }
 
         public (bool Success, string ErrorMessage) ProcessShowBet()
@@ -123,14 +128,7 @@ namespace OcentraAI.LLMGames.ThreeCardBrag.Manager
                 return (false, $"Not enough coins ({TurnManager.CurrentPlayer.Coins}). Current bet is {CurrentBet}.");
             }
 
-            if (ProcessBet(raiseAmount))
-            {
-                return (true, string.Empty);
-            }
-            else
-            {
-                return (false, "Error processing raise");
-            }
+            return ProcessBet(raiseAmount) ? (true, string.Empty) : (false, "Error processing raise");
         }
 
         public bool ProcessFold()
@@ -210,17 +208,12 @@ namespace OcentraAI.LLMGames.ThreeCardBrag.Manager
             return true;
         }
 
-        public int GetPlayerWins(string playerId)
-        {
-            return RoundRecords.Count(r => r.WinnerId == playerId);
-        }
+        public int GetPlayerWins(string playerId) => RoundRecords.Count(r => r.WinnerId == playerId);
 
-        public int GetPlayerTotalWinnings(string playerId)
-        {
-            return RoundRecords
+        public int GetPlayerTotalWinnings(string playerId) =>
+            RoundRecords
                 .Where(r => r.WinnerId == playerId)
                 .Sum(r => r.PotAmount);
-        }
 
         public (string WinnerId, int WinCount) GetOverallWinner()
         {
@@ -254,7 +247,7 @@ namespace OcentraAI.LLMGames.ThreeCardBrag.Manager
                 RoundNumber = TurnManager.CurrentRound,
                 WinnerId = winner?.Id,
                 PotAmount = potAmount,
-                Players = PlayerManager.GetAllPlayers().Select(player => new PlayerRecord(player)).ToList()
+                PlayerRecords = PlayerManager.GetAllPlayers().Select(player => new PlayerRecord(player)).ToList()
             };
 
             if (!RoundRecords.Contains(roundRecord))
@@ -265,25 +258,14 @@ namespace OcentraAI.LLMGames.ThreeCardBrag.Manager
         }
 
 
-        public List<RoundRecord> GetRoundRecords()
-        {
-            return RoundRecords;
-        }
+        public List<RoundRecord> GetRoundRecords() => RoundRecords;
 
-        public RoundRecord GetLastRound()
-        {
-            return RoundRecords.Last();
-        }
+        public RoundRecord GetLastRound() => RoundRecords.Last();
 
         public Player GetLastRoundWinner()
         {
             RoundRecord roundRecord = RoundRecords.Last();
-            if (roundRecord != null)
-            {
-
-                return PlayerManager.GetPlayerById(roundRecord.WinnerId);
-            }
-            return null;
+            return roundRecord != null ? PlayerManager.GetPlayerById(roundRecord.WinnerId) : null;
         }
 
         private bool ValidateBet(int betAmount)

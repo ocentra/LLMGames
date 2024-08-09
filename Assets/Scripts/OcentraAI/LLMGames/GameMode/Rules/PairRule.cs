@@ -15,12 +15,12 @@ namespace OcentraAI.LLMGames.GameModes.Rules
         public override int BonusValue { get; protected set; } = 100;
         public override int Priority { get; protected set; } = 87;
 
-        public override bool Evaluate(List<Card> hand, out BonusDetails bonusDetails)
+        public override bool Evaluate(List<Card> hand, out BonusDetail bonusDetail)
         {
-            bonusDetails = null;
+            bonusDetail = null;
             if (!VerifyNumberOfCards(hand)) return false;
-            
-            
+
+
             if (IsNOfAKind(hand, GameMode.NumberOfCards))
             {
                 return false;
@@ -30,7 +30,7 @@ namespace OcentraAI.LLMGames.GameModes.Rules
 
             if (pair.HasValue)
             {
-                bonusDetails = CalculateBonus(hand, pair.Value);
+                bonusDetail = CalculateBonus(hand, pair.Value);
                 return true;
             }
 
@@ -40,11 +40,12 @@ namespace OcentraAI.LLMGames.GameModes.Rules
 
 
 
-        private BonusDetails CalculateBonus(List<Card> hand, Rank rank)
+        private BonusDetail CalculateBonus(List<Card> hand, Rank rank)
         {
-            int baseBonus = BonusValue * (int)rank;
+            int baseBonus = BonusValue * ((int)rank * 2);
             int additionalBonus = 0;
             List<string> descriptions = new List<string> { $"Pair of {Card.GetRankSymbol(Suit.Spades, rank)}" };
+            string bonusCalculationDescriptions = $"{BonusValue} * ({(int)rank} *2)";
 
             if (GameMode.UseTrump)
             {
@@ -63,11 +64,14 @@ namespace OcentraAI.LLMGames.GameModes.Rules
                     descriptions.Add($"Trump Rank Adjacent Bonus: +{GameMode.TrumpBonusValues.RankAdjacentBonus}");
                 }
             }
-
-            return CreateBonusDetails(RuleName, baseBonus, Priority, descriptions, additionalBonus);
+            if (additionalBonus > 0)
+            {
+                bonusCalculationDescriptions = $"{BonusValue} * ({(int)rank} *2) + {additionalBonus} ";
+            }
+            return CreateBonusDetails(RuleName, baseBonus, Priority, descriptions, bonusCalculationDescriptions, additionalBonus);
         }
 
-       
+
         public override bool Initialize(GameMode gameMode)
         {
             Description = "Pair of cards with the same rank, optionally considering Trump Wild Card.";

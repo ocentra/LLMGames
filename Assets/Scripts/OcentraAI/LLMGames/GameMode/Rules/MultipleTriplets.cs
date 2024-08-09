@@ -15,9 +15,9 @@ namespace OcentraAI.LLMGames.GameModes.Rules
         public override int BonusValue { get; protected set; } = 170;
         public override int Priority { get; protected set; } = 97;
 
-        public override bool Evaluate(List<Card> hand, out BonusDetails bonusDetails)
+        public override bool Evaluate(List<Card> hand, out BonusDetail bonusDetail)
         {
-            bonusDetails = null;
+            bonusDetail = null;
             if (!VerifyNumberOfCards(hand)) return false;
 
             // Check for valid hand size (6 to 9 cards)
@@ -38,14 +38,14 @@ namespace OcentraAI.LLMGames.GameModes.Rules
                         return false;
                     }
                 }
-                bonusDetails = CalculateBonus(triplets);
+                bonusDetail = CalculateBonus(triplets);
                 return true;
             }
 
             return false;
         }
 
-        private BonusDetails CalculateBonus(List<Rank> triplets)
+        private BonusDetail CalculateBonus(List<Rank> triplets)
         {
             int value = 0;
             foreach (Rank rank in triplets)
@@ -54,9 +54,12 @@ namespace OcentraAI.LLMGames.GameModes.Rules
             }
             int baseBonus = BonusValue * triplets.Count * value;
 
+            string bonusCalculationDescriptions = $"{BonusValue} * {triplets.Count} * {value}";
+
+
             List<string> descriptions = new List<string> { $"Multiple Triplets: {string.Join(", ", triplets.Select(rank => Card.GetRankSymbol(Suit.Spades, rank)))}" };
 
-            return CreateBonusDetails(RuleName, baseBonus, Priority, descriptions);
+            return CreateBonusDetails(RuleName, baseBonus, Priority, descriptions, bonusCalculationDescriptions);
         }
 
        

@@ -16,14 +16,14 @@ namespace OcentraAI.LLMGames.GameModes.Rules
         public override int BonusValue { get; protected set; } = 90;
         public override int Priority { get; protected set; } = 86;
 
-        public override bool Evaluate(List<Card> hand, out BonusDetails bonusDetails)
+        public override bool Evaluate(List<Card> hand, out BonusDetail bonusDetail)
         {
-            bonusDetails = null;
+            bonusDetail = null;
             if (!VerifyNumberOfCards(hand)) return false;
 
             Card trumpCard = GetTrumpCard();
 
-            // Check for pairs, three of a kind, or four of a kind
+            // Check if the current hand has any other rule applied
             for (int i = 2; i <= 4; i++)
             {
                 Rank? rank = FindNOfAKind(hand, i);
@@ -33,49 +33,59 @@ namespace OcentraAI.LLMGames.GameModes.Rules
                 }
             }
 
-            // Check for sequence
-            if (IsSequence(hand))
+            if (IsSequence(hand) || IsFullHouseOrTrumpOfKind(hand) || IsSameSuits(hand))
             {
                 return false;
             }
 
-            // Check for TrumpOfAKind or full house rule
-            if (IsFullHouseOrTrumpOfKind(hand))
+            // Collect all players' high cards if no other rules are applied
+            List<(Player player, Card highCard)> highCardPlayers = new List<(Player player, Card highCard)>();
+
+            List<Player> activePlayers = PlayerManager.Instance.GetActivePlayers();
+
+            foreach (Player player in activePlayers)
             {
-                return false;
-            }
+                List<Card> playerHand = player.Hand;
 
-            // Check if hand contains the trump card
-            if (hand.Contains(trumpCard))
-            {
-                bonusDetails = CalculateBonus(trumpCard, true);
-                return true;
-            }
-
-            // Check for highest card from ranks J, Q, K, A
-            Card highCard = FindHighestCard(hand);
-
-            if (highCard != null)
-            {
-                List<Player> activePlayers = PlayerManager.Instance.GetActivePlayers();
-                bool isHighestCard = true;
-
-                foreach (Player player in activePlayers)
+                // Check for other rules in the player's hand
+                bool playerHasOtherRule = false;
+                for (int i = 2; i <= 4; i++)
                 {
-                    if (player.Hand != hand)
+                    Rank? rank = FindNOfAKind(playerHand, i);
+                    if (rank.HasValue)
                     {
-                        Card otherPlayerHighCard = FindHighestCard(player.Hand);
-                        if (otherPlayerHighCard != null && otherPlayerHighCard.Rank > highCard.Rank)
-                        {
-                            isHighestCard = false;
-                            break;
-                        }
+                        playerHasOtherRule = true;
+                        break;
                     }
                 }
 
-                if (isHighestCard)
+                if (playerHasOtherRule || IsSequence(playerHand) || IsFullHouseOrTrumpOfKind(playerHand) || IsSameSuits(playerHand))
                 {
-                    bonusDetails = CalculateBonus(highCard, false);
+                    continue;
+                }
+
+                // Check if player's hand contains the trump card
+                if (playerHand.Contains(trumpCard))
+                {
+                    bonusDetail = CalculateBonus(trumpCard, true);
+                    return true;
+                }
+
+                // Find the highest card in the player's hand
+                Card playerHighCard = FindHighestCard(playerHand);
+                if (playerHighCard != null)
+                {
+                    highCardPlayers.Add((player, playerHighCard));
+                }
+            }
+
+            // If there are no other rules applied, award the highest card bonus
+            if (highCardPlayers.Count > 0)
+            {
+                (Player player, Card highCard) highestCardPlayer = highCardPlayers.OrderByDescending(p => p.highCard.Rank).First();
+                if (highestCardPlayer.player.Hand == hand)
+                {
+                    bonusDetail = CalculateBonus(highestCardPlayer.highCard, false);
                     return true;
                 }
             }
@@ -96,19 +106,24 @@ namespace OcentraAI.LLMGames.GameModes.Rules
             return highestCard;
         }
 
-
-        private BonusDetails CalculateBonus(Card highCard, bool isTrump)
+        private BonusDetail CalculateBonus(Card highCard, bool isTrump)
         {
-            int baseBonus = BonusValue;
+            int baseBonus = BonusValue * (int)highCard.Rank;
             int additionalBonus = isTrump ? GameMode.TrumpBonusValues.HighCardBonus : 0;
+            string bonusCalculationDescriptions = $"{BonusValue} * {(int)highCard.Rank}";
+
             List<string> descriptions = new List<string> { $"High Card: {Card.GetRankSymbol(highCard.Suit, highCard.Rank)}" };
 
             if (isTrump)
             {
                 descriptions.Add($"Trump Card Bonus: +{GameMode.TrumpBonusValues.HighCardBonus}");
             }
+            if (additionalBonus > 0)
+            {
+                bonusCalculationDescriptions = $"{BonusValue} * {(int)highCard.Rank} + {additionalBonus} ";
+            }
 
-            return CreateBonusDetails(RuleName, baseBonus, Priority, descriptions, additionalBonus);
+            return CreateBonusDetails(RuleName, baseBonus, Priority, descriptions, bonusCalculationDescriptions, additionalBonus);
         }
 
         public override bool Initialize(GameMode gameMode)

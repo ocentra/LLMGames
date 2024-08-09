@@ -15,9 +15,9 @@ namespace OcentraAI.LLMGames.GameModes.Rules
         public override int BonusValue { get; protected set; } = 135;
         public override int Priority { get; protected set; } = 93;
 
-        public override bool Evaluate(List<Card> hand, out BonusDetails bonusDetails)
+        public override bool Evaluate(List<Card> hand, out BonusDetail bonusDetail)
         {
-            bonusDetails = null;
+            bonusDetail = null;
             if (!VerifyNumberOfCards(hand)) return false;
 
             Rank? fourOfAKind = FindNOfAKind(hand, 4);
@@ -30,7 +30,7 @@ namespace OcentraAI.LLMGames.GameModes.Rules
 
             if (fourOfAKind.HasValue)
             {
-                bonusDetails = CalculateBonus(hand, fourOfAKind.Value);
+                bonusDetail = CalculateBonus(hand, fourOfAKind.Value);
                 return true;
             }
 
@@ -38,18 +38,19 @@ namespace OcentraAI.LLMGames.GameModes.Rules
 
             if (threeOfAKind.HasValue && HasTrumpCard(hand))
             {
-                bonusDetails = CalculateBonus(hand, threeOfAKind.Value);
+                bonusDetail = CalculateBonus(hand, threeOfAKind.Value);
                 return true;
             }
 
             return false;
         }
 
-        private BonusDetails CalculateBonus(List<Card> hand, Rank rank)
+        private BonusDetail CalculateBonus(List<Card> hand, Rank rank)
         {
-            int baseBonus = BonusValue * (int)rank;
+            int baseBonus = BonusValue * ((int)rank *4);
             int additionalBonus = 0;
             List<string> descriptions = new List<string> { $"Four of a Kind: {Card.GetRankSymbol(Suit.Spades, rank)}" };
+            string bonusCalculationDescriptions = $"{BonusValue} * ( {(int)rank} * 4)";
 
             if (GameMode.UseTrump)
             {
@@ -62,8 +63,11 @@ namespace OcentraAI.LLMGames.GameModes.Rules
                     descriptions.Add($"Trump Card Bonus: +{GameMode.TrumpBonusValues.FourOfKindBonus}");
                 }
             }
-
-            return CreateBonusDetails(RuleName, baseBonus, Priority, descriptions, additionalBonus);
+            if (additionalBonus > 0)
+            {
+                bonusCalculationDescriptions = $"{BonusValue} * ( {(int)rank} * 4) + {additionalBonus} ";
+            }
+            return CreateBonusDetails(RuleName, baseBonus, Priority, descriptions, bonusCalculationDescriptions, additionalBonus);
         }
 
         public override bool Initialize(GameMode gameMode)

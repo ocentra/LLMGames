@@ -12,7 +12,7 @@ namespace OcentraAI.LLMGames.ThreeCardBrag.Players
 {
     public class Player
     {
-       
+
         [ShowInInspector, ReadOnly] public PlayerData PlayerData { get; private set; }
         [ShowInInspector, ReadOnly] public string Id { get; private set; }
         [ShowInInspector, ReadOnly] public string PlayerName { get; private set; }
@@ -26,9 +26,12 @@ namespace OcentraAI.LLMGames.ThreeCardBrag.Players
         [ShowInInspector, ReadOnly] public int HandRankSum { get; private set; }
         [ShowInInspector, ReadOnly] public int HandValue { get; private set; }
 
+        [ShowInInspector, ReadOnly]
+        public List<BonusDetail> BonusDetails { get; private set; }
+
         public Dictionary<string, Card> WildCards { get; private set; }
 
-        public Dictionary<string, Card> WildCardInHand { get; private set; } 
+        public Dictionary<string, Card> WildCardInHand { get; private set; }
 
         [ShowInInspector, ReadOnly]
         public List<BaseBonusRule> AppliedRules { get; private set; } = new List<BaseBonusRule>();
@@ -85,7 +88,7 @@ namespace OcentraAI.LLMGames.ThreeCardBrag.Players
         {
             WildCards = obj.WildCards;
         }
-        
+
         public virtual void SeeHand()
         {
             HasSeenHand = true;
@@ -146,15 +149,26 @@ namespace OcentraAI.LLMGames.ThreeCardBrag.Players
         public int CalculateHandValue()
         {
             AppliedRules = new List<BaseBonusRule>();
+            BonusDetails = new List<BonusDetail>();
             HandRankSum = Hand.Sum(card => card.GetRankValue());
             HandValue = HandRankSum;
             List<BaseBonusRule> bonusRules = GameManager.Instance.GameMode.BonusRules;
             foreach (BaseBonusRule rule in bonusRules)
             {
-                if (rule.Evaluate(Hand , out BonusDetails bonusDetails))
+                if (rule.Evaluate(Hand, out BonusDetail bonusDetails))
                 {
                     HandValue += bonusDetails.TotalBonus;
-                    AppliedRules.Add(rule);
+
+                    if (!AppliedRules.Contains(rule))
+                    {
+                        AppliedRules.Add(rule);
+
+                    }
+
+                    if (!BonusDetails.Contains(bonusDetails))
+                    {
+                        BonusDetails.Add(bonusDetails);
+                    }
                 }
             }
             return HandValue;
@@ -193,7 +207,7 @@ namespace OcentraAI.LLMGames.ThreeCardBrag.Players
                 {
                     Hand.Add(deckManager.DrawCard());
                 }
-               
+
             }
 
             Hand = Hand.OrderByDescending(card => card.Rank).ToList();

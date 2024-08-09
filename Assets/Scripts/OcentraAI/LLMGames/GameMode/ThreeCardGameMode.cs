@@ -11,21 +11,24 @@ namespace OcentraAI.LLMGames.GameModes
 
         public override string GameName { get; protected set; } = "Three Card Brag";
 
-        public override int MinPlayers { get; protected set; } = 2;
-
-        public override int MaxPlayers { get; protected set; } = 6;
+        public override int MaxPlayers { get; protected set; } = 13; // 52 / (3 card + 1 minimum draw)
 
         public override int MaxRounds { get; protected set; } = 10;
 
         public override float TurnDuration { get; protected set; } = 60;
 
-        public override int InitialPlayerCoins { get; protected set; } = 1000;
+        public override int InitialPlayerCoins { get; protected set; } = 10000;
+        public override int BaseBet { get; protected set; } = 5;
+        public override int BaseBlindMultiplier { get; protected set; } = 1;
 
         public override int NumberOfCards { get; protected set; } = 3;
 
         public override bool UseTrump { get; protected set; } = true;
 
-        
+        public override bool UseMagicCards { get; protected set; } = true;
+
+        public override bool DrawFromDeckAllowed { get; protected set; } = true;
+
         public override bool TryInitialize()
         {
            return TryInitializeGameMode();

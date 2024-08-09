@@ -1,3 +1,4 @@
+using OcentraAI.LLMGames.GameModes;
 using OcentraAI.LLMGames.Scriptable;
 using System;
 using System.Collections.Generic;
@@ -17,10 +18,12 @@ namespace OcentraAI.LLMGames.ThreeCardBrag.Events
     public class UpdateWildCards : EventArgs
     {
         public Dictionary<string, Card> WildCards { get; }
+        public GameMode GameMode { get; }
 
-        public UpdateWildCards(Dictionary<string, Card> wildCards)
+        public UpdateWildCards(Dictionary<string, Card> wildCards,GameMode gameMode)
         {
             WildCards = wildCards;
+            GameMode = gameMode;
         }
     }
 

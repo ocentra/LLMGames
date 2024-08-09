@@ -71,9 +71,9 @@ namespace OcentraAI.LLMGames.ThreeCardBrag.Manager
 
         private List<Player> InitializePlayers()
         {
-            var allPlayers = PlayerManager.GetAllPlayers();
-            var computerPlayers = allPlayers.Where(p => p is ComputerPlayer).ToList();
-            var humanPlayers = allPlayers.Where(p => p is HumanPlayer).ToList();
+            List<Player> allPlayers = PlayerManager.GetAllPlayers();
+            List<Player> computerPlayers = allPlayers.Where(p => p is ComputerPlayer).ToList();
+            List<Player> humanPlayers = allPlayers.Where(p => p is HumanPlayer).ToList();
 
             if (computerPlayers.Count == 0 || humanPlayers.Count == 0)
             {
@@ -81,7 +81,7 @@ namespace OcentraAI.LLMGames.ThreeCardBrag.Manager
                 return new List<Player>();
             }
 
-            var orderedPlayers = new List<Player> { humanPlayers[0] };
+            List<Player> orderedPlayers = new List<Player> { humanPlayers[0] };
             orderedPlayers.AddRange(computerPlayers);
 
             Log($"Players initialized. Total players: {orderedPlayers.Count}", nameof(InitializePlayers));
@@ -210,7 +210,7 @@ namespace OcentraAI.LLMGames.ThreeCardBrag.Manager
         private Player GetNextPlayerInOrder(Player currentPlayer)
         {
             int currentIndex = Players.IndexOf(currentPlayer);
-            var activePlayers = PlayerManager.GetActivePlayers();
+            List<Player> activePlayers = PlayerManager.GetActivePlayers();
 
             if (activePlayers.Count == 0)
             {
@@ -307,7 +307,7 @@ namespace OcentraAI.LLMGames.ThreeCardBrag.Manager
 
         public bool IsRoundComplete()
         {
-            var activePlayers = PlayerManager.GetActivePlayers();
+            List<Player> activePlayers = PlayerManager.GetActivePlayers();
 
             if (activePlayers.Count <= 1)
             {

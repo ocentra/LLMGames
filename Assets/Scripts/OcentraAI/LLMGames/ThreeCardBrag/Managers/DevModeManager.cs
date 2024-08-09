@@ -1,26 +1,40 @@
-using UnityEngine;
+using OcentraAI.LLMGames.GameModes;
 using System.Collections.Generic;
 using System.Linq;
 using OcentraAI.LLMGames.Scriptable;
 using OcentraAI.LLMGames.ThreeCardBrag.Players;
 using OcentraAI.LLMGames.Scriptable.ScriptableSingletons;
 using Sirenix.OdinInspector;
-using Sirenix.OdinInspector.Editor;
-using UnityEditor;
+using Sirenix.Serialization;
+using OcentraAI.LLMGames.GameModes.Rules;
 
 namespace OcentraAI.LLMGames.ThreeCardBrag.Manager
 {
-    public class DevModeManager : MonoBehaviour
+    public class DevModeManager : SerializedMonoBehaviour
     {
         public static DevModeManager Instance { get; private set; }
 
-        [Header("Dev Hand")]
+
         [TableList(ShowIndexLabels = true)]
         [ValidateInput("ValidateDevHand", "Duplicate cards are not allowed in the dev hand.")]
-        public DevCard[] DevHand = new DevCard[3] { new DevCard(), new DevCard(), new DevCard() };
+        [OdinSerialize, ShowInInspector] public DevCard[] DevHand { get; set; } = new DevCard[3] { new DevCard(), new DevCard(), new DevCard() };
 
-        [Header("Dev Mode Settings")]
-        [SerializeField] public bool isDevModeActive = false;
+        [OdinSerialize, ShowInInspector] public DevCard[] DevHandComputer { get; set; } = new DevCard[3] { new DevCard(), new DevCard(), new DevCard() };
+
+
+        [OdinSerialize, ShowInInspector] public DevCard TrumpDevCard { get; private set; } = new DevCard();
+
+        [OdinSerialize, ShowInInspector] public bool IsDevModeActive { get; set; } = false;
+
+        [OdinSerialize, ShowInInspector, Required] public GameMode GameMode { get; set; }
+        
+        [OdinSerialize] public bool UseTrumpForPlayer = false;
+        [OdinSerialize] public bool UseTrumpForComputer = false;
+
+        [OdinSerialize] public int SelectedPlayerRuleIndex;
+        [OdinSerialize] public int SelectedComputerRuleIndex;
+
+        [OdinSerialize] public List<Card> DeckCards { get; set; }
 
         private void Awake()
         {
@@ -35,10 +49,10 @@ namespace OcentraAI.LLMGames.ThreeCardBrag.Manager
             }
         }
 
-        private bool ValidateDevHand(DevCard[] devHand)
+        private bool ValidateDevHand()
         {
-            var uniqueCards = new HashSet<string>();
-            foreach (var card in devHand)
+            HashSet<string> uniqueCards = new HashSet<string>();
+            foreach (DevCard card in DevHand)
             {
                 if (card.Suit != Suit.None && card.Rank != Rank.None)
                 {
@@ -52,13 +66,13 @@ namespace OcentraAI.LLMGames.ThreeCardBrag.Manager
             return true;
         }
 
-        public List<Card> GetDevHand()
+        public List<Card> GetDevHand(DevCard[] devCards)
         {
-            if (!isDevModeActive)
+            if (!IsDevModeActive)
                 return null;
 
             List<Card> hand = new List<Card>();
-            foreach (var devCard in DevHand)
+            foreach (DevCard devCard in devCards)
             {
                 if (devCard.Suit != Suit.None && devCard.Rank != Rank.None)
                 {
@@ -75,136 +89,59 @@ namespace OcentraAI.LLMGames.ThreeCardBrag.Manager
 
         public void ApplyDevHandToPlayer(Player player, DeckManager deckManager)
         {
-            List<Card> devHand = GetDevHand();
-            if (isDevModeActive && devHand != null && devHand.Count == 3 && player is HumanPlayer)
+            List<Card> devHand = GetDevHand(DevHand);
+
+            List<Card> devHandComputer = GetDevHand(DevHandComputer);
+
+            if (IsDevModeActive)
             {
-                player.ResetForNewRound(deckManager, devHand);
-                deckManager.RemoveCardsFromDeck(devHand);
+                if (player is HumanPlayer && devHand is { Count: >= 3 })
+                {
+                    player.ResetForNewRound(deckManager, devHand);
+                    deckManager.RemoveCardsFromDeck(devHand);
+                }
+                else if (player is HumanPlayer && devHandComputer is { Count: >= 3 })
+                {
+                    player.ResetForNewRound(deckManager, devHandComputer);
+                    deckManager.RemoveCardsFromDeck(devHandComputer);
+                }
             }
-            else
-            {
-                player.ResetForNewRound(deckManager);
-            }
+
         }
 
         [Button("Reset Dev Hand")]
         public void ResetDevHand()
         {
-            foreach (var card in DevHand)
+            foreach (DevCard card in DevHand)
             {
                 card.Clear();
             }
         }
 
-        public bool IsDevModeActive() => isDevModeActive;
+        [Button("Reset Dev Hand")]
+        public void ResetDevComputerHand()
+        {
+            foreach (DevCard card in DevHandComputer)
+            {
+                card.Clear();
+            }
+        }
+
+
+        public void ResetDeck()
+        {
+            DeckCards = new List<Card>(Deck.Instance.CardTemplates);
+        }
+
+
 
         [Button("Toggle Dev Mode")]
         public void ToggleDevMode()
         {
-            isDevModeActive = !isDevModeActive;
+            IsDevModeActive = !IsDevModeActive;
         }
 
-        [ShowInInspector, ReadOnly]
-        public string CombinedHandString => string.Join(", ", DevHand.Select(card => card.CardText));
-    }
 
-    [System.Serializable]
-    public class DevCard
-    {
-        [ValueDropdown("GetAvailableSuits")]
-        public Suit Suit = Suit.None;
-
-        [ValueDropdown("GetAvailableRanks")]
-        public Rank Rank = Rank.None;
-
-        [ShowInInspector, ReadOnly]
-        public string CardText => GetCardText();
-
-        private string GetCardText()
-        {
-            if (Suit == Suit.None || Rank == Rank.None)
-                return "Not Set";
-
-            Card tempCard = ScriptableObject.CreateInstance<Card>();
-            tempCard.Suit = Suit;
-            tempCard.Rank = Rank;
-            string text = tempCard.RankSymbol;
-            Object.DestroyImmediate(tempCard);
-            return text;
-        }
-
-        private static List<Suit> GetAvailableSuits()
-        {
-            return System.Enum.GetValues(typeof(Suit)).Cast<Suit>().ToList();
-        }
-
-        private List<Rank> GetAvailableRanks()
-        {
-            return System.Enum.GetValues(typeof(Rank)).Cast<Rank>().ToList();
-        }
-
-        [Button("Clear")]
-        public void Clear()
-        {
-            Suit = Suit.None;
-            Rank = Rank.None;
-        }
-    }
-
-    [CustomEditor(typeof(DevModeManager))]
-    public class DevModeManagerEditor : OdinEditor
-    {
-        public override void OnInspectorGUI()
-        {
-            DevModeManager manager = (DevModeManager)target;
-
-            GUILayout.Space(10);
-            GUILayout.Label("Dev Hand", EditorStyles.boldLabel);
-
-            GUILayout.BeginHorizontal();
-            // Draw Dev Hand
-            for (int i = 0; i < manager.DevHand.Length; i++)
-            {
-                var devCard = manager.DevHand[i];
-                GUILayout.BeginHorizontal();
-                devCard.Suit = (Suit)EditorGUILayout.EnumPopup(devCard.Suit, GUILayout.Width(100));
-                devCard.Rank = (Rank)EditorGUILayout.EnumPopup(devCard.Rank, GUILayout.Width(50));
-                GUILayout.EndHorizontal();
-            }
-
-            // Draw Combined Hand String
-
-            GUILayout.Label("Hand", EditorStyles.boldLabel);
-            GUIStyle combinedStyle = new GUIStyle(EditorStyles.boldLabel)
-            {
-                richText = true, fontSize = 25
-            };
-
-            GUILayout.Label(new GUIContent(manager.CombinedHandString), combinedStyle);
-
-            GUILayout.Space(250);
-
-
-            GUILayout.EndHorizontal();
-
-            GUILayout.BeginHorizontal();
-
-            // Toggle for Dev Mode
-            manager.isDevModeActive = GUILayout.Toggle(manager.isDevModeActive, "Dev Mode Active", GUILayout.Width(150));
-
-            // Button for Reset Dev Hand
-            if (GUILayout.Button("Reset Dev Hand", GUILayout.Width(150)))
-            {
-                manager.ResetDevHand();
-            }
-
-            if (GUI.changed)
-            {
-                EditorUtility.SetDirty(manager);
-            }
-
-            GUILayout.EndHorizontal();
-        }
     }
 }
 

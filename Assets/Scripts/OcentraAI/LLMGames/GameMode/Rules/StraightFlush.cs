@@ -13,9 +13,9 @@ namespace OcentraAI.LLMGames.GameModes.Rules
         public override int BonusValue { get; protected set; } = 180;
         public override int Priority { get; protected set; } = 98;
 
-        public override bool Evaluate(List<Card> hand, out BonusDetails bonusDetails)
+        public override bool Evaluate(List<Card> hand, out BonusDetail bonusDetail)
         {
-            bonusDetails = null;
+            bonusDetail = null;
             if (!VerifyNumberOfCards(hand)) return false;
 
             List<int> ranks = hand.Select(card => (int)card.Rank).ToList();
@@ -30,7 +30,7 @@ namespace OcentraAI.LLMGames.GameModes.Rules
             // Check for natural straight flush
             if (hand.All(card => card.Suit == suit) && IsSequence(hand))
             {
-                bonusDetails = CalculateBonus(hand, false);
+                bonusDetail = CalculateBonus(hand, false);
                 return true;
             }
 
@@ -47,7 +47,7 @@ namespace OcentraAI.LLMGames.GameModes.Rules
 
                     if (canFormStraightFlush)
                     {
-                        bonusDetails = CalculateBonus(hand, true);
+                        bonusDetail = CalculateBonus(hand, true);
                         return true;
                     }
                 }
@@ -56,9 +56,11 @@ namespace OcentraAI.LLMGames.GameModes.Rules
             return false;
         }
 
-        private BonusDetails CalculateBonus(List<Card> hand, bool isTrumpAssisted)
+        private BonusDetail CalculateBonus(List<Card> hand, bool isTrumpAssisted)
         {
             int baseBonus = BonusValue * CalculateHandValue(hand);
+            string bonusCalculationDescriptions = $"{BonusValue} * {CalculateHandValue(hand)}";
+
             int additionalBonus = 0;
             List<string> descriptions = new List<string> { $"Straight Flush:" };
 
@@ -84,8 +86,11 @@ namespace OcentraAI.LLMGames.GameModes.Rules
                     descriptions.Add($"Trump Rank Adjacent: +{GameMode.TrumpBonusValues.RankAdjacentBonus}");
                 }
             }
-
-            return CreateBonusDetails(RuleName, baseBonus, Priority, descriptions, additionalBonus);
+            if (additionalBonus > 0)
+            {
+                bonusCalculationDescriptions = $"{BonusValue} * {CalculateHandValue(hand)} + {additionalBonus} ";
+            }
+            return CreateBonusDetails(RuleName, baseBonus, Priority, descriptions, bonusCalculationDescriptions, additionalBonus);
         }
 
         public override bool Initialize(GameMode gameMode)

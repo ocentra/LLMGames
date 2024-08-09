@@ -100,7 +100,7 @@ namespace OcentraAI.LLMGames.ThreeCardBrag.Manager
             return Task.CompletedTask;
         }
 
-        
+
         private Task InitializeUIPlayers()
         {
             TaskCompletionSource<bool> initializedUIPlayersSource = new TaskCompletionSource<bool>();
@@ -207,7 +207,7 @@ namespace OcentraAI.LLMGames.ThreeCardBrag.Manager
                         newBet = (int)(ScoreManager.CurrentBet * 2 + ScoreManager.CurrentBet * randomMultiplier);
                     }
 
-                    var (success, errorMessage) = ScoreManager.ProcessRaise(newBet);
+                    (bool success, string errorMessage) = ScoreManager.ProcessRaise(newBet);
 
                     if (success)
                     {
@@ -300,18 +300,12 @@ namespace OcentraAI.LLMGames.ThreeCardBrag.Manager
         {
             try
             {
-                if (TurnManager.IsFixedRoundsOver())
-                {
-                    await CheckForContinuation(true);
-                    return;
-                }
-
                 DeckManager.ResetForNewRound();
                 PlayerManager.ResetForNewRound();
                 ScoreManager.ResetForNewRound();
                 TurnManager.ResetForNewRound();
 
-               // Log("GameManager Calling TurnManager.ResetForNewRound");
+                // Log("GameManager Calling TurnManager.ResetForNewRound");
 
                 EventBus.Publish(new NewRoundEventArgs(this));
                 // Ensure the first turn is always started correctly
@@ -469,7 +463,7 @@ namespace OcentraAI.LLMGames.ThreeCardBrag.Manager
 
         private async Task PlayBlind()
         {
-            var (success, errorMessage) = ScoreManager.ProcessBlindBet();
+            (bool success, string errorMessage) = ScoreManager.ProcessBlindBet();
 
             if (success)
             {
@@ -484,7 +478,7 @@ namespace OcentraAI.LLMGames.ThreeCardBrag.Manager
 
         private async Task Bet()
         {
-            var (success, errorMessage) = ScoreManager.ProcessRegularBet();
+            (bool success, string errorMessage) = ScoreManager.ProcessRegularBet();
 
             if (success)
             {
@@ -507,7 +501,7 @@ namespace OcentraAI.LLMGames.ThreeCardBrag.Manager
 
         private async Task Show()
         {
-            var (success, errorMessage) = ScoreManager.ProcessShowBet();
+            (bool success, string errorMessage) = ScoreManager.ProcessShowBet();
 
             if (success)
             {
@@ -535,7 +529,7 @@ namespace OcentraAI.LLMGames.ThreeCardBrag.Manager
             }
 
             Dictionary<Player, int> playerHandValues = new Dictionary<Player, int>();
-            foreach (var player in activePlayers)
+            foreach (Player player in activePlayers)
             {
                 playerHandValues[player] = player.CalculateHandValue();
             }
@@ -553,7 +547,7 @@ namespace OcentraAI.LLMGames.ThreeCardBrag.Manager
             }
 
             Dictionary<Player, int> potentialWinnersCardValues = new Dictionary<Player, int>();
-            foreach (var player in potentialWinners)
+            foreach (Player player in potentialWinners)
             {
                 potentialWinnersCardValues[player] = player.GetHighestCardValue();
             }
@@ -580,7 +574,7 @@ namespace OcentraAI.LLMGames.ThreeCardBrag.Manager
 
             if (winners.Count > 1)
             {
-                var winner = BreakTie(winners);
+                Player winner = BreakTie(winners);
                 if (winner != null)
                 {
                     await HandleSingleWinner(winner, showHand);
@@ -602,9 +596,9 @@ namespace OcentraAI.LLMGames.ThreeCardBrag.Manager
         public Player BreakTie(List<Player> tiedPlayers)
         {
             // First, compare the highest cards
-            var highestCards = tiedPlayers.Select(p => p.Hand.Max(c => c.GetRankValue())).ToList();
+            List<int> highestCards = tiedPlayers.Select(p => p.Hand.Max(c => c.GetRankValue())).ToList();
             int maxHighCard = highestCards.Max();
-            var playersWithMaxHighCard = tiedPlayers.Where(p => p.Hand.Max(c => c.GetRankValue()) == maxHighCard).ToList();
+            List<Player> playersWithMaxHighCard = tiedPlayers.Where(p => p.Hand.Max(c => c.GetRankValue()) == maxHighCard).ToList();
 
             if (playersWithMaxHighCard.Count == 1)
             {
@@ -612,9 +606,9 @@ namespace OcentraAI.LLMGames.ThreeCardBrag.Manager
             }
 
             // If still tied, compare the second highest cards
-            var secondHighestCards = playersWithMaxHighCard.Select(p => p.Hand.OrderByDescending(c => c.GetRankValue()).Skip(1).First().GetRankValue()).ToList();
+            List<int> secondHighestCards = playersWithMaxHighCard.Select(p => p.Hand.OrderByDescending(c => c.GetRankValue()).Skip(1).First().GetRankValue()).ToList();
             int maxSecondHighCard = secondHighestCards.Max();
-            var playersWithMaxSecondHighCard = playersWithMaxHighCard.Where(p => p.Hand.OrderByDescending(c => c.GetRankValue()).Skip(1).First().GetRankValue() == maxSecondHighCard).ToList();
+            List<Player> playersWithMaxSecondHighCard = playersWithMaxHighCard.Where(p => p.Hand.OrderByDescending(c => c.GetRankValue()).Skip(1).First().GetRankValue() == maxSecondHighCard).ToList();
 
             if (playersWithMaxSecondHighCard.Count == 1)
             {
@@ -622,9 +616,9 @@ namespace OcentraAI.LLMGames.ThreeCardBrag.Manager
             }
 
             // If still tied, compare the lowest cards
-            var lowestCards = playersWithMaxSecondHighCard.Select(p => p.Hand.Min(c => c.GetRankValue())).ToList();
+            List<int> lowestCards = playersWithMaxSecondHighCard.Select(p => p.Hand.Min(c => c.GetRankValue())).ToList();
             int maxLowestCard = lowestCards.Max();
-            var winnersWithMaxLowestCard = playersWithMaxSecondHighCard.Where(p => p.Hand.Min(c => c.GetRankValue()) == maxLowestCard).ToList();
+            List<Player> winnersWithMaxLowestCard = playersWithMaxSecondHighCard.Where(p => p.Hand.Min(c => c.GetRankValue()) == maxLowestCard).ToList();
 
             // If still tied after comparing all cards, it's a true tie
             if (winnersWithMaxLowestCard.Count > 1)
@@ -675,11 +669,13 @@ namespace OcentraAI.LLMGames.ThreeCardBrag.Manager
 
         private async Task CheckForContinuation(bool showHand)
         {
-
             if (TurnManager.IsFixedRoundsOver())
             {
-                var leaderboard = ScoreManager.GetLeaderboard();
-                if (leaderboard.Count > 1 && leaderboard[0].TotalWinnings > leaderboard[1].TotalWinnings)
+                List<(string PlayerId, int Wins, int TotalWinnings)> leaderboard = ScoreManager.GetLeaderboard();
+
+                // If there's only one player, or the top player has zero winnings, or the top player has more winnings than the second player
+                if (leaderboard.Count <= 1 ||
+                    (leaderboard.Count > 1 && leaderboard[0].TotalWinnings > leaderboard[1].TotalWinnings && leaderboard[0].TotalWinnings > 0))
                 {
                     await EndGame();
                 }
@@ -693,6 +689,8 @@ namespace OcentraAI.LLMGames.ThreeCardBrag.Manager
                 OfferContinuation(showHand);
             }
         }
+
+
 
         private void OfferContinuation(bool showHand)
         {

@@ -1,4 +1,5 @@
 using OcentraAI.LLMGames.Extensions;
+using OcentraAI.LLMGames.GameModes.Rules;
 using Sirenix.OdinInspector;
 using TMPro;
 using UnityEngine;
@@ -23,10 +24,10 @@ namespace OcentraAI.LLMGames
 
         }
 
-        public void SetBonus(string ruleName, string ruleValue)
+        public void SetBonus(BonusDetail bonusDetail)
         {
-            BonusRuleName.text = ruleName;
-            BonusRuleValue.text = ruleValue;
+            BonusRuleName.text = bonusDetail.RuleName;
+            BonusRuleValue.text = bonusDetail.BonusCalculationDescriptions;
         }
     }
 }

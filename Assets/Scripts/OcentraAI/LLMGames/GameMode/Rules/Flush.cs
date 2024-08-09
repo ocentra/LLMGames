@@ -15,17 +15,19 @@ namespace OcentraAI.LLMGames.GameModes.Rules
         public override int BonusValue { get; protected set; } = 110;
         public override int Priority { get; protected set; } = 88;
 
-        public override bool Evaluate(List<Card> hand, out BonusDetails bonusDetails)
+        public override bool Evaluate(List<Card> hand, out BonusDetail bonusDetail)
         {
-            bonusDetails = null;
+            bonusDetail = null;
             if (!VerifyNumberOfCards(hand)) return false;
 
             // Check for natural flush
-            if (hand.All(card => card.Suit == hand[0].Suit))
+            if (IsSameSuits(hand))
             {
-                bonusDetails = CalculateBonus(hand, false);
+                bonusDetail = CalculateBonus(hand, false);
                 return true;
             }
+
+            
 
             // Check for trump-assisted flush
             if (GameMode.UseTrump)
@@ -37,7 +39,7 @@ namespace OcentraAI.LLMGames.GameModes.Rules
                     List<Card> nonTrumpCards = hand.Where(c => c != trumpCard).ToList();
                     if (nonTrumpCards.All(card => card.Suit == nonTrumpCards[0].Suit))
                     {
-                        bonusDetails = CalculateBonus(hand, true);
+                        bonusDetail = CalculateBonus(hand, true);
                         return true;
                     }
                 }
@@ -46,11 +48,12 @@ namespace OcentraAI.LLMGames.GameModes.Rules
             return false;
         }
 
-        private BonusDetails CalculateBonus(List<Card> hand, bool isTrumpAssisted)
+        private BonusDetail CalculateBonus(List<Card> hand, bool isTrumpAssisted)
         {
             int baseBonus = BonusValue * CalculateHandValue(hand);
             int additionalBonus = 0;
             List<string> descriptions = new List<string> { $"Flush:" };
+            string bonusCalculationDescriptions = $"{BonusValue} * {CalculateHandValue(hand)}";
 
             if (isTrumpAssisted)
             {
@@ -75,7 +78,12 @@ namespace OcentraAI.LLMGames.GameModes.Rules
                 }
             }
 
-            return CreateBonusDetails(RuleName, baseBonus, Priority, descriptions, additionalBonus);
+            if (additionalBonus > 0)
+            {
+                bonusCalculationDescriptions = $"{BonusValue} * {CalculateHandValue(hand)} + {additionalBonus} ";
+            }
+
+            return CreateBonusDetails(RuleName, baseBonus, Priority, descriptions, bonusCalculationDescriptions, additionalBonus);
         }
 
        

@@ -1,4 +1,5 @@
 ﻿using OcentraAI.LLMGames.Scriptable;
+using OcentraAI.LLMGames.Utilities;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -14,7 +15,7 @@ namespace OcentraAI.LLMGames.GameModes.Rules
         public override int BonusValue { get; protected set; } = 125;
         public override int Priority { get; protected set; } = 91;
 
-        public override bool Evaluate(List<Card> hand, out BonusDetail bonusDetail)
+        public override bool Evaluate(Hand hand, out BonusDetail bonusDetail)
         {
             bonusDetail = null;
 
@@ -50,7 +51,7 @@ namespace OcentraAI.LLMGames.GameModes.Rules
 
 
 
-        private BonusDetail CalculateBonus(List<Card> hand, Rank rank)
+        private BonusDetail CalculateBonus(Hand hand, Rank rank)
         {
             int baseBonus = BonusValue * ((int)rank * 3);
 
@@ -58,7 +59,7 @@ namespace OcentraAI.LLMGames.GameModes.Rules
 
 
             int additionalBonus = 0;
-            List<string> descriptions = new List<string> { $"Three of a Kind: {Card.GetRankSymbol(Suit.Spades, rank)}" };
+            List<string> descriptions = new List<string> { $"Three of a Kind: {CardUtility.GetRankSymbol(Suit.Spades, rank)}" };
 
             if (GameMode.UseTrump)
             {
@@ -113,18 +114,21 @@ namespace OcentraAI.LLMGames.GameModes.Rules
         public override string[] CreateExampleHand(int handSize, string trumpCard = null, bool coloured = true)
         {
             if (handSize < 3)
-                throw new ArgumentException("Hand size must be at least 3 for Three of a Kind.");
+            {
+                Debug.LogError("Hand size must be at least 3 for Three of a Kind.");
+                return Array.Empty<string>();
+            }
 
             List<string> hand = new List<string>();
 
             Rank threeOfAKindRank = (Rank)UnityEngine.Random.Range(2, 15);
 
-            hand.Add($"{Card.GetRankSymbol(Suit.Hearts, threeOfAKindRank, coloured)}");
-            hand.Add($"{Card.GetRankSymbol(Suit.Diamonds, threeOfAKindRank, coloured)}");
+            hand.Add($"{CardUtility.GetRankSymbol(Suit.Hearts, threeOfAKindRank, coloured)}");
+            hand.Add($"{CardUtility.GetRankSymbol(Suit.Diamonds, threeOfAKindRank, coloured)}");
 
             hand.Add(!string.IsNullOrEmpty(trumpCard)
                 ? trumpCard
-                : $"{Card.GetRankSymbol(Suit.Clubs, threeOfAKindRank, coloured)}");
+                : $"{CardUtility.GetRankSymbol(Suit.Clubs, threeOfAKindRank, coloured)}");
 
             for (int i = 3; i < handSize; i++)
             {
@@ -137,7 +141,7 @@ namespace OcentraAI.LLMGames.GameModes.Rules
 
                 Suit randomSuit = (Suit)UnityEngine.Random.Range(0, 4);
 
-                hand.Add($"{Card.GetRankSymbol(randomSuit, randomRank, coloured)}");
+                hand.Add($"{CardUtility.GetRankSymbol(randomSuit, randomRank, coloured)}");
             }
 
             return hand.ToArray();

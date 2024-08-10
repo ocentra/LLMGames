@@ -1,5 +1,6 @@
 ﻿using OcentraAI.LLMGames.Scriptable;
 using OcentraAI.LLMGames.ThreeCardBrag.Manager;
+using OcentraAI.LLMGames.Utilities;
 using Sirenix.OdinInspector;
 using Sirenix.Serialization;
 using System;
@@ -37,23 +38,33 @@ namespace OcentraAI.LLMGames.GameModes.Rules
             return Initialize(gameMode);
         }
 
-        public abstract bool Evaluate(List<Card> hand, out BonusDetail bonusDetail);
+        public abstract bool Evaluate(Hand hand, out BonusDetail bonusDetail);
 
+
+        [Button(ButtonSizes.Large)]
+        [ShowIf(nameof(IsGameModeAssigned))]
+        public void Initialize()
+        {
+            Initialize(GameMode);
+        }
 
         public abstract bool Initialize(GameMode gameMode);
 
-        protected Card GetTrumpCard() => DeckManager.Instance.WildCards.GetValueOrDefault("TrumpCard"); //todo put it in some const class no string literals
-
-        protected int CalculateHandValue(List<Card> hand)
+        private bool IsGameModeAssigned()
         {
-            return hand.Sum(card => card.GetRankValue());
+            return GameMode != null;
+
         }
 
-        protected bool HasTrumpCard(List<Card> hand) => hand.Any(card => card.Equals(GetTrumpCard()));
+        protected Card GetTrumpCard() => DeckManager.Instance.WildCards.GetValueOrDefault("TrumpCard"); //todo put it in some const class no string literals
 
-        protected Dictionary<Rank, int> GetRankCounts(List<Card> hand)
+
+
+        protected bool HasTrumpCard(Hand hand) => hand.HasTrumpCard(GetTrumpCard());
+
+        protected Dictionary<Rank, int> GetRankCounts(Hand hand)
         {
-            return hand.GroupBy(card => card.Rank).ToDictionary(g => g.Key, g => g.Count());
+            return hand.Cards.GroupBy(card => card.Rank).ToDictionary(g => g.Key, g => g.Count());
         }
 
         protected bool IsRankAdjacent(Rank rank1, Rank rank2)
@@ -64,7 +75,7 @@ namespace OcentraAI.LLMGames.GameModes.Rules
         }
 
 
-        protected Rank? FindNOfAKind(List<Card> hand, int numberOfCards)
+        protected Rank? FindNOfAKind(Hand hand, int numberOfCards)
         {
             return GetRankCounts(hand).Where(kv => kv.Value >= numberOfCards)
                 .OrderByDescending(kv => kv.Key)
@@ -74,18 +85,18 @@ namespace OcentraAI.LLMGames.GameModes.Rules
 
 
 
-        protected bool IsNOfAKind(List<Card> hand, Rank rank, int numberOfCards)
+        protected bool IsNOfAKind(Hand hand, Rank rank, int numberOfCards)
         {
             return GetRankCounts(hand).TryGetValue(rank, out int count) && count == numberOfCards;
         }
 
-        protected bool IsNOfAKind(List<Card> hand, int numberOfCards)
+        protected bool IsNOfAKind(Hand hand, int numberOfCards)
         {
             return FindNOfAKind(hand, numberOfCards).HasValue;
         }
 
 
-        protected bool IsFullHouseOrTrumpOfKind(List<Card> hand)
+        protected bool IsFullHouseOrTrumpOfKind(Hand hand)
         {
             Dictionary<Rank, int> rankCounts = GetRankCounts(hand);
             if (GameMode.UseTrump && rankCounts.TryGetValue(GetTrumpCard().Rank, out int trumpRankCount) && trumpRankCount == GameMode.NumberOfCards)
@@ -99,7 +110,7 @@ namespace OcentraAI.LLMGames.GameModes.Rules
 
 
 
-        protected bool IsNOfAKindOfTrump(List<Card> hand, int n)
+        protected bool IsNOfAKindOfTrump(Hand hand, int n)
         {
             return GetRankCounts(hand).TryGetValue(GetTrumpCard().Rank, out int trumpCount) && trumpCount == n;
         }
@@ -117,12 +128,12 @@ namespace OcentraAI.LLMGames.GameModes.Rules
                 if (symbol.Length == 3) // For "10♠" type symbols
                 {
                     rank = Rank.Ten;
-                    suit = Card.GetSuitFromChar(symbol[2]);
+                    suit = CardUtility.GetSuitFromChar(symbol[2]);
                 }
                 else if (symbol.Length == 2) // For "2♠", "J♠" type symbols
                 {
-                    rank = Card.GetRankFromChar(symbol[0]);
-                    suit = Card.GetSuitFromChar(symbol[1]);
+                    rank = CardUtility.GetRankFromChar(symbol[0]);
+                    suit = CardUtility.GetSuitFromChar(symbol[1]);
                 }
                 else
                 {
@@ -130,17 +141,17 @@ namespace OcentraAI.LLMGames.GameModes.Rules
                     continue;
                 }
 
-                convertedSymbols.Add(Card.GetRankSymbol(suit, rank, false));
+                convertedSymbols.Add(CardUtility.GetRankSymbol(suit, rank, false));
             }
 
             return convertedSymbols.ToArray();
         }
 
-        protected bool IsRoyalSequence(List<Card> hand)
+        protected bool IsRoyalSequence(Hand hand)
         {
             if (IsSameSuits(hand))
             {
-                List<int> ranks = hand.Select(card => (int)card.Rank).OrderBy(rank => rank).ToList();
+                List<int> ranks = hand.Cards.Select(card => (int)card.Rank).OrderBy(rank => rank).ToList();
                 List<int> royalSequence = GetRoyalSequence();
                 return ranks.SequenceEqual(royalSequence.Take(ranks.Count));
             }
@@ -148,18 +159,18 @@ namespace OcentraAI.LLMGames.GameModes.Rules
             return false;
         }
 
-        protected static bool IsSameSuits(List<Card> hand)
+        protected static bool IsSameSuits(Hand hand)
         {
-            return hand.All(card => card.Suit == hand[0].Suit);
+            return hand.Cards.All(card => card.Suit == hand.Cards[0].Suit);
         }
 
 
 
-        protected bool IsSequence(List<Card> hand)
+        protected bool IsSequence(Hand hand)
         {
-            if (hand == null || hand.Count < 2) return false;
+            if (hand == null || hand.Count() < 2) return false;
 
-            List<int> ranks = hand.Select(card => card.GetRankValue()).OrderBy(rank => rank).ToList();
+            List<int> ranks = hand.Cards.Select(card => card.GetRankValue()).OrderBy(rank => rank).ToList();
             return IsAscendingSequence(ranks) || IsWraparoundSequence(ranks);
         }
 
@@ -201,16 +212,16 @@ namespace OcentraAI.LLMGames.GameModes.Rules
                    (sortedRanks[0] == 12 && sortedRanks[2] == 14); // Q-x-A
         }
 
-        protected bool IsSameColorAndDifferentSuits(List<Card> hand)
+        protected bool IsSameColorAndDifferentSuits(Hand hand)
         {
-            if (hand == null || hand.Count == 0) return false;
+            if (hand == null || hand.Count() == 0) return false;
 
-            Color firstCardColor = Card.GetColorValue(hand[0].Suit);
+            Color firstCardColor = CardUtility.GetColorValue(hand.Cards[0].Suit);
 
 
-            foreach (Card card in hand)
+            foreach (Card card in hand.Cards)
             {
-                if (Card.GetColorValue(card.Suit) != firstCardColor)
+                if (CardUtility.GetColorValue(card.Suit) != firstCardColor)
                 {
                     return false;
                 }
@@ -220,27 +231,27 @@ namespace OcentraAI.LLMGames.GameModes.Rules
             return IsSameSuits(hand);
         }
 
-        protected bool IsTrumpInMiddle(List<Card> orderedHand, Card trumpCard)
+        protected bool IsTrumpInMiddle(Hand orderedHand, Card trumpCard)
         {
-            int handSize = orderedHand.Count;
+            int handSize = orderedHand.Count();
             if (handSize % 2 == 1)
             {
                 // Odd number of cards, one middle position
                 int middleIndex = handSize / 2;
-                return orderedHand[middleIndex].Equals(trumpCard);
+                return orderedHand.Cards[middleIndex].Equals(trumpCard);
             }
             else
             {
                 // Even number of cards, two middle positions
                 int firstMiddleIndex = (handSize / 2) - 1;
                 int secondMiddleIndex = handSize / 2;
-                return orderedHand[firstMiddleIndex].Equals(trumpCard) || orderedHand[secondMiddleIndex].Equals(trumpCard);
+                return orderedHand.Cards[firstMiddleIndex].Equals(trumpCard) || orderedHand.Cards[secondMiddleIndex].Equals(trumpCard);
             }
         }
 
-        protected bool IsRankAdjacentToTrump(List<Card> orderedHand, Card trumpCard)
+        protected bool IsRankAdjacentToTrump(Hand orderedHand, Card trumpCard)
         {
-            foreach (Card card in orderedHand)
+            foreach (Card card in orderedHand.Cards)
             {
                 if (IsRankAdjacent(card.Rank, trumpCard.Rank))
                 {
@@ -259,6 +270,16 @@ namespace OcentraAI.LLMGames.GameModes.Rules
             return sortedRanks[0] + 1;
         }
 
+        protected List<Rank> SelectNonHighRanks(int handSize,Rank trumpRank)
+        {
+            // Exclude high cards (J, Q, K, A)
+            List<Rank> availableRanks = Enum.GetValues(typeof(Rank))
+                .Cast<Rank>()
+                .Where(rank => rank != Rank.J && rank != Rank.Q && rank != Rank.K && rank != Rank.A && (trumpRank != Rank.None && rank != trumpRank))
+                .ToList();
+
+            return availableRanks.OrderBy(rank => UnityEngine.Random.value).Take(handSize).ToList();
+        }
 
         protected BonusDetail CreateBonusDetails(string ruleName, int baseBonus, int priority, List<string> descriptions, string bonusCalculationDescriptions, int additionalBonus = 0)
         {
@@ -273,9 +294,9 @@ namespace OcentraAI.LLMGames.GameModes.Rules
             };
         }
 
-        protected bool VerifyNumberOfCards(List<Card> hand)
+        protected bool VerifyNumberOfCards(Hand hand)
         {
-            return GameMode != null && GameMode.NumberOfCards >= MinNumberOfCard && hand.Count == GameMode.NumberOfCards;
+            return GameMode != null && GameMode.NumberOfCards >= MinNumberOfCard && hand.Count() == GameMode.NumberOfCards;
         }
 
 
@@ -291,6 +312,17 @@ namespace OcentraAI.LLMGames.GameModes.Rules
             {
                 (int)Rank.A, (int)Rank.K, (int)Rank.Q, (int)Rank.J, (int)Rank.Ten,
                 (int)Rank.Nine, (int)Rank.Eight, (int)Rank.Seven, (int)Rank.Six
+            };
+
+            return royalRanks.Take(GameMode.NumberOfCards).ToList();
+        }
+
+        protected List<Rank> GetRoyalRankSequence()
+        {
+            List<Rank> royalRanks = new List<Rank>
+            {
+                Rank.A, Rank.K, Rank.Q, Rank.J, Rank.Ten,
+                Rank.Nine, Rank.Eight, Rank.Seven, Rank.Six
             };
 
             return royalRanks.Take(GameMode.NumberOfCards).ToList();

@@ -596,9 +596,9 @@ namespace OcentraAI.LLMGames.ThreeCardBrag.Manager
         public Player BreakTie(List<Player> tiedPlayers)
         {
             // First, compare the highest cards
-            List<int> highestCards = tiedPlayers.Select(p => p.Hand.Max(c => c.GetRankValue())).ToList();
+            List<int> highestCards = tiedPlayers.Select(p => p.Hand.Max()).ToList();
             int maxHighCard = highestCards.Max();
-            List<Player> playersWithMaxHighCard = tiedPlayers.Where(p => p.Hand.Max(c => c.GetRankValue()) == maxHighCard).ToList();
+            List<Player> playersWithMaxHighCard = tiedPlayers.Where(p => p.Hand.Max() == maxHighCard).ToList();
 
             if (playersWithMaxHighCard.Count == 1)
             {
@@ -606,9 +606,9 @@ namespace OcentraAI.LLMGames.ThreeCardBrag.Manager
             }
 
             // If still tied, compare the second highest cards
-            List<int> secondHighestCards = playersWithMaxHighCard.Select(p => p.Hand.OrderByDescending(c => c.GetRankValue()).Skip(1).First().GetRankValue()).ToList();
+            List<int> secondHighestCards = playersWithMaxHighCard.Select(p => p.Hand.Cards.OrderByDescending(c => c.GetRankValue()).Skip(1).First().GetRankValue()).ToList();
             int maxSecondHighCard = secondHighestCards.Max();
-            List<Player> playersWithMaxSecondHighCard = playersWithMaxHighCard.Where(p => p.Hand.OrderByDescending(c => c.GetRankValue()).Skip(1).First().GetRankValue() == maxSecondHighCard).ToList();
+            List<Player> playersWithMaxSecondHighCard = playersWithMaxHighCard.Where(p => p.Hand.Cards.OrderByDescending(c => c.GetRankValue()).Skip(1).First().GetRankValue() == maxSecondHighCard).ToList();
 
             if (playersWithMaxSecondHighCard.Count == 1)
             {
@@ -616,9 +616,9 @@ namespace OcentraAI.LLMGames.ThreeCardBrag.Manager
             }
 
             // If still tied, compare the lowest cards
-            List<int> lowestCards = playersWithMaxSecondHighCard.Select(p => p.Hand.Min(c => c.GetRankValue())).ToList();
+            List<int> lowestCards = playersWithMaxSecondHighCard.Select(p => p.Hand.Min()).ToList();
             int maxLowestCard = lowestCards.Max();
-            List<Player> winnersWithMaxLowestCard = playersWithMaxSecondHighCard.Where(p => p.Hand.Min(c => c.GetRankValue()) == maxLowestCard).ToList();
+            List<Player> winnersWithMaxLowestCard = playersWithMaxSecondHighCard.Where(p => p.Hand.Min() == maxLowestCard).ToList();
 
             // If still tied after comparing all cards, it's a true tie
             if (winnersWithMaxLowestCard.Count > 1)

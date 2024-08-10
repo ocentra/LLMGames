@@ -1,5 +1,6 @@
 ﻿using OcentraAI.LLMGames.Scriptable;
-using Sirenix.OdinInspector;
+using OcentraAI.LLMGames.Utilities;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using UnityEngine;
@@ -10,68 +11,96 @@ namespace OcentraAI.LLMGames.GameModes.Rules
     public class Flush : BaseBonusRule
     {
         public override int MinNumberOfCard { get; protected set; } = 3;
-
         public override string RuleName { get; protected set; } = $"{nameof(Flush)}";
         public override int BonusValue { get; protected set; } = 110;
         public override int Priority { get; protected set; } = 88;
 
-        public override bool Evaluate(List<Card> hand, out BonusDetail bonusDetail)
+        public override bool Evaluate(Hand hand, out BonusDetail bonusDetail)
         {
             bonusDetail = null;
             if (!VerifyNumberOfCards(hand)) return false;
 
-            // Check for natural flush
-            if (IsSameSuits(hand))
+            Rank trumpRank = GameMode.UseTrump ? GetTrumpCard().Rank : Rank.None;
+            List<Rank> nonHighRanks = SelectNonHighRanks(hand.Count(), trumpRank);
+
+            if (IsFlushValid(hand, nonHighRanks, trumpRank))
             {
                 bonusDetail = CalculateBonus(hand, false);
                 return true;
             }
 
-            
-
-            // Check for trump-assisted flush
-            if (GameMode.UseTrump)
+            if (GameMode.UseTrump && HasTrumpCard(hand))
             {
                 Card trumpCard = GetTrumpCard();
-                bool hasTrumpCard = HasTrumpCard(hand);
-                if (hasTrumpCard)
+                Hand nonTrumpHand = new Hand(hand.Cards.Where(c => c != trumpCard).ToList());
+                if (IsFlushValid(nonTrumpHand, nonHighRanks, trumpRank))
                 {
-                    List<Card> nonTrumpCards = hand.Where(c => c != trumpCard).ToList();
-                    if (nonTrumpCards.All(card => card.Suit == nonTrumpCards[0].Suit))
-                    {
-                        bonusDetail = CalculateBonus(hand, true);
-                        return true;
-                    }
+                    bonusDetail = CalculateBonus(hand, true);
+                    return true;
                 }
             }
 
             return false;
         }
 
-        private BonusDetail CalculateBonus(List<Card> hand, bool isTrumpAssisted)
+        private bool IsFlushValid(Hand hand, List<Rank> nonHighRanks, Rank trumpRank)
         {
-            int baseBonus = BonusValue * CalculateHandValue(hand);
+            if (!hand.IsFlush())
+            {
+                return false;
+            }
+
+            if (hand.IsSequence())
+            {
+                return false;
+            }
+
+            if (hand.IsNOfAKind(2))
+            {
+                return false;
+            }
+
+            foreach (Card card in hand.Cards)
+            {
+                if (!nonHighRanks.Contains(card.Rank))
+                {
+                    return false;
+                }
+            }
+
+            foreach (Card card in hand.Cards)
+            {
+                if (card.Rank == trumpRank)
+                {
+                    return false;
+                }
+            }
+
+            return true;
+        }
+
+
+        private BonusDetail CalculateBonus(Hand hand, bool isTrumpAssisted)
+        {
+            int baseBonus = BonusValue * hand.Sum();
             int additionalBonus = 0;
             List<string> descriptions = new List<string> { $"Flush:" };
-            string bonusCalculationDescriptions = $"{BonusValue} * {CalculateHandValue(hand)}";
+            string bonusCalculationDescriptions = $"{BonusValue} * {hand.Sum()}";
 
             if (isTrumpAssisted)
             {
                 additionalBonus += GameMode.TrumpBonusValues.FlushBonus;
                 descriptions.Add($"Trump Card Bonus: +{GameMode.TrumpBonusValues.FlushBonus}");
 
-                List<Card> orderedHand = hand.OrderBy(card => card.GetRankValue()).ToList();
                 Card trumpCard = GetTrumpCard();
 
-                // Check for CardInMiddleBonus
-                if (IsTrumpInMiddle(orderedHand, trumpCard))
+                if (hand.IsTrumpInMiddle(trumpCard))
                 {
                     additionalBonus += GameMode.TrumpBonusValues.CardInMiddleBonus;
                     descriptions.Add($"Trump Card in Middle: +{GameMode.TrumpBonusValues.CardInMiddleBonus}");
                 }
 
-                // Check for RankAdjacentBonus
-                if (IsRankAdjacentToTrump(orderedHand, trumpCard))
+                if (hand.IsRankAdjacentToTrump(trumpCard))
                 {
                     additionalBonus += GameMode.TrumpBonusValues.RankAdjacentBonus;
                     descriptions.Add($"Trump Rank Adjacent: +{GameMode.TrumpBonusValues.RankAdjacentBonus}");
@@ -80,42 +109,102 @@ namespace OcentraAI.LLMGames.GameModes.Rules
 
             if (additionalBonus > 0)
             {
-                bonusCalculationDescriptions = $"{BonusValue} * {CalculateHandValue(hand)} + {additionalBonus} ";
+                bonusCalculationDescriptions += $" + {additionalBonus}";
             }
 
             return CreateBonusDetails(RuleName, baseBonus, Priority, descriptions, bonusCalculationDescriptions, additionalBonus);
         }
 
-       
+        public override string[] CreateExampleHand(int handSize, string trumpCard = null, bool coloured = true)
+        {
+            if (handSize < 3)
+            {
+                Debug.LogError("Hand size must be at least 3 for a Flush.");
+                return Array.Empty<string>();
+            }
+
+            List<string> hand;
+            Rank trumpRank = !string.IsNullOrEmpty(trumpCard) ? CardUtility.GetRankFromSymbol(trumpCard) : Rank.None;
+            List<Rank> nonHighRanks = SelectNonHighRanks(handSize, trumpRank);
+
+            do
+            {
+                hand = GeneratePotentialHand(handSize, trumpCard, coloured, nonHighRanks);
+            }
+            while (!IsFlushValid(HandExtensions.ConvertFromSymbols(hand.ToArray()), nonHighRanks, trumpRank));
+
+            return hand.ToArray();
+        }
+
+        private List<string> GeneratePotentialHand(int handSize, string trumpCard, bool coloured, List<Rank> nonHighRanks)
+        {
+            List<string> hand = new List<string>();
+            Suit flushSuit = CardUtility.GetRandomSuit();
+            List<Rank> selectedRanks = new List<Rank>(nonHighRanks);
+            selectedRanks = AvoidSequencesAndDuplicates(selectedRanks);
+
+            for (int i = 0; i < handSize; i++)
+            {
+                if (!string.IsNullOrEmpty(trumpCard) && i == handSize - 1)
+                {
+                    hand.Add(trumpCard);
+                }
+                else if (i < selectedRanks.Count)
+                {
+                    hand.Add(CardUtility.GetRankSymbol(flushSuit, selectedRanks[i], coloured));
+                }
+                else
+                {
+                    Debug.LogError($"Not enough ranks selected for hand size {handSize}");
+                    return hand; // Return partial hand to avoid infinite loop
+                }
+            }
+
+            return hand;
+        }
+
+
+
+        private List<Rank> AvoidSequencesAndDuplicates(List<Rank> ranks)
+        {
+            ranks = ranks.OrderBy(rank => rank).ToList();
+            for (int i = 0; i < ranks.Count - 1; i++)
+            {
+                if (IsRankAdjacent(ranks[i], ranks[i + 1]) || ranks[i] == ranks[i + 1])
+                {
+                    ranks.RemoveAt(i + 1);
+                    i--; // Recheck this position
+                }
+            }
+            return ranks;
+        }
+
+        private string CreateExampleString(int cardCount, bool isPlayer, bool useTrump = false)
+        {
+            string trumpCard = useTrump ? CardUtility.GetRankSymbol(Suit.Hearts, Rank.Six, isPlayer) : null;
+            string[] exampleHand = CreateExampleHand(cardCount, trumpCard, isPlayer);
+            return string.Join(", ", exampleHand);
+        }
+
         public override bool Initialize(GameMode gameMode)
         {
-            Description = "All cards of the same suit, optionally considering Trump Wild Card.";
+            Description = "All cards of the same suit, without forming a sequence, pair, or n of a kind, optionally considering Trump Wild Card.";
 
             List<string> playerExamples = new List<string>();
             List<string> llmExamples = new List<string>();
             List<string> playerTrumpExamples = new List<string>();
             List<string> llmTrumpExamples = new List<string>();
 
-            string playerTrumpCardSymbol = Card.GetRankSymbol(Suit.Hearts, Rank.Six);
-            string llmTrumpCardSymbol = Card.GetRankSymbol(Suit.Hearts, Rank.Six, false);
-
-            Suit[] suits = new[] { Suit.Spades, Suit.Hearts, Suit.Diamonds, Suit.Clubs };
-            foreach (Suit suit in suits)
+            for (int cardCount = 3; cardCount <= gameMode.NumberOfCards; cardCount++)
             {
-                string playerExample = string.Join(", ", Enumerable.Range(2, 5).Select(rank => Card.GetRankSymbol(suit, (Rank)rank)));
-                playerExamples.Add(playerExample);
+                playerExamples.Add(CreateExampleString(cardCount, true, false));
+                llmExamples.Add(CreateExampleString(cardCount, false, false));
 
-                string llmExample = string.Join(", ", Enumerable.Range(2, 5).Select(rank => Card.GetRankSymbol(suit, (Rank)rank, false)));
-                llmExamples.Add(llmExample);
-            }
-
-            if (gameMode.UseTrump)
-            {
-                string trumpPlayerExample = $"{Card.GetRankSymbol(Suit.Hearts, Rank.Two)}, {Card.GetRankSymbol(Suit.Hearts, Rank.Three)}, {Card.GetRankSymbol(Suit.Hearts, Rank.Four)}, {Card.GetRankSymbol(Suit.Hearts, Rank.Six)}, {Card.GetRankSymbol(Suit.Hearts, Rank.Seven)} (Trump: {playerTrumpCardSymbol})";
-                playerTrumpExamples.Add(trumpPlayerExample);
-
-                string llmTrumpExample = $"{Card.GetRankSymbol(Suit.Hearts, Rank.Two, false)}, {Card.GetRankSymbol(Suit.Hearts, Rank.Three, false)}, {Card.GetRankSymbol(Suit.Hearts, Rank.Four, false)}, {Card.GetRankSymbol(Suit.Hearts, Rank.Six, false)}, {Card.GetRankSymbol(Suit.Hearts, Rank.Seven, false)} (Trump: {llmTrumpCardSymbol})";
-                llmTrumpExamples.Add(llmTrumpExample);
+                if (gameMode.UseTrump)
+                {
+                    playerTrumpExamples.Add(CreateExampleString(cardCount, true, true));
+                    llmTrumpExamples.Add(CreateExampleString(cardCount, false, true));
+                }
             }
 
             return TryCreateExample(RuleName, Description, BonusValue, playerExamples, llmExamples, playerTrumpExamples, llmTrumpExamples, gameMode.UseTrump);

@@ -1,10 +1,10 @@
 using OcentraAI.LLMGames.Authentication;
+using OcentraAI.LLMGames.GameModes;
 using OcentraAI.LLMGames.Scriptable;
 using OcentraAI.LLMGames.ThreeCardBrag.Events;
 using OcentraAI.LLMGames.ThreeCardBrag.Manager;
 using OcentraAI.LLMGames.Utilities;
 using System;
-using System.Linq;
 using System.Threading.Tasks;
 using UnityEngine;
 
@@ -142,15 +142,14 @@ namespace OcentraAI.LLMGames.ThreeCardBrag.Players
         private bool ShouldSwapCard()
         {
             if (FloorCard == null) return false;
-            int worstCardValue = Hand.Min(card => card.GetRankValue());
+            int worstCardValue = Hand.Min();
             return FloorCard.GetRankValue() > worstCardValue;
         }
 
         private void SwapWithFloorCard()
         {
             if (FloorCard == null) return;
-            int worstCardIndex = Hand.FindIndex(c => c.GetRankValue() == Hand.Min(card => card.GetRankValue()));
-            PickAndSwap(FloorCard, Hand[worstCardIndex]);
+            PickAndSwap(FloorCard, Hand.FindWorstCard());
         }
 
         private async Task TakeActionSeeHand(int currentBet)

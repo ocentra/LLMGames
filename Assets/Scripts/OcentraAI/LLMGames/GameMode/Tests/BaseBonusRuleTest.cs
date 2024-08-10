@@ -24,7 +24,7 @@ namespace OcentraAI.LLMGames.GameModes.Rules.Tests
         public void Evaluate_WithValidHand_ReturnsTrue([NUnit.Framework.Range(3, 9)] int handSize)
         {
             _gameMode.SetNumberOfCards(handSize);
-            var hand = CreateRandomHand(handSize);
+            Hand hand = new Hand(CreateRandomHand(handSize));
 
             bool result = _rule.Evaluate(hand, out BonusDetail bonusDetails);
 
@@ -35,10 +35,10 @@ namespace OcentraAI.LLMGames.GameModes.Rules.Tests
 
             CleanupHand(hand);
         }
-
-        protected void CleanupHand(List<Card> hand)
+        // todo dont instantiate or create 
+        protected void CleanupHand(Hand hand)
         {
-            foreach (var card in hand)
+            foreach (Card card in hand.Cards)
             {
                 Object.DestroyImmediate(card);
             }
@@ -46,12 +46,12 @@ namespace OcentraAI.LLMGames.GameModes.Rules.Tests
 
         protected List<Card> CreateRandomHand(int size)
         {
-            var hand = new List<Card>();
-            var cardTemplates = Deck.Instance.CardTemplates;
+            List<Card> hand = new List<Card>();
+            List<Card> cardTemplates = Deck.Instance.CardTemplates;
 
             for (int i = 0; i < size; i++)
             {
-                var card = cardTemplates[Random.Range(0, cardTemplates.Count)];
+                Card card = cardTemplates[Random.Range(0, cardTemplates.Count)];
                 hand.Add(Object.Instantiate(card));
             }
 

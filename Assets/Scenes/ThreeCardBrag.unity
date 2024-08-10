@@ -645,10 +645,10 @@ RectTransform:
   - {fileID: 661500533}
   m_Father: {fileID: 1941572716}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
-  m_AnchorMin: {x: 0, y: 0}
-  m_AnchorMax: {x: 0, y: 0}
-  m_AnchoredPosition: {x: 0, y: 0}
-  m_SizeDelta: {x: 0, y: 0}
+  m_AnchorMin: {x: 0, y: 1}
+  m_AnchorMax: {x: 0, y: 1}
+  m_AnchoredPosition: {x: 301.6667, y: -279.03226}
+  m_SizeDelta: {x: 603.3334, y: 457.1502}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &84540919
 MonoBehaviour:
@@ -1382,7 +1382,54 @@ MonoBehaviour:
   serializationData:
     SerializedFormat: 2
     SerializedBytes: 
-    ReferencedUnityObjects: []
+    ReferencedUnityObjects:
+    - {fileID: 11400000, guid: 733bab288dca6884d9e3bf5a2afbc107, type: 2}
+    - {fileID: 11400000, guid: cb87ee4ac9d547b4fb69da9352942b02, type: 2}
+    - {fileID: 11400000, guid: dc0143bdc52553641a61b2da4f8859e6, type: 2}
+    - {fileID: 11400000, guid: 1d217e4da330d0142b95e71f497be302, type: 2}
+    - {fileID: 11400000, guid: 71ec115ddace56b4e833c757273c78f8, type: 2}
+    - {fileID: 11400000, guid: 5dead15664f19134b8d1a4d1fe639a90, type: 2}
+    - {fileID: 11400000, guid: caf9406f3d16ad4488cb8c8d2ea2e683, type: 2}
+    - {fileID: 11400000, guid: 5e0bf6a28a386a64ebd4437ea16c4072, type: 2}
+    - {fileID: 11400000, guid: 11bed756b536c1d4b8130a46d52ba2fe, type: 2}
+    - {fileID: 11400000, guid: bae2d3e29aca9e443b70208329bf589f, type: 2}
+    - {fileID: 11400000, guid: c7d3f3f0095eb174eb2c1ffd1ec7d863, type: 2}
+    - {fileID: 11400000, guid: 9767ed520b7b33b41b619507942a6225, type: 2}
+    - {fileID: 11400000, guid: 89683889a04d52f43a8e1737c2007d19, type: 2}
+    - {fileID: 11400000, guid: 642f438db37fb7e488dfd73cd5f97e63, type: 2}
+    - {fileID: 11400000, guid: e195ddfa337a4a64b8a2d1fe41946426, type: 2}
+    - {fileID: 11400000, guid: 92ff5a73c9016c740b1fce98c51ff887, type: 2}
+    - {fileID: 11400000, guid: 06b0ec5305646de42b03714ae2587886, type: 2}
+    - {fileID: 11400000, guid: 790da3bba9027ce4691e46aeac751a6f, type: 2}
+    - {fileID: 11400000, guid: fff7a575c1dcfdb42a7ebebb40eef723, type: 2}
+    - {fileID: 11400000, guid: f430ae0bce594584694eb7f8008c0987, type: 2}
+    - {fileID: 11400000, guid: 274e9ccf751be1942868a31691ddcbce, type: 2}
+    - {fileID: 11400000, guid: d299dee4cbd64404d9878074bc8d0b6e, type: 2}
+    - {fileID: 11400000, guid: d56954bb8a67b7b4da188dd84aa52ec5, type: 2}
+    - {fileID: 11400000, guid: 3f2e9a10b30af8f45beb92ea7f170fbe, type: 2}
+    - {fileID: 11400000, guid: 61fae7cbe0d7b87479f39ccf7512eea3, type: 2}
+    - {fileID: 11400000, guid: 5d0f90c3184bc714f8333f1081627868, type: 2}
+    - {fileID: 11400000, guid: 2f93c2816b7c44243b9a89d1de793a92, type: 2}
+    - {fileID: 11400000, guid: 9134c32db54240740a030e05087e6fe1, type: 2}
+    - {fileID: 11400000, guid: 3e1df413b4c575b41b451a599b6b6b4a, type: 2}
+    - {fileID: 11400000, guid: 15e03939a5511ed44bb7c6c0787d6e06, type: 2}
+    - {fileID: 11400000, guid: 31b90e04bca4eb348ba7a33a8c9e77eb, type: 2}
+    - {fileID: 11400000, guid: e6299a775b0fffd4eba872ee7dd353e8, type: 2}
+    - {fileID: 11400000, guid: 11919ff7fbefb3d499662ff6d2ee5491, type: 2}
+    - {fileID: 11400000, guid: 788c26660bb4e4140899ad45da325011, type: 2}
+    - {fileID: 11400000, guid: 65c30a3572d3c074cb210fe99fe9b41e, type: 2}
+    - {fileID: 11400000, guid: f88151c85f3dd9d40a67d8d70ab00dce, type: 2}
+    - {fileID: 11400000, guid: d38d5111c714aed4faf0630c1cbaadf5, type: 2}
+    - {fileID: 11400000, guid: 44c6e34bb93ffb4498cdfab8f2887b45, type: 2}
+    - {fileID: 11400000, guid: 59955c6d28044e147acce4a9bf242cd5, type: 2}
+    - {fileID: 11400000, guid: 8b88b0dda72f1ea45bc6731b5554678f, type: 2}
+    - {fileID: 11400000, guid: a575f272505252a4f816bde44cef87a7, type: 2}
+    - {fileID: 11400000, guid: d2ef2c70f07aeb14da7020d9736f3ec6, type: 2}
+    - {fileID: 11400000, guid: b738c3ed4facc8845bf3fb373128eea2, type: 2}
+    - {fileID: 11400000, guid: 1b20db8655e3cd04bbdb6d0645758bb8, type: 2}
+    - {fileID: 11400000, guid: 7788105815f99314ab8503529ddcaf35, type: 2}
+    - {fileID: 11400000, guid: dbae2d36e1137594b8af2ea7f52857f1, type: 2}
+    - {fileID: 11400000, guid: 0b8aae605b6ca614a81467dc49ff18e7, type: 2}
     SerializedBytesString: 
     Prefab: {fileID: 0}
     PrefabModificationsReferencedUnityObjects: []
@@ -1423,7 +1470,7 @@ MonoBehaviour:
       Data: 3|OcentraAI.LLMGames.ThreeCardBrag.Manager.DevCard, LLMGames
     - Name: Suit
       Entry: 3
-      Data: 4
+      Data: 3
     - Name: Rank
       Entry: 3
       Data: 14
@@ -1436,21 +1483,239 @@ MonoBehaviour:
     - Name: 
       Entry: 8
       Data: 
-    - Name: TrumpDevCard
+    - Name: DevHandComputer
       Entry: 7
-      Data: 4|OcentraAI.LLMGames.ThreeCardBrag.Manager.DevCard, LLMGames
+      Data: 4|OcentraAI.LLMGames.ThreeCardBrag.Manager.DevCard[], LLMGames
+    - Name: 
+      Entry: 12
+      Data: 3
+    - Name: 
+      Entry: 7
+      Data: 5|OcentraAI.LLMGames.ThreeCardBrag.Manager.DevCard, LLMGames
+    - Name: Suit
+      Entry: 3
+      Data: 1
+    - Name: Rank
+      Entry: 3
+      Data: 13
+    - Name: 
+      Entry: 8
+      Data: 
+    - Name: 
+      Entry: 7
+      Data: 6|OcentraAI.LLMGames.ThreeCardBrag.Manager.DevCard, LLMGames
     - Name: Suit
       Entry: 3
       Data: 2
     - Name: Rank
       Entry: 3
-      Data: 14
+      Data: 13
+    - Name: 
+      Entry: 8
+      Data: 
+    - Name: 
+      Entry: 7
+      Data: 7|OcentraAI.LLMGames.ThreeCardBrag.Manager.DevCard, LLMGames
+    - Name: Suit
+      Entry: 3
+      Data: 3
+    - Name: Rank
+      Entry: 3
+      Data: 13
+    - Name: 
+      Entry: 8
+      Data: 
+    - Name: 
+      Entry: 13
+      Data: 
+    - Name: 
+      Entry: 8
+      Data: 
+    - Name: TrumpDevCard
+      Entry: 7
+      Data: 8|OcentraAI.LLMGames.ThreeCardBrag.Manager.DevCard, LLMGames
+    - Name: Suit
+      Entry: 3
+      Data: 1
+    - Name: Rank
+      Entry: 3
+      Data: 2
     - Name: 
       Entry: 8
       Data: 
     - Name: IsDevModeActive
       Entry: 5
+      Data: true
+    - Name: GameMode
+      Entry: 10
+      Data: 0
+    - Name: DeckCards
+      Entry: 7
+      Data: 9|System.Collections.Generic.List`1[[OcentraAI.LLMGames.Scriptable.Card,
+        LLMGames]], mscorlib
+    - Name: 
+      Entry: 12
+      Data: 46
+    - Name: 
+      Entry: 10
+      Data: 1
+    - Name: 
+      Entry: 10
+      Data: 2
+    - Name: 
+      Entry: 10
+      Data: 3
+    - Name: 
+      Entry: 10
+      Data: 4
+    - Name: 
+      Entry: 10
+      Data: 5
+    - Name: 
+      Entry: 10
+      Data: 6
+    - Name: 
+      Entry: 10
+      Data: 7
+    - Name: 
+      Entry: 10
+      Data: 8
+    - Name: 
+      Entry: 10
+      Data: 9
+    - Name: 
+      Entry: 10
+      Data: 10
+    - Name: 
+      Entry: 10
+      Data: 11
+    - Name: 
+      Entry: 10
+      Data: 12
+    - Name: 
+      Entry: 10
+      Data: 13
+    - Name: 
+      Entry: 10
+      Data: 14
+    - Name: 
+      Entry: 10
+      Data: 15
+    - Name: 
+      Entry: 10
+      Data: 16
+    - Name: 
+      Entry: 10
+      Data: 17
+    - Name: 
+      Entry: 10
+      Data: 18
+    - Name: 
+      Entry: 10
+      Data: 19
+    - Name: 
+      Entry: 10
+      Data: 20
+    - Name: 
+      Entry: 10
+      Data: 21
+    - Name: 
+      Entry: 10
+      Data: 22
+    - Name: 
+      Entry: 10
+      Data: 23
+    - Name: 
+      Entry: 10
+      Data: 24
+    - Name: 
+      Entry: 10
+      Data: 25
+    - Name: 
+      Entry: 10
+      Data: 26
+    - Name: 
+      Entry: 10
+      Data: 27
+    - Name: 
+      Entry: 10
+      Data: 28
+    - Name: 
+      Entry: 10
+      Data: 29
+    - Name: 
+      Entry: 10
+      Data: 30
+    - Name: 
+      Entry: 10
+      Data: 31
+    - Name: 
+      Entry: 10
+      Data: 32
+    - Name: 
+      Entry: 10
+      Data: 33
+    - Name: 
+      Entry: 10
+      Data: 34
+    - Name: 
+      Entry: 10
+      Data: 35
+    - Name: 
+      Entry: 10
+      Data: 36
+    - Name: 
+      Entry: 10
+      Data: 37
+    - Name: 
+      Entry: 10
+      Data: 38
+    - Name: 
+      Entry: 10
+      Data: 39
+    - Name: 
+      Entry: 10
+      Data: 40
+    - Name: 
+      Entry: 10
+      Data: 41
+    - Name: 
+      Entry: 10
+      Data: 42
+    - Name: 
+      Entry: 10
+      Data: 43
+    - Name: 
+      Entry: 10
+      Data: 44
+    - Name: 
+      Entry: 10
+      Data: 45
+    - Name: 
+      Entry: 10
+      Data: 46
+    - Name: 
+      Entry: 13
+      Data: 
+    - Name: 
+      Entry: 8
+      Data: 
+    - Name: UseTrumpForPlayer
+      Entry: 5
       Data: false
+    - Name: UseTrumpForComputer
+      Entry: 5
+      Data: false
+    - Name: SelectedPlayerRuleIndex
+      Entry: 3
+      Data: 5
+    - Name: SelectedComputerRuleIndex
+      Entry: 3
+      Data: 5
+  UseTrumpForPlayer: 0
+  UseTrumpForComputer: 0
+  SelectedPlayerRuleIndex: 5
+  SelectedComputerRuleIndex: 5
 --- !u!1 &196705494
 GameObject:
   m_ObjectHideFlags: 0
@@ -2476,10 +2741,10 @@ RectTransform:
   m_Children: []
   m_Father: {fileID: 351106230}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
-  m_AnchorMin: {x: 0, y: 0}
-  m_AnchorMax: {x: 0, y: 0}
-  m_AnchoredPosition: {x: 0, y: 0}
-  m_SizeDelta: {x: 0, y: 0}
+  m_AnchorMin: {x: 0, y: 1}
+  m_AnchorMax: {x: 0, y: 1}
+  m_AnchoredPosition: {x: 301.6667, y: -21.048388}
+  m_SizeDelta: {x: 603.3334, y: 42.096775}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &314576201
 MonoBehaviour:
@@ -3589,10 +3854,10 @@ RectTransform:
   - {fileID: 1712479965}
   m_Father: {fileID: 1941572716}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
-  m_AnchorMin: {x: 0, y: 0}
-  m_AnchorMax: {x: 0, y: 0}
-  m_AnchoredPosition: {x: 0, y: 0}
-  m_SizeDelta: {x: 0, y: 0}
+  m_AnchorMin: {x: 0, y: 1}
+  m_AnchorMax: {x: 0, y: 1}
+  m_AnchoredPosition: {x: 301.6667, y: -532.83594}
+  m_SizeDelta: {x: 603.3334, y: 50.45715}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &391079768
 MonoBehaviour:
@@ -6695,10 +6960,10 @@ RectTransform:
   - {fileID: 858293554}
   m_Father: {fileID: 800793669}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
-  m_AnchorMin: {x: 0, y: 0}
-  m_AnchorMax: {x: 0, y: 0}
-  m_AnchoredPosition: {x: 0, y: 0}
-  m_SizeDelta: {x: 0, y: 0}
+  m_AnchorMin: {x: 0, y: 1}
+  m_AnchorMax: {x: 0, y: 1}
+  m_AnchoredPosition: {x: 185, y: -107.90322}
+  m_SizeDelta: {x: 106.66667, y: 215.80644}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &756157072
 MonoBehaviour:
@@ -6979,10 +7244,10 @@ RectTransform:
   - {fileID: 2635122488316619935}
   m_Father: {fileID: 351106230}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
-  m_AnchorMin: {x: 0, y: 0}
-  m_AnchorMax: {x: 0, y: 0}
-  m_AnchoredPosition: {x: 0, y: 0}
-  m_SizeDelta: {x: 0, y: 0}
+  m_AnchorMin: {x: 0, y: 1}
+  m_AnchorMax: {x: 0, y: 1}
+  m_AnchoredPosition: {x: 301.6667, y: -150}
+  m_SizeDelta: {x: 603.3334, y: 215.80644}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &800793670
 MonoBehaviour:
@@ -7970,10 +8235,10 @@ RectTransform:
   m_Children: []
   m_Father: {fileID: 351106230}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
-  m_AnchorMin: {x: 0, y: 0}
-  m_AnchorMax: {x: 0, y: 0}
-  m_AnchoredPosition: {x: 0, y: 0}
-  m_SizeDelta: {x: 0, y: 0}
+  m_AnchorMin: {x: 0, y: 1}
+  m_AnchorMax: {x: 0, y: 1}
+  m_AnchoredPosition: {x: 301.6667, y: -278.95163}
+  m_SizeDelta: {x: 603.3334, y: 42.096775}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &897982853
 MonoBehaviour:
@@ -11817,10 +12082,10 @@ RectTransform:
   - {fileID: 1109954667}
   m_Father: {fileID: 800793669}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
-  m_AnchorMin: {x: 0, y: 0}
-  m_AnchorMax: {x: 0, y: 0}
-  m_AnchoredPosition: {x: 0, y: 0}
-  m_SizeDelta: {x: 0, y: 0}
+  m_AnchorMin: {x: 0, y: 1}
+  m_AnchorMax: {x: 0, y: 1}
+  m_AnchoredPosition: {x: 68.33334, y: -107.90322}
+  m_SizeDelta: {x: 106.66667, y: 215.80644}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &1481450355
 MonoBehaviour:
@@ -12921,10 +13186,10 @@ RectTransform:
   - {fileID: 381219788}
   m_Father: {fileID: 800793669}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
-  m_AnchorMin: {x: 0, y: 0}
-  m_AnchorMax: {x: 0, y: 0}
-  m_AnchoredPosition: {x: 0, y: 0}
-  m_SizeDelta: {x: 0, y: 0}
+  m_AnchorMin: {x: 0, y: 1}
+  m_AnchorMax: {x: 0, y: 1}
+  m_AnchoredPosition: {x: 418.33334, y: -107.90322}
+  m_SizeDelta: {x: 106.66667, y: 215.80644}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &1645184361
 MonoBehaviour:
@@ -13100,10 +13365,10 @@ RectTransform:
   - {fileID: 1719745181}
   m_Father: {fileID: 800793669}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
-  m_AnchorMin: {x: 0, y: 0}
-  m_AnchorMax: {x: 0, y: 0}
-  m_AnchoredPosition: {x: 0, y: 0}
-  m_SizeDelta: {x: 0, y: 0}
+  m_AnchorMin: {x: 0, y: 1}
+  m_AnchorMax: {x: 0, y: 1}
+  m_AnchoredPosition: {x: 301.6667, y: -107.90322}
+  m_SizeDelta: {x: 106.66667, y: 215.80644}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &1658782732
 MonoBehaviour:
@@ -14603,10 +14868,10 @@ RectTransform:
   m_Children: []
   m_Father: {fileID: 1941572716}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
-  m_AnchorMin: {x: 0, y: 0}
-  m_AnchorMax: {x: 0, y: 0}
-  m_AnchoredPosition: {x: 0, y: 0}
-  m_SizeDelta: {x: 0, y: 0}
+  m_AnchorMin: {x: 0, y: 1}
+  m_AnchorMax: {x: 0, y: 1}
+  m_AnchoredPosition: {x: 301.6667, y: -25.228575}
+  m_SizeDelta: {x: 603.3334, y: 50.45715}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &1771065303
 MonoBehaviour:
@@ -17885,10 +18150,10 @@ RectTransform:
   - {fileID: 4168011320010310459}
   m_Father: {fileID: 800793669}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
-  m_AnchorMin: {x: 0, y: 0}
-  m_AnchorMax: {x: 0, y: 0}
-  m_AnchoredPosition: {x: 0, y: 0}
-  m_SizeDelta: {x: 0, y: 0}
+  m_AnchorMin: {x: 0, y: 1}
+  m_AnchorMax: {x: 0, y: 1}
+  m_AnchoredPosition: {x: 535, y: -107.90322}
+  m_SizeDelta: {x: 106.66667, y: 215.80644}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!1 &2658599746080855834
 GameObject:

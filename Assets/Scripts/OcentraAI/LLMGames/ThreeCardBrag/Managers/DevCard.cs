@@ -2,7 +2,7 @@
 using Sirenix.OdinInspector;
 using System.Collections.Generic;
 using System.Linq;
-using UnityEngine;
+using static OcentraAI.LLMGames.Utilities.CardUtility;
 
 namespace OcentraAI.LLMGames.ThreeCardBrag.Manager
 {
@@ -35,7 +35,7 @@ namespace OcentraAI.LLMGames.ThreeCardBrag.Manager
             if (Suit == Suit.None || Rank == Rank.None)
                 return "Not Set";
 
-            return Card.GetRankSymbol(Suit, Rank, coloured);
+            return GetRankSymbol(Suit, Rank, coloured);
         }
 
         private static List<Suit> GetAvailableSuits()
@@ -60,12 +60,12 @@ namespace OcentraAI.LLMGames.ThreeCardBrag.Manager
                 if (symbol.Length == 3) // For "10♠" type symbols
                 {
                     rank = Rank.Ten;
-                    suit = Card.GetSuitFromChar(symbol[2]); 
+                    suit = GetSuitFromChar(symbol[2]); 
                 }
                 else if (symbol.Length == 2) // For "2♠", "J♠" type symbols
                 {
-                    rank = Card.GetRankFromChar(symbol[0]); 
-                    suit = Card.GetSuitFromChar(symbol[1]); 
+                    rank = GetRankFromChar(symbol[0]); 
+                    suit = GetSuitFromChar(symbol[1]); 
                 }
 
                 // Create a DevCard instance and add it to the list

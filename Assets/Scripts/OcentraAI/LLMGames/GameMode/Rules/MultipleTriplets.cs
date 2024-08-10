@@ -1,5 +1,5 @@
 ﻿using OcentraAI.LLMGames.Scriptable;
-using Sirenix.OdinInspector;
+using OcentraAI.LLMGames.Utilities;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -15,13 +15,13 @@ namespace OcentraAI.LLMGames.GameModes.Rules
         public override int BonusValue { get; protected set; } = 170;
         public override int Priority { get; protected set; } = 97;
 
-        public override bool Evaluate(List<Card> hand, out BonusDetail bonusDetail)
+        public override bool Evaluate(Hand hand, out BonusDetail bonusDetail)
         {
             bonusDetail = null;
             if (!VerifyNumberOfCards(hand)) return false;
 
             // Check for valid hand size (6 to 9 cards)
-            if (hand.Count < 6)
+            if (hand.Count() < 6)
             {
                 return false;
             }
@@ -57,12 +57,12 @@ namespace OcentraAI.LLMGames.GameModes.Rules
             string bonusCalculationDescriptions = $"{BonusValue} * {triplets.Count} * {value}";
 
 
-            List<string> descriptions = new List<string> { $"Multiple Triplets: {string.Join(", ", triplets.Select(rank => Card.GetRankSymbol(Suit.Spades, rank)))}" };
+            List<string> descriptions = new List<string> { $"Multiple Triplets: {string.Join(", ", triplets.Select(rank => CardUtility.GetRankSymbol(Suit.Spades, rank)))}" };
 
             return CreateBonusDetails(RuleName, baseBonus, Priority, descriptions, bonusCalculationDescriptions);
         }
 
-       
+
         public override bool Initialize(GameMode gameMode)
         {
             Description = "Two or more triplets of cards with different ranks.";
@@ -92,34 +92,71 @@ namespace OcentraAI.LLMGames.GameModes.Rules
             return TryCreateExample(RuleName, Description, BonusValue, playerExamples, llmExamples, playerTrumpExamples, llmTrumpExamples, gameMode.UseTrump);
         }
 
+        public override string[] CreateExampleHand(int handSize, string trumpCard = null, bool coloured = true)
+        {
+            if (handSize < 6)
+            {
+                Debug.LogError("Hand size must be at least 6 for Multiple Triplets.");
+                return Array.Empty<string>();
+
+            }
+
+            List<string> hand = new List<string>();
+            List<Rank> usedRanks = new List<Rank>();
+
+            for (int i = 0; i < 2; i++)
+            {
+                Rank tripletRank;
+                do
+                {
+                    tripletRank = (Rank)UnityEngine.Random.Range(2, 15);
+                } while (usedRanks.Contains(tripletRank));
+
+                usedRanks.Add(tripletRank);
+
+                for (int j = 0; j < 3; j++)
+                {
+                    hand.Add($"{CardUtility.GetRankSymbol((Suit)j, tripletRank, coloured)}");
+                }
+            }
+
+            for (int i = 6; i < handSize; i++)
+            {
+                Rank randomRank;
+                do
+                {
+                    randomRank = (Rank)UnityEngine.Random.Range(2, 15);
+                } while (usedRanks.Contains(randomRank));
+
+                Suit randomSuit = (Suit)UnityEngine.Random.Range(0, 4);
+
+                if (!string.IsNullOrEmpty(trumpCard) && i == handSize - 1)
+                {
+                    hand.Add(trumpCard);
+                }
+                else
+                {
+                    hand.Add($"{CardUtility.GetRankSymbol(randomSuit, randomRank, coloured)}");
+                    usedRanks.Add(randomRank);
+                }
+            }
+
+            return hand.ToArray();
+        }
+
         private string CreateExampleString(int cardCount, bool isPlayer, bool useTrump = false)
         {
             List<string[]> examples = new List<string[]>();
+            string trumpCard = useTrump ? "6♥" : null;
 
-            switch (cardCount)
+            examples.Add(CreateExampleHand(cardCount, null, isPlayer));
+            if (useTrump)
             {
-                case 6:
-                    examples.Add(new[] { "A♠", "A♥", "A♦", "K♠", "K♥", "K♦" });
-                    if (useTrump) examples.Add(new[] { "A♠", "A♥", "A♦", "K♠", "K♥", "6♥" });
-                    break;
-                case 7:
-                    examples.Add(new[] { "Q♠", "Q♥", "Q♦", "J♠", "J♥", "J♦", "9♠" });
-                    if (useTrump) examples.Add(new[] { "Q♠", "Q♥", "Q♦", "J♠", "J♥", "6♥", "9♠" });
-                    break;
-                case 8:
-                    examples.Add(new[] { "A♠", "A♥", "A♦", "K♠", "K♥", "K♦", "Q♠", "Q♥" });
-                    if (useTrump) examples.Add(new[] { "A♠", "A♥", "A♦", "K♠", "K♥", "K♦", "Q♠", "6♥" });
-                    break;
-                case 9:
-                    examples.Add(new[] { "A♠", "A♥", "A♦", "Q♠", "Q♥", "Q♦", "J♠", "J♥", "J♦" });
-                    if (useTrump) examples.Add(new[] { "A♠", "A♥", "A♦", "Q♠", "Q♥", "Q♦", "J♠", "J♥", "6♥" });
-                    break;
-                default:
-                    break;
+                examples.Add(CreateExampleHand(cardCount, trumpCard, isPlayer));
             }
 
             IEnumerable<string> exampleStrings = examples.Select(example =>
-                string.Join(", ", isPlayer ? ConvertCardSymbols(example) : example)
+                string.Join(", ", example)
             );
 
             return string.Join(Environment.NewLine, exampleStrings);

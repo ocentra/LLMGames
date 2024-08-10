@@ -1,4 +1,5 @@
 using OcentraAI.LLMGames.Authentication;
+using OcentraAI.LLMGames.GameModes;
 using OcentraAI.LLMGames.GameModes.Rules;
 using OcentraAI.LLMGames.Scriptable;
 using OcentraAI.LLMGames.ThreeCardBrag.Events;
@@ -17,7 +18,7 @@ namespace OcentraAI.LLMGames.ThreeCardBrag.Players
         [ShowInInspector, ReadOnly] public string Id { get; private set; }
         [ShowInInspector, ReadOnly] public string PlayerName { get; private set; }
         [ShowInInspector, ReadOnly] public PlayerType Type { get; private set; }
-        [ShowInInspector, ReadOnly] public List<Card> Hand { get; private set; } = new List<Card>();
+        [ShowInInspector, ReadOnly] public Hand Hand { get; private set; }
         [ShowInInspector, ReadOnly] public int Coins { get; private set; }
         [ShowInInspector, ReadOnly] public bool HasSeenHand { get; private set; } = false;
         [ShowInInspector, ReadOnly] public bool HasBetOnBlind { get; private set; } = true;
@@ -75,7 +76,7 @@ namespace OcentraAI.LLMGames.ThreeCardBrag.Players
 
             foreach (KeyValuePair<string, Card> card in WildCards)
             {
-                if (Hand.Any(handCard => handCard.Id == card.Value.Id))
+                if (Hand.Any(card.Value.Id))
                 {
                     WildCardInHand.Add(card.Key, card.Value);
                 }
@@ -94,12 +95,7 @@ namespace OcentraAI.LLMGames.ThreeCardBrag.Players
             HasSeenHand = true;
         }
 
-        public static string GetFormattedHand(List<Card> cards)
-        {
-            return string.Join(" ", cards.Select(card => card.RankSymbol));
-        }
-
-
+        
         public bool CanAffordBet(int betAmount) => Coins >= betAmount;
 
         public virtual void Bet(int amount)
@@ -150,7 +146,7 @@ namespace OcentraAI.LLMGames.ThreeCardBrag.Players
         {
             AppliedRules = new List<BaseBonusRule>();
             BonusDetails = new List<BonusDetail>();
-            HandRankSum = Hand.Sum(card => card.GetRankValue());
+            HandRankSum = Hand.Sum();
             HandValue = HandRankSum;
             List<BaseBonusRule> bonusRules = GameManager.Instance.GameMode.BonusRules;
             foreach (BaseBonusRule rule in bonusRules)
@@ -176,12 +172,12 @@ namespace OcentraAI.LLMGames.ThreeCardBrag.Players
 
         public int GetHighestCardValue()
         {
-            return Hand.Max(card => card.GetRankValue());
+            return Hand.Max();
         }
 
         public virtual void ShowHand(bool showHands = false)
         {
-            foreach (Card card in Hand)
+            foreach (Card card in Hand.Cards)
             {
                 // Debug.Log($"{PlayerName}'s card: {card.Rank} of {card.Suit}");
             }
@@ -190,27 +186,29 @@ namespace OcentraAI.LLMGames.ThreeCardBrag.Players
 
         public virtual void ResetForNewRound(DeckManager deckManager, List<Card> customHand = null)
         {
-            Hand = new List<Card>();
+           
             AppliedRules = new List<BaseBonusRule>();
             HandRankSum = 0;
 
             // this is temp solution for quick testing on dev mode 
             if (customHand is { Count: >= 3 })
             {
-                Hand = new List<Card>(customHand);
+                Hand = new Hand(customHand);
                 deckManager.RemoveCardsFromDeck(customHand);
                 HasSeenHand = true;
             }
             else
             {
+                List<Card> cards = new List<Card>();
                 for (int i = 0; i < GameManager.Instance.GameMode.NumberOfCards; i++)
                 {
-                    Hand.Add(deckManager.DrawCard());
+                    cards.Add(deckManager.DrawCard());
                 }
 
+                Hand = new Hand(cards);
             }
 
-            Hand = Hand.OrderByDescending(card => card.Rank).ToList();
+            Hand.Descending();
 
             CheckForWildCardsInHand();
             HasBetOnBlind = false;
@@ -229,12 +227,12 @@ namespace OcentraAI.LLMGames.ThreeCardBrag.Players
 
         public void SwapCard(Card floorCard, Card swapCard)
         {
-            for (int index = 0; index < Hand.Count; index++)
+            for (int index = 0; index < Hand.Count(); index++)
             {
-                Card cardInHand = Hand[index];
+                Card cardInHand = Hand.GetCard(index);
                 if (cardInHand.Suit == swapCard.Suit && cardInHand.Rank == swapCard.Rank)
                 {
-                    Hand[index] = floorCard;
+                    Hand.ReplaceCard(index, floorCard);
                     break;
                 }
             }

@@ -1,4 +1,5 @@
 using OcentraAI.LLMGames.Extensions;
+using OcentraAI.LLMGames.GameModes;
 using OcentraAI.LLMGames.Scriptable;
 using OcentraAI.LLMGames.ThreeCardBrag.Events;
 using OcentraAI.LLMGames.ThreeCardBrag.Manager;
@@ -594,9 +595,9 @@ namespace OcentraAI.LLMGames.ThreeCardBrag.UI.Controllers
         {
             if (player.HasSeenHand || isRoundEnd)
             {
-                for (int i = 0; i < player.Hand.Count; i++)
+                for (int i = 0; i < player.Hand.Count(); i++)
                 {
-                    HumanPlayerCardViews[i].SetCard(player.Hand[i]);
+                    HumanPlayerCardViews[i].SetCard(player.Hand.GetCard(i));
                     HumanPlayerCardViews[i].UpdateCardView();
                 }
             }
@@ -606,9 +607,9 @@ namespace OcentraAI.LLMGames.ThreeCardBrag.UI.Controllers
         {
             ComputerPlayingBlind.text = player.HasSeenHand ? "" : "Playing Blind";
 
-            for (int i = 0; i < player.Hand.Count; i++)
+            for (int i = 0; i < player.Hand.Count(); i++)
             {
-                ComputerPlayerCardViews[i].SetCard(player.Hand[i]);
+                ComputerPlayerCardViews[i].SetCard(player.Hand.GetCard(i));
             }
 
             if (isRoundEnd)

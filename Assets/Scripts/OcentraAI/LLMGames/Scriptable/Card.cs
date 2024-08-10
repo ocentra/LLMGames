@@ -1,10 +1,8 @@
-﻿using OcentraAI.LLMGames.Scriptable.ScriptableSingletons;
-using OcentraAI.LLMGames.ThreeCardBrag.Manager;
+﻿using OcentraAI.LLMGames.GameModes.Extensions;
 using Sirenix.OdinInspector;
-using System.Collections.Generic;
 using UnityEditor;
 using UnityEngine;
-using static OcentraAI.LLMGames.Utility;
+using static OcentraAI.LLMGames.Utilities.CardUtility;
 
 namespace OcentraAI.LLMGames.Scriptable
 {
@@ -12,12 +10,13 @@ namespace OcentraAI.LLMGames.Scriptable
     public class Card : ScriptableObject
     {
         public Suit Suit;
-
         public Rank Rank;
 
-        [Required] public Sprite Sprite;
+        [Required]
+        public Sprite Sprite;
 
-        [ShowInInspector] public string RankSymbol => GetRankSymbol(Suit, Rank);
+        [ShowInInspector]
+        public string RankSymbol => GetRankSymbol(Suit, Rank);
 
         public string Id => $"{Suit}_{Rank}";
 
@@ -26,149 +25,12 @@ namespace OcentraAI.LLMGames.Scriptable
             return (int)Rank;
         }
 
-        public string GetColorString()
-        {
-            if (Suit is Suit.Hearts or Suit.Diamonds)
-            {
-                return "Red";
-            }
-
-            return "Black";
-        }
-
-        public static Color GetColorValue(Suit suit)
-        {
-            if (suit is Suit.Hearts or Suit.Diamonds)
-            {
-                return Color.red;
-            }
-
-            return Color.black;
-        }
-
-        public static Rank GetRankFromChar(char rankChar)
-        {
-            return rankChar switch
-            {
-                '2' => Rank.Two,
-                '3' => Rank.Three,
-                '4' => Rank.Four,
-                '5' => Rank.Five,
-                '6' => Rank.Six,
-                '7' => Rank.Seven,
-                '8' => Rank.Eight,
-                '9' => Rank.Nine,
-                'J' => Rank.J,
-                'Q' => Rank.Q,
-                'K' => Rank.K,
-                'A' => Rank.A,
-                _ => Rank.None // Default to None for invalid ranks
-            };
-        }
-
-        public static Card[] ConvertToCardFromSymbols(string[] cardSymbols)
-        {
-            List<Card> cards = new List<Card>();
-
-            foreach (string symbol in cardSymbols)
-            {
-                Rank rank = Rank.Nine;
-                Suit suit = Suit.None;
-
-                if (symbol.Length == 3) // For "10♠" type symbols
-                {
-                    rank = Rank.Ten;
-                    suit = GetSuitFromChar(symbol[2]);
-                }
-                else if (symbol.Length == 2) // For "2♠", "J♠" type symbols
-                {
-                    rank = GetRankFromChar(symbol[0]);
-                    suit = GetSuitFromChar(symbol[1]);
-                }
-
-                cards.Add(Deck.Instance.GetCard(suit, rank));
-            }
-
-            return cards.ToArray();
-        }
-
-
-        public static Suit GetSuitFromChar(char suitChar)
-        {
-            return suitChar switch
-            {
-                '♠' => Suit.Spades,
-                '♥' => Suit.Hearts,
-                '♦' => Suit.Diamonds,
-                '♣' => Suit.Clubs,
-                _ => Suit.None // Default to None for invalid suits
-            };
-        }
-
-
-        public static string GetRankSymbol(Suit suit, Rank rank, bool coloured = true)
-        {
-            if (suit == Suit.None || rank == Rank.None)
-            {
-                return "None";
-            }
-
-            string symbol;
-            if (suit == Suit.Hearts)
-            {
-                symbol = coloured ? ColouredMessage("♥", Color.red) : "♥";
-            }
-            else if (suit == Suit.Diamonds)
-            {
-                symbol = coloured ? ColouredMessage("♦", Color.red) : "♦";
-            }
-            else if (suit == Suit.Clubs)
-            {
-                symbol = coloured ? ColouredMessage("♣", Color.black) : "♣";
-            }
-            else if (suit == Suit.Spades)
-            {
-                symbol = coloured ? ColouredMessage("♠", Color.black) : "♠";
-            }
-            else
-            {
-                symbol = "";
-            }
-
-            string formattedRank;
-            if (rank == Rank.A)
-            {
-                formattedRank = "A";
-            }
-            else if (rank == Rank.K)
-            {
-                formattedRank = "K";
-            }
-            else if (rank == Rank.Q)
-            {
-                formattedRank = "Q";
-            }
-            else if (rank == Rank.J)
-            {
-                formattedRank = "J";
-            }
-            else
-            {
-                formattedRank = ((int)rank).ToString();
-            }
-
-            string rankSymbol = coloured ? $"{ColouredMessage($"{formattedRank}", GetColorValue(suit))}{symbol}" : $"{formattedRank}{symbol}";
-
-            // Debug.Log($"GetRankSymbol {rankSymbol} Rank {Rank.ToString()} Suit {Suit} ");
-            return rankSymbol;
-        }
-
         public void Init(Suit suit, Rank rank)
         {
             Suit = suit;
             Rank = rank;
             AssignSprite();
-            SaveChanges();
+            this.SaveChanges();
         }
 
         [Button, ShowIf("@this.Sprite == null")]
@@ -190,7 +52,7 @@ namespace OcentraAI.LLMGames.Scriptable
             {
                 Sprite = sprite;
                 Debug.Log($"Assigned sprite from {path}");
-                SaveChanges();
+                this.SaveChanges();
             }
             else
             {
@@ -198,13 +60,6 @@ namespace OcentraAI.LLMGames.Scriptable
             }
         }
 
-        private void SaveChanges()
-        {
-            EditorUtility.SetDirty(this);
-            AssetDatabase.SaveAssets();
-            AssetDatabase.Refresh();
-        }
-
-
+  
     }
 }

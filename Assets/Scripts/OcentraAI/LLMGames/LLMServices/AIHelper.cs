@@ -87,7 +87,7 @@ namespace OcentraAI.LLMGames.LLMServices
 
         private string GetHandDetails()
         {
-            return string.Join(", ", PlayerManager.ComputerPlayer.Hand.Select((card, index) => $"Card {index + 1}: {card.Rank} of {card.Suit}"));
+            return string.Join(", ", PlayerManager.ComputerPlayer.Hand.Cards.Select((card, index) => $"Card {index + 1}: {card.Rank} of {card.Suit}"));
         }
 
         private  string GetGameStateDetails()

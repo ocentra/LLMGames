@@ -1,4 +1,5 @@
 using OcentraAI.LLMGames.Extensions;
+using OcentraAI.LLMGames.GameModes;
 using OcentraAI.LLMGames.GameModes.Rules;
 using OcentraAI.LLMGames.ThreeCardBrag.Manager;
 using OcentraAI.LLMGames.ThreeCardBrag.Players;
@@ -100,7 +101,7 @@ namespace OcentraAI.LLMGames
 
                     if (playerPanel.HandView != null)
                     {
-                        playerPanel.HandView.text = Player.GetFormattedHand(player.Hand);
+                        playerPanel.HandView.text = player.Hand.GetFormattedHand();
                     }
                 }
 

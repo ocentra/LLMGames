@@ -72,12 +72,14 @@
     <Compile Include="Assets\Scripts\OcentraAI\LLMGames\ThreeCardBrag\EventBus\UpdateGameState.cs" />
     <Compile Include="Assets\Scripts\OcentraAI\LLMGames\GameMode\GameMode.cs" />
     <Compile Include="Assets\Scripts\OcentraAI\LLMGames\LLMServices\OpenAIResponse.cs" />
+    <Compile Include="Assets\Scripts\OcentraAI\LLMGames\GameMode\Hand.cs" />
     <Compile Include="Assets\Scripts\OcentraAI\LLMGames\ThreeCardBrag\UI\Controllers\UIController.cs" />
     <Compile Include="Assets\Scripts\OcentraAI\LLMGames\Authentication\AuthenticationManager.cs" />
     <Compile Include="Assets\Scripts\OcentraAI\LLMGames\Authentication\PlayerData.cs" />
     <Compile Include="Assets\Scripts\OcentraAI\LLMGames\GameMode\ThreeCardGameMode.cs" />
     <Compile Include="Assets\Scripts\OcentraAI\LLMGames\LLMServices\BaseLLMService.cs" />
     <Compile Include="Assets\Scripts\OcentraAI\LLMGames\GameScreens\RulesScreen.cs" />
+    <Compile Include="Assets\Scripts\OcentraAI\LLMGames\GameMode\CardUtility.cs" />
     <Compile Include="Assets\Scripts\OcentraAI\LLMGames\GameMode\Rules\DifferentColorsSequence.cs" />
     <Compile Include="Assets\Scripts\OcentraAI\LLMGames\LLMServices\LLMServiceFactory.cs" />
     <Compile Include="Assets\Scripts\OcentraAI\LLMGames\Scriptable\ScriptableSingletons\TrumpBonusValues.cs" />
@@ -120,6 +122,7 @@
     <Compile Include="Assets\Scripts\OcentraAI\LLMGames\ThreeCardBrag\Managers\DevCard.cs" />
     <Compile Include="Assets\Scripts\OcentraAI\LLMGames\GameScreens\WelcomeScreen.cs" />
     <Compile Include="Assets\Scripts\OcentraAI\LLMGames\ThreeCardBrag\Managers\DeckManager.cs" />
+    <Compile Include="Assets\Scripts\OcentraAI\LLMGames\GameMode\HandExtensions.cs" />
     <Compile Include="Assets\Scripts\OcentraAI\LLMGames\LLMServices\LLMProviderConfig.cs" />
     <Compile Include="Assets\Scripts\OcentraAI\LLMGames\ThreeCardBrag\UI\BonusRuleUI.cs" />
     <Compile Include="Assets\Scripts\OcentraAI\LLMGames\GameScreens\PauseScreen.cs" />
@@ -131,6 +134,7 @@
     <Compile Include="Assets\Scripts\OcentraAI\LLMGames\ThreeCardBrag\EventBus\UpdateRoundDisplay.cs" />
     <Compile Include="Assets\Scripts\OcentraAI\LLMGames\LLMServices\CardRanking.cs" />
     <Compile Include="Assets\Scripts\OcentraAI\LLMGames\Utilities\DifficultyLevels.cs" />
+    <Compile Include="Assets\Scripts\OcentraAI\LLMGames\GameMode\CardExtensions.cs" />
     <Compile Include="Assets\Scripts\OcentraAI\LLMGames\LLMServices\LLMConfig.cs" />
     <Compile Include="Assets\Scripts\OcentraAI\LLMGames\GameScreens\GameOverScreen.cs" />
     <Compile Include="Assets\Scripts\OcentraAI\LLMGames\Utilities\Utility.cs" />

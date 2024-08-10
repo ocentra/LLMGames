@@ -1,5 +1,8 @@
 ﻿using OcentraAI.LLMGames.Scriptable;
+using OcentraAI.LLMGames.Utilities;
+using System;
 using System.Collections.Generic;
+using System.Linq;
 using UnityEngine;
 
 namespace OcentraAI.LLMGames.GameModes.Rules
@@ -13,7 +16,7 @@ namespace OcentraAI.LLMGames.GameModes.Rules
         public override int BonusValue { get; protected set; } = 140;
         public override int Priority { get; protected set; } = 94;
 
-        public override bool Evaluate(List<Card> hand, out BonusDetail bonusDetail)
+        public override bool Evaluate(Hand hand, out BonusDetail bonusDetail)
         {
             bonusDetail = null;
             if (!VerifyNumberOfCards(hand)) return false;
@@ -22,11 +25,11 @@ namespace OcentraAI.LLMGames.GameModes.Rules
 
             Card trumpCard = GetTrumpCard();
 
-            if (hand.Count >= 5)
+            if (hand.Count() >= 5)
             {
                 Rank? fourOfAKindRank = FindNOfAKind(hand, 4);
 
-                if (fourOfAKindRank.HasValue && !IsRankTrumpOrAce(fourOfAKindRank.Value, trumpCard) && HasTrumpCard(hand))
+                if (fourOfAKindRank.HasValue && !IsRankTrumpOrAce(fourOfAKindRank.Value, trumpCard) && hand.HasTrumpCard(trumpCard))
                 {
                     bonusDetail = CalculateBonus(hand, fourOfAKindRank.Value);
                     return true;
@@ -41,7 +44,7 @@ namespace OcentraAI.LLMGames.GameModes.Rules
             return rank == trumpCard.Rank || rank == Rank.A;
         }
 
-        private BonusDetail CalculateBonus(List<Card> hand, Rank rank)
+        private BonusDetail CalculateBonus(Hand hand, Rank rank)
         {
             int baseBonus = BonusValue * ((int)rank * 5);
             string bonusCalculationDescriptions = $"{BonusValue} * ( {(int)rank} * 5)";
@@ -82,54 +85,52 @@ namespace OcentraAI.LLMGames.GameModes.Rules
             return TryCreateExample(RuleName, Description, BonusValue, playerExamples, llmExamples, null, null, gameMode.UseTrump);
         }
 
-        private string CreateExampleString(int cardCount, bool isPlayer)
+        public override string[] CreateExampleHand(int handSize, string trumpCard = null, bool coloured = true)
         {
-            List<string> exampleCards = new List<string>();
-            string trumpCardSymbol = Card.GetRankSymbol(Suit.Hearts, Rank.Six, isPlayer);
-
-            switch (cardCount)
+            if (handSize < 5 || string.IsNullOrEmpty(trumpCard))
             {
-                case 5:
-                    exampleCards.AddRange(GetExampleCards(isPlayer, 5, 4, trumpCardSymbol));
-                    break;
-                case 6:
-                    exampleCards.AddRange(GetExampleCards(isPlayer, 6, 4, trumpCardSymbol));
-                    break;
-                case 7:
-                    exampleCards.AddRange(GetExampleCards(isPlayer, 7, 4, trumpCardSymbol));
-                    break;
-                case 8:
-                    exampleCards.AddRange(GetExampleCards(isPlayer, 8, 4, trumpCardSymbol));
-                    break;
-                case 9:
-                    exampleCards.AddRange(GetExampleCards(isPlayer, 9, 4, trumpCardSymbol));
-                    break;
-                default:
-                    break;
+                Debug.LogError("Hand size must be at least 5 and trump card must be specified for Five of a Kind.");
+                return Array.Empty<string>();
             }
 
-            return string.Join(" ", exampleCards);
+            List<string> hand = new List<string>();
+
+            Rank fiveOfAKindRank = (Rank)UnityEngine.Random.Range(2, 15);
+
+            foreach (Suit suit in Enum.GetValues(typeof(Suit)))
+            {
+                hand.Add($"{CardUtility.GetRankSymbol(suit, fiveOfAKindRank, coloured)}");
+            }
+
+            hand.Add(trumpCard);
+
+            for (int i = 5; i < handSize; i++)
+            {
+                Rank randomRank;
+                do
+                {
+                    randomRank = (Rank)UnityEngine.Random.Range(2, 15);
+                } while (randomRank == fiveOfAKindRank);
+
+                Suit randomSuit = (Suit)UnityEngine.Random.Range(0, 4);
+                hand.Add($"{CardUtility.GetRankSymbol(randomSuit, randomRank, coloured)}");
+            }
+
+            return hand.ToArray();
         }
 
-        private List<string> GetExampleCards(bool isPlayer, int cardCount, int fourOfAKindCount, string trumpCardSymbol)
+        private string CreateExampleString(int cardCount, bool isPlayer, bool useTrump = false)
         {
-            List<string> exampleCards = new List<string>();
-            string fourOfAKindCardSymbol = isPlayer ? Card.GetRankSymbol(Suit.Spades, Rank.Five) : "5♠";
+            List<string[]> examples = new List<string[]>();
+            string trumpCard = "6♥"; // Trump card is always used in this rule
 
-            for (int i = 0; i < fourOfAKindCount; i++)
-            {
-                exampleCards.Add(fourOfAKindCardSymbol);
-            }
+            examples.Add(CreateExampleHand(cardCount, trumpCard, isPlayer));
 
-            exampleCards.Add(trumpCardSymbol);
+            IEnumerable<string> exampleStrings = examples.Select(example =>
+                string.Join(", ", example)
+            );
 
-            for (int i = fourOfAKindCount + 1; i < cardCount; i++)
-            {
-                string fillerCardSymbol = isPlayer ? Card.GetRankSymbol(Suit.Hearts, Rank.Q) : "Q♥";
-                exampleCards.Add(fillerCardSymbol);
-            }
-
-            return exampleCards;
+            return string.Join(Environment.NewLine, exampleStrings);
         }
     }
 }

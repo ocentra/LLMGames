@@ -1,4 +1,5 @@
 ﻿using OcentraAI.LLMGames.Scriptable;
+using OcentraAI.LLMGames.Utilities;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -16,7 +17,40 @@ namespace OcentraAI.LLMGames.GameModes.Rules
 
         private readonly Rank[] ranksInOrder = { Rank.A, Rank.K, Rank.Q };
 
-        public override bool Evaluate(List<Card> hand, out BonusDetail bonusDetail)
+
+
+        public override bool Initialize(GameMode gameMode)
+        {
+            Description = "Full House with exactly A, K, Q in order, using trump as replacement if available.";
+
+            List<string> playerExamples = new List<string>();
+            List<string> llmExamples = new List<string>();
+            List<string> playerTrumpExamples = new List<string>();
+            List<string> llmTrumpExamples = new List<string>();
+
+            for (int cardCount = 3; cardCount <= gameMode.NumberOfCards; cardCount++)
+            {
+                string playerExample = CreateExampleString(cardCount, true);
+                string llmExample = CreateExampleString(cardCount, false);
+
+                playerExamples.Add(playerExample);
+                llmExamples.Add(llmExample);
+
+                if (gameMode.UseTrump)
+                {
+                    string playerTrumpExample = CreateExampleString(cardCount, true, true);
+                    string llmTrumpExample = CreateExampleString(cardCount, false, true);
+                    playerTrumpExamples.Add(playerTrumpExample);
+                    llmTrumpExamples.Add(llmTrumpExample);
+                }
+            }
+
+            return TryCreateExample(RuleName, Description, BonusValue, playerExamples, llmExamples, playerTrumpExamples, llmTrumpExamples, gameMode.UseTrump);
+        }
+
+
+
+        public override bool Evaluate(Hand hand, out BonusDetail bonusDetail)
         {
             bonusDetail = null;
             if (!VerifyNumberOfCards(hand)) return false;
@@ -30,10 +64,8 @@ namespace OcentraAI.LLMGames.GameModes.Rules
             Card trumpCard = GameMode.UseTrump ? GetTrumpCard() : null;
             bool hasTrump = trumpCard != null && hand.Contains(trumpCard);
 
-
-
-            int requiredCount = Math.Min(4, hand.Count);
-            int availableSlots = hand.Count;
+            int requiredCount = Math.Min(3, hand.Count() - 2);
+            int availableSlots = hand.Count();
 
             foreach (Rank rank in ranksInOrder)
             {
@@ -50,7 +82,7 @@ namespace OcentraAI.LLMGames.GameModes.Rules
                 if (count == requiredCount)
                 {
                     availableSlots -= count;
-                    requiredCount = Math.Min(4, availableSlots);
+                    requiredCount = Math.Min(3, availableSlots);
 
                     if (availableSlots == 0)
                     {
@@ -67,10 +99,10 @@ namespace OcentraAI.LLMGames.GameModes.Rules
             return false; // Shouldn't reach here, but just in case
         }
 
-        private BonusDetail CalculateBonus(List<Card> hand)
+        private BonusDetail CalculateBonus(Hand hand)
         {
-            int baseBonus = BonusValue * CalculateHandValue(hand);
-            string bonusCalculationDescriptions = $"{BonusValue} * {CalculateHandValue(hand)}";
+            int baseBonus = BonusValue * hand.Sum();
+            string bonusCalculationDescriptions = $"{BonusValue} * {hand.Sum()}";
 
             int additionalBonus = 0;
             List<string> descriptions = new List<string> { "Full House" };
@@ -82,78 +114,74 @@ namespace OcentraAI.LLMGames.GameModes.Rules
             }
             if (additionalBonus > 0)
             {
-                bonusCalculationDescriptions = $"{BonusValue} * {CalculateHandValue(hand)} + {additionalBonus} ";
+                bonusCalculationDescriptions = $"{BonusValue} * {hand.Sum()} + {additionalBonus} ";
             }
             return CreateBonusDetails(RuleName, baseBonus, Priority, descriptions, bonusCalculationDescriptions, additionalBonus);
         }
 
-        public override bool Initialize(GameMode gameMode)
+        public override string[] CreateExampleHand(int handSize, string trumpCard = null, bool coloured = true)
         {
-            Description = "Full House with exactly A, K, Q in order, using trump as replacement if available";
-
-            List<string> playerExamples = new List<string>();
-            List<string> llmExamples = new List<string>();
-            List<string> playerTrumpExamples = new List<string>();
-            List<string> llmTrumpExamples = new List<string>();
-
-            int cardCount = gameMode.NumberOfCards;
-            string playerExample = CreateExampleString(cardCount, true);
-            string llmExample = CreateExampleString(cardCount, false);
-
-            playerExamples.Add(playerExample);
-            llmExamples.Add(llmExample);
-
-            if (gameMode.UseTrump)
+            if (handSize < 3)
             {
-                string playerTrumpExample = CreateExampleString(cardCount, true, true);
-                string llmTrumpExample = CreateExampleString(cardCount, false, true);
-                playerTrumpExamples.Add(playerTrumpExample);
-                llmTrumpExamples.Add(llmTrumpExample);
+                Debug.LogError("Hand size must be at least 3 for a Full House.");
+                return Array.Empty<string>();
             }
 
-            return TryCreateExample(RuleName, Description, BonusValue, playerExamples, llmExamples, playerTrumpExamples, llmTrumpExamples, gameMode.UseTrump);
+            List<string> hand = new List<string>();
+
+            Rank trumpRank = !string.IsNullOrEmpty(trumpCard) ? CardUtility.GetRankFromSymbol(trumpCard) : Rank.None;
+
+            Rank highestRank = ranksInOrder.FirstOrDefault(rank => rank != trumpRank);
+            Rank secondHighestRank = ranksInOrder.FirstOrDefault(rank => rank != highestRank && rank != trumpRank);
+
+            if (highestRank == Rank.None || secondHighestRank == Rank.None)
+            {
+                Debug.LogError("Invalid rank assignment, check the logic.");
+                return Array.Empty<string>();
+            }
+
+            int highestRankCount = Math.Min(handSize, 4); 
+            for (int i = 0; i < highestRankCount; i++)
+            {
+                Suit suit = (Suit)((i % 4) + 1); 
+                hand.Add($"{CardUtility.GetRankSymbol(suit, highestRank, coloured)}");
+            }
+
+            for (int i = highestRankCount; i < handSize; i++)
+            {
+                if (i == handSize - 1 && !string.IsNullOrEmpty(trumpCard))
+                {
+                    hand.Add(trumpCard); 
+                }
+                else
+                {
+                    Rank randomRank;
+                    do
+                    {
+                        randomRank = (Rank)UnityEngine.Random.Range(2, 15);
+                    } while (randomRank == highestRank || randomRank == trumpRank); 
+
+                    Suit randomSuit = (Suit)UnityEngine.Random.Range(1, 5); 
+                    hand.Add($"{CardUtility.GetRankSymbol(randomSuit, randomRank, coloured)}");
+                }
+            }
+
+            return hand.ToArray();
         }
+
 
         private string CreateExampleString(int cardCount, bool isPlayer, bool useTrump = false)
         {
-            List<string[]> examples = new List<string[]>();
+            string trumpCard = "6♥";
 
-            switch (cardCount)
+            List<string[]> examples = new List<string[]> { CreateExampleHand(cardCount, trumpCard, isPlayer) };
+
+            if (useTrump)
             {
-                case 3:
-                    examples.Add(new[] { "A♠", "A♦", "A♣" });
-                    if (useTrump) examples.Add(new[] { "A♠", "A♦", "6♥" });
-                    break;
-                case 4:
-                    examples.Add(new[] { "A♠", "A♦", "A♣", "A♥" });
-                    if (useTrump) examples.Add(new[] { "A♠", "A♦", "A♣", "6♥" });
-                    break;
-                case 5:
-                    examples.Add(new[] { "A♠", "A♦", "A♣", "A♥", "K♠" });
-                    if (useTrump) examples.Add(new[] { "A♠", "A♦", "A♣", "A♥", "6♥" });
-                    break;
-                case 6:
-                    examples.Add(new[] { "A♠", "A♦", "A♣", "A♥", "K♠", "K♦" });
-                    if (useTrump) examples.Add(new[] { "A♠", "A♦", "A♣", "A♥", "K♠", "6♥" });
-                    break;
-                case 7:
-                    examples.Add(new[] { "A♠", "A♦", "A♣", "A♥", "K♠", "K♦", "K♣" });
-                    if (useTrump) examples.Add(new[] { "A♠", "A♦", "A♣", "A♥", "K♠", "K♦", "6♥" });
-                    break;
-                case 8:
-                    examples.Add(new[] { "A♠", "A♦", "A♣", "A♥", "K♠", "K♦", "K♣", "K♥" });
-                    if (useTrump) examples.Add(new[] { "A♠", "A♦", "A♣", "A♥", "K♠", "K♦", "K♣", "6♥" });
-                    break;
-                case 9:
-                    examples.Add(new[] { "A♠", "A♦", "A♣", "A♥", "K♠", "K♦", "K♣", "K♥", "Q♠" });
-                    if (useTrump) examples.Add(new[] { "A♠", "A♦", "A♣", "A♥", "K♠", "K♦", "K♣", "K♥", "6♥" });
-                    break;
-                default:
-                    break;
+                examples.Add(CreateExampleHand(cardCount, trumpCard, isPlayer));
             }
 
-            IEnumerable<string> exampleStrings = examples.Select(example =>
-                string.Join(", ", isPlayer ? ConvertCardSymbols(example) : example)
+            IEnumerable<string> exampleStrings = examples.Select(example => string.Join(", ", example.Where(card => !card.Contains("None")))
             );
 
             return string.Join(Environment.NewLine, exampleStrings);

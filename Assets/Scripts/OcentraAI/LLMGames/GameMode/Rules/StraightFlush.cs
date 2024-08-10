@@ -1,4 +1,6 @@
 using OcentraAI.LLMGames.Scriptable;
+using OcentraAI.LLMGames.Utilities;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using UnityEngine;
@@ -13,13 +15,12 @@ namespace OcentraAI.LLMGames.GameModes.Rules
         public override int BonusValue { get; protected set; } = 180;
         public override int Priority { get; protected set; } = 98;
 
-        public override bool Evaluate(List<Card> hand, out BonusDetail bonusDetail)
+        public override bool Evaluate(Hand hand, out BonusDetail bonusDetail)
         {
             bonusDetail = null;
             if (!VerifyNumberOfCards(hand)) return false;
 
-            List<int> ranks = hand.Select(card => (int)card.Rank).ToList();
-            Suit suit = hand[0].Suit;
+            Suit suit = hand.Cards[0].Suit;
 
             // Check for royal flush
             if (IsRoyalSequence(hand))
@@ -28,7 +29,7 @@ namespace OcentraAI.LLMGames.GameModes.Rules
             }
 
             // Check for natural straight flush
-            if (hand.All(card => card.Suit == suit) && IsSequence(hand))
+            if (IsSameSuits(hand) && IsSequence(hand))
             {
                 bonusDetail = CalculateBonus(hand, false);
                 return true;
@@ -41,9 +42,10 @@ namespace OcentraAI.LLMGames.GameModes.Rules
                 bool hasTrumpCard = HasTrumpCard(hand);
                 if (hasTrumpCard)
                 {
-                    List<Card> nonTrumpCards = hand.Where(c => c != trumpCard).ToList();
-                    bool canFormStraightFlush = (nonTrumpCards.All(card => card.Suit == suit) && CanFormSequenceWithWild(nonTrumpCards.Select(c => (int)c.Rank).ToList())) ||
-                                                (IsSequence(hand) && nonTrumpCards.All(c => c.Suit == suit));
+                    Hand trumpHand = new Hand(hand.Cards.Where(c => c != trumpCard).ToArray());
+
+                    bool canFormStraightFlush = (IsSameSuits(trumpHand) && CanFormSequenceWithWild(trumpHand.Cards.Select(c => (int)c.Rank).ToList())) ||
+                                                (IsSequence(hand) && IsSameSuits(trumpHand));
 
                     if (canFormStraightFlush)
                     {
@@ -56,10 +58,10 @@ namespace OcentraAI.LLMGames.GameModes.Rules
             return false;
         }
 
-        private BonusDetail CalculateBonus(List<Card> hand, bool isTrumpAssisted)
+        private BonusDetail CalculateBonus(Hand hand, bool isTrumpAssisted)
         {
-            int baseBonus = BonusValue * CalculateHandValue(hand);
-            string bonusCalculationDescriptions = $"{BonusValue} * {CalculateHandValue(hand)}";
+            int baseBonus = BonusValue * hand.Sum();
+            string bonusCalculationDescriptions = $"{BonusValue} * {hand.Sum()}";
 
             int additionalBonus = 0;
             List<string> descriptions = new List<string> { $"Straight Flush:" };
@@ -69,7 +71,7 @@ namespace OcentraAI.LLMGames.GameModes.Rules
                 additionalBonus += GameMode.TrumpBonusValues.StraightFlushBonus;
                 descriptions.Add($"Trump Card Bonus: +{GameMode.TrumpBonusValues.StraightFlushBonus}");
 
-                List<Card> orderedHand = hand.OrderBy(card => (int)card.Rank).ToList();
+                Hand orderedHand = new Hand(hand.Cards.OrderBy(card => (int)card.Rank).ToArray());
                 Card trumpCard = GetTrumpCard();
 
                 // Check for CardInMiddleBonus
@@ -88,43 +90,77 @@ namespace OcentraAI.LLMGames.GameModes.Rules
             }
             if (additionalBonus > 0)
             {
-                bonusCalculationDescriptions = $"{BonusValue} * {CalculateHandValue(hand)} + {additionalBonus} ";
+                bonusCalculationDescriptions = $"{BonusValue} * {hand.Sum()} + {additionalBonus} ";
             }
             return CreateBonusDetails(RuleName, baseBonus, Priority, descriptions, bonusCalculationDescriptions, additionalBonus);
         }
 
+        public override string[] CreateExampleHand(int handSize, string trumpCard = null, bool coloured = true)
+        {
+            if (handSize < 3)
+            {
+                Debug.LogError("Hand size must be at least 3 for a Straight Flush.");
+                return Array.Empty<string>();
+            }
+
+            List<string> hand = new List<string>();
+            Suit flushSuit = CardUtility.GetRandomSuit();
+            List<Rank> selectedRanks = CardUtility.SelectRanks(handSize, allowSequence: true, sameSuit: true, fixedSuit: flushSuit);
+            selectedRanks.Sort();
+
+
+            for (int i = 0; i < handSize; i++)
+            {
+                if (!string.IsNullOrEmpty(trumpCard) && i == handSize - 1)
+                {
+                    hand.Add(trumpCard);
+                }
+                else
+                {
+                    hand.Add(CardUtility.GetRankSymbol(flushSuit, selectedRanks[i], coloured));
+                }
+            }
+
+            return hand.ToArray();
+        }
+
+        private string CreateExampleString(int cardCount, bool isPlayer, bool useTrump = false)
+        {
+            List<string[]> examples = new List<string[]>();
+            string trumpCard = useTrump ? CardUtility.GetRankSymbol(Suit.Hearts, Rank.Six, isPlayer) : null;
+
+            examples.Add(CreateExampleHand(cardCount, null, isPlayer));
+            if (useTrump)
+            {
+                examples.Add(CreateExampleHand(cardCount, trumpCard, isPlayer));
+            }
+
+            IEnumerable<string> exampleStrings = examples.Select(example =>
+                string.Join(", ", example)
+            );
+
+            return string.Join(Environment.NewLine, exampleStrings);
+        }
+
         public override bool Initialize(GameMode gameMode)
         {
-            Description = "A sequence of cards in rank and all of the same suit, optionally considering Trump Wild Card.";
+            Description = "A sequence of cards in the same suit, optionally considering Trump Wild Card.";
 
             List<string> playerExamples = new List<string>();
             List<string> llmExamples = new List<string>();
             List<string> playerTrumpExamples = new List<string>();
             List<string> llmTrumpExamples = new List<string>();
 
-            string playerTrumpCardSymbol = Card.GetRankSymbol(Suit.Hearts, Rank.Six);
-            string llmTrumpCardSymbol = Card.GetRankSymbol(Suit.Hearts, Rank.Six, false);
-
-            List<int> sequence = GetSequence(gameMode.NumberOfCards);
-            Rank fromRank = (Rank)sequence.First();
-            Rank toRank = (Rank)sequence.Last();
-            Description = $"A sequence of cards from {fromRank} to {toRank} in the same suit";
-
-            string playerExample = string.Join(", ", sequence.Select(rank => Card.GetRankSymbol(Suit.Spades, (Rank)rank)));
-            string llmExample = string.Join(", ", sequence.Select(rank => Card.GetRankSymbol(Suit.Spades, (Rank)rank, false)));
-
-            playerExamples.Add(playerExample);
-            llmExamples.Add(llmExample);
-
-            if (gameMode.UseTrump)
+            for (int cardCount = 3; cardCount <= gameMode.NumberOfCards; cardCount++)
             {
-                IEnumerable<string> trumpSequence = sequence.Take(gameMode.NumberOfCards - 1).Concat(new[] { (int)Rank.Six }).Select(rank => Card.GetRankSymbol(Suit.Hearts, (Rank)rank));
-                string trumpPlayerExample = string.Join(", ", trumpSequence);
-                playerTrumpExamples.Add($"{trumpPlayerExample} (Trump: {playerTrumpCardSymbol})");
+                playerExamples.Add(CreateExampleString(cardCount, true, false));
+                llmExamples.Add(CreateExampleString(cardCount, false, false));
 
-                IEnumerable<string> sequenceLLM = sequence.Take(gameMode.NumberOfCards - 1).Concat(new[] { (int)Rank.Six }).Select(rank => Card.GetRankSymbol(Suit.Hearts, (Rank)rank, false));
-                string llmTrumpExample = string.Join(", ", sequenceLLM);
-                llmTrumpExamples.Add($"{llmTrumpExample} (Trump: {llmTrumpCardSymbol})");
+                if (gameMode.UseTrump)
+                {
+                    playerTrumpExamples.Add(CreateExampleString(cardCount, true, true));
+                    llmTrumpExamples.Add(CreateExampleString(cardCount, false, true));
+                }
             }
 
             return TryCreateExample(RuleName, Description, BonusValue, playerExamples, llmExamples, playerTrumpExamples, llmTrumpExamples, gameMode.UseTrump);

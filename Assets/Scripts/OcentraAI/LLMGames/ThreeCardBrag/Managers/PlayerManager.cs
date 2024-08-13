@@ -14,9 +14,7 @@ namespace OcentraAI.LLMGames.ThreeCardBrag.Manager
 
         [ShowInInspector, ReadOnly] private readonly HashSet<string> foldedPlayers = new HashSet<string>();
 
-        // Players
-        [ShowInInspector, ReadOnly] public HumanPlayer HumanPlayer { get; set; }
-        [ShowInInspector, ReadOnly] public ComputerPlayer ComputerPlayer { get; set; }
+
         private DeckManager DeckManager => DeckManager.Instance;
         private ScoreManager ScoreManager => ScoreManager.Instance;
         private TurnManager TurnManager => TurnManager.Instance;
@@ -26,29 +24,36 @@ namespace OcentraAI.LLMGames.ThreeCardBrag.Manager
         protected override void Awake()
         {
             base.Awake();
-           
+
         }
 
 
         public void AddPlayer(PlayerData playerData, PlayerType playerType)
         {
-            Player player = default;
             switch (playerType)
             {
                 case PlayerType.Human:
-                    player = new HumanPlayer(playerData, GameMode.InitialPlayerCoins);
-                    HumanPlayer = (HumanPlayer)player; // todo temp for now 2 player setup need to think once multiplayer
+
+                    HumanPlayer humanPlayer = new HumanPlayer(playerData, GameMode.InitialPlayerCoins);
+                    if (!Players.Contains(humanPlayer))
+                    {
+                        Players.Add(humanPlayer);
+                    }
+
                     break;
+
                 case PlayerType.Computer:
-                    player = new ComputerPlayer(playerData, GameMode.InitialPlayerCoins);
-                    ComputerPlayer = (ComputerPlayer)player; // todo temp for now 2 player setup need to think once multiplayer
+
+                    ComputerPlayer computerPlayer = new ComputerPlayer(playerData, GameMode.InitialPlayerCoins);
+                    if (!Players.Contains(computerPlayer))
+                    {
+                        Players.Add(computerPlayer);
+                    }
+
                     break;
             }
 
-            if (player != default && !Players.Contains(player))
-            {
-                Players.Add(player);
-            }
+
         }
 
         public void ResetForNewGame()
@@ -66,34 +71,50 @@ namespace OcentraAI.LLMGames.ThreeCardBrag.Manager
         {
             foldedPlayers.Clear();
 
+            (HumanPlayer humanPlayer, bool humanInitialized) = (GetHumanPlayer(), false);
+            (ComputerPlayer computerPlayer, bool compInitialized) = (GetComputerPlayer(), false);
+
+            if (DevModeManager.Instance != null && DevModeManager.Instance.TryGetDevHands(out Hand humanHand, out Hand computerHand))
+            {
+                humanInitialized = TryInitializePlayerHand(humanPlayer, humanHand);
+                compInitialized = TryInitializePlayerHand(computerPlayer, computerHand);
+            }
+
             foreach (Player player in Players)
             {
-                if (DevModeManager.Instance != null)
+                if ((player == humanPlayer && humanInitialized) || (player == computerPlayer && compInitialized))
                 {
-                    DevModeManager.Instance.ApplyDevHandToPlayer(player, DeckManager);
+                    continue;
                 }
-                else
-                {
-                    player.ResetForNewRound(DeckManager);
-                }
+                player.ResetForNewRound(DeckManager);
             }
+        }
+
+        private bool TryInitializePlayerHand(Player player, Hand customHand)
+        {
+            if (customHand != null && customHand.VerifyHand(GameManager.Instance.GameMode, GameManager.Instance.GameMode.NumberOfCards))
+            {
+                player.ResetForNewRound(DeckManager, customHand);
+                return true;
+            }
+            return false;
         }
 
 
         public bool FoldPlayer()
         {
             TurnManager.CurrentPlayer.Fold();
-            return foldedPlayers.Add(TurnManager.CurrentPlayer.Id);
+            return foldedPlayers.Add(TurnManager.CurrentPlayer.PlayerData.PlayerID);
         }
 
         public List<Player> GetActivePlayers()
         {
-            return Players.Where(p => !foldedPlayers.Contains(p.Id)).ToList();
+            return Players.Where(player => !foldedPlayers.Contains(player.PlayerData.PlayerID)).ToList();
         }
 
         public Player GetPlayerById(string playerId)
         {
-            return Players.FirstOrDefault(p => p.Id == playerId);
+            return Players.FirstOrDefault(player => player.PlayerData.PlayerID == playerId);
         }
 
         public bool IsRoundOver()
@@ -101,20 +122,32 @@ namespace OcentraAI.LLMGames.ThreeCardBrag.Manager
             return GetActivePlayers().Count <= 1;
         }
 
-        public bool GetHumanPlayer(string playerId, out HumanPlayer player)
+        public HumanPlayer GetHumanPlayer(string playerId)
         {
-            player = default;
 
-            foreach (Player p in Players)
+            foreach (Player player in Players)
             {
-                if (p.Type == PlayerType.Human && p.PlayerData.PlayerID == playerId && p is HumanPlayer humanPlayer)
+                if (player.Type == PlayerType.Human && player.PlayerData.PlayerID == playerId && player is HumanPlayer humanPlayer)
                 {
-                    player = humanPlayer;
-                    return true;
+                    return humanPlayer;
                 }
             }
 
-            return false;
+            return null;
+        }
+
+        public HumanPlayer GetHumanPlayer()
+        {
+
+            foreach (Player player in Players)
+            {
+                if (player.Type == PlayerType.Human && player.PlayerData.PlayerID == AuthenticationManager.Instance.PlayerData.PlayerID && player is HumanPlayer humanPlayer)
+                {
+                    return humanPlayer;
+                }
+            }
+
+            return null;
         }
 
         public ComputerPlayer GetComputerPlayer()

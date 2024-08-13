@@ -245,7 +245,7 @@ namespace OcentraAI.LLMGames.ThreeCardBrag.Manager
             RoundRecord roundRecord = new RoundRecord
             {
                 RoundNumber = TurnManager.CurrentRound,
-                WinnerId = winner?.Id,
+                WinnerId = winner?.PlayerData.PlayerID,
                 PotAmount = potAmount,
                 PlayerRecords = PlayerManager.GetAllPlayers().Select(player => new PlayerRecord(player)).ToList()
             };
@@ -277,7 +277,7 @@ namespace OcentraAI.LLMGames.ThreeCardBrag.Manager
         {
             if (!ValidateBet(betAmount))
             {
-                Debug.LogError($"Invalid bet: Player {TurnManager.CurrentPlayer.Id}, Amount: {betAmount}, Player Coins: {TurnManager.CurrentPlayer.Coins}");
+                Debug.LogError($"Invalid bet: Player {TurnManager.CurrentPlayer.PlayerData.PlayerID}, Amount: {betAmount}, Player Coins: {TurnManager.CurrentPlayer.Coins}");
                 return false;
             }
             TurnManager.CurrentPlayer.Bet(betAmount);

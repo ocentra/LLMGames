@@ -40,7 +40,7 @@ namespace OcentraAI.LLMGames.ThreeCardBrag.Rules
         public int FiveOfKindBonus = 25;
 
         [Tooltip("Bonus for FullHouseBonus")] 
-        public int FullHouseBonus = 35;
+        public int FullHouseBonus = 100;
 
         public int StraightBonus = 25;
         public int FlushBonus = 20;

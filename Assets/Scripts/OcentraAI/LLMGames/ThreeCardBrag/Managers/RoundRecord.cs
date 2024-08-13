@@ -29,8 +29,8 @@ namespace OcentraAI.LLMGames.ThreeCardBrag.Manager
 
         public PlayerRecord(Player player)
         {
-            PlayerName = player.PlayerName;
-            PlayerId = player.Id;
+            PlayerName = player.PlayerData.PlayerName;
+            PlayerId = player.PlayerData.PlayerID;
             Hand = player.Hand;
             HandValue = player.HandValue;
             HandRankSum = player.HandRankSum;

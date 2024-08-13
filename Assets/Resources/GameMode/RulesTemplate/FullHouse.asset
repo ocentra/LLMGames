@@ -26,7 +26,7 @@ MonoBehaviour:
       Data: 3
     - Name: BonusValue
       Entry: 3
-      Data: 150
+      Data: 190
     - Name: Priority
       Entry: 3
       Data: 95

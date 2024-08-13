@@ -15,8 +15,6 @@ namespace OcentraAI.LLMGames.ThreeCardBrag.Players
     {
 
         [ShowInInspector, ReadOnly] public PlayerData PlayerData { get; private set; }
-        [ShowInInspector, ReadOnly] public string Id { get; private set; }
-        [ShowInInspector, ReadOnly] public string PlayerName { get; private set; }
         [ShowInInspector, ReadOnly] public PlayerType Type { get; private set; }
         [ShowInInspector, ReadOnly] public Hand Hand { get; private set; }
         [ShowInInspector, ReadOnly] public int Coins { get; private set; }
@@ -42,8 +40,6 @@ namespace OcentraAI.LLMGames.ThreeCardBrag.Players
         public Player(PlayerData playerData, PlayerType type, int initialCoins)
         {
             PlayerData = playerData;
-            Id = playerData.PlayerID;
-            PlayerName = playerData.PlayerName;
             Type = type;
             Coins = initialCoins;
             WildCardInHand = new Dictionary<string, Card>();
@@ -177,24 +173,24 @@ namespace OcentraAI.LLMGames.ThreeCardBrag.Players
 
         public virtual void ShowHand(bool showHands = false)
         {
-            foreach (Card card in Hand.Cards)
+            foreach (Card card in Hand.GetCards())
             {
                 // Debug.Log($"{PlayerName}'s card: {card.Rank} of {card.Suit}");
             }
             // Debug.Log($"{PlayerName}'s hand value: {CalculateHandValue()}");
         }
 
-        public virtual void ResetForNewRound(DeckManager deckManager, List<Card> customHand = null)
+        public virtual void ResetForNewRound(DeckManager deckManager, Hand customHand = null)
         {
            
             AppliedRules = new List<BaseBonusRule>();
             HandRankSum = 0;
 
             // this is temp solution for quick testing on dev mode 
-            if (customHand is { Count: >= 3 })
+            if (customHand != null)
             {
-                Hand = new Hand(customHand);
-                deckManager.RemoveCardsFromDeck(customHand);
+                Hand = customHand;
+                deckManager.RemoveCardsFromDeck(customHand.GetCards().ToList());
                 HasSeenHand = true;
             }
             else
@@ -208,7 +204,7 @@ namespace OcentraAI.LLMGames.ThreeCardBrag.Players
                 Hand = new Hand(cards);
             }
 
-            Hand.Descending();
+            Hand.OrderByDescending();
 
             CheckForWildCardsInHand();
             HasBetOnBlind = false;

@@ -5,6 +5,6 @@ namespace OcentraAI.LLMGames.Authentication
     {
         public string PlayerName;
         public string Email;
-        public string PlayerID { get; internal set; }
+        public string PlayerID;
     }
 }

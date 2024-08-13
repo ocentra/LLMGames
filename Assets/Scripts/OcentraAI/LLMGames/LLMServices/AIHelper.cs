@@ -42,9 +42,9 @@ namespace OcentraAI.LLMGames.LLMServices
         public string GetUserPrompt()
         {
             return $"Current Hand: {GetHandDetails()}. " +
-                   $"Current Hand Value: {PlayerManager.ComputerPlayer.CalculateHandValue()}. " +
+                   $"Current Hand Value: {PlayerManager.GetComputerPlayer().CalculateHandValue()}. " +
                    $"Current Bet: {ScoreManager.CurrentBet}, Pot Size: {ScoreManager.Pot}. " +
-                   $"Your Coins: {PlayerManager.ComputerPlayer.Coins}, Opponent's Coins: {PlayerManager.HumanPlayer.Coins}. " +
+                   $"Your Coins: {PlayerManager.GetComputerPlayer().Coins}, Opponent's Coins: {PlayerManager.GetHumanPlayer().Coins}. " +
                    $"Current Game State: {GetGameStateDetails()}. " +
                    $"Move Options: {GetMoveWord()}";
         }
@@ -87,7 +87,7 @@ namespace OcentraAI.LLMGames.LLMServices
 
         private string GetHandDetails()
         {
-            return string.Join(", ", PlayerManager.ComputerPlayer.Hand.Cards.Select((card, index) => $"Card {index + 1}: {card.Rank} of {card.Suit}"));
+            return string.Join(", ", PlayerManager.GetComputerPlayer().Hand.Select((card, index) => $"Card {index + 1}: {card.Rank} of {card.Suit}"));
         }
 
         private  string GetGameStateDetails()
@@ -119,8 +119,8 @@ namespace OcentraAI.LLMGames.LLMServices
 
         private string GetPlayerDetails()
         {
-            return $"Human: {PlayerManager.HumanPlayer.Coins} coins, Computer: {PlayerManager.ComputerPlayer.Coins} coins, " +
-                   $"Human playing blind: {!PlayerManager.HumanPlayer.HasSeenHand}, Computer playing blind: {!PlayerManager.ComputerPlayer.HasSeenHand}";
+            return $"Human: {PlayerManager.GetHumanPlayer().Coins} coins, Computer: {PlayerManager.GetComputerPlayer().Coins} coins, " +
+                   $"Human playing blind: {!PlayerManager.GetHumanPlayer().HasSeenHand}, Computer playing blind: {!PlayerManager.GetComputerPlayer().HasSeenHand}";
         }
 
 

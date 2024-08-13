@@ -75,10 +75,7 @@ namespace OcentraAI.LLMGames.ThreeCardBrag.Manager
 
             await Task.WhenAll(
                 InitializeDeck(),
-                InitializePlayers(),
-
-                InitializeUIPlayers()
-
+                InitializePlayers()
             );
 
             await StartNewGameAsync();
@@ -97,7 +94,8 @@ namespace OcentraAI.LLMGames.ThreeCardBrag.Manager
             PlayerManager.AddPlayer(AuthenticationManager.Instance.PlayerData, PlayerType.Human);
             PlayerData playerData = new PlayerData { PlayerID = Guid.NewGuid().ToString(), PlayerName = nameof(ComputerPlayer) };
             PlayerManager.AddPlayer(playerData, PlayerType.Computer);
-            return Task.CompletedTask;
+
+            return InitializeUIPlayers();
         }
 
 
@@ -242,7 +240,7 @@ namespace OcentraAI.LLMGames.ThreeCardBrag.Manager
         {
             // This method would interface with the external service to handle coin purchases
             // For now, we'll just add the coins directly
-            PlayerManager.HumanPlayer.AdjustCoins(obj.Amount);
+            TurnManager.CurrentPlayer.AdjustCoins(obj.Amount);
         }
 
         private async void ShowMessage(string message, bool delay = true, float delayTime = 5f)
@@ -400,7 +398,7 @@ namespace OcentraAI.LLMGames.ThreeCardBrag.Manager
 
         private async Task ProcessPlayerAction(PlayerAction action)
         {
-            string message = $"<color={GetColor(Color.white)}>Player : </color> <color={GetColor(Color.blue)}>{TurnManager.CurrentPlayer.PlayerName}</color>" +
+            string message = $"<color={GetColor(Color.white)}>Player : </color> <color={GetColor(Color.blue)}>{TurnManager.CurrentPlayer.PlayerData.PlayerName}</color>" +
                              $"{Environment.NewLine}<color={GetColor(Color.white)}>PlayerAction : </color> <color={GetColor(Color.green)}>{action.ToString()}</color>" +
                              $"{Environment.NewLine}<color={GetColor(Color.white)}>Current bet : </color> <color={GetColor(Color.yellow)}>{ScoreManager.CurrentBet}</color>" +
                              $"{Environment.NewLine}<color={GetColor(Color.white)}>Player coins : </color> <color={GetColor(Color.yellow)}>{TurnManager.CurrentPlayer.Coins}</color>";
@@ -606,9 +604,9 @@ namespace OcentraAI.LLMGames.ThreeCardBrag.Manager
             }
 
             // If still tied, compare the second highest cards
-            List<int> secondHighestCards = playersWithMaxHighCard.Select(p => p.Hand.Cards.OrderByDescending(c => c.GetRankValue()).Skip(1).First().GetRankValue()).ToList();
+            List<int> secondHighestCards = playersWithMaxHighCard.Select(p => p.Hand.OrderByDescending(c => c.GetRankValue()).Skip(1).FirstOrDefault().GetRankValue()).ToList();
             int maxSecondHighCard = secondHighestCards.Max();
-            List<Player> playersWithMaxSecondHighCard = playersWithMaxHighCard.Where(p => p.Hand.Cards.OrderByDescending(c => c.GetRankValue()).Skip(1).First().GetRankValue() == maxSecondHighCard).ToList();
+            List<Player> playersWithMaxSecondHighCard = playersWithMaxHighCard.Where(p => p.Hand.OrderByDescending(c => c.GetRankValue()).Skip(1).FirstOrDefault().GetRankValue() == maxSecondHighCard).ToList();
 
             if (playersWithMaxSecondHighCard.Count == 1)
             {
@@ -634,7 +632,7 @@ namespace OcentraAI.LLMGames.ThreeCardBrag.Manager
         {
             if (ScoreManager.AwardTiedPot(winners))
             {
-                string winnerNames = string.Join(", ", winners.Select(w => w.PlayerName));
+                string winnerNames = string.Join(", ", winners.Select(player => player.PlayerData.PlayerName));
                 EventBus.Publish(new UpdateRoundDisplay(ScoreManager));
                 EventBus.Publish(new UpdateGameState(this));
                 OfferContinuation(showHand);

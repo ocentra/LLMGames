@@ -122,7 +122,7 @@ namespace OcentraAI.LLMGames.Screens
 
             Player winner = PlayerManager.GetPlayerById(roundRecord.WinnerId);
 
-            string message = ColouredMessage($"{winner.PlayerName} ", Color.green) + ColouredMessage($"Won the Round Pot: ", Color.white) + ColouredMessage($" {roundRecord.PotAmount} Coins ", Color.yellow) +
+            string message = ColouredMessage($"{winner.PlayerData.PlayerName} ", Color.green) + ColouredMessage($"Won the Round Pot: ", Color.white) + ColouredMessage($" {roundRecord.PotAmount} Coins ", Color.yellow) +
                              $"{Environment.NewLine}" + ColouredMessage("Remaining Rounds : ", Color.white) + ColouredMessage($"{TurnManager.MaxRounds - TurnManager.CurrentRound} ", Color.cyan) + ColouredMessage(" Continue Next rounds ?", Color.white);
 
             ShowStats(roundRecord);
@@ -165,7 +165,7 @@ namespace OcentraAI.LLMGames.Screens
             (string winnerId, int winCount) = ScoreManager.GetOverallWinner();
             Player winner = PlayerManager.Instance.GetPlayerById(winnerId);
 
-            string message = ColouredMessage($"{winner.PlayerName}", Color.white, true) +
+            string message = ColouredMessage($"{winner.PlayerData.PlayerID}", Color.white, true) +
                              ColouredMessage($"wins the game with {winCount} rounds!", Color.cyan) +
                              $"{Environment.NewLine}" +
                              ColouredMessage("Play New Game of 10 rounds ?", Color.red, true);

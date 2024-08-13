@@ -2,7 +2,6 @@ using OcentraAI.LLMGames.GameModes;
 using System.Collections.Generic;
 using System.Linq;
 using OcentraAI.LLMGames.Scriptable;
-using OcentraAI.LLMGames.ThreeCardBrag.Players;
 using OcentraAI.LLMGames.Scriptable.ScriptableSingletons;
 using Sirenix.OdinInspector;
 using Sirenix.Serialization;
@@ -27,7 +26,7 @@ namespace OcentraAI.LLMGames.ThreeCardBrag.Manager
         [OdinSerialize, ShowInInspector] public bool IsDevModeActive { get; set; } = false;
 
         [OdinSerialize, ShowInInspector, Required] public GameMode GameMode { get; set; }
-        
+
         [OdinSerialize] public bool UseTrumpForPlayer = false;
         [OdinSerialize] public bool UseTrumpForComputer = false;
 
@@ -66,7 +65,7 @@ namespace OcentraAI.LLMGames.ThreeCardBrag.Manager
             return true;
         }
 
-        public List<Card> GetDevHand(DevCard[] devCards)
+        private List<Card> GetDevHand(DevCard[] devCards)
         {
             if (!IsDevModeActive)
                 return null;
@@ -87,26 +86,19 @@ namespace OcentraAI.LLMGames.ThreeCardBrag.Manager
             return hand.Count == 3 ? hand : null;
         }
 
-        public void ApplyDevHandToPlayer(Player player, DeckManager deckManager)
+        public bool TryGetDevHands(out Hand playerHuman, out Hand computer)
         {
-            List<Card> devHand = GetDevHand(DevHand);
-
-            List<Card> devHandComputer = GetDevHand(DevHandComputer);
-
+            playerHuman = null;
+            computer = null;
             if (IsDevModeActive)
             {
-                if (player is HumanPlayer && devHand is { Count: >= 3 })
-                {
-                    player.ResetForNewRound(deckManager, devHand);
-                    deckManager.RemoveCardsFromDeck(devHand);
-                }
-                else if (player is HumanPlayer && devHandComputer is { Count: >= 3 })
-                {
-                    player.ResetForNewRound(deckManager, devHandComputer);
-                    deckManager.RemoveCardsFromDeck(devHandComputer);
-                }
+                playerHuman = new Hand(GetDevHand(DevHand));
+
+                computer = new Hand(GetDevHand(DevHandComputer));
+                return true;
             }
 
+            return false;
         }
 
         [Button("Reset Dev Hand")]

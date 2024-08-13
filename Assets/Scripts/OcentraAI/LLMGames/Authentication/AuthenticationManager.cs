@@ -3,6 +3,7 @@ using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
 using OcentraAI.LLMGames.Screens;
+using OcentraAI.LLMGames.ThreeCardBrag.Manager;
 using Unity.Services.Authentication;
 using Unity.Services.Authentication.PlayerAccounts;
 using Unity.Services.Core;
@@ -11,11 +12,8 @@ using UnityEngine;
 namespace OcentraAI.LLMGames.Authentication
 {
     [RequireComponent(typeof(UnityServicesManager))]
-    public class AuthenticationManager : MonoBehaviour
+    public class AuthenticationManager : ManagerBase<AuthenticationManager>
     {
-        public static AuthenticationManager Instance { get; private set; }
-
-
         [ShowInInspector]
         public PlayerData PlayerData { get; private set; } = null;
         public bool IsSigningIn { get; private set; }
@@ -27,23 +25,15 @@ namespace OcentraAI.LLMGames.Authentication
 
         public bool UseAnonymousSignIn  = false;
 
-        async void Awake()
+        protected override async void Awake()
         {
-            if (Instance != null && Instance != this)
-            {
-                Destroy(gameObject);
-            }
-            else
-            {
-                Instance = this;
-                DontDestroyOnLoad(gameObject);
-            }
+            base.Awake();
 
             await UnityServices.InitializeAsync();
         }
 
 
-        async void Start()
+        protected override async void Start()
         {
             try
             {

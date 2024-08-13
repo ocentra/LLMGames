@@ -224,7 +224,7 @@ namespace OcentraAI.LLMGames.ThreeCardBrag.Manager
                 Player nextPlayer = Players[nextIndex];
                 if (activePlayers.Contains(nextPlayer))
                 {
-                    Log($"Next player: {nextPlayer.PlayerName}", "GetNextPlayerInOrder");
+                    Log($"Next player: {nextPlayer.PlayerData.PlayerID}", "GetNextPlayerInOrder");
                     return nextPlayer;
                 }
             }
@@ -296,7 +296,7 @@ namespace OcentraAI.LLMGames.ThreeCardBrag.Manager
             LastBettor = CurrentPlayer;
             ActionCompletionSource.TrySetResult(true);
 
-            Log($"Last bettor set to {CurrentPlayer.PlayerName}", "SetLastBettor");
+            Log($"Last bettor set to {CurrentPlayer.PlayerData.PlayerID}", "SetLastBettor");
         }
 
         public void CallShow()

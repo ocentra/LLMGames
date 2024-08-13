@@ -46,14 +46,14 @@ namespace OcentraAI.LLMGames.ThreeCardBrag.Players
         public void SetPlayer(Player player)
         {
             Player = player;
-            GameLogger.Log($"[UI] PlayerTimer set for player: {player.GetType().Name}");
+            GameLogger.Log($"[UI] PlayerTimer set for player: {player.PlayerData.PlayerName}");
         }
 
         public void StartTimer(TurnManager turnManager)
         {
             if (Player != turnManager.CurrentPlayer)
             {
-                GameLogger.Log($"[UI] PlayerTimer not started. Current player ({turnManager.CurrentPlayer.PlayerName}) doesn't match this timer's player ({Player.PlayerName})");
+                GameLogger.Log($"[UI] PlayerTimer not started. Current player ({turnManager.CurrentPlayer.PlayerData.PlayerName}) doesn't match this timer's player ({Player.PlayerData.PlayerName})");
                 return;
             }
             Duration = turnManager.TurnDuration;
@@ -68,11 +68,11 @@ namespace OcentraAI.LLMGames.ThreeCardBrag.Players
         {
             if (!isTimerRunning || Player != currentPlayer)
             {
-                GameLogger.Log($"[UI] PlayerTimer cannot be stopped. Current player ({currentPlayer.PlayerName}) doesn't match this timer's player ({Player.PlayerName})");
+                GameLogger.Log($"[UI] PlayerTimer cannot be stopped. Current player ({currentPlayer.PlayerData.PlayerName}) doesn't match this timer's player ({Player.PlayerData.PlayerName})");
                 return;
             }
             isTimerRunning = false;
-            GameLogger.Log($"[UI] PlayerTimer stopped for {currentPlayer.PlayerName}");
+            GameLogger.Log($"[UI] PlayerTimer stopped for {currentPlayer.PlayerData.PlayerID}");
             Show(false);
         }
 

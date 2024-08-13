@@ -1,5 +1,6 @@
 ﻿using OcentraAI.LLMGames.GameModes.Extensions;
 using Sirenix.OdinInspector;
+using System;
 using UnityEditor;
 using UnityEngine;
 using static OcentraAI.LLMGames.Utilities.CardUtility;
@@ -7,7 +8,7 @@ using static OcentraAI.LLMGames.Utilities.CardUtility;
 namespace OcentraAI.LLMGames.Scriptable
 {
     [CreateAssetMenu(fileName = nameof(Card), menuName = "ThreeCardBrag/Card")]
-    public class Card : ScriptableObject
+    public class Card : ScriptableObject, IComparable<Card>
     {
         public Suit Suit;
         public Rank Rank;
@@ -60,6 +61,14 @@ namespace OcentraAI.LLMGames.Scriptable
             }
         }
 
-  
+        public int CompareTo(Card other)
+        {
+            if (other == null) return 1;
+
+            int rankComparison = GetRankValue().CompareTo(other.GetRankValue());
+            if (rankComparison != 0) return rankComparison;
+
+            return Suit.CompareTo(other.Suit);
+        }
     }
 }

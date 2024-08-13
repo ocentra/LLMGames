@@ -1,3 +1,4 @@
+using OcentraAI.LLMGames.Authentication;
 using OcentraAI.LLMGames.Extensions;
 using OcentraAI.LLMGames.GameModes;
 using OcentraAI.LLMGames.Scriptable;
@@ -311,11 +312,22 @@ namespace OcentraAI.LLMGames.ThreeCardBrag.UI.Controllers
         #region Event Handlers
         private void OnInitializeUIPlayers(InitializeUIPlayers e)
         {
-            HumanPlayerTimer.SetPlayer(PlayerManager.HumanPlayer);
-            HumanPlayerTimer.Show(false);
+            HumanPlayer humanPlayer = PlayerManager.GetHumanPlayer();
+            if (humanPlayer !=null)
+            {
+                HumanPlayerTimer.SetPlayer(humanPlayer);
+                HumanPlayerTimer.Show(false);
+            }
 
-            ComputerPlayerTimer.SetPlayer(PlayerManager.ComputerPlayer);
-            ComputerPlayerTimer.Show(false);
+
+            ComputerPlayer computerPlayer = PlayerManager.GetComputerPlayer();
+
+            if (computerPlayer !=null)
+            {
+                ComputerPlayerTimer.SetPlayer(computerPlayer);
+                ComputerPlayerTimer.Show(false);
+            }
+
 
             FloorCardView.gameObject.SetActive(false);
             FloorCardView.transform.parent.gameObject.SetActive(false);
@@ -347,7 +359,7 @@ namespace OcentraAI.LLMGames.ThreeCardBrag.UI.Controllers
 
         private void UpdateUI()
         {
-            UpdateCoinsDisplay(PlayerManager.HumanPlayer.Coins, PlayerManager.ComputerPlayer.Coins);
+            UpdateCoinsDisplay(PlayerManager.GetHumanPlayer().Coins, PlayerManager.GetComputerPlayer().Coins);
             UpdatePotDisplay(ScoreManager.Pot);
             UpdateCurrentBetDisplay(ScoreManager.CurrentBet);
             EnablePlayerActions();

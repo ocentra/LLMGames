@@ -4,6 +4,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using UnityEngine;
+using Random = UnityEngine.Random;
 
 namespace OcentraAI.LLMGames.GameModes.Rules
 {
@@ -54,7 +55,7 @@ namespace OcentraAI.LLMGames.GameModes.Rules
         {
             int baseBonus = BonusValue * hand.Sum();
             int additionalBonus = 0;
-            List<string> descriptions = new List<string> { $"Different Colors Sequence:" };
+            List<string> descriptions = new List<string> { "Different Colors Sequence:" };
             string bonusCalculationDescriptions = $"{BonusValue} * {hand.Sum()}";
 
             if (isTrumpAssisted)
@@ -100,8 +101,8 @@ namespace OcentraAI.LLMGames.GameModes.Rules
             List<Rank> selectedRanks = CardUtility.SelectRanks(handSize, allowSequence: true);
             selectedRanks.Sort();
 
-            Suit[] redSuits = { Suit.Hearts, Suit.Diamonds };
-            Suit[] blackSuits = { Suit.Spades, Suit.Clubs };
+            Suit[] redSuits = { Suit.Heart, Suit.Diamond };
+            Suit[] blackSuits = { Suit.Spade, Suit.Club };
 
             for (int i = 0; i < handSize; i++)
             {
@@ -112,7 +113,7 @@ namespace OcentraAI.LLMGames.GameModes.Rules
                 else
                 {
                     Suit[] currentSuits = i % 2 == 0 ? redSuits : blackSuits;
-                    Suit randomSuit = currentSuits[UnityEngine.Random.Range(0, 2)];
+                    Suit randomSuit = currentSuits[Random.Range(0, 2)];
                     hand.Add(CardUtility.GetRankSymbol(randomSuit, selectedRanks[i], coloured));
                 }
             }
@@ -123,7 +124,7 @@ namespace OcentraAI.LLMGames.GameModes.Rules
         private string CreateExampleString(int cardCount, bool isPlayer, bool useTrump = false)
         {
             List<string[]> examples = new List<string[]>();
-            string trumpCard = useTrump ? CardUtility.GetRankSymbol(Suit.Hearts, Rank.Six, isPlayer) : null;
+            string trumpCard = useTrump ? CardUtility.GetRankSymbol(Suit.Heart, Rank.Six, isPlayer) : null;
 
             examples.Add(CreateExampleHand(cardCount, null, isPlayer));
             if (useTrump)
@@ -149,8 +150,8 @@ namespace OcentraAI.LLMGames.GameModes.Rules
 
             for (int cardCount = 3; cardCount <= gameMode.NumberOfCards; cardCount++)
             {
-                playerExamples.Add(CreateExampleString(cardCount, true, false));
-                llmExamples.Add(CreateExampleString(cardCount, false, false));
+                playerExamples.Add(CreateExampleString(cardCount, true));
+                llmExamples.Add(CreateExampleString(cardCount, false));
 
                 if (gameMode.UseTrump)
                 {

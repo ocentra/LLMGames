@@ -71,26 +71,34 @@ namespace OcentraAI.LLMGames.ThreeCardBrag.Manager
         {
             foldedPlayers.Clear();
 
-            (HumanPlayer humanPlayer, bool humanInitialized) = (GetHumanPlayer(), false);
-            (ComputerPlayer computerPlayer, bool compInitialized) = (GetComputerPlayer(), false);
+            HumanPlayer humanPlayer = GetHumanPlayer();
+            ComputerPlayer computerPlayer = GetComputerPlayer();
 
-            if (DevModeManager.Instance != null && DevModeManager.Instance.TryGetDevHands(out Hand humanHand, out Hand computerHand))
+            bool devModeHandled = DevModeManager.Instance != null && DevModeManager.Instance.InitializeDevModeHands(this, humanPlayer, computerPlayer);
+
+            // Check if each player was initialized in DevModeManager, and if not, initialize them here
+            if (!devModeHandled || !DevModeManager.Instance.IsPlayerHandInitialized(humanPlayer))
             {
-                humanInitialized = TryInitializePlayerHand(humanPlayer, humanHand);
-                compInitialized = TryInitializePlayerHand(computerPlayer, computerHand);
+                humanPlayer?.ResetForNewRound(DeckManager);
             }
 
+            if (!devModeHandled || !DevModeManager.Instance.IsPlayerHandInitialized(computerPlayer))
+            {
+                computerPlayer?.ResetForNewRound(DeckManager);
+            }
+
+            // Continue with the normal reset process for other players
             foreach (Player player in Players)
             {
-                if ((player == humanPlayer && humanInitialized) || (player == computerPlayer && compInitialized))
+                if (player != null && player != humanPlayer && player != computerPlayer)
                 {
-                    continue;
+                    player.ResetForNewRound(DeckManager);
                 }
-                player.ResetForNewRound(DeckManager);
             }
         }
 
-        private bool TryInitializePlayerHand(Player player, Hand customHand)
+
+        public bool TryInitializePlayerHand(Player player, Hand customHand)
         {
             if (customHand != null && customHand.VerifyHand(GameManager.Instance.GameMode, GameManager.Instance.GameMode.NumberOfCards))
             {

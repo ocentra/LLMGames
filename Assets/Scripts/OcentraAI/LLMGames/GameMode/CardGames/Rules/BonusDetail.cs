@@ -1,10 +1,11 @@
 using Sirenix.OdinInspector;
 using Sirenix.Serialization;
+using System;
 using System.Collections.Generic;
 
 namespace OcentraAI.LLMGames.GameModes.Rules
 {
-    [System.Serializable]
+    [Serializable]
     public class BonusDetail
     {
         [OdinSerialize, ShowInInspector] public string RuleName { get; set; }

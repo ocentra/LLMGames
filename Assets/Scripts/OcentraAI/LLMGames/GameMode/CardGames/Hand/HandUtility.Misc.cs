@@ -1,8 +1,5 @@
-using OcentraAI.LLMGames.Scriptable;
-using OcentraAI.LLMGames.Utilities;
 using System;
 using System.Collections.Generic;
-using System.Linq;
 using UnityEngine;
 
 
@@ -35,7 +32,7 @@ namespace OcentraAI.LLMGames.GameModes
         {
             IRandom random = new UnityRandom();
             List<Rank> availableRanks = new List<Rank>();
-            foreach (Rank rank in Enum.GetValues(typeof(Rank)))
+            foreach (Rank rank in Rank.GetStandardRanks())
             {
                 if (rank != Rank.J && rank != Rank.Q && rank != Rank.K && rank != Rank.A &&
                     (trumpRank != Rank.None && rank != trumpRank))

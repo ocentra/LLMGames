@@ -119,7 +119,7 @@ namespace OcentraAI.LLMGames.GameModes
         /// </summary>
         public static bool IsRankAdjacent(Rank rank1, Rank rank2)
         {
-            int rankDifference = Math.Abs((int)rank1 - (int)rank2);
+            int rankDifference = Math.Abs((int)rank1.Value - (int)rank2.Value);
 
             bool isNumericallyAdjacent = rankDifference == 1;
 

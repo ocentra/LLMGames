@@ -21,18 +21,23 @@ namespace OcentraAI.LLMGames.Scriptable.ScriptableSingletons
         [Button]
         private void LoadCardsFromResources()
         {
-            var allCards = Resources.LoadAll<Card>("Cards").ToList();
+            List<Card> allCards = Resources.LoadAll<Card>("Cards").ToList();
 
-            // Filter out the BackCard
+            // Assign or create the BackCard
             BackCard = allCards.FirstOrDefault(card => card.name == nameof(BackCard));
+            if (BackCard == null)
+            {
+                CreateBackCard();
+            }
+
             CardTemplates = allCards.Where(card => card.name != nameof(BackCard)).ToList();
 
             if (CardTemplates.Count == 0)
             {
-                Debug.LogError("No card assets found in Resources/Cards. Please ensure card assets are in the correct location.");
+               // Debug.Log("No card assets found in Resources/Cards. Creating New Assets.");
                 CreateAllCards();
             }
-            else if (ValidateDeck() == false)
+            else if (ValidateStandardDeck() == false)
             {
                 CreateMissingCards();
             }
@@ -40,24 +45,33 @@ namespace OcentraAI.LLMGames.Scriptable.ScriptableSingletons
             SaveChanges();
         }
 
-        [Button]
-        private bool ValidateDeck()
+        private void CreateBackCard()
         {
-            if (CardTemplates.Count != 52) 
+            BackCard = CreateInstance<Card>();
+            BackCard.name = nameof(BackCard);
+            BackCard.Init(Suit.None, new Rank(0, nameof(BackCard), "nameof(BackCard)"));
+            string path = $"Assets/Resources/Cards/{nameof(BackCard)}.asset";
+            AssetDatabase.CreateAsset(BackCard, path);
+            Debug.Log($"Created BackCard at {path}");
+        }
+
+        [Button]
+        private bool ValidateStandardDeck()
+        {
+            if (CardTemplates.Count != 52)
             {
                 Debug.LogError($"Invalid number of cards in the deck. Expected 52, but found {CardTemplates.Count}");
                 return false;
             }
 
-
-            foreach (Suit suit in Enum.GetValues(typeof(Suit)))
+            foreach (Suit suit in Suit.GetStandardSuits())
             {
                 if (suit == Suit.None)
                 {
                     continue;
                 }
 
-                foreach (Rank rank in Enum.GetValues(typeof(Rank)))
+                foreach (Rank rank in Rank.GetStandardRanks())
                 {
                     if (rank == Rank.None)
                     {
@@ -71,7 +85,6 @@ namespace OcentraAI.LLMGames.Scriptable.ScriptableSingletons
                     }
                 }
             }
-
 
             var cardGroups = CardTemplates.GroupBy(card => new { suit = card.Suit, rank = card.Rank });
             foreach (var group in cardGroups)
@@ -88,15 +101,14 @@ namespace OcentraAI.LLMGames.Scriptable.ScriptableSingletons
 
         private void CreateMissingCards()
         {
-
-            foreach (Suit suit in Enum.GetValues(typeof(Suit)))
+            foreach (Suit suit in Suit.GetStandardSuits())
             {
                 if (suit == Suit.None)
                 {
                     continue;
                 }
 
-                foreach (Rank rank in Enum.GetValues(typeof(Rank)))
+                foreach (Rank rank in Rank.GetStandardRanks())
                 {
                     if (rank == Rank.None)
                     {
@@ -114,21 +126,19 @@ namespace OcentraAI.LLMGames.Scriptable.ScriptableSingletons
                 }
             }
 
-
             SaveChanges();
         }
 
         private void CreateAllCards()
         {
-
-            foreach (Suit suit in Enum.GetValues(typeof(Suit)))
+            foreach (Suit suit in Suit.GetStandardSuits())
             {
                 if (suit == Suit.None)
                 {
                     continue;
                 }
 
-                foreach (Rank rank in Enum.GetValues(typeof(Rank)))
+                foreach (Rank rank in Rank.GetStandardRanks())
                 {
                     if (rank == Rank.None)
                     {
@@ -141,7 +151,6 @@ namespace OcentraAI.LLMGames.Scriptable.ScriptableSingletons
             SaveChanges();
         }
 
-
         private void CreateCard(Suit suit, Rank rank)
         {
             Card newCard = CreateInstance<Card>();
@@ -149,19 +158,18 @@ namespace OcentraAI.LLMGames.Scriptable.ScriptableSingletons
             string path = $"Assets/Resources/Cards/{rank.ToString()}_of_{suit.ToString()}.asset";
             AssetDatabase.CreateAsset(newCard, path);
             CardTemplates.Add(newCard);
-            Debug.Log($"Created card: {rank.ToString()} of {suit.ToString()} at {path}");
+            //Debug.Log($"Created card: {rank.Name} of {suit.ToString()} at {path}");
         }
 
         private void SaveChanges()
         {
 #if UNITY_EDITOR
-
             EditorUtility.SetDirty(this);
             if (BackCard != null)
             {
                 EditorUtility.SetDirty(BackCard);
             }
-            foreach (var card in CardTemplates)
+            foreach (Card card in CardTemplates)
             {
                 EditorUtility.SetDirty(card);
             }
@@ -172,8 +180,11 @@ namespace OcentraAI.LLMGames.Scriptable.ScriptableSingletons
 
         public Card GetCard(Suit suit, Rank rank)
         {
-            return CardTemplates.FirstOrDefault(card => card.Suit == suit && card.Rank == rank);
-
+            return CardTemplates.FirstOrDefault(card =>
+            {
+                if (card.Suit == suit && card.Rank == rank) return true;
+                return false;
+            });
         }
     }
 }

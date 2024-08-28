@@ -4,6 +4,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using UnityEngine;
+using Random = UnityEngine.Random;
 
 namespace OcentraAI.LLMGames.GameModes.Rules
 {
@@ -110,7 +111,7 @@ namespace OcentraAI.LLMGames.GameModes.Rules
                 if (!string.IsNullOrEmpty(exampleHand))
                 {
                     llmExamples.Add(exampleHand);
-                    playerExamples.Add(HandUtility.GetHandAsSymbols(exampleHand.Split(", ").ToList(), true));
+                    playerExamples.Add(HandUtility.GetHandAsSymbols(exampleHand.Split(", ").ToList()));
                 }
 
 
@@ -167,7 +168,7 @@ namespace OcentraAI.LLMGames.GameModes.Rules
             {
                 // Add sequences or other combinations for the remaining cards
                 int remainingCards = handSize - 4;
-                int ruleChoice = UnityEngine.Random.Range(0, 3);
+                int ruleChoice = Random.Range(0, 3);
                 List<string> additionalCards = ruleChoice switch
                 {
                     0 => HandUtility.GetRoyalSequenceAsRank(remainingCards).ToCardSymbols(coloured),
@@ -197,11 +198,9 @@ namespace OcentraAI.LLMGames.GameModes.Rules
                 int trumpCount = generatedHand.Count(card => card.Rank == trumpRank);
                 return trumpCount >= 4;
             }
-            else
-            {
-                // Ensure all cards are trump cards for smaller hands
-                return generatedHand.All(card => card.Rank == trumpRank);
-            }
+
+            // Ensure all cards are trump cards for smaller hands
+            return generatedHand.All(card => card.Rank == trumpRank);
         }
 
 
@@ -228,8 +227,8 @@ namespace OcentraAI.LLMGames.GameModes.Rules
                 Suit randomSuit;
                 do
                 {
-                    randomRank = (Rank)UnityEngine.Random.Range(2, 15);
-                    randomSuit = (Suit)UnityEngine.Random.Range(0, 4);
+                    randomRank = Rank.RandomBetweenStandard();
+                    randomSuit = Suit.RandomBetweenStandard();
                 } while (randomRank == trumpRank && availableSuits.Contains(randomSuit));
 
                 hand.Add(CardUtility.GetRankSymbol(randomSuit, randomRank, coloured));

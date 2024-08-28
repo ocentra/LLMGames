@@ -1,0 +1,35 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: cd4b2cffdf356ee4793ad49ba3700792, type: 3}
+  m_Name: 3_of_Heart
+  m_EditorClassIdentifier: 
+  serializationData:
+    SerializedFormat: 2
+    SerializedBytes: 
+    ReferencedUnityObjects: []
+    SerializedBytesString: 
+    Prefab: {fileID: 0}
+    PrefabModificationsReferencedUnityObjects: []
+    PrefabModifications: []
+    SerializationNodes: []
+  suit:
+    value: 1
+    name: Heart
+    symbol: "\u2665"
+  rank:
+    value: 3
+    name: 3
+    alias: 3
+  sprite: {fileID: 21300000, guid: 1129bb559439962418cc556029db3437, type: 3}
+  path: Assets/Images/Cards/3_of_hearts.png
+  rankSymbol: "<color=#FF0000>3</color><color=#FF0000>\u2665</color>"
+  id: "3_\u2665"

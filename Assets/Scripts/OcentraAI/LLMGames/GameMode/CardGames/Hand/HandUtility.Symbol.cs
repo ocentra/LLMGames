@@ -55,14 +55,17 @@ namespace OcentraAI.LLMGames.GameModes
         public static List<string> ToCardSymbols(this List<int> sequence, List<Suit> availableSuits, bool coloured = true)
         {
             List<string> cardSymbols = new List<string>();
-
             foreach (int rankValue in sequence)
             {
-                Rank rank = (Rank)rankValue;
+                Rank rank = Rank.GetStandardRanks().FirstOrDefault(r => r.Value == rankValue);
+                if (rank == null)
+                {
+                    Debug.LogWarning($"No CardRank found for value {rankValue}");
+                    continue;
+                }
                 Suit randomSuit = CardUtility.GetAndRemoveRandomSuit(availableSuits);
                 cardSymbols.Add(CardUtility.GetRankSymbol(randomSuit, rank, coloured));
             }
-
             return cardSymbols;
         }
 

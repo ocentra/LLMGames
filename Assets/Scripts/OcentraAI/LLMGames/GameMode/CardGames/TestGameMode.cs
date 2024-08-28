@@ -9,7 +9,7 @@ namespace OcentraAI.LLMGames.GameModes
     [CreateAssetMenu(fileName = nameof(TestGameMode), menuName = "GameMode/TestGameMode")]
     public class TestGameMode : GameMode
     {
-        [OdinSerialize, ShowInInspector] public Card TrumpCard => Deck.Instance.GetCard(Suit.Hearts, Rank.Six);
+        [OdinSerialize, ShowInInspector] public Card TrumpCard => Deck.Instance.GetCard(Suit.Heart, Rank.Six);
 
         [OdinSerialize, ShowInInspector]
         public override int MaxRounds { get; protected set; } = 10;

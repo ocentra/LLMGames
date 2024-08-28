@@ -1,9 +1,9 @@
-﻿using OcentraAI.LLMGames.Scriptable;
-using OcentraAI.LLMGames.Utilities;
+﻿using OcentraAI.LLMGames.Utilities;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using UnityEngine;
+using Random = UnityEngine.Random;
 
 namespace OcentraAI.LLMGames.GameModes.Rules
 {
@@ -34,12 +34,12 @@ namespace OcentraAI.LLMGames.GameModes.Rules
             {
                 foreach (Rank rank in fourOfAKinds)
                 {
-                    if (rank is Rank.A or Rank.K)
+                    if (rank == Rank.A || rank == Rank.K)
                     {
                         return false; // full house will deal this
                     }
                 }
- 
+
                 bonusDetail = CalculateBonus(fourOfAKinds);
                 return true;
             }
@@ -49,21 +49,16 @@ namespace OcentraAI.LLMGames.GameModes.Rules
 
         private BonusDetail CalculateBonus(List<Rank> fourOfAKinds)
         {
-            var value = 0;
-            foreach (var rank in fourOfAKinds)
-            {
-                value += (int)rank;
-            }
+            var value = fourOfAKinds.Sum(rank => rank.Value);
 
             int baseBonus = BonusValue * fourOfAKinds.Count * value;
             string bonusCalculationDescriptions = $"{BonusValue} * {fourOfAKinds.Count} * {value}";
 
-            List<string> descriptions = new List<string> { $"Multiple Four of a Kinds: {string.Join(", ", fourOfAKinds.Select(rank => CardUtility.GetRankSymbol(Suit.Spades, rank)))}" };
+            List<string> descriptions = new List<string> { $"Multiple Four of a Kinds: {string.Join(", ", fourOfAKinds.Select(rank => CardUtility.GetRankSymbol(Suit.Spade, rank)))}" };
 
             return CreateBonusDetails(RuleName, baseBonus, Priority, descriptions, bonusCalculationDescriptions);
         }
 
-       
         public override bool Initialize(GameMode gameMode)
         {
             Description = "Two or more sets of four cards with the same rank.";
@@ -109,35 +104,34 @@ namespace OcentraAI.LLMGames.GameModes.Rules
                 Rank fourOfAKindRank;
                 do
                 {
-                    fourOfAKindRank = (Rank)UnityEngine.Random.Range(2, 15);
-                } while (usedRanks.Contains(fourOfAKindRank));
+                    fourOfAKindRank = Rank.GetStandardRanks()[Random.Range(0, Rank.GetStandardRanks().Count)];
+                } while (usedRanks.Contains(fourOfAKindRank) || fourOfAKindRank == Rank.A || fourOfAKindRank == Rank.K);
 
                 usedRanks.Add(fourOfAKindRank);
 
-                foreach (Suit suit in Enum.GetValues(typeof(Suit)))
+                foreach (Suit suit in Suit.GetStandardSuits())
                 {
                     hand.Add($"{CardUtility.GetRankSymbol(suit, fourOfAKindRank, coloured)}");
                 }
             }
 
+            List<Rank> availableRanks = new List<Rank>(Rank.GetStandardRanks());
+            availableRanks.RemoveAll(r => usedRanks.Contains(r));
+
             for (int i = 8; i < handSize; i++)
             {
-                Rank randomRank;
-                do
-                {
-                    randomRank = (Rank)UnityEngine.Random.Range(2, 15);
-                } while (usedRanks.Contains(randomRank));
-
-                Suit randomSuit = (Suit)UnityEngine.Random.Range(0, 4);
-
                 if (!string.IsNullOrEmpty(trumpCard) && i == handSize - 1)
                 {
                     hand.Add(trumpCard);
                 }
                 else
                 {
+                    Rank randomRank = availableRanks[Random.Range(0, availableRanks.Count)];
+                    Suit randomSuit = Suit.RandomBetweenStandard();
+
                     hand.Add($"{CardUtility.GetRankSymbol(randomSuit, randomRank, coloured)}");
                     usedRanks.Add(randomRank);
+                    availableRanks.Remove(randomRank);
                 }
             }
 

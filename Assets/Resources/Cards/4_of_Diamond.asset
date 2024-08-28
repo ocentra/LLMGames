@@ -1,0 +1,35 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: cd4b2cffdf356ee4793ad49ba3700792, type: 3}
+  m_Name: 4_of_Diamond
+  m_EditorClassIdentifier: 
+  serializationData:
+    SerializedFormat: 2
+    SerializedBytes: 
+    ReferencedUnityObjects: []
+    SerializedBytesString: 
+    Prefab: {fileID: 0}
+    PrefabModificationsReferencedUnityObjects: []
+    PrefabModifications: []
+    SerializationNodes: []
+  suit:
+    value: 2
+    name: Diamond
+    symbol: "\u2666"
+  rank:
+    value: 4
+    name: 4
+    alias: 4
+  sprite: {fileID: 21300000, guid: fa25951b58ead9140820d5411a984dcf, type: 3}
+  path: Assets/Images/Cards/4_of_diamonds.png
+  rankSymbol: "<color=#FF0000>4</color><color=#FF0000>\u2666</color>"
+  id: "4_\u2666"

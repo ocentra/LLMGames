@@ -79,16 +79,17 @@ namespace OcentraAI.LLMGames.GameModes
             UnityRandom random = new UnityRandom();
             List<Rank> straightFlush;
             List<Rank> royalSequence = GetRoyalSequenceAsRank(numberOfCards);
+            List<Rank> orderedRanks = Rank.GetStandardRanks().OrderBy(r => r.Value).ToList();
 
             do
             {
-                int startRankValue = random.Range(2, 15 - numberOfCards + 1);
+                int startIndex = random.Range(0, orderedRanks.Count - numberOfCards + 1);
                 straightFlush = new List<Rank>();
 
                 for (int i = 0; i < numberOfCards; i++)
                 {
-                    int rankValue = (startRankValue + i - 2) % 13 + 2;
-                    straightFlush.Add((Rank)rankValue);
+                    int rankIndex = (startIndex + i) % orderedRanks.Count;
+                    straightFlush.Add(orderedRanks[rankIndex]);
                 }
             } while (IsRoyalSequence(straightFlush, royalSequence));
 
@@ -113,6 +114,51 @@ namespace OcentraAI.LLMGames.GameModes
                 }
             }
             return true;
+        }
+
+        public static bool IsThreeOfAKind(this Hand hand, Card trumpCard, bool useTrump)
+        {
+            if (hand == null || hand.Count() != 3)
+            {
+                return false;
+            }
+
+            Rank threeOfAKindRank = hand.GetThreeOfAKindRank(trumpCard, useTrump);
+            return threeOfAKindRank != Rank.None;
+        }
+        public static bool IsMultiplePairs(this Hand hand, Card trumpCard, bool useTrump, out List<Rank> pairRanks)
+        {
+            pairRanks = new List<Rank>();
+            if (hand == null || hand.Count() < 4) return false;
+
+            Dictionary<Rank, int> rankCounts = hand.GetRankCounts();
+            int trumpCount = useTrump && trumpCard != null ? hand.Count(c => c.Suit == trumpCard.Suit && c.Rank == trumpCard.Rank) : 0;
+
+            pairRanks = rankCounts
+                .Where(kv => kv.Value >= 2 || (kv.Value == 1 && trumpCount > 0 && kv.Key == trumpCard.Rank))
+                .Select(kv => kv.Key)
+                .ToList();
+
+            return pairRanks.Count >= 2;
+        }
+
+        public static bool IsMultipleTriplets(this Hand hand, Card trumpCard, GameMode gameMode)
+        {
+            if (hand == null || hand.Count() < 6) return false;
+
+            List<Rank> triplets = hand.GetTripletRanks(trumpCard, gameMode.UseTrump);
+            return triplets.Count >= 2 && !triplets.Contains(Rank.A) && !triplets.Contains(Rank.K);
+        }
+
+        public static List<Rank> GetTripletRanks(this Hand hand, Card trumpCard, bool useTrump)
+        {
+            Dictionary<Rank, int> rankCounts = hand.GetRankCounts();
+            int trumpCount = useTrump && trumpCard != null ? hand.Count(c => c.Suit == trumpCard.Suit && c.Rank == trumpCard.Rank) : 0;
+
+            return rankCounts
+                .Where(kv => kv.Value >= 3 || (kv.Value == 2 && trumpCount > 0 && kv.Key != trumpCard.Rank))
+                .Select(kv => kv.Key)
+                .ToList();
         }
 
         /// <summary>
@@ -148,7 +194,7 @@ namespace OcentraAI.LLMGames.GameModes
             int[] ranks = new int[hand.GetCards().Length];
             for (int i = 0; i < hand.GetCards().Length; i++)
             {
-                ranks[i] = (int)hand.GetCards()[i].Rank;
+                ranks[i] = hand.GetCards()[i].Rank.Value;
             }
 
             Array.Sort(ranks);
@@ -169,8 +215,8 @@ namespace OcentraAI.LLMGames.GameModes
         {
             int[] royalRanks = new int[]
             {
-                (int)Rank.A, (int)Rank.K, (int)Rank.Q, (int)Rank.J, (int)Rank.Ten,
-                (int)Rank.Nine, (int)Rank.Eight, (int)Rank.Seven, (int)Rank.Six
+                Rank.A.Value, Rank.K.Value, Rank.Q.Value, Rank.J.Value, Rank.Ten.Value,
+                Rank.Nine.Value, Rank.Eight.Value, Rank.Seven.Value, Rank.Six.Value
             };
 
             int[] result = new int[gameMode.NumberOfCards];
@@ -306,15 +352,15 @@ namespace OcentraAI.LLMGames.GameModes
         /// <summary>
         /// Finds the rank with the highest N-of-a-Kind in the hand.
         /// </summary>
-        public static Rank? TryGetHighestNOfKindRank(this Hand hand, int numberOfCards)
+        public static Rank TryGetHighestNOfKindRank(this Hand hand, int numberOfCards)
         {
             Dictionary<Rank, int> rankCounts = hand.GetRankCounts();
 
-            Rank? highestRank = null;
+            Rank highestRank = null;
 
             foreach (KeyValuePair<Rank, int> kvp in rankCounts)
             {
-                if (kvp.Value >= numberOfCards && (highestRank == null || kvp.Key > highestRank.Value))
+                if (kvp.Value >= numberOfCards && (highestRank == null || kvp.Key.Value > highestRank.Value))
                 {
                     highestRank = kvp.Key;
                 }

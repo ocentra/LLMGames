@@ -177,7 +177,7 @@ namespace OcentraAI.LLMGames.ThreeCardBrag.Manager
         {
             if (IsCancellationRequested()) return;
 
-            if (TurnManager.CurrentPlayer.GetType() == e.CurrentPlayerType)
+            if (TurnManager != null && TurnManager.CurrentPlayer != null && TurnManager.CurrentPlayer.GetType() == e.CurrentPlayerType)
             {
                 await ProcessPlayerAction(e.Action);
             }
@@ -187,7 +187,7 @@ namespace OcentraAI.LLMGames.ThreeCardBrag.Manager
         {
             if (IsCancellationRequested()) return;
 
-            if (TurnManager.CurrentPlayer.GetType() == e.CurrentPlayerType)
+            if (TurnManager.CurrentPlayer != null && TurnManager.CurrentPlayer.GetType() == e.CurrentPlayerType)
             {
                 if (string.IsNullOrEmpty(e.Amount))
                 {
@@ -230,17 +230,21 @@ namespace OcentraAI.LLMGames.ThreeCardBrag.Manager
         {
             if (IsCancellationRequested()) return;
 
-            if (e.CurrentPlayerType == TurnManager.CurrentPlayer.GetType())
+            if (TurnManager.CurrentPlayer != null && e.CurrentPlayerType == TurnManager.CurrentPlayer.GetType())
             {
                 TurnManager.CurrentPlayer.PickAndSwap(e.FloorCard, e.SwapCard);
             }
         }
 
-        private void OnPurchaseCoins(PurchaseCoins obj)
+        private void OnPurchaseCoins(PurchaseCoins e)
         {
             // This method would interface with the external service to handle coin purchases
             // For now, we'll just add the coins directly
-            TurnManager.CurrentPlayer.AdjustCoins(obj.Amount);
+            if (TurnManager.CurrentPlayer != null)
+            {
+                TurnManager.CurrentPlayer.AdjustCoins(e.Amount);
+            }
+
         }
 
         private async void ShowMessage(string message, bool delay = true, float delayTime = 5f)
@@ -260,6 +264,7 @@ namespace OcentraAI.LLMGames.ThreeCardBrag.Manager
         private void LogError(string message)
         {
             GameLogger.LogError($"{nameof(GameManager)}  {message}");
+            Debug.LogError($"{nameof(GameManager)}  {message}");
         }
 
         private bool IsCancellationRequested()

@@ -46,6 +46,7 @@ namespace OcentraAI.LLMGames.ThreeCardBrag.Rules
         public int FlushBonus = 20;
         public int RoyalFlushBonus = 35;
         public int HighCardBonus = 10;
+        public int TripletsBonus = 75;
 
         public int GetBonusForSet(int setSize)
         {

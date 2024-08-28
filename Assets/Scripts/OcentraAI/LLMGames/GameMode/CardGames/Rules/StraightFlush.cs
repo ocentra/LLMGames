@@ -62,14 +62,14 @@ namespace OcentraAI.LLMGames.GameModes.Rules
             string bonusCalculationDescriptions = $"{BonusValue} * {hand.Sum()}";
 
             int additionalBonus = 0;
-            List<string> descriptions = new List<string> { $"Straight Flush:" };
+            List<string> descriptions = new List<string> { "Straight Flush:" };
 
             if (isTrumpAssisted)
             {
                 additionalBonus += GameMode.TrumpBonusValues.StraightFlushBonus;
                 descriptions.Add($"Trump Card Bonus: +{GameMode.TrumpBonusValues.StraightFlushBonus}");
 
-                Hand orderedHand = hand.OrderBy(card => (int)card.Rank);
+                Hand orderedHand = hand.OrderBy(card => card.Rank.Value);
                 Card trumpCard = GetTrumpCard();
 
                 // Check for CardInMiddleBonus
@@ -125,7 +125,7 @@ namespace OcentraAI.LLMGames.GameModes.Rules
         private string CreateExampleString(int cardCount, bool isPlayer, bool useTrump = false)
         {
             List<string[]> examples = new List<string[]>();
-            string trumpCard = useTrump ? CardUtility.GetRankSymbol(Suit.Hearts, Rank.Six, isPlayer) : null;
+            string trumpCard = useTrump ? CardUtility.GetRankSymbol(Suit.Heart, Rank.Six, isPlayer) : null;
 
             examples.Add(CreateExampleHand(cardCount, null, isPlayer));
             if (useTrump)
@@ -151,8 +151,8 @@ namespace OcentraAI.LLMGames.GameModes.Rules
 
             for (int cardCount = 3; cardCount <= gameMode.NumberOfCards; cardCount++)
             {
-                playerExamples.Add(CreateExampleString(cardCount, true, false));
-                llmExamples.Add(CreateExampleString(cardCount, false, false));
+                playerExamples.Add(CreateExampleString(cardCount, true));
+                llmExamples.Add(CreateExampleString(cardCount, false));
 
                 if (gameMode.UseTrump)
                 {

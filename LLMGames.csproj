@@ -95,6 +95,7 @@
     <Compile Include="Assets\Scripts\OcentraAI\LLMGames\GameMode\CardGames\Rules\FiveOfAKind.cs" />
     <Compile Include="Assets\Scripts\OcentraAI\LLMGames\ThreeCardBrag\EventBus\PlayerActionPickAndSwap.cs" />
     <Compile Include="Assets\Scripts\OcentraAI\LLMGames\GameMode\CardGames\Rules\FourOfAKind.cs" />
+    <Compile Include="Assets\Scripts\OcentraAI\LLMGames\Utilities\Suit.cs" />
     <Compile Include="Assets\Scripts\OcentraAI\LLMGames\GameMode\CardGames\Rules\Flush.cs" />
     <Compile Include="Assets\Scripts\OcentraAI\LLMGames\ThreeCardBrag\EventBus\PlayerStopCountDown.cs" />
     <Compile Include="Assets\Scripts\OcentraAI\LLMGames\Editor\SortingCriteria.cs" />
@@ -125,6 +126,7 @@
     <Compile Include="Assets\Scripts\OcentraAI\LLMGames\ThreeCardBrag\Players\PlayerAction.cs" />
     <Compile Include="Assets\Scripts\OcentraAI\LLMGames\GameMode\CardGames\TestGameMode.cs" />
     <Compile Include="Assets\Scripts\OcentraAI\LLMGames\GameMode\CardGames\Hand\HandUtility.TrumpCard.cs" />
+    <Compile Include="Assets\Scripts\OcentraAI\LLMGames\Utilities\Rank.cs" />
     <Compile Include="Assets\Scripts\OcentraAI\LLMGames\ThreeCardBrag\Managers\DevCard.cs" />
     <Compile Include="Assets\Scripts\OcentraAI\LLMGames\GameScreens\WelcomeScreen.cs" />
     <Compile Include="Assets\Scripts\OcentraAI\LLMGames\GameMode\CardGames\Rules\TrumpOfAKind.cs" />

@@ -40,5 +40,14 @@ MonoBehaviour:
       Entry: 6
       Data: 
     - Name: Examples
+      Entry: 7
+      Data: 0|OcentraAI.LLMGames.GameModes.GameRulesContainer, LLMGames
+    - Name: Player
       Entry: 6
+      Data: 
+    - Name: LLM
+      Entry: 6
+      Data: 
+    - Name: 
+      Entry: 8
       Data: 

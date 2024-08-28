@@ -1,11 +1,12 @@
 using OcentraAI.LLMGames.GameModes;
-using System.Collections.Generic;
-using System.Linq;
 using OcentraAI.LLMGames.Scriptable;
 using OcentraAI.LLMGames.Scriptable.ScriptableSingletons;
+using OcentraAI.LLMGames.ThreeCardBrag.Players;
 using Sirenix.OdinInspector;
 using Sirenix.Serialization;
-using OcentraAI.LLMGames.GameModes.Rules;
+using System.Collections.Generic;
+using System.Linq;
+using UnityEditor;
 
 namespace OcentraAI.LLMGames.ThreeCardBrag.Manager
 {
@@ -20,10 +21,7 @@ namespace OcentraAI.LLMGames.ThreeCardBrag.Manager
 
         [OdinSerialize, ShowInInspector] public DevCard[] DevHandComputer { get; set; } = new DevCard[3] { new DevCard(), new DevCard(), new DevCard() };
 
-
         [OdinSerialize, ShowInInspector] public DevCard TrumpDevCard { get; private set; } = new DevCard();
-
-        [OdinSerialize, ShowInInspector] public bool IsDevModeActive { get; set; } = false;
 
         [OdinSerialize, ShowInInspector, Required] public GameMode GameMode { get; set; }
 
@@ -67,9 +65,7 @@ namespace OcentraAI.LLMGames.ThreeCardBrag.Manager
 
         private List<Card> GetDevHand(DevCard[] devCards)
         {
-            if (!IsDevModeActive)
-                return null;
-
+  
             List<Card> hand = new List<Card>();
             foreach (DevCard devCard in devCards)
             {
@@ -86,11 +82,54 @@ namespace OcentraAI.LLMGames.ThreeCardBrag.Manager
             return hand.Count == 3 ? hand : null;
         }
 
-        public bool TryGetDevHands(out Hand playerHuman, out Hand computer)
+        public bool InitializeDevModeHands(PlayerManager playerManager, HumanPlayer humanPlayer, ComputerPlayer computerPlayer)
+        {
+            
+            bool humanInitialized = false;
+            bool compInitialized = false;
+
+            if (TryGetDevHands(out Hand humanHand, out Hand computerHand))
+            {
+                if (humanHand != null)
+                {
+                    humanInitialized = playerManager.TryInitializePlayerHand(humanPlayer, humanHand);
+                }
+
+                if (computerHand != null)
+                {
+                    compInitialized = playerManager.TryInitializePlayerHand(computerPlayer, computerHand);
+                }
+
+                return humanInitialized || compInitialized;
+            }
+
+            return false;
+        }
+
+        public bool IsPlayerHandInitialized(Player player)
+        {
+            // Check if the player's hand has been initialized in dev mode
+            if (player == null)
+                return false;
+
+            if (player is HumanPlayer)
+                return DevHand != null && DevHand.All(card => card.Suit != Suit.None && card.Rank != Rank.None);
+
+            if (player is ComputerPlayer)
+                return DevHandComputer != null && DevHandComputer.All(card => card.Suit != Suit.None && card.Rank != Rank.None);
+
+            return false;
+        }
+
+
+
+
+
+        private bool TryGetDevHands(out Hand playerHuman, out Hand computer)
         {
             playerHuman = null;
             computer = null;
-            if (IsDevModeActive)
+            if (enabled)
             {
                 playerHuman = new Hand(GetDevHand(DevHand));
 
@@ -101,7 +140,6 @@ namespace OcentraAI.LLMGames.ThreeCardBrag.Manager
             return false;
         }
 
-        [Button("Reset Dev Hand")]
         public void ResetDevHand()
         {
             foreach (DevCard card in DevHand)
@@ -110,7 +148,6 @@ namespace OcentraAI.LLMGames.ThreeCardBrag.Manager
             }
         }
 
-        [Button("Reset Dev Hand")]
         public void ResetDevComputerHand()
         {
             foreach (DevCard card in DevHandComputer)
@@ -125,15 +162,14 @@ namespace OcentraAI.LLMGames.ThreeCardBrag.Manager
             DeckCards = new List<Card>(Deck.Instance.CardTemplates);
         }
 
+        
 
 
-        [Button("Toggle Dev Mode")]
-        public void ToggleDevMode()
+        public void SetTrumpDevCard(Suit newSuit, Rank newRank)
         {
-            IsDevModeActive = !IsDevModeActive;
+            TrumpDevCard = new DevCard(newSuit, newRank);
+            EditorUtility.SetDirty(this);
         }
-
-
     }
 }
 

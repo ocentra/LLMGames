@@ -4,6 +4,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using UnityEngine;
+using Random = UnityEngine.Random;
 
 namespace OcentraAI.LLMGames.GameModes.Rules
 {
@@ -20,7 +21,7 @@ namespace OcentraAI.LLMGames.GameModes.Rules
             bonusDetail = null;
             if (hand == null || !hand.VerifyHand(GameMode, MinNumberOfCard)) return false;
 
-            if (hand.IsFullHouse( GetTrumpCard(), GameMode))
+            if (hand.IsFullHouse(GetTrumpCard(), GameMode))
             {
                 bonusDetail = CalculateBonus(hand);
                 return true;
@@ -28,7 +29,7 @@ namespace OcentraAI.LLMGames.GameModes.Rules
 
             return false;
         }
-        
+
         private BonusDetail CalculateBonus(Hand hand)
         {
             if (hand == null) return null;
@@ -40,7 +41,7 @@ namespace OcentraAI.LLMGames.GameModes.Rules
 
             if (GameMode.UseTrump && hand.Contains(GetTrumpCard()))
             {
-                additionalBonus +=  GameMode.TrumpBonusValues.FullHouseBonus;
+                additionalBonus += GameMode.TrumpBonusValues.FullHouseBonus;
                 descriptions.Add($"Trump Card Bonus: +{BonusValue + GameMode.TrumpBonusValues.FullHouseBonus}");
             }
 
@@ -65,19 +66,25 @@ namespace OcentraAI.LLMGames.GameModes.Rules
             Card trumpCard = CardUtility.GetCardFromSymbol(trumpCardSymbol);
             int attempts = 0;
             const int maxAttempts = 100;
-
+            bool isFullHouse = false;
             do
             {
+                
+
                 hand = GeneratePotentialFullHouseHand(handSize, trumpCard, coloured);
-                attempts++;
+                Hand convertFromSymbols = HandUtility.ConvertFromSymbols(hand.ToArray());
+                isFullHouse = convertFromSymbols.IsFullHouse(trumpCard, GameMode);
+
+
 
                 if (attempts >= maxAttempts)
                 {
                     Debug.LogError($"Failed to generate a valid Full House hand after {maxAttempts} attempts.");
                     return Array.Empty<string>();
                 }
+                attempts++;
             }
-            while (!HandUtility.ConvertFromSymbols(hand.ToArray()).IsFullHouse( trumpCard, GameMode));
+            while (!isFullHouse);
 
             return hand.ToArray();
         }
@@ -91,8 +98,13 @@ namespace OcentraAI.LLMGames.GameModes.Rules
 
             List<Suit> availableSuits = CardUtility.GetAvailableSuits().ToList();
 
-            for (int i = 0; i < 3; i++)
+            for (int i = 0; i < Math.Min(handSize, 4); i++)
             {
+                if (availableSuits.Count == 0)
+                {
+                    availableSuits = CardUtility.GetAvailableSuits().ToList();
+                }
+
                 Suit suit = CardUtility.GetAndRemoveRandomSuit(availableSuits);
                 hand.Add(CardUtility.GetRankSymbol(suit, primaryRank, coloured));
             }
@@ -100,25 +112,24 @@ namespace OcentraAI.LLMGames.GameModes.Rules
             while (hand.Count < handSize)
             {
                 if (availableSuits.Count == 0)
-                    availableSuits = CardUtility.GetAvailableSuits().ToList(); 
+                {
+                    availableSuits = CardUtility.GetAvailableSuits().ToList();
+                }
 
                 Suit suit = CardUtility.GetAndRemoveRandomSuit(availableSuits);
-                Rank rank = (hand.Count < 4 || UnityEngine.Random.value > 0.5f) ? primaryRank : secondaryRank;
-
-                string newCard = CardUtility.GetRankSymbol(suit, rank, coloured);
-                if (hand.All(c => c != newCard))
-                {
-                    hand.Add(newCard);
-                }
+                hand.Add(CardUtility.GetRankSymbol(suit, secondaryRank, coloured));
             }
 
             if (trumpCard != null)
             {
-                hand[handSize - 1] = CardUtility.GetRankSymbol(trumpCard.Suit, trumpCard.Rank, coloured);
+                hand[hand.Count - 1] = CardUtility.GetRankSymbol(trumpCard.Suit, trumpCard.Rank, coloured);
             }
 
             return hand;
         }
+
+
+
 
 
 
@@ -134,11 +145,11 @@ namespace OcentraAI.LLMGames.GameModes.Rules
 
             for (int cardCount = MinNumberOfCard; cardCount <= gameMode.NumberOfCards; cardCount++)
             {
-                string exampleHand = CreateExampleString(cardCount, false);
+                string exampleHand = CreateExampleString(cardCount);
                 if (!string.IsNullOrEmpty(exampleHand))
                 {
                     llmExamples.Add(exampleHand);
-                    playerExamples.Add(HandUtility.GetHandAsSymbols(exampleHand.Split(", ").ToList(), true));
+                    playerExamples.Add(HandUtility.GetHandAsSymbols(exampleHand.Split(", ").ToList()));
                 }
 
                 if (gameMode.UseTrump)
@@ -147,7 +158,7 @@ namespace OcentraAI.LLMGames.GameModes.Rules
                     if (!string.IsNullOrEmpty(exampleTrumpHand))
                     {
                         llmTrumpExamples.Add(exampleTrumpHand);
-                        playerTrumpExamples.Add(HandUtility.GetHandAsSymbols(exampleTrumpHand.Split(", ").ToList(), true));
+                        playerTrumpExamples.Add(HandUtility.GetHandAsSymbols(exampleTrumpHand.Split(", ").ToList()));
                     }
                 }
             }
@@ -157,7 +168,7 @@ namespace OcentraAI.LLMGames.GameModes.Rules
 
         private string CreateExampleString(int cardCount, bool useTrump = false)
         {
-            string trumpCard = useTrump ? CardUtility.GetRankSymbol(Suit.Hearts, Rank.Six, false) : null;
+            string trumpCard = useTrump ? CardUtility.GetRankSymbol(Suit.Heart, Rank.Six, false) : null;
             string[] exampleHand = CreateExampleHand(cardCount, trumpCard, false);
             return exampleHand.Length > 0 ? string.Join(", ", exampleHand) : string.Empty;
         }

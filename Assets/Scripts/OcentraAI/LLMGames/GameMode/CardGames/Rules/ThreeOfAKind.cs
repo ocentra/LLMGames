@@ -4,6 +4,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using UnityEngine;
+using Random = UnityEngine.Random;
 
 namespace OcentraAI.LLMGames.GameModes.Rules
 {
@@ -22,7 +23,7 @@ namespace OcentraAI.LLMGames.GameModes.Rules
 
             Card trumpCard = GetTrumpCard();
 
-            if (IsThreeOfAKind(hand, trumpCard))
+            if (hand.IsThreeOfAKind( trumpCard, GameMode.UseTrump))
             {
                 bonusDetail = CalculateBonus(hand, trumpCard);
                 return true;
@@ -31,16 +32,7 @@ namespace OcentraAI.LLMGames.GameModes.Rules
             return false;
         }
 
-        private bool IsThreeOfAKind(Hand hand, Card trumpCard)
-        {
-            if (hand == null ||  hand.Count() != 3)
-            {
-                return false;
-            }
 
-            Rank threeOfAKindRank = hand.GetThreeOfAKindRank(trumpCard, GameMode.UseTrump);
-            return threeOfAKindRank != Rank.None;
-        }
 
         private BonusDetail CalculateBonus(Hand hand, Card trumpCard)
         {
@@ -53,17 +45,17 @@ namespace OcentraAI.LLMGames.GameModes.Rules
             if (GameMode.UseTrump && hand.Contains(trumpCard))
             {
                 Rank pairRank = hand.FirstNonTrumpRankOrDefault(trumpCard);
-                baseBonus = BonusValue * ((int)pairRank + (int)trumpCard.Rank);
-                bonusCalculationDescriptions = $"{BonusValue} * ({(int)pairRank} + {(int)trumpCard.Rank})";
+                baseBonus = BonusValue * ((int)pairRank.Value + (int)trumpCard.Rank.Value);
+                bonusCalculationDescriptions = $"{BonusValue} * ({(int)pairRank.Value} + {(int)trumpCard.Rank.Value})";
             }
             else
             {
-                baseBonus = BonusValue * ((int)threeOfAKindRank * 3);
-                bonusCalculationDescriptions = $"{BonusValue} * ({(int)threeOfAKindRank} * 3)";
+                baseBonus = BonusValue * ((int)threeOfAKindRank.Value * 3);
+                bonusCalculationDescriptions = $"{BonusValue} * ({(int)threeOfAKindRank.Value} * 3)";
             }
 
             int additionalBonus = 0;
-            List<string> descriptions = new List<string> { $"Three of a Kind: {CardUtility.GetRankSymbol(Suit.Spades, threeOfAKindRank)}" };
+            List<string> descriptions = new List<string> { $"Three of a Kind: {CardUtility.GetRankSymbol(Suit.Spade, threeOfAKindRank)}" };
 
             if (GameMode.UseTrump && hand.Contains(trumpCard))
             {
@@ -85,7 +77,7 @@ namespace OcentraAI.LLMGames.GameModes.Rules
         {
             if (handSize != 3)
             {
-                Debug.LogError($"Hand size must be exactly 3 for Three of a Kind.");
+                Debug.LogError("Hand size must be exactly 3 for Three of a Kind.");
                 return Array.Empty<string>();
             }
 
@@ -94,9 +86,12 @@ namespace OcentraAI.LLMGames.GameModes.Rules
             int attempts = 0;
             const int maxAttempts = 100;
 
+            bool isThreeOfAKind = false;
             do
             {
                 hand = GeneratePotentialThreeOfAKindHand(handSize, trumpCard, coloured);
+                Hand convertFromSymbols = HandUtility.ConvertFromSymbols(hand);
+                isThreeOfAKind = convertFromSymbols.IsThreeOfAKind(trumpCard, GameMode.UseTrump);
                 attempts++;
 
                 if (attempts >= maxAttempts)
@@ -105,7 +100,7 @@ namespace OcentraAI.LLMGames.GameModes.Rules
                     return Array.Empty<string>();
                 }
             }
-            while (!IsThreeOfAKind(HandUtility.ConvertFromSymbols(hand), trumpCard));
+            while (!isThreeOfAKind);
 
             return hand;
         }
@@ -113,8 +108,8 @@ namespace OcentraAI.LLMGames.GameModes.Rules
         private string[] GeneratePotentialThreeOfAKindHand(int handSize, Card trumpCard, bool coloured)
         {
             List<string> hand = new List<string>();
-            Rank threeOfAKindRank = (Rank)UnityEngine.Random.Range((int)Rank.Two, (int)Rank.K + 1);
-            List<Suit> availableSuits = new List<Suit> { Suit.Hearts, Suit.Diamonds, Suit.Clubs, Suit.Spades };
+            Rank threeOfAKindRank = Rank.RandomBetween(Rank.Two, Rank.K);
+            List<Suit> availableSuits = new List<Suit> { Suit.Heart, Suit.Diamond, Suit.Club, Suit.Spade };
 
             bool useTrump = GameMode.UseTrump && trumpCard != null;
 
@@ -144,11 +139,11 @@ namespace OcentraAI.LLMGames.GameModes.Rules
             List<string> playerTrumpExamples = new List<string>();
             List<string> llmTrumpExamples = new List<string>();
 
-            string exampleHand = CreateExampleString(3, false);
+            string exampleHand = CreateExampleString(3);
             if (!string.IsNullOrEmpty(exampleHand))
             {
                 llmExamples.Add(exampleHand);
-                playerExamples.Add(HandUtility.GetHandAsSymbols(exampleHand.Split(", ").ToList(), true));
+                playerExamples.Add(HandUtility.GetHandAsSymbols(exampleHand.Split(", ").ToList()));
             }
 
             if (gameMode.UseTrump)
@@ -157,7 +152,7 @@ namespace OcentraAI.LLMGames.GameModes.Rules
                 if (!string.IsNullOrEmpty(exampleTrumpHand))
                 {
                     llmTrumpExamples.Add(exampleTrumpHand);
-                    playerTrumpExamples.Add(HandUtility.GetHandAsSymbols(exampleTrumpHand.Split(", ").ToList(), true));
+                    playerTrumpExamples.Add(HandUtility.GetHandAsSymbols(exampleTrumpHand.Split(", ").ToList()));
                 }
             }
 
@@ -166,7 +161,7 @@ namespace OcentraAI.LLMGames.GameModes.Rules
 
         private string CreateExampleString(int cardCount, bool useTrump = false)
         {
-            string trumpCard = useTrump ? CardUtility.GetRankSymbol(Suit.Hearts, Rank.Six, false) : null;
+            string trumpCard = useTrump ? CardUtility.GetRankSymbol(Suit.Heart, Rank.Six, false) : null;
             string[] exampleHand = CreateExampleHand(cardCount, trumpCard, false);
             return exampleHand.Length > 0 ? string.Join(", ", exampleHand) : string.Empty;
         }

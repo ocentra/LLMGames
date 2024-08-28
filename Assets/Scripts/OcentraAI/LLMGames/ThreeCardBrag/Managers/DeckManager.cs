@@ -96,7 +96,7 @@ namespace OcentraAI.LLMGames.ThreeCardBrag.Manager
 
             // Select Trump Card
             Card trumpCard = null;
-            if (DevModeManager.Instance.IsDevModeActive)
+            if (DevModeManager.Instance.enabled)
             {
                 DevCard devTrumpCard = DevModeManager.Instance.TrumpDevCard;
                 if (devTrumpCard != null)

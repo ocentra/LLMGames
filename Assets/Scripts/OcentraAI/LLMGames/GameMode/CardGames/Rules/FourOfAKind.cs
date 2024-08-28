@@ -4,6 +4,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using UnityEngine;
+using Random = UnityEngine.Random;
 
 namespace OcentraAI.LLMGames.GameModes.Rules
 {
@@ -44,17 +45,17 @@ namespace OcentraAI.LLMGames.GameModes.Rules
             if (GameMode.UseTrump && hand.Contains(trumpCard))
             {
                 Rank tripleRank = hand.FirstNonTrumpRankOrDefault(trumpCard);
-                baseBonus = BonusValue * ((int)tripleRank + (int)trumpCard.Rank);
-                bonusCalculationDescriptions = $"{BonusValue} * ({(int)tripleRank} + {(int)trumpCard.Rank})";
+                baseBonus = BonusValue * (tripleRank.Value + trumpCard.Rank.Value);
+                bonusCalculationDescriptions = $"{BonusValue} * ({tripleRank.Value} + {trumpCard.Rank.Value})";
             }
             else
             {
-                baseBonus = BonusValue * ((int)fourOfAKindRank * 4);
-                bonusCalculationDescriptions = $"{BonusValue} * ({(int)fourOfAKindRank} * 4)";
+                baseBonus = BonusValue * (fourOfAKindRank.Value * 4);
+                bonusCalculationDescriptions = $"{BonusValue} * ({fourOfAKindRank.Value} * 4)";
             }
 
             int additionalBonus = 0;
-            List<string> descriptions = new List<string> { $"Four of a Kind: {CardUtility.GetRankSymbol(Suit.Spades, fourOfAKindRank)}" };
+            List<string> descriptions = new List<string> { $"Four of a Kind: {CardUtility.GetRankSymbol(Suit.Spade, fourOfAKindRank)}" };
 
             if (GameMode.UseTrump && hand.Contains(trumpCard))
             {
@@ -76,7 +77,7 @@ namespace OcentraAI.LLMGames.GameModes.Rules
         {
             if (handSize != 4)
             {
-                Debug.LogError($"Hand size must be exactly 4 for Four of a Kind.");
+                Debug.LogError("Hand size must be exactly 4 for Four of a Kind.");
                 return Array.Empty<string>();
             }
 
@@ -105,13 +106,22 @@ namespace OcentraAI.LLMGames.GameModes.Rules
         {
             List<string> hand = new List<string>();
             Rank fourOfAKindRank;
-            do
+
+            // Get all valid ranks (excluding A and trump rank if present)
+            List<Rank> validRanks = Rank.GetStandardRanks()
+                .Where(r => r != Rank.A && r != Rank.None && (trumpCard == null || r != trumpCard.Rank))
+                .ToList();
+
+            if (validRanks.Count == 0)
             {
-                fourOfAKindRank = (Rank)UnityEngine.Random.Range((int)Rank.Two, (int)Rank.K + 1);
-            } while (fourOfAKindRank == Rank.A || (trumpCard != null && fourOfAKindRank == trumpCard.Rank));
+                Debug.LogError("No valid ranks available for Four of a Kind.");
+                return Array.Empty<string>();
+            }
 
-            List<Suit> availableSuits = new List<Suit> { Suit.Hearts, Suit.Diamonds, Suit.Clubs, Suit.Spades };
+            int randomIndex = Random.Range(0, validRanks.Count);
+            fourOfAKindRank = validRanks[randomIndex];
 
+            List<Suit> availableSuits = new List<Suit> { Suit.Heart, Suit.Diamond, Suit.Club, Suit.Spade };
 
             // Add four cards of the same rank (or three if using trump)
             int cardsToAdd = useTrump && trumpCard != null ? 3 : 4;
@@ -139,11 +149,11 @@ namespace OcentraAI.LLMGames.GameModes.Rules
             List<string> playerTrumpExamples = new List<string>();
             List<string> llmTrumpExamples = new List<string>();
 
-            string exampleHand = CreateExampleString(4, false);
+            string exampleHand = CreateExampleString(4);
             if (!string.IsNullOrEmpty(exampleHand))
             {
                 llmExamples.Add(exampleHand);
-                playerExamples.Add(HandUtility.GetHandAsSymbols(exampleHand.Split(", ").ToList(), true));
+                playerExamples.Add(HandUtility.GetHandAsSymbols(exampleHand.Split(", ").ToList()));
             }
 
             if (gameMode.UseTrump)
@@ -152,7 +162,7 @@ namespace OcentraAI.LLMGames.GameModes.Rules
                 if (!string.IsNullOrEmpty(exampleTrumpHand))
                 {
                     llmTrumpExamples.Add(exampleTrumpHand);
-                    playerTrumpExamples.Add(HandUtility.GetHandAsSymbols(exampleTrumpHand.Split(", ").ToList(), true));
+                    playerTrumpExamples.Add(HandUtility.GetHandAsSymbols(exampleTrumpHand.Split(", ").ToList()));
                 }
             }
 
@@ -161,7 +171,7 @@ namespace OcentraAI.LLMGames.GameModes.Rules
 
         private string CreateExampleString(int cardCount, bool useTrump = false)
         {
-            string trumpCard = useTrump ? CardUtility.GetRankSymbol(Suit.Hearts, Rank.Six, false) : null;
+            string trumpCard = useTrump ? CardUtility.GetRankSymbol(Suit.Heart, Rank.Six, false) : null;
             string[] exampleHand = CreateExampleHand(cardCount, trumpCard, false);
             return exampleHand.Length > 0 ? string.Join(", ", exampleHand) : string.Empty;
         }

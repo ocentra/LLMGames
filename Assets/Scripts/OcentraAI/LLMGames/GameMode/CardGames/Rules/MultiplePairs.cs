@@ -4,6 +4,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using UnityEngine;
+using Random = UnityEngine.Random;
 
 namespace OcentraAI.LLMGames.GameModes.Rules
 {
@@ -20,76 +21,50 @@ namespace OcentraAI.LLMGames.GameModes.Rules
             bonusDetail = null;
             if (!hand.VerifyHand(GameMode, MinNumberOfCard)) return false;
 
-            // Check for valid hand size (4 to 9 cards)
-            if (hand.Count() < 4)
+            Card trumpCard = GameMode.UseTrump ? GetTrumpCard() : null;
+
+            if (hand.IsMultiplePairs(trumpCard, GameMode.UseTrump, out List<Rank> pairRanks))
             {
-                return false;
-            }
-
-
-
-            if (hand.IsPair(GetTrumpCard(), GameMode.UseTrump, out List<Rank> pairRank))
-            {
-                if (pairRank.Count > 1)
-                {
-                    bonusDetail = CalculateBonus(hand,pairRank);
-
-                }
+                bonusDetail = CalculateBonus(hand, pairRanks, trumpCard);
                 return true;
             }
-
 
             return false;
         }
 
-
-
-        private BonusDetail CalculateBonus(Hand hand, List<Rank> pairs)
+        private BonusDetail CalculateBonus(Hand hand, List<Rank> pairs, Card trumpCard)
         {
-            var value = 0;
-            foreach (var rank in pairs)
-            {
-                value += (int)rank;
-            }
-
+            int value = pairs.Sum(rank => rank.Value);
             int baseBonus = BonusValue * pairs.Count * value;
 
             string bonusCalculationDescriptions = $"{BonusValue} * {pairs.Count} * {value}";
 
-
             int additionalBonus = 0;
-            List<string> descriptions = new List<string> { $"Multiple Pairs: {string.Join(", ", pairs.Select(rank => CardUtility.GetRankSymbol(Suit.Spades, rank)))}" };
+            List<string> descriptions = new List<string> { $"Multiple Pairs: {string.Join(", ", pairs.Select(rank => CardUtility.GetRankSymbol(Suit.Spade, rank)))}" };
 
-            if (GameMode.UseTrump)
+            if (GameMode.UseTrump && trumpCard != null && hand.HasTrumpCard(trumpCard))
             {
-                Card trumpCard = GetTrumpCard();
-                bool hasTrumpCard = hand.HasTrumpCard( GetTrumpCard());
-
-                if (hasTrumpCard)
+                if (pairs.Any(rank => rank == trumpCard.Rank))
                 {
-                    if (pairs.Any(rank => rank == trumpCard.Rank))
-                    {
-                        additionalBonus += GameMode.TrumpBonusValues.PairBonus;
-                        descriptions.Add($"Trump Card Bonus: +{GameMode.TrumpBonusValues.PairBonus}");
-                    }
+                    additionalBonus += GameMode.TrumpBonusValues.PairBonus;
+                    descriptions.Add($"Trump Card Bonus: +{GameMode.TrumpBonusValues.PairBonus}");
+                }
 
-                    if (pairs.Any(rank => HandUtility.IsRankAdjacent(trumpCard.Rank, rank)))
-                    {
-                        additionalBonus += GameMode.TrumpBonusValues.RankAdjacentBonus;
-                        descriptions.Add($"Trump Rank Adjacent Bonus: +{GameMode.TrumpBonusValues.RankAdjacentBonus}");
-                    }
+                if (pairs.Any(rank => HandUtility.IsRankAdjacent(trumpCard.Rank, rank)))
+                {
+                    additionalBonus += GameMode.TrumpBonusValues.RankAdjacentBonus;
+                    descriptions.Add($"Trump Rank Adjacent Bonus: +{GameMode.TrumpBonusValues.RankAdjacentBonus}");
                 }
             }
+
             if (additionalBonus > 0)
             {
-                bonusCalculationDescriptions = $"{BonusValue} * {pairs.Count} * {value} + {additionalBonus} ";
+                bonusCalculationDescriptions += $" + {additionalBonus}";
             }
-
 
             return CreateBonusDetails(RuleName, baseBonus, Priority, descriptions, bonusCalculationDescriptions, additionalBonus);
         }
 
-       
         public override bool Initialize(GameMode gameMode)
         {
             Description = "Two or more pairs of cards with different ranks.";
@@ -99,7 +74,7 @@ namespace OcentraAI.LLMGames.GameModes.Rules
             List<string> playerTrumpExamples = new List<string>();
             List<string> llmTrumpExamples = new List<string>();
 
-            for (int cardCount = 4; cardCount <= gameMode.NumberOfCards; cardCount++)
+            for (int cardCount = MinNumberOfCard; cardCount <= gameMode.NumberOfCards; cardCount++)
             {
                 string playerExample = CreateExampleString(cardCount, true);
                 string llmExample = CreateExampleString(cardCount, false);
@@ -119,71 +94,87 @@ namespace OcentraAI.LLMGames.GameModes.Rules
             return TryCreateExample(RuleName, Description, BonusValue, playerExamples, llmExamples, playerTrumpExamples, llmTrumpExamples, gameMode.UseTrump);
         }
 
-        public override string[] CreateExampleHand(int handSize, string trumpCard = null, bool coloured = true)
+        public override string[] CreateExampleHand(int handSize, string trumpCardSymbol = null, bool coloured = true)
         {
-            if (handSize < 4)
+            if (handSize < MinNumberOfCard)
             {
-                Debug.LogError("Hand size must be at least 4 for Multiple Pairs.");
+                Debug.LogError($"Hand size must be at least {MinNumberOfCard} for Multiple Pairs.");
                 return Array.Empty<string>();
             }
 
+            List<string> hand;
+            Card trumpCard = CardUtility.GetCardFromSymbol(trumpCardSymbol);
+            int attempts = 0;
+            const int maxAttempts = 100;
+
+            do
+            {
+                hand = GeneratePotentialMultiplePairsHand(handSize, trumpCard, coloured);
+                attempts++;
+
+                if (attempts >= maxAttempts)
+                {
+                    Debug.LogError($"Failed to generate a valid Multiple Pairs hand after {maxAttempts} attempts.");
+                    return Array.Empty<string>();
+                }
+            }
+            while (!HandUtility.ConvertFromSymbols(hand.ToArray()).IsMultiplePairs(trumpCard, GameMode.UseTrump, out _));
+
+            return hand.ToArray();
+        }
+
+       
+        private List<string> GeneratePotentialMultiplePairsHand(int handSize, Card trumpCard, bool coloured)
+        {
             List<string> hand = new List<string>();
             List<Rank> usedRanks = new List<Rank>();
+            List<Rank> availableRanks = new List<Rank>(Rank.GetStandardRanks());
+            availableRanks.RemoveAll(r => r == Rank.None);
 
             for (int i = 0; i < 2; i++)
             {
                 Rank pairRank;
                 do
                 {
-                    pairRank = (Rank)UnityEngine.Random.Range(2, 15);
+                    pairRank = Rank.RandomBetweenStandard();
                 } while (usedRanks.Contains(pairRank));
 
                 usedRanks.Add(pairRank);
+                availableRanks.Remove(pairRank);
 
-                hand.Add($"{CardUtility.GetRankSymbol(Suit.Hearts, pairRank, coloured)}");
-                hand.Add($"{CardUtility.GetRankSymbol(Suit.Diamonds, pairRank, coloured)}");
+                hand.Add(CardUtility.GetRankSymbol(Suit.Heart, pairRank, coloured));
+                hand.Add(CardUtility.GetRankSymbol(Suit.Diamond, pairRank, coloured));
             }
 
-            for (int i = 4; i < handSize; i++)
+            while (hand.Count < handSize)
             {
-                Rank randomRank;
-                do
+                if (trumpCard != null && hand.Count == handSize - 1)
                 {
-                    randomRank = (Rank)UnityEngine.Random.Range(2, 15);
-                } while (usedRanks.Contains(randomRank));
-
-                Suit randomSuit = (Suit)UnityEngine.Random.Range(0, 4);
-
-                if (!string.IsNullOrEmpty(trumpCard) && i == handSize - 1)
-                {
-                    hand.Add(trumpCard);
+                    hand.Add(CardUtility.GetRankSymbol(trumpCard.Suit, trumpCard.Rank, coloured));
                 }
                 else
                 {
-                    hand.Add($"{CardUtility.GetRankSymbol(randomSuit, randomRank, coloured)}");
+                    Rank randomRank;
+                    do
+                    {
+                        randomRank = Rank.RandomBetweenStandard();
+                    } while (usedRanks.Contains(randomRank));
+
+                    Suit randomSuit = Suit.RandomBetweenStandard();
+                    hand.Add(CardUtility.GetRankSymbol(randomSuit, randomRank, coloured));
                     usedRanks.Add(randomRank);
+                    availableRanks.Remove(randomRank);
                 }
             }
 
-            return hand.ToArray();
+            return hand;
         }
 
         private string CreateExampleString(int cardCount, bool isPlayer, bool useTrump = false)
         {
-            List<string[]> examples = new List<string[]>();
-            string trumpCard = useTrump ? "6♥" : null;
-
-            examples.Add(CreateExampleHand(cardCount, null, isPlayer));
-            if (useTrump)
-            {
-                examples.Add(CreateExampleHand(cardCount, trumpCard, isPlayer));
-            }
-
-            IEnumerable<string> exampleStrings = examples.Select(example =>
-                string.Join(", ", example)
-            );
-
-            return string.Join(Environment.NewLine, exampleStrings);
+            string trumpCard = useTrump ? CardUtility.GetRankSymbol(Suit.Heart, Rank.Six, false) : null;
+            string[] exampleHand = CreateExampleHand(cardCount, trumpCard, isPlayer);
+            return string.Join(", ", exampleHand);
         }
     }
 }

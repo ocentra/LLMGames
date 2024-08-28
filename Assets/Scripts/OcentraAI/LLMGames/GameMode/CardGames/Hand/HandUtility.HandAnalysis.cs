@@ -14,13 +14,18 @@ namespace OcentraAI.LLMGames.GameModes
         /// <summary>
         /// Finds the highest card in the hand that is greater than or equal to a specified minimum rank.
         /// </summary>
-        public static Card FindHighestCard(this Hand hand, Rank minimumRank = Rank.J)
+        public static Card FindHighestCard(this Hand hand, Rank minimumRank = null)
         {
+            if (minimumRank == null)
+            {
+                minimumRank = Rank.J;
+            }
+
             Card highestCard = null;
             for (int i = 0; i < hand.GetCards().Length; i++)
             {
                 Card card = hand.GetCards()[i];
-                if (card.Rank >= minimumRank && (highestCard == null || card.Rank > highestCard.Rank))
+                if (card.Rank.Value >= minimumRank.Value && (highestCard == null || card.Rank.Value > highestCard.Rank.Value))
                 {
                     highestCard = card;
                 }

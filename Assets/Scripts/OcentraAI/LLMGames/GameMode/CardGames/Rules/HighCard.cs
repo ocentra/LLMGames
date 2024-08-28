@@ -6,6 +6,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using UnityEngine;
+using Random = UnityEngine.Random;
 
 namespace OcentraAI.LLMGames.GameModes.Rules
 {
@@ -27,8 +28,8 @@ namespace OcentraAI.LLMGames.GameModes.Rules
             // Check if the current hand has any other rule applied
             for (int i = 2; i <= 4; i++)
             {
-                Rank? rank = hand.TryGetHighestNOfKindRank(i);
-                if (rank.HasValue)
+                Rank rank = hand.TryGetHighestNOfKindRank(i);
+                if (rank != null)
                 {
                     return false;
                 }
@@ -52,8 +53,8 @@ namespace OcentraAI.LLMGames.GameModes.Rules
                 bool playerHasOtherRule = false;
                 for (int i = 2; i <= 4; i++)
                 {
-                    Rank? rank = playerHand.TryGetHighestNOfKindRank(i);
-                    if (rank.HasValue)
+                    Rank rank = playerHand.TryGetHighestNOfKindRank(i);
+                    if (rank != null)
                     {
                         playerHasOtherRule = true;
                         break;
@@ -98,9 +99,9 @@ namespace OcentraAI.LLMGames.GameModes.Rules
 
         private BonusDetail CalculateBonus(Card highCard, bool isTrump)
         {
-            int baseBonus = BonusValue * (int)highCard.Rank;
+            int baseBonus = BonusValue * highCard.Rank.Value;
             int additionalBonus = isTrump ? GameMode.TrumpBonusValues.HighCardBonus : 0;
-            string bonusCalculationDescriptions = $"{BonusValue} * {(int)highCard.Rank}";
+            string bonusCalculationDescriptions = $"{BonusValue} * {highCard.Rank.Value}";
 
             List<string> descriptions = new List<string> { $"High Card: {CardUtility.GetRankSymbol(highCard.Suit, highCard.Rank)}" };
 
@@ -110,7 +111,7 @@ namespace OcentraAI.LLMGames.GameModes.Rules
             }
             if (additionalBonus > 0)
             {
-                bonusCalculationDescriptions = $"{BonusValue} * {(int)highCard.Rank} + {additionalBonus} ";
+                bonusCalculationDescriptions = $"{BonusValue} * {highCard.Rank.Value} + {additionalBonus} ";
             }
 
             return CreateBonusDetails(RuleName, baseBonus, Priority, descriptions, bonusCalculationDescriptions, additionalBonus);
@@ -157,29 +158,33 @@ namespace OcentraAI.LLMGames.GameModes.Rules
             List<Rank> usedRanks = new List<Rank>();
 
             // Ensure at least one high card (J or higher)
-            Rank highCard = (Rank)UnityEngine.Random.Range((int)Rank.J, 15);
-            Suit highCardSuit = (Suit)UnityEngine.Random.Range(0, 4);
+            List<Rank> highCards = Rank.GetStandardRanks().Where(r => r.Value >= Rank.J.Value).ToList();
+            Rank highCard = highCards[Random.Range(0, highCards.Count)];
+            Suit highCardSuit = Suit.RandomBetweenStandard();
             hand.Add($"{CardUtility.GetRankSymbol(highCardSuit, highCard, coloured)}");
             usedRanks.Add(highCard);
 
+            List<Rank> availableRanks = new List<Rank>(Rank.GetStandardRanks());
+            availableRanks.Remove(highCard);
+
             for (int i = 1; i < handSize; i++)
             {
-                Rank randomRank;
-                do
-                {
-                    randomRank = (Rank)UnityEngine.Random.Range(2, 15);
-                } while (usedRanks.Contains(randomRank));
-
-                Suit randomSuit = (Suit)UnityEngine.Random.Range(0, 4);
-
                 if (!string.IsNullOrEmpty(trumpCard) && i == handSize - 1)
                 {
                     hand.Add(trumpCard);
                 }
                 else
                 {
+                    Rank randomRank;
+                    do
+                    {
+                        randomRank = availableRanks[Random.Range(0, availableRanks.Count)];
+                    } while (usedRanks.Contains(randomRank));
+
+                    Suit randomSuit = Suit.RandomBetweenStandard();
                     hand.Add($"{CardUtility.GetRankSymbol(randomSuit, randomRank, coloured)}");
                     usedRanks.Add(randomRank);
+                    availableRanks.Remove(randomRank);
                 }
             }
 

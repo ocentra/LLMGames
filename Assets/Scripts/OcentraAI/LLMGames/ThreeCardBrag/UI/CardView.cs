@@ -61,7 +61,11 @@ namespace OcentraAI.LLMGames.ThreeCardBrag.UI
             {
                 HighlightImage.enabled = false;
             }
-            CardImage.sprite = Deck.Instance.BackCard.Sprite;
+
+            if (Deck.Instance.BackCard != null && Deck.Instance.BackCard.Sprite != null)
+            {
+                CardImage.sprite = Deck.Instance.BackCard.Sprite;
+            }
         }
 
         public void UpdateCardView()

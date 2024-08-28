@@ -39,11 +39,11 @@ namespace OcentraAI.LLMGames.GameModes.Rules
 
         private BonusDetail CalculateBonus(Rank pairRank)
         {
-            int baseBonus = BonusValue * ((int)pairRank * 2);
-            List<string> descriptions = new List<string> { $"Pair of {CardUtility.GetRankSymbol(Suit.Spades, pairRank)}" };
-            string bonusCalculationDescriptions = $"{BonusValue} * ({(int)pairRank} * 2)";
+            int baseBonus = BonusValue * (pairRank.Value * 2);
+            List<string> descriptions = new List<string> { $"Pair of {CardUtility.GetRankSymbol(Suit.Spade, pairRank)}" };
+            string bonusCalculationDescriptions = $"{BonusValue} * ({pairRank.Value} * 2)";
 
-            return CreateBonusDetails(RuleName, baseBonus, Priority, descriptions, bonusCalculationDescriptions, 0);
+            return CreateBonusDetails(RuleName, baseBonus, Priority, descriptions, bonusCalculationDescriptions);
         }
 
         public override string[] CreateExampleHand(int handSize, string trumpCardSymbol = null, bool coloured = true)
@@ -78,14 +78,16 @@ namespace OcentraAI.LLMGames.GameModes.Rules
         private string[] GeneratePotentialPairHand(int handSize, bool coloured)
         {
             List<string> hand = new List<string>();
-            Rank pairRank = (Rank)UnityEngine.Random.Range((int)Rank.Two, (int)Rank.A + 1);
-
+            Rank pairRank = Rank.RandomBetweenStandard();
             List<Suit> availableSuits = CardUtility.GetAvailableSuits().ToList();
+            List<(Suit, Rank)> usedCombinations = new List<(Suit, Rank)>();
 
+            // Generate the pair
             for (int i = 0; i < 2; i++)
             {
                 Suit suit = CardUtility.GetAndRemoveRandomSuit(availableSuits);
                 hand.Add(CardUtility.GetRankSymbol(suit, pairRank, coloured));
+                usedCombinations.Add((suit, pairRank));
             }
 
             // Fill the rest with random cards, making sure not to repeat rank and suit combination
@@ -96,13 +98,13 @@ namespace OcentraAI.LLMGames.GameModes.Rules
 
                 Suit suit = CardUtility.GetAndRemoveRandomSuit(availableSuits);
                 Rank rank;
-
                 do
                 {
-                    rank = (Rank)UnityEngine.Random.Range((int)Rank.Two, (int)Rank.A + 1);
-                } while (hand.Any(c => c == CardUtility.GetRankSymbol(suit, rank, coloured)));
+                    rank = Rank.RandomBetweenStandard();
+                } while (usedCombinations.Contains((suit, rank)));
 
                 hand.Add(CardUtility.GetRankSymbol(suit, rank, coloured));
+                usedCombinations.Add((suit, rank));
             }
 
             return hand.ToArray();
@@ -123,7 +125,7 @@ namespace OcentraAI.LLMGames.GameModes.Rules
                 if (!string.IsNullOrEmpty(exampleHand))
                 {
                     llmExamples.Add(exampleHand);
-                    playerExamples.Add(HandUtility.GetHandAsSymbols(exampleHand.Split(", ").ToList(), true));
+                    playerExamples.Add(HandUtility.GetHandAsSymbols(exampleHand.Split(", ").ToList()));
                 }
             }
 

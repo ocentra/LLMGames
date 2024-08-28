@@ -1,4 +1,5 @@
-﻿using Sirenix.OdinInspector.Editor;
+﻿using OcentraAI.LLMGames.Utilities;
+using Sirenix.OdinInspector.Editor;
 using UnityEditor;
 using UnityEngine;
 
@@ -7,7 +8,6 @@ namespace OcentraAI.LLMGames.Scriptable
     [CustomEditor(typeof(Card))]
     public class CardEditor : OdinEditor
     {
-
         public override void OnInspectorGUI()
         {
             Card card = (Card)target;
@@ -16,7 +16,7 @@ namespace OcentraAI.LLMGames.Scriptable
             DrawDefaultInspector();
 
             // Custom display for RankSymbol
-            if (!string.IsNullOrEmpty(card.RankSymbol))
+            if (!string.IsNullOrEmpty(CardUtility.GetRankSymbol(card.Suit, card.Rank)))
             {
                 GUILayout.Space(10);
                 GUILayout.Label("Rank Symbol", EditorStyles.boldLabel);
@@ -29,6 +29,10 @@ namespace OcentraAI.LLMGames.Scriptable
 
                 GUILayout.Label(new GUIContent(card.RankSymbol), style);
             }
+
+            // Display the sprite asset linked to the path as an ObjectField
+            GUILayout.Space(10);
+
 
             // Save changes if any
             if (GUI.changed)

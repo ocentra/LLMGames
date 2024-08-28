@@ -1,4 +1,3 @@
-using OcentraAI.LLMGames.Scriptable;
 using OcentraAI.LLMGames.Utilities;
 using System;
 using System.Collections.Generic;
@@ -32,7 +31,7 @@ namespace OcentraAI.LLMGames.GameModes.Rules
         private BonusDetail CalculateBonus(Hand hand)
         {
             int baseBonus = BonusValue * hand.Sum();
-            List<string> descriptions = new List<string> { $"Royal Flush" };
+            List<string> descriptions = new List<string> { "Royal Flush" };
             string bonusCalculationDescriptions = $"{BonusValue} * {hand.Sum()}";
             return CreateBonusDetails(RuleName, baseBonus, Priority, descriptions, bonusCalculationDescriptions);
         }

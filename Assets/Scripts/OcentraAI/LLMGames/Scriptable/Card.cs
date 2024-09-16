@@ -1,15 +1,14 @@
-﻿using OcentraAI.LLMGames.Utilities;
+﻿using OcentraAI.LLMGames.ThreeCardBrag.Manager;
+using OcentraAI.LLMGames.Utilities;
 using Sirenix.OdinInspector;
 using System;
-using UnityEditor;
 using UnityEngine;
 
 namespace OcentraAI.LLMGames.Scriptable
 {
     [CreateAssetMenu(fileName = nameof(Card), menuName = "ThreeCardBrag/Card")]
-    public class Card : SerializedScriptableObject, IComparable<Card>
+    public class Card : SerializedScriptableObject, IComparable<Card>, ISaveScriptable
     {
-        // Backing fields for serialized properties
         [SerializeField] private Suit suit;
         [SerializeField] private Rank rank;
         [SerializeField] private Sprite sprite;
@@ -17,7 +16,6 @@ namespace OcentraAI.LLMGames.Scriptable
         [SerializeField, ReadOnly] private string rankSymbol;
         [SerializeField, ReadOnly] private string id;
 
-        // Properties for accessing the fields
         public Suit Suit
         {
             get => suit;
@@ -51,23 +49,26 @@ namespace OcentraAI.LLMGames.Scriptable
         [ReadOnly]
         public string Id => id;
 
-        // Constructor
+
+
         public void Init(Suit s, Rank r)
         {
             Suit = s;
             Rank = r;
+#if UNITY_EDITOR
+
             AssignSprite();
             SaveChanges();
+#endif
         }
-        public int GetRankValue()
-        {
-            return Rank.Value;
-        }
+
+
+#if UNITY_EDITOR
         // Method to assign the sprite
         [Button, ShowIf("@this.Sprite == null")]
         public void AssignSprite()
         {
-            Sprite assetAtPath = AssetDatabase.LoadAssetAtPath<Sprite>(path);
+            Sprite assetAtPath = UnityEditor.AssetDatabase.LoadAssetAtPath<Sprite>(path);
 
             if (assetAtPath != null)
             {
@@ -80,7 +81,21 @@ namespace OcentraAI.LLMGames.Scriptable
             }
         }
 
-        // Comparison method
+
+
+
+
+#endif
+
+        public void SaveChanges()
+        {
+#if UNITY_EDITOR
+
+            EditorSaveManager.RequestSave(this);
+
+#endif
+        }
+
         public int CompareTo(Card other)
         {
             if (other == null) return 1;
@@ -89,15 +104,7 @@ namespace OcentraAI.LLMGames.Scriptable
             return Suit.CompareTo(other.Suit);
         }
 
-        public void SaveChanges()
-        {
 
 
-#if UNITY_EDITOR
-            EditorUtility.SetDirty(this);
-            AssetDatabase.SaveAssets();
-            AssetDatabase.Refresh();
-#endif
-        }
     }
 }

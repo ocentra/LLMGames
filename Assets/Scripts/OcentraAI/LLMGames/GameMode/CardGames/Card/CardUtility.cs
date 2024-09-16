@@ -224,25 +224,41 @@ namespace OcentraAI.LLMGames.Utilities
         /// </summary>
         private static bool IsValidRankSelection(Rank newRank, List<Rank> selectedRanks, bool allowSequence, bool sameColor, bool sameSuit, Suit selectedSuit, Color selectedColor)
         {
-            if (!allowSequence)
+            // Handle sequence logic
+            if (allowSequence)
+            {
+                if (selectedRanks.Count > 0)
+                {
+                    Rank lastSelectedRank = selectedRanks[selectedRanks.Count - 1];
+                    if (Math.Abs(lastSelectedRank.Value - newRank.Value) != 1)
+                    {
+                        return false; 
+                    }
+                }
+            }
+            else
             {
                 foreach (Rank rank in selectedRanks)
                 {
                     if (Math.Abs(rank.Value - newRank.Value) == 1)
                     {
-                        return false;
+                        return false; 
                     }
                 }
             }
 
+            // Handle same color or same suit logic
             if (sameColor || sameSuit)
             {
                 Suit newSuit = GetValidSuit(newRank, sameColor, sameSuit, selectedSuit, selectedColor);
-                return newSuit != Suit.None;
+                return newSuit != Suit.None; 
             }
-
-            return true;
+            else
+            {
+                return true; 
+            }
         }
+
 
         /// <summary>
         /// Gets a valid suit based on specified criteria.

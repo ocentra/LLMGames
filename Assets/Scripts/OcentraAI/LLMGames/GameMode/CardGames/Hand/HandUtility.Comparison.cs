@@ -52,7 +52,9 @@ namespace OcentraAI.LLMGames.GameModes
         public static bool IsSameColorAndDifferentSuits(this Hand hand)
         {
             if (hand == null || hand.Count() == 0) return false;
+
             Color firstCardColor = CardUtility.GetColorValue(hand.GetCards()[0].Suit);
+
             for (int i = 1; i < hand.GetCards().Length; i++)
             {
                 if (CardUtility.GetColorValue(hand.GetCards()[i].Suit) != firstCardColor)
@@ -63,6 +65,7 @@ namespace OcentraAI.LLMGames.GameModes
 
             return !hand.IsSameSuits();
         }
+
 
         /// <summary>
         /// Determines if all cards in the hand have the same suit.
@@ -88,7 +91,7 @@ namespace OcentraAI.LLMGames.GameModes
             int[] ranks = new int[hand.GetCards().Length];
             for (int i = 0; i < hand.GetCards().Length; i++)
             {
-                ranks[i] = hand.GetCards()[i].GetRankValue();
+                ranks[i] = hand.GetCards()[i].Rank.Value;
             }
 
             Array.Sort(ranks);

@@ -42,7 +42,7 @@ namespace OcentraAI.LLMGames.GameModes
             Card worstCard = hand.GetCards()[0];
             for (int i = 1; i < hand.GetCards().Length; i++)
             {
-                if (hand.GetCards()[i].GetRankValue() < worstCard.GetRankValue())
+                if (hand.GetCards()[i].Rank.Value < worstCard.Rank.Value)
                 {
                     worstCard = hand.GetCards()[i];
                 }

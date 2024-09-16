@@ -61,33 +61,35 @@ namespace OcentraAI.LLMGames.GameModes.Rules
                 return Array.Empty<string>();
             }
 
-            List<string> hand;
-
-            Card trumpCard = CardUtility.GetCardFromSymbol(trumpCardSymbol);
+            string[] hand;
             int attempts = 0;
             const int maxAttempts = 100;
             bool isFullHouse = false;
+
+            Card trumpCard = CardUtility.GetCardFromSymbol(trumpCardSymbol);
+
             do
             {
-                
+                // Generate a potential Full House hand
+                hand = GeneratePotentialFullHouseHand(handSize, trumpCard, coloured).ToArray();
+                Hand handToValidate = HandUtility.ConvertFromSymbols(hand);
 
-                hand = GeneratePotentialFullHouseHand(handSize, trumpCard, coloured);
-                Hand convertFromSymbols = HandUtility.ConvertFromSymbols(hand.ToArray());
-                isFullHouse = convertFromSymbols.IsFullHouse(trumpCard, GameMode);
+                // Validate if the generated hand forms a valid Full House
+                isFullHouse = handToValidate.IsFullHouse(trumpCard, GameMode);
 
-
+                attempts++;
 
                 if (attempts >= maxAttempts)
                 {
                     Debug.LogError($"Failed to generate a valid Full House hand after {maxAttempts} attempts.");
                     return Array.Empty<string>();
                 }
-                attempts++;
-            }
-            while (!isFullHouse);
 
-            return hand.ToArray();
+            } while (!isFullHouse);
+
+            return hand;
         }
+
 
         private List<string> GeneratePotentialFullHouseHand(int handSize, Card trumpCard, bool coloured)
         {

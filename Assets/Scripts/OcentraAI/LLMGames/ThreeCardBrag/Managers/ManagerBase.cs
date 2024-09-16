@@ -9,6 +9,7 @@ namespace OcentraAI.LLMGames.ThreeCardBrag.Manager
         protected static T instance;
         public static T Instance => instance;
 
+        
         protected virtual void Awake()
         {
             CreateSingletonInstance();
@@ -43,14 +44,11 @@ namespace OcentraAI.LLMGames.ThreeCardBrag.Manager
 
         protected virtual void Initialize() { }
 
-        protected virtual void Log(string message, string method = "")
-        {
-            GameLogger.Log($"[{GetType().Name}] {message} in method {method}");
-        }
+        protected virtual void Log(string message, string method = "") => GameLogger.Log($"[{GetType().Name}] {message}", method);
 
-        protected virtual void LogError(string message, string method = "")
-        {
-            GameLogger.LogError($"[{GetType().Name}] {message} in method {method}");
-        }
+
+        protected virtual void LogError(string message, string method = "") => GameLogger.LogError($"[{GetType().Name}] {message}", method);
+
+        protected virtual void LogWarning(string message, string method = "") => GameLogger.LogWarning($"[{GetType().Name}] {message}", method);
     }
 }

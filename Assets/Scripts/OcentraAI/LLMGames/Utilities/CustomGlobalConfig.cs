@@ -1,35 +1,32 @@
-using Sirenix.OdinInspector;
+using OcentraAI.LLMGames.ThreeCardBrag.Manager;
 using Sirenix.Utilities;
 
 namespace OcentraAI.LLMGames.Utilities
 {
-    public abstract class CustomGlobalConfig<T> : SerializedScriptableObject, ICustomGlobalConfigEvents where T : SerializedScriptableObject
+    public abstract class CustomGlobalConfig<T> : GlobalConfig<T>, ISaveScriptable where T : GlobalConfig<T>, new()
     {
-        private static CustomGlobalConfigAttribute configAttribute;
-        private static T instance;
-
-        public static CustomGlobalConfigAttribute ConfigAttribute
+        public virtual void SaveChanges()
         {
-            get
-            {
-                if (configAttribute == null)
-                {
-                    configAttribute = typeof(T).GetCustomAttribute<CustomGlobalConfigAttribute>() ?? new CustomGlobalConfigAttribute(TypeExtensions.GetNiceName(typeof(T)));
-                }
-                return configAttribute;
-            }
+            // Centralized save logic
+#if UNITY_EDITOR
+            EditorSaveManager.RequestSave(this);
+#endif
         }
-        
-        public static T Instance => CustomGlobalConfigUtility<T>.GetInstance(ConfigAttribute.AssetPath);
 
-        protected virtual void OnConfigInstanceFirstAccessed() { }
+        public virtual void LogError(string message, string method = "")
+        {
+            // Centralized logging for errors
+            GameLogger.LogError($"[{GetType().Name}] {message}", method);
+        }
 
-        protected virtual void OnConfigAutoCreated() { }
+        public virtual void Log(string message, string method = "")
+        {
+            GameLogger.Log($"[{GetType().Name}] {message}", method);
+        }
 
-        void ICustomGlobalConfigEvents.OnConfigAutoCreated() => OnConfigAutoCreated();
-
-        void ICustomGlobalConfigEvents.OnConfigInstanceFirstAccessed() => OnConfigInstanceFirstAccessed();
+        public virtual void LogWarning(string message, string method = "")
+        {
+            GameLogger.LogWarning($"[{GetType().Name}] {message}", method);
+        }
     }
-
-  
 }

@@ -1314,6 +1314,10 @@
       <Project>{6244580A-079D-8390-8339-3697D71A1D19}</Project>
       <Name>LLMGames</Name>
     </ProjectReference>
+    <ProjectReference Include="LLMGames.Editors.csproj">
+      <Project>{24F6203B-B781-4E67-9D85-227F7CEAD68E}</Project>
+      <Name>LLMGames.Editors</Name>
+    </ProjectReference>
     <ProjectReference Include="Sirenix.OdinInspector.CompatibilityLayer.csproj">
       <Project>{EB7B45BE-8318-8DA6-E28B-F19A5DF97A24}</Project>
       <Name>Sirenix.OdinInspector.CompatibilityLayer</Name>

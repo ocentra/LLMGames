@@ -11,13 +11,13 @@ namespace OcentraAI.LLMGames.ThreeCardBrag.Manager
     [System.Serializable]
     public class DevCard
     {
-        [ValueDropdown("GetAvailableSuits")]
         [SerializeField] public Suit Suit = Suit.None;
 
-        [ValueDropdown("GetAvailableRanks")]
         [SerializeField] public Rank Rank = Rank.None;
 
-        [ShowInInspector, ReadOnly] public string CardText => GetCardText();
+        [HideInInspector] public string ID => $"{Rank.Alias}_{Suit.Symbol}";
+
+        [HideInInspector] public string CardText => GetCardText();
 
         public DevCard()
         {
@@ -69,7 +69,6 @@ namespace OcentraAI.LLMGames.ThreeCardBrag.Manager
             return devCards.ToArray();
         }
 
-        [Button("Clear")]
         public void Clear()
         {
             Suit = Suit.None;

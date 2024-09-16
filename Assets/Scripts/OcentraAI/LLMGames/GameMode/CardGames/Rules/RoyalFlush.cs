@@ -40,14 +40,40 @@ namespace OcentraAI.LLMGames.GameModes.Rules
         {
             if (handSize is < 3 or > 9)
             {
-                Debug.LogError($"Invalid hand size for Royal Flush. Received: {handSize}");         
+                Debug.LogError($"Invalid hand size for Royal Flush. Received: {handSize}");
                 return Array.Empty<string>();
             }
-            Suit flushSuit = CardUtility.GetRandomSuit();
-            List<Rank> royalRanks = HandUtility.GetRoyalSequenceAsRank(GameMode.NumberOfCards).Take(handSize).ToList();
 
-            return royalRanks.Select(rank => CardUtility.GetRankSymbol(flushSuit, rank, coloured)).ToArray();
+            string[] hand;
+            int attempts = 0;
+            const int maxAttempts = 100;
+            bool isValidRoyalFlush = false;
+
+            do
+            {
+                Suit flushSuit = CardUtility.GetRandomSuit();
+                List<Rank> royalRanks = HandUtility.GetRoyalSequenceAsRank(GameMode.NumberOfCards).Take(handSize).ToList();
+
+                hand = royalRanks.Select(rank => CardUtility.GetRankSymbol(flushSuit, rank, coloured)).ToArray();
+
+                Hand handToValidate = HandUtility.ConvertFromSymbols(hand);
+
+                // Validate if the generated hand forms a valid Royal Flush
+                isValidRoyalFlush = handToValidate.IsRoyalSequence(GameMode);
+
+                attempts++;
+
+                if (attempts >= maxAttempts)
+                {
+                    Debug.LogError($"Failed to generate a valid Royal Flush hand after {maxAttempts} attempts.");
+                    return Array.Empty<string>();
+                }
+
+            } while (!isValidRoyalFlush);
+
+            return hand;
         }
+
 
         private string CreateExampleString(int cardCount, bool isPlayer)
         {

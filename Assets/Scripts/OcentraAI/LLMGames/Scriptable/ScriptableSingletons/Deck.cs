@@ -1,15 +1,15 @@
+using OcentraAI.LLMGames.ThreeCardBrag.Manager;
+using OcentraAI.LLMGames.Utilities;
 using Sirenix.OdinInspector;
+using Sirenix.Utilities;
 using System.Collections.Generic;
 using System.Linq;
-using OcentraAI.LLMGames.Utilities;
-using UnityEditor;
 using UnityEngine;
-using System;
 
 namespace OcentraAI.LLMGames.Scriptable.ScriptableSingletons
 {
     [CreateAssetMenu(fileName = nameof(Deck), menuName = "ThreeCardBrag/Deck")]
-    [CustomGlobalConfig("Assets/Resources/")]
+    [GlobalConfig("Assets/Resources/")]
     public class Deck : CustomGlobalConfig<Deck>
     {
         [ShowInInspector]
@@ -18,10 +18,26 @@ namespace OcentraAI.LLMGames.Scriptable.ScriptableSingletons
         [ShowInInspector, Required]
         public Card BackCard;
 
+        [ShowInInspector, Required]
+        public Card NullCard;
+
+#if UNITY_EDITOR
+
+        private List<Card> remainingCards = new List<Card>();
+        private List<Card> drawnCards = new List<Card>();
+
+
         [Button]
         private void LoadCardsFromResources()
         {
             List<Card> allCards = Resources.LoadAll<Card>("Cards").ToList();
+
+            // Assign or create the BackCard
+            NullCard = allCards.FirstOrDefault(card => card.name == nameof(NullCard));
+            if (NullCard == null)
+            {
+                CreateNullCard();
+            }
 
             // Assign or create the BackCard
             BackCard = allCards.FirstOrDefault(card => card.name == nameof(BackCard));
@@ -34,7 +50,7 @@ namespace OcentraAI.LLMGames.Scriptable.ScriptableSingletons
 
             if (CardTemplates.Count == 0)
             {
-               // Debug.Log("No card assets found in Resources/Cards. Creating New Assets.");
+                // Debug.Log("No card assets found in Resources/Cards. Creating New Assets.");
                 CreateAllCards();
             }
             else if (ValidateStandardDeck() == false)
@@ -49,10 +65,21 @@ namespace OcentraAI.LLMGames.Scriptable.ScriptableSingletons
         {
             BackCard = CreateInstance<Card>();
             BackCard.name = nameof(BackCard);
-            BackCard.Init(Suit.None, new Rank(0, nameof(BackCard), "nameof(BackCard)"));
+            BackCard.Init(Suit.None, new Rank(0, nameof(BackCard), nameof(BackCard)));
             string path = $"Assets/Resources/Cards/{nameof(BackCard)}.asset";
-            AssetDatabase.CreateAsset(BackCard, path);
+            UnityEditor.AssetDatabase.CreateAsset(BackCard, path);
             Debug.Log($"Created BackCard at {path}");
+        }
+
+
+        private void CreateNullCard()
+        {
+            NullCard = CreateInstance<Card>();
+            NullCard.name = nameof(NullCard);
+            NullCard.Init(Suit.None, new Rank(0, nameof(NullCard), nameof(NullCard)));
+            string path = $"Assets/Resources/Cards/{nameof(NullCard)}.asset";
+            UnityEditor.AssetDatabase.CreateAsset(NullCard, path);
+            Debug.Log($"Created NullCard at {path}");
         }
 
         [Button]
@@ -156,28 +183,73 @@ namespace OcentraAI.LLMGames.Scriptable.ScriptableSingletons
             Card newCard = CreateInstance<Card>();
             newCard.Init(suit, rank);
             string path = $"Assets/Resources/Cards/{rank.ToString()}_of_{suit.ToString()}.asset";
-            AssetDatabase.CreateAsset(newCard, path);
+            UnityEditor.AssetDatabase.CreateAsset(newCard, path);
             CardTemplates.Add(newCard);
             //Debug.Log($"Created card: {rank.Name} of {suit.ToString()} at {path}");
         }
 
-        private void SaveChanges()
+        [Button]
+        public Card GetRandomCard()
+        {
+            if (remainingCards.Count == 0)
+            {
+                ResetDeck();
+            }
+
+            int randomIndex = UnityEngine.Random.Range(0, remainingCards.Count);
+            Card randomCard = remainingCards[randomIndex];
+
+            remainingCards.RemoveAt(randomIndex);
+            drawnCards.Add(randomCard);
+
+            return randomCard;
+        }
+
+        private void ResetDeck()
+        {
+            remainingCards = new List<Card>(CardTemplates);
+            drawnCards.Clear();
+
+            ShuffleDeck(remainingCards);
+        }
+
+        private void ShuffleDeck(List<Card> deck)
+        {
+            for (int i = deck.Count - 1; i > 0; i--)
+            {
+                int randomIndex = UnityEngine.Random.Range(0, i + 1);
+                (deck[i], deck[randomIndex]) = (deck[randomIndex], deck[i]);
+            }
+        }
+
+
+
+
+
+
+
+
+#endif
+
+
+        public override void SaveChanges()
         {
 #if UNITY_EDITOR
-            EditorUtility.SetDirty(this);
+
             if (BackCard != null)
             {
-                EditorUtility.SetDirty(BackCard);
+                UnityEditor.EditorUtility.SetDirty(BackCard);
             }
             foreach (Card card in CardTemplates)
             {
-                EditorUtility.SetDirty(card);
+                UnityEditor.EditorUtility.SetDirty(card);
             }
-            AssetDatabase.SaveAssets();
-            AssetDatabase.Refresh();
-#endif
-        }
 
+            base.SaveChanges();
+#endif
+
+
+        }
         public Card GetCard(Suit suit, Rank rank)
         {
             return CardTemplates.FirstOrDefault(card =>
@@ -188,3 +260,6 @@ namespace OcentraAI.LLMGames.Scriptable.ScriptableSingletons
         }
     }
 }
+
+
+

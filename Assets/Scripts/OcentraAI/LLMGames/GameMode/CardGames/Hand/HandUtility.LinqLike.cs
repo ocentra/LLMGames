@@ -103,7 +103,7 @@ namespace OcentraAI.LLMGames.GameModes
         /// </summary>
         public static Hand OrderBy(this Hand hand)
         {
-            return OrderBy(hand, card => card.GetRankValue());
+            return OrderBy(hand, card => card.Rank.Value);
         }
 
         /// <summary>
@@ -121,7 +121,7 @@ namespace OcentraAI.LLMGames.GameModes
         /// </summary>
         public static Hand OrderByDescending(this Hand hand)
         {
-            return OrderByDescending(hand, card => card.GetRankValue());
+            return OrderByDescending(hand, card => card.Rank.Value);
         }
 
         /// <summary>

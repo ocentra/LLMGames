@@ -101,26 +101,49 @@ namespace OcentraAI.LLMGames.GameModes.Rules
                 return Array.Empty<string>();
             }
 
-            List<string> hand = new List<string>();
-            Suit flushSuit = CardUtility.GetRandomSuit();
-            List<Rank> selectedRanks = CardUtility.SelectRanks(handSize, allowSequence: true, sameSuit: true, fixedSuit: flushSuit);
-            selectedRanks.Sort();
+            string[] hand;
+            int attempts = 0;
+            const int maxAttempts = 100;
+            bool isValidStraightFlush = false;
 
-
-            for (int i = 0; i < handSize; i++)
+            do
             {
-                if (!string.IsNullOrEmpty(trumpCard) && i == handSize - 1)
-                {
-                    hand.Add(trumpCard);
-                }
-                else
-                {
-                    hand.Add(CardUtility.GetRankSymbol(flushSuit, selectedRanks[i], coloured));
-                }
-            }
+                List<string> tempHand = new List<string>();
+                Suit flushSuit = CardUtility.GetRandomSuit();
+                List<Rank> selectedRanks = CardUtility.SelectRanks(handSize, allowSequence: true, sameSuit: true, fixedSuit: flushSuit);
+                selectedRanks.Sort();
 
-            return hand.ToArray();
+                for (int i = 0; i < handSize; i++)
+                {
+                    if (!string.IsNullOrEmpty(trumpCard) && i == handSize - 1)
+                    {
+                        tempHand.Add(trumpCard);
+                    }
+                    else
+                    {
+                        tempHand.Add(CardUtility.GetRankSymbol(flushSuit, selectedRanks[i], coloured));
+                    }
+                }
+
+                hand = tempHand.ToArray();
+                Hand handToValidate = HandUtility.ConvertFromSymbols(hand);
+
+                // Validate if the generated hand forms a valid Straight Flush
+                isValidStraightFlush = handToValidate.IsSameSuits() && handToValidate.IsSequence();
+
+                attempts++;
+
+                if (attempts >= maxAttempts)
+                {
+                    Debug.LogError($"Failed to generate a valid Straight Flush hand after {maxAttempts} attempts.");
+                    return Array.Empty<string>();
+                }
+
+            } while (!isValidStraightFlush);
+
+            return hand;
         }
+
 
         private string CreateExampleString(int cardCount, bool isPlayer, bool useTrump = false)
         {

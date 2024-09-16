@@ -12,8 +12,6 @@ namespace OcentraAI.LLMGames.ThreeCardBrag.Manager
 {
     public class DeckManager : ManagerBase<DeckManager>
     {
-
-
         [ShowInInspector, ReadOnly] public List<Card> DeckCards { get; private set; } = new List<Card>();
         [ShowInInspector, ReadOnly] public List<Card> FloorCards { get; private set; } = new List<Card>();
         [ShowInInspector, ReadOnly] public Card BackCard => Deck.Instance.BackCard;
@@ -96,9 +94,12 @@ namespace OcentraAI.LLMGames.ThreeCardBrag.Manager
 
             // Select Trump Card
             Card trumpCard = null;
-            if (DevModeManager.Instance.enabled)
+
+#if UNITY_EDITOR
+            // Editor-specific DevModeManager logic
+            if (GameSettings.Instance.DevModeEnabled)
             {
-                DevCard devTrumpCard = DevModeManager.Instance.TrumpDevCard;
+                Card devTrumpCard = DevModeManager.Instance.TrumpDevCard;
                 if (devTrumpCard != null)
                 {
                     trumpCard = cards.FirstOrDefault(c => c.Suit == devTrumpCard.Suit && c.Rank == devTrumpCard.Rank);
@@ -109,7 +110,9 @@ namespace OcentraAI.LLMGames.ThreeCardBrag.Manager
                 }
             }
             else
+#endif
             {
+                // Randomly select a Trump Card
                 bool validCardFound = false;
                 while (!validCardFound)
                 {
@@ -124,8 +127,6 @@ namespace OcentraAI.LLMGames.ThreeCardBrag.Manager
                     }
                 }
             }
-
-
 
             // Select Magic Cards
             List<Card> magicCards = new List<Card>();
@@ -159,8 +160,10 @@ namespace OcentraAI.LLMGames.ThreeCardBrag.Manager
                 LastDrawnWildCards.Dequeue();
             }
 
+            // Publish event with new wild cards
             EventBus.Publish(new UpdateWildCards(WildCards, GameMode));
         }
+
 
 
 

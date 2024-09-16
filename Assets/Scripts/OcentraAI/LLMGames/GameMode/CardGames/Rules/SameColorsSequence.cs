@@ -71,7 +71,7 @@ namespace OcentraAI.LLMGames.GameModes.Rules
                 additionalBonus += GameMode.TrumpBonusValues.SequenceBonus;
                 descriptions.Add($"Trump Card Bonus: +{GameMode.TrumpBonusValues.SequenceBonus}");
 
-                Hand orderedHand = hand.OrderBy(card => card.GetRankValue());
+                Hand orderedHand = hand.OrderBy(card => card.Rank.Value);
                 Card trumpCard = GetTrumpCard();
 
                 // Check for CardInMiddleBonus
@@ -105,27 +105,51 @@ namespace OcentraAI.LLMGames.GameModes.Rules
                 return Array.Empty<string>();
             }
 
-            List<string> hand = new List<string>();
-            bool isRed = Random.value > 0.5f;
-            Suit[] suits = isRed ? new[] { Suit.Heart, Suit.Diamond } : new[] { Suit.Spade, Suit.Club };
-            List<Rank> selectedRanks = CardUtility.SelectRanks(handSize, allowSequence: true, sameColor: true);
-            selectedRanks.Sort();
+            string[] hand;
+            int attempts = 0;
+            const int maxAttempts = 100;
+            bool isValidSameColorSequence = false;
 
-            for (int i = 0; i < handSize; i++)
+            do
             {
-                if (!string.IsNullOrEmpty(trumpCard) && i == handSize - 1)
-                {
-                    hand.Add(trumpCard);
-                }
-                else
-                {
-                    Suit randomSuit = suits[Random.Range(0, 2)];
-                    hand.Add(CardUtility.GetRankSymbol(randomSuit, selectedRanks[i], coloured));
-                }
-            }
+                List<string> tempHand = new List<string>();
+                bool isRed = Random.value > 0.5f;
+                Suit[] suits = isRed ? new[] { Suit.Heart, Suit.Diamond } : new[] { Suit.Spade, Suit.Club };
+                List<Rank> selectedRanks = CardUtility.SelectRanks(handSize, allowSequence: true, sameColor: true);
+                selectedRanks.Sort();
 
-            return hand.ToArray();
+                for (int i = 0; i < handSize; i++)
+                {
+                    if (!string.IsNullOrEmpty(trumpCard) && i == handSize - 1)
+                    {
+                        tempHand.Add(trumpCard);
+                    }
+                    else
+                    {
+                        Suit randomSuit = suits[Random.Range(0, 2)];
+                        tempHand.Add(CardUtility.GetRankSymbol(randomSuit, selectedRanks[i], coloured));
+                    }
+                }
+
+                hand = tempHand.ToArray();
+                Hand handToValidate = HandUtility.ConvertFromSymbols(hand);
+
+                // Validate if the generated hand forms a valid Same Color Sequence
+                isValidSameColorSequence = handToValidate.IsSameColorAndDifferentSuits() && handToValidate.IsSequence();
+
+                attempts++;
+
+                if (attempts >= maxAttempts)
+                {
+                    Debug.LogError($"Failed to generate a valid Same Color Sequence hand after {maxAttempts} attempts.");
+                    return Array.Empty<string>();
+                }
+
+            } while (!isValidSameColorSequence);
+
+            return hand;
         }
+
 
         private string CreateExampleString(int cardCount, bool isPlayer, bool useTrump = false)
         {

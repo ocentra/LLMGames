@@ -247,6 +247,28 @@ namespace OcentraAI.LLMGames
             return standardRanks[randomIndex];
         }
 
+        public static List<Rank> GetRanksInDescendingOrder()
+        {
+            List<Rank> ranks = GetStandardRanks();
+            ranks.Sort((a, b) => b.CompareTo(a));  
+            return ranks;
+        }
+
+        public static Rank[] GetTopNRanks(int numberOfCards)
+        {
+            List<Rank> ranksInDescendingOrder = GetRanksInDescendingOrder();
+
+            if (numberOfCards > ranksInDescendingOrder.Count)
+            {
+                numberOfCards = ranksInDescendingOrder.Count;
+            }
+
+            Rank[] result = new Rank[numberOfCards];
+            ranksInDescendingOrder.CopyTo(0, result, 0, numberOfCards);
+
+            return result;
+        }
+
     }
 }
 

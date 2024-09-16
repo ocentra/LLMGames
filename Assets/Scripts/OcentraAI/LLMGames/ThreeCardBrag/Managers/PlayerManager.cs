@@ -74,6 +74,8 @@ namespace OcentraAI.LLMGames.ThreeCardBrag.Manager
             HumanPlayer humanPlayer = GetHumanPlayer();
             ComputerPlayer computerPlayer = GetComputerPlayer();
 
+#if UNITY_EDITOR
+            
             bool devModeHandled = DevModeManager.Instance != null && DevModeManager.Instance.InitializeDevModeHands(this, humanPlayer, computerPlayer);
 
             // Check if each player was initialized in DevModeManager, and if not, initialize them here
@@ -86,6 +88,8 @@ namespace OcentraAI.LLMGames.ThreeCardBrag.Manager
             {
                 computerPlayer?.ResetForNewRound(DeckManager);
             }
+
+#endif
 
             // Continue with the normal reset process for other players
             foreach (Player player in Players)

@@ -10,10 +10,10 @@
     <ProductVersion>10.0.20506</ProductVersion>
     <SchemaVersion>2.0</SchemaVersion>
     <RootNamespace></RootNamespace>
-    <ProjectGuid>{EEC457BC-FE6C-8713-31A5-64F56AC71C25}</ProjectGuid>
+    <ProjectGuid>{14C4CA76-F723-66ED-F78E-B77FB58242EB}</ProjectGuid>
     <OutputType>Library</OutputType>
     <AppDesignerFolder>Properties</AppDesignerFolder>
-    <AssemblyName>NewAssembly</AssemblyName>
+    <AssemblyName>LLMGames.Editor</AssemblyName>
     <TargetFrameworkVersion>v4.7.1</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
     <BaseDirectory>.</BaseDirectory>
@@ -50,7 +50,7 @@
     <UnityProjectGenerator>Package</UnityProjectGenerator>
     <UnityProjectGeneratorVersion>2.0.22</UnityProjectGeneratorVersion>
     <UnityProjectGeneratorStyle>Legacy</UnityProjectGeneratorStyle>
-    <UnityProjectType>Game:1</UnityProjectType>
+    <UnityProjectType>Editor:5</UnityProjectType>
     <UnityBuildTarget>StandaloneWindows64:19</UnityBuildTarget>
     <UnityVersion>2022.3.27f1</UnityVersion>
   </PropertyGroup>
@@ -60,16 +60,14 @@
     <Analyzer Include="C:\Program Files\Unity\Hub\Editor\2022.3.27f1\Editor\Data\Tools\Unity.SourceGenerators\Unity.Properties.SourceGenerator.dll" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="Assets\Scripts\OcentraAI\LLMGames\Editor\SortingCriteria.cs" />
-    <Compile Include="Assets\Scripts\OcentraAI\LLMGames\Editor\DevModeManagerEditor.cs" />
-    <Compile Include="Assets\Scripts\OcentraAI\LLMGames\Editor\CardEditor.cs" />
-    <Compile Include="Assets\Scripts\OcentraAI\LLMGames\Editor\CardAssetPostprocessor.cs" />
-    <Compile Include="Assets\Scripts\OcentraAI\LLMGames\Editor\GameModeEditor.cs" />
-    <Compile Include="Assets\Scripts\OcentraAI\LLMGames\Editor\GameRulesContainerDrawer.cs" />
-    <Compile Include="Assets\Scripts\OcentraAI\LLMGames\Editor\EditorSaveManager.cs" />
+    <Compile Include="Assets\Scripts\OcentraAI\Editor\DevModeManagerEditor.cs" />
+    <Compile Include="Assets\Scripts\OcentraAI\Editor\GameRulesContainerDrawer.cs" />
+    <Compile Include="Assets\Scripts\OcentraAI\Editor\CardEditor.cs" />
+    <Compile Include="Assets\Scripts\OcentraAI\Editor\GameModeEditor.cs" />
+    <Compile Include="Assets\Scripts\OcentraAI\Editor\CardAssetPostprocessor.cs" />
   </ItemGroup>
   <ItemGroup>
-    <None Include="Assets\Scripts\OcentraAI\LLMGames\Editor\LLMGames.Editor.asmdef" />
+    <None Include="Assets\Scripts\OcentraAI\Editor\LLMGames.Editor.asmdef" />
   </ItemGroup>
   <ItemGroup>
     <Reference Include="UnityEngine">

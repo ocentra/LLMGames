@@ -264,7 +264,6 @@ namespace OcentraAI.LLMGames.ThreeCardBrag.Manager
         private void LogError(string message)
         {
             GameLogger.LogError($"{nameof(GameManager)}  {message}");
-            Debug.LogError($"{nameof(GameManager)}  {message}");
         }
 
         private bool IsCancellationRequested()
@@ -319,7 +318,6 @@ namespace OcentraAI.LLMGames.ThreeCardBrag.Manager
             catch (Exception ex)
             {
                 LogError($"Error in StartNewRoundAsync: {ex.Message}");
-                // Handle the error appropriately
             }
         }
 
@@ -609,9 +607,9 @@ namespace OcentraAI.LLMGames.ThreeCardBrag.Manager
             }
 
             // If still tied, compare the second highest cards
-            List<int> secondHighestCards = playersWithMaxHighCard.Select(p => p.Hand.OrderByDescending(c => c.GetRankValue()).Skip(1).FirstOrDefault().GetRankValue()).ToList();
+            List<int> secondHighestCards = playersWithMaxHighCard.Select(p => p.Hand.OrderByDescending(c => c.Rank.Value).Skip(1).FirstOrDefault().Rank.Value).ToList();
             int maxSecondHighCard = secondHighestCards.Max();
-            List<Player> playersWithMaxSecondHighCard = playersWithMaxHighCard.Where(p => p.Hand.OrderByDescending(c => c.GetRankValue()).Skip(1).FirstOrDefault().GetRankValue() == maxSecondHighCard).ToList();
+            List<Player> playersWithMaxSecondHighCard = playersWithMaxHighCard.Where(p => p.Hand.OrderByDescending(c => c.Rank.Value).Skip(1).FirstOrDefault().Rank.Value == maxSecondHighCard).ToList();
 
             if (playersWithMaxSecondHighCard.Count == 1)
             {

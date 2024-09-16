@@ -1,21 +1,19 @@
-﻿using OcentraAI.LLMGames.Utilities;
-using Sirenix.OdinInspector.Editor;
+﻿using OcentraAI.LLMGames.ThreeCardBrag.Manager;
+using OcentraAI.LLMGames.Utilities;
 using UnityEditor;
 using UnityEngine;
 
 namespace OcentraAI.LLMGames.Scriptable
 {
     [CustomEditor(typeof(Card))]
-    public class CardEditor : OdinEditor
+    public class CardEditor : UnityEditor.Editor
     {
         public override void OnInspectorGUI()
         {
             Card card = (Card)target;
-
-            // Draw default inspector
+            EditorGUI.BeginChangeCheck();
             DrawDefaultInspector();
 
-            // Custom display for RankSymbol
             if (!string.IsNullOrEmpty(CardUtility.GetRankSymbol(card.Suit, card.Rank)))
             {
                 GUILayout.Space(10);
@@ -30,16 +28,12 @@ namespace OcentraAI.LLMGames.Scriptable
                 GUILayout.Label(new GUIContent(card.RankSymbol), style);
             }
 
-            // Display the sprite asset linked to the path as an ObjectField
             GUILayout.Space(10);
 
 
-            // Save changes if any
-            if (GUI.changed)
+            if (EditorGUI.EndChangeCheck())
             {
-                EditorUtility.SetDirty(card);
-                AssetDatabase.SaveAssets();
-                AssetDatabase.Refresh();
+                EditorSaveManager.RequestSave(card);
             }
         }
     }

@@ -75,3 +75,4 @@ MonoBehaviour:
   - {fileID: 11400000, guid: 79ace2cea2388e44b8d7d07ff4ef4b6c, type: 2}
   - {fileID: 11400000, guid: 21152d53a1448d24082d15b5fa156b0d, type: 2}
   BackCard: {fileID: 11400000, guid: 5a2f1121011698a4e853d6e0f403f3e1, type: 2}
+  NullCard: {fileID: 11400000, guid: 7fcb6b3dff972274e805f602058eaa87, type: 2}

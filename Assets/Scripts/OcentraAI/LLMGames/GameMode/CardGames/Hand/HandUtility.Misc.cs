@@ -66,7 +66,7 @@ namespace OcentraAI.LLMGames.GameModes
             int[] ranks = new int[hand.GetCards().Length];
             for (int i = 0; i < hand.GetCards().Length; i++)
             {
-                ranks[i] = hand.GetCards()[i].GetRankValue();
+                ranks[i] = hand.GetCards()[i].Rank.Value;
             }
             Array.Sort(ranks);
 
@@ -99,7 +99,7 @@ namespace OcentraAI.LLMGames.GameModes
             int[] ranks = new int[hand.GetCards().Length];
             for (int i = 0; i < hand.GetCards().Length; i++)
             {
-                ranks[i] = hand.GetCards()[i].GetRankValue();
+                ranks[i] = hand.GetCards()[i].Rank.Value;
             }
             Array.Sort(ranks);
 

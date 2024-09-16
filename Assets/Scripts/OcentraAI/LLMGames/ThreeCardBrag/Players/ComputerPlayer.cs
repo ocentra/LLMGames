@@ -143,7 +143,7 @@ namespace OcentraAI.LLMGames.ThreeCardBrag.Players
         {
             if (FloorCard == null) return false;
             int worstCardValue = Hand.Min();
-            return FloorCard.GetRankValue() > worstCardValue;
+            return FloorCard.Rank.Value > worstCardValue;
         }
 
         private void SwapWithFloorCard()

@@ -4,7 +4,9 @@ using OcentraAI.LLMGames.GameModes;
 using OcentraAI.LLMGames.GameModes.Rules;
 using OcentraAI.LLMGames.Scriptable;
 using OcentraAI.LLMGames.Scriptable.ScriptableSingletons;
+using OcentraAI.LLMGames.Utilities;
 using Sirenix.OdinInspector.Editor;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using UnityEditor;
@@ -21,20 +23,31 @@ namespace OcentraAI.LLMGames.ThreeCardBrag.Manager
         public int SelectedPlayerRuleIndex { get => Manager.SelectedPlayerRuleIndex; set => Manager.SelectedPlayerRuleIndex = value; }
         public int SelectedComputerRuleIndex { get => Manager.SelectedComputerRuleIndex; set => Manager.SelectedComputerRuleIndex = value; }
 
+        #region Unity Editor Methods
+
         protected override void OnEnable()
         {
             PopulateRuleDictionary();
-            Manager.ResetDeck(); // Initialize DeckCards when the editor is enabled
 
             // Remove cards in hand from the deck
             RemoveUsedCards(Manager.DevHand);
             RemoveUsedCards(Manager.DevHandComputer);
-            EditorUtility.SetDirty(Manager);
+
         }
 
         public override void OnInspectorGUI()
         {
-            DrawScriptField();
+            EditorGUI.BeginChangeCheck();
+
+            base.OnInspectorGUI();
+
+            bool newDevModeEnabled = EditorGUILayout.Toggle("Enable Dev Mode", Manager.DevModeEnabled);
+            if (newDevModeEnabled != Manager.DevModeEnabled)
+            {
+                Manager.DevModeEnabled = GameSettings.Instance.DevModeEnabled = newDevModeEnabled;
+                Manager.SaveChanges();
+                GameSettings.Instance.SaveChanges();
+            }
 
             Manager.GameMode = (GameMode)EditorGUILayout.ObjectField("Game Mode", Manager.GameMode, typeof(GameMode), false);
 
@@ -54,93 +67,33 @@ namespace OcentraAI.LLMGames.ThreeCardBrag.Manager
             if (RuleDictionary != null)
             {
                 DrawPlayerHand();
-
                 DrawComputerHand();
-
                 DrawTrumpCard();
-
                 DrawResetButtons();
             }
 
-
-            if (GUI.changed)
+            if (EditorGUI.EndChangeCheck())
             {
-                EditorUtility.SetDirty(Manager);
+                GameSettings.Instance.SaveChanges();
+                Manager.SaveChanges();
+               
             }
         }
 
-        private void DrawScriptField()
-        {
-            EditorGUILayout.BeginHorizontal();
+        #endregion
 
-            // Draw the script reference and enabled checkbox
-            Manager.enabled = EditorGUILayout.ToggleLeft("Enabled", Manager.enabled, GUILayout.Width(70));
-            EditorGUI.BeginDisabledGroup(true);
-            MonoScript script = MonoScript.FromMonoBehaviour((MonoBehaviour)target);
-            EditorGUILayout.ObjectField("Script", script, typeof(MonoScript), false);
-            EditorGUI.EndDisabledGroup();
-
-            EditorGUILayout.EndHorizontal();
-        }
-
-        private static GUIStyle GetRichTextStyle() => new(EditorStyles.boldLabel) { richText = true, };
-
-        private bool IsTrumpCardAvailable() => Manager.TrumpDevCard.Rank != Rank.None && Manager.TrumpDevCard.Suit != Suit.None;
-
-        private void DrawResetButtons()
-        {
-            GUILayout.BeginHorizontal();
-
-
-            if (GUILayout.Button("Reset Dev Hand", GUILayout.Width(150)))
-            {
-                Manager.ResetDevHand();
-                Manager.ResetDeck();
-                EditorUtility.SetDirty(Manager);
-            }
-
-            if (GUILayout.Button("Reset Computer Hand", GUILayout.Width(200)))
-            {
-                Manager.ResetDevComputerHand();
-                Manager.ResetDeck();
-                EditorUtility.SetDirty(Manager);
-            }
-
-            GUILayout.EndHorizontal();
-        }
-
-        private void DrawComputerHand()
-        {
-            // Computer Hand Section
-            GUILayout.BeginHorizontal();
-            GUILayout.Label("Computer", EditorStyles.boldLabel);
-            SelectedComputerRuleIndex = EditorGUILayout.Popup(SelectedComputerRuleIndex, RuleDictionary.Keys.ToArray());
-
-            // Use Trump checkbox for computer
-            EditorGUI.BeginDisabledGroup(!IsTrumpCardAvailable());
-            bool useTrumpForComputer = GUILayout.Toggle(Manager.UseTrumpForComputer, "Use Trump");
-            EditorGUI.EndDisabledGroup();
-
-            if (useTrumpForComputer != Manager.UseTrumpForComputer)
-            {
-                HandleTrumpSelection(useTrumpForComputer, false);
-            }
-
-            if (GUILayout.Button("Apply", GUILayout.Width(100)))
-            {
-                ApplySelectedRule(false, Manager.UseTrumpForComputer); // false indicates the computer's hand
-            }
-            GUILayout.EndHorizontal();
-            DrawDevHand(Manager.DevHandComputer);
-        }
+        #region Hand Drawing Methods
 
         private void DrawPlayerHand()
         {
             GUILayout.BeginHorizontal();
             GUILayout.Label("Player  ", EditorStyles.boldLabel);
-            SelectedPlayerRuleIndex = EditorGUILayout.Popup(SelectedPlayerRuleIndex, RuleDictionary.Keys.ToArray());
 
-            EditorGUI.BeginDisabledGroup(!IsTrumpCardAvailable());
+            string[] ruleKeys = GetRuleKeys();
+            SelectedPlayerRuleIndex = EditorGUILayout.Popup(SelectedPlayerRuleIndex, ruleKeys);
+
+            bool canUseTrump = IsTrumpCardAvailable() && !IsUsingTrumpOfAKind(SelectedComputerRuleIndex);
+            EditorGUI.BeginDisabledGroup(!canUseTrump);
             bool useTrumpForPlayer = GUILayout.Toggle(Manager.UseTrumpForPlayer, "Use Trump");
             EditorGUI.EndDisabledGroup();
 
@@ -151,12 +104,62 @@ namespace OcentraAI.LLMGames.ThreeCardBrag.Manager
 
             if (GUILayout.Button("Apply", GUILayout.Width(100)))
             {
-                ApplySelectedRule(true, Manager.UseTrumpForPlayer); // true indicates the player's hand
+                ApplySelectedRule(true, Manager.UseTrumpForPlayer);
             }
 
             GUILayout.EndHorizontal();
 
-            DrawDevHand(Manager.DevHand);
+            ValidateDevHand(Manager.DevHand, Manager.DevHandComputer, out string playerErrorMessage);
+            DrawDevHand(Manager.DevHand, playerErrorMessage);
+        }
+
+        private void DrawComputerHand()
+        {
+            GUILayout.BeginHorizontal();
+            GUILayout.Label("Computer", EditorStyles.boldLabel);
+
+            string[] ruleKeys = GetRuleKeys();
+            SelectedComputerRuleIndex = EditorGUILayout.Popup(SelectedComputerRuleIndex, ruleKeys);
+
+            bool canUseTrump = IsTrumpCardAvailable() && !IsUsingTrumpOfAKind(SelectedPlayerRuleIndex);
+            EditorGUI.BeginDisabledGroup(!canUseTrump);
+            bool useTrumpForComputer = GUILayout.Toggle(Manager.UseTrumpForComputer, "Use Trump");
+            EditorGUI.EndDisabledGroup();
+
+            if (useTrumpForComputer != Manager.UseTrumpForComputer)
+            {
+                HandleTrumpSelection(useTrumpForComputer, false);
+            }
+
+            if (GUILayout.Button("Apply", GUILayout.Width(100)))
+            {
+                ApplySelectedRule(false, Manager.UseTrumpForComputer);
+            }
+
+            GUILayout.EndHorizontal();
+
+            ValidateDevHand(Manager.DevHandComputer, Manager.DevHand, out string computerErrorMessage);
+            DrawDevHand(Manager.DevHandComputer, computerErrorMessage);
+        }
+
+        private void DrawDevHand(Card[] hand, string errorMessage)
+        {
+            if (!IsNullOrEmpty(errorMessage))
+            {
+                EditorGUILayout.HelpBox(errorMessage, MessageType.Error);
+            }
+
+            GUILayout.BeginHorizontal();
+            foreach (Card devCard in hand)
+            {
+                GUILayout.BeginVertical();
+                devCard.Suit = DrawCardSuitPopup(devCard.Suit);
+                devCard.Rank = DrawCardRankPopup(devCard.Rank);
+                GUILayout.Label(new GUIContent(devCard.RankSymbol), GetRichTextStyle());
+                GUILayout.EndVertical();
+            }
+            GUILayout.EndHorizontal();
+
         }
 
         private void DrawTrumpCard()
@@ -165,19 +168,56 @@ namespace OcentraAI.LLMGames.ThreeCardBrag.Manager
 
             GUILayout.BeginHorizontal();
 
-            Suit newSuit = DrawCardSuitPopup(Manager.TrumpDevCard.Suit);
-            Rank newRank = DrawCardRankPopup(Manager.TrumpDevCard.Rank);
-
-            if (newSuit != Manager.TrumpDevCard.Suit || newRank != Manager.TrumpDevCard.Rank)
+            if (Manager.TrumpDevCard != null)
             {
-                Manager.SetTrumpDevCard(newSuit, newRank);
+                Suit newSuit = DrawCardSuitPopup(Manager.TrumpDevCard.Suit);
+                Rank newRank = DrawCardRankPopup(Manager.TrumpDevCard.Rank);
+
+                if (newSuit != Manager.TrumpDevCard.Suit || newRank != Manager.TrumpDevCard.Rank)
+                {
+                    Manager.SetTrumpDevCard(newSuit, newRank);
+                }
             }
 
+            if (Manager.TrumpDevCard != null)
+            {
+                GUILayout.Label(new GUIContent(Manager.TrumpDevCard.RankSymbol), GetRichTextStyle());
+            }
+
+            GUILayout.EndHorizontal();
 
 
-            GUILayout.Label(new GUIContent(Manager.TrumpDevCard.CardText), GetRichTextStyle());
+        }
+
+
+
+        private void DrawResetButtons()
+        {
+            GUILayout.BeginHorizontal();
+
+            if (GUILayout.Button("Reset Dev Hand", GUILayout.Width(150)))
+            {
+                Manager.ResetDevHand();
+               
+            }
+
+            if (GUILayout.Button("Reset Computer Hand", GUILayout.Width(200)))
+            {
+                Manager.ResetDevComputerHand();
+               
+            }
+
+            if (GUILayout.Button("Reset All", GUILayout.Width(200)))
+            {
+                ResetBothHandsAndDeck();
+            }
+
             GUILayout.EndHorizontal();
         }
+
+        #endregion
+
+        #region Utility Methods
 
         private void PopulateRuleDictionary()
         {
@@ -194,40 +234,190 @@ namespace OcentraAI.LLMGames.ThreeCardBrag.Manager
 
         private void HandleTrumpSelection(bool useTrump, bool isPlayer)
         {
-            if (useTrump)
+            // If turning off "Use Trump", always allow it
+            if (!useTrump)
             {
-                // If one is selected, the other must be deselected
-                if (isPlayer)
-                {
-                    Manager.UseTrumpForPlayer = true;
-                    Manager.UseTrumpForComputer = false;
-                }
-                else
-                {
-                    Manager.UseTrumpForComputer = true;
-                    Manager.UseTrumpForPlayer = false;
-                }
+                SetUseTrumpForHand(isPlayer, false);
+                RegenerateHandIfNeeded(isPlayer);
+                return;
+            }
+
+            // If turning on "Use Trump", check if it's allowed
+            bool canUseTrump = isPlayer
+                ? !IsUsingTrumpOfAKind(SelectedComputerRuleIndex)
+                : !IsUsingTrumpOfAKind(SelectedPlayerRuleIndex);
+
+            if (canUseTrump)
+            {
+                SetUseTrumpForHand(isPlayer, true);
+                RegenerateHandIfNeeded(isPlayer);
             }
             else
             {
-                // If unchecking, re-add the trump card to the deck
-                if (isPlayer)
+                GameLogger.LogWarning($"Cannot enable 'Use Trump' for {(isPlayer ? "Player" : "Computer")}. TrumpOfAKind is already in use by the other hand.");
+            }
+        }
+
+        private string[] GetRuleKeys()
+        {
+            string[] ruleKeys = new string[RuleDictionary.Count];
+            int index = 0;
+            foreach (var key in RuleDictionary.Keys)
+            {
+                ruleKeys[index++] = key;
+            }
+            return ruleKeys;
+        }
+
+        private bool IsTrumpCardAvailable()
+        {
+            return Manager.TrumpDevCard != null && Manager.TrumpDevCard.Rank != Rank.None && Manager.TrumpDevCard.Suit != Suit.None;
+        }
+
+        private static GUIStyle GetRichTextStyle()
+        {
+            return new GUIStyle(EditorStyles.boldLabel) { richText = true };
+        }
+
+        private bool IsUsingTrumpOfAKind(int ruleIndex)
+        {
+            if (ruleIndex < 0 || ruleIndex >= RuleDictionary.Count)
+                return false;
+
+            string ruleName = RuleDictionary.Keys.ElementAt(ruleIndex);
+            return RuleDictionary.TryGetValue(ruleName, out BaseBonusRule rule) && rule?.RuleName == nameof(TrumpOfAKind);
+        }
+
+        private void SetUseTrumpForHand(bool isPlayerHand, bool useTrump)
+        {
+            if (isPlayerHand)
+            {
+                Manager.UseTrumpForPlayer = useTrump;
+            }
+            else
+            {
+                Manager.UseTrumpForComputer = useTrump;
+            }
+        }
+
+        #endregion
+
+        #region Card Manipulation Methods
+
+        private bool AreCardsAvailable(Card[] devCards, Card[] otherHand)
+        {
+            HashSet<string> usedCards = new HashSet<string>();
+            foreach (Card card in otherHand)
+            {
+                usedCards.Add(card.Id);
+            }
+
+            foreach (Card devCard in devCards)
+            {
+                if (usedCards.Contains(devCard.Id))
                 {
-                    Manager.UseTrumpForPlayer = false;
-                }
-                else
-                {
-                    Manager.UseTrumpForComputer = false;
+                    return false;
                 }
 
-                RegenerateHandIfNeeded(isPlayer);
+                bool cardInDeck = false;
+                for (int i = 0; i < Manager.DeckCards.Count; i++)
+                {
+                    if (Manager.DeckCards[i].Suit == devCard.Suit && Manager.DeckCards[i].Rank == devCard.Rank)
+                    {
+                        cardInDeck = true;
+                        break;
+                    }
+                }
+
+                if (!cardInDeck)
+                {
+                    return false;
+                }
+
+                usedCards.Add(devCard.Id);
             }
+            return true;
+        }
+
+        private Rank DrawCardRankPopup(Rank currentRank)
+        {
+            List<Rank> standardRanks = Rank.GetStandardRanks();
+
+            int currentIndex = -1;
+            for (int i = 0; i < standardRanks.Count; i++)
+            {
+                if (standardRanks[i] == currentRank)
+                {
+                    currentIndex = i;
+                    break;
+                }
+            }
+
+            if (currentIndex == -1)
+            {
+                currentIndex = 0;
+            }
+
+            string[] rankNames = new string[standardRanks.Count];
+            for (int i = 0; i < standardRanks.Count; i++)
+            {
+                rankNames[i] = standardRanks[i].Name;
+            }
+
+            int newIndex = EditorGUILayout.Popup(currentIndex, rankNames);
+
+            Rank selectedRank = standardRanks[newIndex];
+
+            return selectedRank;
+        }
+
+        private Suit DrawCardSuitPopup(Suit currentSuit)
+        {
+            List<Suit> standardSuits = Suit.GetStandardSuits();
+
+            int currentIndex = -1;
+            for (int i = 0; i < standardSuits.Count; i++)
+            {
+                if (standardSuits[i] == currentSuit)
+                {
+                    currentIndex = i;
+                    break;
+                }
+            }
+
+            if (currentIndex == -1)
+            {
+                currentIndex = 0;
+            }
+
+            string[] suitNames = new string[standardSuits.Count];
+            for (int i = 0; i < standardSuits.Count; i++)
+            {
+                suitNames[i] = standardSuits[i].Name;
+            }
+
+            int newIndex = EditorGUILayout.Popup(currentIndex, suitNames);
+
+            Suit selectedSuit = standardSuits[newIndex];
+
+
+
+            return selectedSuit;
         }
 
         private void RegenerateHandIfNeeded(bool isPlayerHand)
         {
-            DevCard[] currentHand = isPlayerHand ? Manager.DevHand : Manager.DevHandComputer;
-            bool containsTrump = currentHand.Any(card => card.Suit == Manager.TrumpDevCard.Suit && card.Rank == Manager.TrumpDevCard.Rank);
+            Card[] currentHand = isPlayerHand ? Manager.DevHand : Manager.DevHandComputer;
+            bool containsTrump = false;
+
+            for (int i = 0; i < currentHand.Length; i++)
+            {
+                if (currentHand[i].Suit == Manager.TrumpDevCard.Suit && currentHand[i].Rank == Manager.TrumpDevCard.Rank)
+                {
+                    containsTrump = true;
+                    break;
+                }
+            }
 
             if (containsTrump)
             {
@@ -237,9 +427,21 @@ namespace OcentraAI.LLMGames.ThreeCardBrag.Manager
 
         private void ApplySelectedRule(bool isPlayerHand, bool useTrump = false)
         {
-            string selectedRuleName = isPlayerHand ? RuleDictionary.Keys.ElementAt(SelectedPlayerRuleIndex) : RuleDictionary.Keys.ElementAt(SelectedComputerRuleIndex);
+            string selectedRuleName = null;
+            int index = isPlayerHand ? SelectedPlayerRuleIndex : SelectedComputerRuleIndex;
+            int i = 0;
 
-            if (RuleDictionary.TryGetValue(selectedRuleName, out BaseBonusRule selectedRule))
+            foreach (var key in RuleDictionary.Keys)
+            {
+                if (i == index)
+                {
+                    selectedRuleName = key;
+                    break;
+                }
+                i++;
+            }
+
+            if (selectedRuleName != null && RuleDictionary.TryGetValue(selectedRuleName, out BaseBonusRule selectedRule))
             {
                 if (selectedRule == null)
                 {
@@ -250,6 +452,24 @@ namespace OcentraAI.LLMGames.ThreeCardBrag.Manager
                 }
                 else
                 {
+                    if (selectedRule.RuleName == nameof(TrumpOfAKind))
+                    {
+                        // Check if the other hand is already using TrumpOfAKind
+                        bool otherHandUsingTrumpOfAKind = isPlayerHand
+                            ? IsUsingTrumpOfAKind(SelectedComputerRuleIndex)
+                            : IsUsingTrumpOfAKind(SelectedPlayerRuleIndex);
+
+                        if (otherHandUsingTrumpOfAKind)
+                        {
+                            GameLogger.LogWarning($"Cannot apply TrumpOfAKind to {(isPlayerHand ? "Player" : "Computer")} hand. It's already in use by the other hand.");
+                            return;
+                        }
+
+                        useTrump = true;
+                        SetUseTrumpForHand(isPlayerHand, true);
+                        GameLogger.Log($"'Use Trump' has been automatically enabled for the TrumpOfAKind rule for {(isPlayerHand ? "Player" : "Computer")}.");
+                    }
+
                     SetupHandForRule(selectedRule, isPlayerHand, useTrump);
                 }
             }
@@ -257,86 +477,118 @@ namespace OcentraAI.LLMGames.ThreeCardBrag.Manager
 
         private void SetupHandForRule(BaseBonusRule rule, bool isPlayerHand, bool useTrump = false)
         {
-            string trumpCardText = useTrump ? Manager.TrumpDevCard.GetCardText(false) : null;
+            string trumpCardText = useTrump ? Manager.TrumpDevCard.RankSymbol : null;
 
+            Card[] otherHand = isPlayerHand ? Manager.DevHandComputer : Manager.DevHand;
             AddCardBackToDeck(isPlayerHand ? Manager.DevHand : Manager.DevHandComputer);
 
-            // Attempt to create a valid hand that uses cards available in the deck
-            DevCard[] devCards = null;
+            Card[] devCards = null;
             bool validHand = false;
             int attempts = 0;
-            const int maxAttempts = 10;
+            const int maxAttempts = 20;
             string[] cardSymbols = new[] { Empty };
             while (!validHand && attempts < maxAttempts)
             {
                 cardSymbols = rule.CreateExampleHand(Manager.GameMode.NumberOfCards, trumpCardText, false);
-                devCards = DevCard.ConvertToDevCardFromSymbols(cardSymbols);
+                devCards = HandUtility.ConvertFromSymbols(cardSymbols).GetCards();
+                validHand = AreCardsAvailable(devCards, otherHand);
 
-                // Check if all the cards in the generated hand are available in the deck
-                validHand = AreCardsAvailable(devCards);
+                // Ensure the trump card is not in the hand if useTrump is false
+                if (!useTrump && ContainsTrumpCard(devCards))
+                {
+                    validHand = false;
+                }
+
                 if (!validHand)
                 {
                     attempts++;
                 }
             }
 
-            if (validHand && devCards != null)
+            if (validHand && devCards != null && devCards.Length == Manager.GameMode.NumberOfCards)
             {
                 RemoveUsedCards(devCards);
                 AssignHand(isPlayerHand, devCards);
-                EditorUtility.SetDirty(Manager);
             }
             else
             {
-                Debug.LogWarning($"Failed to generate a valid hand after multiple attempts. cardSymbols {Join("", cardSymbols)} devCards  {devCards?.Select(c => c.CardText)}");
+                GameLogger.LogWarning($"Failed to generate a valid hand after multiple attempts. cardSymbols {Join("", cardSymbols)} devCards {Join(", ", GetDevCardTexts(devCards))}");
             }
         }
 
-        private bool AreCardsAvailable(DevCard[] devCards)
+        private bool ContainsTrumpCard(Card[] hand)
         {
-            foreach (DevCard devCard in devCards)
+            foreach (var card in hand)
             {
-                if (!Manager.DeckCards.Any(card => card.Suit == devCard.Suit && card.Rank == devCard.Rank))
+                if (card.Suit == Manager.TrumpDevCard.Suit && card.Rank == Manager.TrumpDevCard.Rank)
                 {
-                    return false;
+                    return true;
                 }
             }
-            return true;
+            return false;
         }
 
-        private void RemoveUsedCards(DevCard[] devCards)
+        private void RemoveUsedCards(Card[] devCards)
         {
-            foreach (DevCard devCard in devCards)
+            if (devCards != null)
             {
-                Card cardToRemove = Manager.DeckCards.FirstOrDefault(card => card.Suit == devCard.Suit && card.Rank == devCard.Rank);
-                if (cardToRemove != null)
+                foreach (Card devCard in devCards)
                 {
-                    Manager.DeckCards.Remove(cardToRemove);
+                    if (Manager.DeckCards != null)
+                    {
+                        for (int i = Manager.DeckCards.Count - 1; i >= 0; i--)
+                        {
+                            if (Manager.DeckCards[i].Suit == devCard.Suit && Manager.DeckCards[i].Rank == devCard.Rank)
+                            {
+                                Manager.DeckCards.RemoveAt(i);
+                                break;
+                            }
+                        }
+                    }
                 }
             }
 
             // If deck is empty, reset it
-            if (Manager.DeckCards.Count == 0)
+            if (Manager.DeckCards is { Count: 0 })
             {
                 Manager.ResetDeck();
             }
         }
 
-        private void AddCardBackToDeck(IEnumerable<DevCard> devCards)
+        private void AddCardBackToDeck(IEnumerable<Card> devCards)
         {
-            foreach (DevCard devCard in devCards)
+            foreach (Card devCard in devCards)
             {
                 Card card = Deck.Instance.GetCard(devCard.Suit, devCard.Rank);
 
-                if (card != null && !Manager.DeckCards.Contains(card))
+                if (card != null)
                 {
-                    Manager.DeckCards.Add(card);
+                    bool cardExists = false;
+                    foreach (Card deckCard in Manager.DeckCards)
+                    {
+                        if (deckCard.Suit == card.Suit && deckCard.Rank == card.Rank)
+                        {
+                            cardExists = true;
+                            break;
+                        }
+                    }
+
+                    if (!cardExists)
+                    {
+                        Manager.DeckCards.Add(card);
+                    }
                 }
             }
         }
 
-        private void AssignHand(bool isPlayerHand, DevCard[] devCards)
+        private void AssignHand(bool isPlayerHand, Card[] devCards)
         {
+            if (devCards == null || devCards.Length != Manager.GameMode.NumberOfCards)
+            {
+                GameLogger.LogError($"Invalid devCards array: {(devCards == null ? "null" : $"length {devCards.Length}")}");
+                return;
+            }
+
             if (isPlayerHand)
             {
                 Manager.DevHand = devCards;
@@ -347,71 +599,86 @@ namespace OcentraAI.LLMGames.ThreeCardBrag.Manager
             }
         }
 
-        private void DrawDevHand(DevCard[] hand)
+        private bool ValidateDevHand(Card[] devHand, Card[] otherHand, out string errorMessage)
         {
-            GUILayout.BeginHorizontal();
-            foreach (DevCard devCard in hand)
+            errorMessage = Empty;
+
+            if (devHand == null)
             {
-                GUILayout.BeginHorizontal();
-                devCard.Suit = DrawCardSuitPopup(devCard.Suit);
-                devCard.Rank = DrawCardRankPopup(devCard.Rank);
-                GUILayout.Label(new GUIContent(devCard.CardText), GetRichTextStyle());
-                GUILayout.EndHorizontal();
+                errorMessage = "Dev hand is null.";
+                return false;
             }
-            GUILayout.EndHorizontal();
+
+            if (devHand.Length != Manager.GameMode.NumberOfCards)
+            {
+                errorMessage = $"Dev hand must contain exactly {Manager.GameMode.NumberOfCards} cards. Current count: {devHand.Length}";
+                return false;
+            }
+
+            HashSet<string> uniqueCards = new HashSet<string>();
+            for (int i = 0; i < devHand.Length; i++)
+            {
+                Card card = devHand[i];
+                if (card == null)
+                {
+                    errorMessage = $"Card at index {i} is null.";
+                    return false;
+                }
+
+                if (card.Suit == Suit.None || card.Rank == Rank.None)
+                {
+                    errorMessage = $"Card at index {i} has invalid Suit or Rank.";
+                    return false;
+                }
+
+                if (!uniqueCards.Add(card.Id))
+                {
+                    errorMessage = $"Duplicate card found: {card.Id}";
+                    return false;
+                }
+
+                bool cardInOtherHand = false;
+                for (int j = 0; j < otherHand.Length; j++)
+                {
+                    if (otherHand[j].Id == card.Id)
+                    {
+                        cardInOtherHand = true;
+                        break;
+                    }
+                }
+
+                if (cardInOtherHand)
+                {
+                    errorMessage = $"Card {card.Id} is already in the other player's hand.";
+                    return false;
+                }
+            }
+
+            return true;
         }
 
-        private Rank DrawCardRankPopup(Rank currentRank)
+        private string[] GetDevCardTexts(Card[] devCards)
         {
-            List<Rank> standardRanks = Rank.GetStandardRanks();
-
-            int currentIndex = standardRanks.IndexOf(currentRank);
-
-            if (currentIndex == -1)
+            if (devCards == null) return Array.Empty<string>();
+            string[] texts = new string[devCards.Length];
+            for (int i = 0; i < devCards.Length; i++)
             {
-                currentIndex = 0;
+                texts[i] = devCards[i].RankSymbol;
             }
-
-            string[] rankNames = standardRanks.Select(r => r.Name).ToArray();
-
-            int newIndex = EditorGUILayout.Popup(currentIndex, rankNames);
-
-            Rank selectedRank = standardRanks[newIndex];
-
-            // If the rank has changed, mark the manager as dirty
-            if (selectedRank != currentRank)
-            {
-                EditorUtility.SetDirty(Manager);
-            }
-
-            return selectedRank;
+            return texts;
         }
 
-        private Suit DrawCardSuitPopup(Suit currentSuit)
+        private void ResetBothHandsAndDeck()
         {
-            List<Suit> standardSuits = Suit.GetStandardSuits(); // Method similar to Rank's GetStandardRanks()
+            Manager.ResetDevHand();
+            Manager.ResetDevComputerHand();
+            Manager.ResetDeck();
+            Manager.SetTrumpDevCard();
 
-            int currentIndex = standardSuits.IndexOf(currentSuit);
-
-            if (currentIndex == -1)
-            {
-                currentIndex = 0;
-            }
-
-            string[] suitNames = standardSuits.Select(s => s.Name).ToArray();
-
-            int newIndex = EditorGUILayout.Popup(currentIndex, suitNames);
-
-            Suit selectedSuit = standardSuits[newIndex];
-
-            // If the suit has changed, mark the manager as dirty
-            if (selectedSuit != currentSuit)
-            {
-                EditorUtility.SetDirty(Manager);
-            }
-
-            return selectedSuit;
         }
+
+        #endregion
+
     }
 }
 

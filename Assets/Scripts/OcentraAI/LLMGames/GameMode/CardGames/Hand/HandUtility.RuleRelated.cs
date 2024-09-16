@@ -191,14 +191,17 @@ namespace OcentraAI.LLMGames.GameModes
         {
             if (!hand.IsSameSuits()) return false;
 
-            int[] ranks = new int[hand.GetCards().Length];
+            Rank[] ranks = new Rank[hand.GetCards().Length];
             for (int i = 0; i < hand.GetCards().Length; i++)
             {
-                ranks[i] = hand.GetCards()[i].Rank.Value;
+                ranks[i] = hand.GetCards()[i].Rank;
             }
 
-            Array.Sort(ranks);
-            int[] royalSequence = GetRoyalSequence(gameMode);
+            Array.Sort(ranks, (a, b) => b.CompareTo(a));
+
+            Rank[] royalSequence = Rank.GetTopNRanks(gameMode.NumberOfCards);
+
+            if (ranks.Length != royalSequence.Length) return false;
 
             for (int i = 0; i < ranks.Length; i++)
             {
@@ -207,22 +210,7 @@ namespace OcentraAI.LLMGames.GameModes
 
             return true;
         }
-
-        /// <summary>
-        /// Gets the ranks of a Royal Sequence for the specified game mode.
-        /// </summary>
-        public static int[] GetRoyalSequence(GameMode gameMode)
-        {
-            int[] royalRanks = new int[]
-            {
-                Rank.A.Value, Rank.K.Value, Rank.Q.Value, Rank.J.Value, Rank.Ten.Value,
-                Rank.Nine.Value, Rank.Eight.Value, Rank.Seven.Value, Rank.Six.Value
-            };
-
-            int[] result = new int[gameMode.NumberOfCards];
-            Array.Copy(royalRanks, result, gameMode.NumberOfCards);
-            return result;
-        }
+        
 
 
         /// <summary>

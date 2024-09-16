@@ -1,22 +1,22 @@
 using OcentraAI.LLMGames.GameModes.Rules;
+using OcentraAI.LLMGames.ThreeCardBrag.Manager;
 using OcentraAI.LLMGames.ThreeCardBrag.Rules;
 using Sirenix.OdinInspector;
 using Sirenix.Serialization;
 using System.Collections.Generic;
 using System.Linq;
-using UnityEditor;
 using UnityEngine;
 using static System.String;
 
 namespace OcentraAI.LLMGames.GameModes
 {
-    public abstract class GameMode : SerializedScriptableObject
+    public abstract class GameMode : SerializedScriptableObject, ISaveScriptable
     {
         #region Fields and Properties
         [OdinSerialize, HideInInspector] public Dictionary<BaseBonusRule, CustomRuleState> BaseBonusRulesTemplate { get; set; } = new Dictionary<BaseBonusRule, CustomRuleState>();
         [OdinSerialize, HideInInspector] public float Height { get; set; } = 100;
         [OdinSerialize, HideInInspector] public SortingCriteria CurrentSortingCriteria { get; set; } = SortingCriteria.PriorityAscending;
-       
+
         [FolderPath(AbsolutePath = true), ReadOnly]
         [OdinSerialize, ShowInInspector] public string RulesTemplatePath { get; set; } = "Assets/Resources/GameMode";
         [OdinSerialize, HideInInspector] public bool Foldout { get; set; } = false;
@@ -27,7 +27,7 @@ namespace OcentraAI.LLMGames.GameModes
         [OdinSerialize, ShowInInspector] public abstract float TurnDuration { get; protected set; }
 
         [OdinSerialize, ShowInInspector] public abstract int InitialPlayerCoins { get; protected set; }
-        
+
         [OdinSerialize, ShowInInspector] public abstract int BaseBet { get; protected set; }
 
         [OdinSerialize, ShowInInspector] public abstract int BaseBlindMultiplier { get; protected set; }
@@ -89,6 +89,8 @@ namespace OcentraAI.LLMGames.GameModes
         protected virtual bool TryInitializeBonusRules()
         {
 
+#if UNITY_EDITOR
+            
             List<BaseBonusRule> bonusRulesTemplate = new List<BaseBonusRule>();
             foreach (var ruleStatePair in BaseBonusRulesTemplate)
             {
@@ -98,8 +100,8 @@ namespace OcentraAI.LLMGames.GameModes
                 }
             }
 
-            string gameModePath = AssetDatabase.GetAssetPath(this);
-            Object[] assets = AssetDatabase.LoadAllAssetsAtPath(gameModePath);
+            string gameModePath = UnityEditor.AssetDatabase.GetAssetPath(this);
+            Object[] assets = UnityEditor.AssetDatabase.LoadAllAssetsAtPath(gameModePath);
 
             // Remove any corrupt or invalid assets
             foreach (Object asset in assets)
@@ -111,14 +113,14 @@ namespace OcentraAI.LLMGames.GameModes
                         DestroyImmediate(asset, true);
                     }
                 }
-                if (asset == null || asset.GetType() == typeof(MonoScript) || IsNullOrEmpty(asset.name))
+                if (asset == null || asset.GetType() == typeof(UnityEditor.MonoScript) || IsNullOrEmpty(asset.name))
                 {
                     Debug.LogWarning($"Found and removing invalid asset: {asset}");
                     DestroyImmediate(asset, true);
                 }
             }
 
-            assets = AssetDatabase.LoadAllAssetsAtPath(gameModePath);
+            assets = UnityEditor.AssetDatabase.LoadAllAssetsAtPath(gameModePath);
 
             List<BaseBonusRule> existingChildRules = assets.OfType<BaseBonusRule>().Where(r => r.RuleName != Empty).ToList();
 
@@ -148,7 +150,7 @@ namespace OcentraAI.LLMGames.GameModes
             {
                 if (existingRulesDict.TryGetValue(templateRule.RuleName, out BaseBonusRule existingRule))
                 {
-                    existingRule.UpdateRule(templateRule.BonusValue,templateRule.Priority);
+                    existingRule.UpdateRule(templateRule.BonusValue, templateRule.Priority);
                     updatedRules.Add(existingRule);
                 }
                 else
@@ -158,7 +160,7 @@ namespace OcentraAI.LLMGames.GameModes
                     if (newRule.SetGameMode(this))
                     {
                         updatedRules.Add(newRule);
-                        AssetDatabase.AddObjectToAsset(newRule, this);
+                        UnityEditor.AssetDatabase.AddObjectToAsset(newRule, this);
                     }
                     else
                     {
@@ -178,9 +180,10 @@ namespace OcentraAI.LLMGames.GameModes
             }
 
             BonusRules = updatedRules;
-            AssetDatabase.SaveAssets();
-            AssetDatabase.Refresh();
+            SaveChanges();
 
+
+#endif
             return true;
         }
 
@@ -287,15 +290,13 @@ namespace OcentraAI.LLMGames.GameModes
 
         #region Utility Methods
 
-#if UNITY_EDITOR
         [Button]
         public virtual void SaveChanges()
         {
-            EditorUtility.SetDirty(this);
-            AssetDatabase.SaveAssets();
-            AssetDatabase.Refresh();
-        }
+#if UNITY_EDITOR
+            EditorSaveManager.RequestSave(this);
 #endif
+        }
 
         #endregion
     }

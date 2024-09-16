@@ -13,7 +13,7 @@ namespace OcentraAI.LLMGames.GameModes
         /// </summary>
         public static int Sum(this Hand hand)
         {
-            return Sum(hand, card => card.GetRankValue());
+            return Sum(hand, card => card.Rank.Value);
         }
 
         /// <summary>
@@ -34,8 +34,8 @@ namespace OcentraAI.LLMGames.GameModes
         /// </summary>
         public static int Max(this Hand hand)
         {
-            Card maxCard = Max(hand, card => card.GetRankValue());
-            return maxCard?.GetRankValue() ?? int.MinValue;
+            Card maxCard = Max(hand, card => card.Rank.Value);
+            return maxCard?.Rank.Value ?? int.MinValue;
         }
 
         /// <summary>
@@ -64,8 +64,8 @@ namespace OcentraAI.LLMGames.GameModes
         /// </summary>
         public static int Min(this Hand hand)
         {
-            Card minCard = Min(hand, card => card.GetRankValue());
-            int rankValue = minCard?.GetRankValue() ?? int.MaxValue;
+            Card minCard = Min(hand, card => card.Rank.Value);
+            int rankValue = minCard?.Rank.Value ?? int.MaxValue;
             return rankValue;
         }
 

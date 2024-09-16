@@ -154,42 +154,68 @@ namespace OcentraAI.LLMGames.GameModes.Rules
                 return Array.Empty<string>();
             }
 
-            List<string> hand = new List<string>();
-            List<Rank> usedRanks = new List<Rank>();
+            string[] hand;
+            int attempts = 0;
+            const int maxAttempts = 100;
+            bool isValidHighCardHand = false;
 
-            // Ensure at least one high card (J or higher)
-            List<Rank> highCards = Rank.GetStandardRanks().Where(r => r.Value >= Rank.J.Value).ToList();
-            Rank highCard = highCards[Random.Range(0, highCards.Count)];
-            Suit highCardSuit = Suit.RandomBetweenStandard();
-            hand.Add($"{CardUtility.GetRankSymbol(highCardSuit, highCard, coloured)}");
-            usedRanks.Add(highCard);
-
-            List<Rank> availableRanks = new List<Rank>(Rank.GetStandardRanks());
-            availableRanks.Remove(highCard);
-
-            for (int i = 1; i < handSize; i++)
+            do
             {
-                if (!string.IsNullOrEmpty(trumpCard) && i == handSize - 1)
+                List<string> tempHand = new List<string>();
+                List<Rank> usedRanks = new List<Rank>();
+
+                // Ensure at least one high card (J or higher)
+                List<Rank> highCards = Rank.GetStandardRanks().Where(r => r.Value >= Rank.J.Value).ToList();
+                Rank highCard = highCards[Random.Range(0, highCards.Count)];
+                Suit highCardSuit = Suit.RandomBetweenStandard();
+                tempHand.Add($"{CardUtility.GetRankSymbol(highCardSuit, highCard, coloured)}");
+                usedRanks.Add(highCard);
+
+                List<Rank> availableRanks = new List<Rank>(Rank.GetStandardRanks());
+                availableRanks.Remove(highCard);
+
+                for (int i = 1; i < handSize; i++)
                 {
-                    hand.Add(trumpCard);
-                }
-                else
-                {
-                    Rank randomRank;
-                    do
+                    if (!string.IsNullOrEmpty(trumpCard) && i == handSize - 1)
                     {
-                        randomRank = availableRanks[Random.Range(0, availableRanks.Count)];
-                    } while (usedRanks.Contains(randomRank));
+                        tempHand.Add(trumpCard);
+                    }
+                    else
+                    {
+                        Rank randomRank;
+                        do
+                        {
+                            randomRank = availableRanks[Random.Range(0, availableRanks.Count)];
+                        } while (usedRanks.Contains(randomRank));
 
-                    Suit randomSuit = Suit.RandomBetweenStandard();
-                    hand.Add($"{CardUtility.GetRankSymbol(randomSuit, randomRank, coloured)}");
-                    usedRanks.Add(randomRank);
-                    availableRanks.Remove(randomRank);
+                        Suit randomSuit = Suit.RandomBetweenStandard();
+                        tempHand.Add($"{CardUtility.GetRankSymbol(randomSuit, randomRank, coloured)}");
+                        usedRanks.Add(randomRank);
+                        availableRanks.Remove(randomRank);
+                    }
                 }
-            }
 
-            return hand.ToArray();
+                hand = tempHand.ToArray();
+                Hand handToValidate = HandUtility.ConvertFromSymbols(hand);
+
+                // Ensure it's a high card hand (i.e., no other rules like sequences or full houses are applied)
+                isValidHighCardHand = !handToValidate.IsSequence() &&
+                                      !handToValidate.IsFullHouseOrTrumpOfKind(GetTrumpCard(), GameMode) &&
+                                      !handToValidate.IsSameSuits();
+
+                attempts++;
+
+                if (attempts >= maxAttempts)
+                {
+                    Debug.LogError($"Failed to generate a valid High Card hand after {maxAttempts} attempts.");
+                    return Array.Empty<string>();
+                }
+
+            } while (!isValidHighCardHand);
+
+            return hand;
         }
+
 
         private string CreateExampleString(int cardCount, bool isPlayer, bool useTrump = false)
         {

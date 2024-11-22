@@ -1,9 +1,9 @@
-using System.Threading.Tasks;
+using Cysharp.Threading.Tasks;
 
 namespace OcentraAI.LLMGames.LLMServices
 {
     public interface ILLMService
     {
-        Task<string> GetResponseAsync(string systemMessage, string userPrompt);
+        UniTask<string> GetResponseAsync(string systemMessage, string userPrompt);
     }
 }

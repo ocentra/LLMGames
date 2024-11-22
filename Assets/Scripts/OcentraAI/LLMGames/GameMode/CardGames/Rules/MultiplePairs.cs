@@ -4,7 +4,6 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using UnityEngine;
-using Random = UnityEngine.Random;
 
 namespace OcentraAI.LLMGames.GameModes.Rules
 {
@@ -19,7 +18,10 @@ namespace OcentraAI.LLMGames.GameModes.Rules
         public override bool Evaluate(Hand hand, out BonusDetail bonusDetail)
         {
             bonusDetail = null;
-            if (!hand.VerifyHand(GameMode, MinNumberOfCard)) return false;
+            if (!hand.VerifyHand(GameMode, MinNumberOfCard))
+            {
+                return false;
+            }
 
             Card trumpCard = GameMode.UseTrump ? GetTrumpCard() : null;
 
@@ -40,7 +42,10 @@ namespace OcentraAI.LLMGames.GameModes.Rules
             string bonusCalculationDescriptions = $"{BonusValue} * {pairs.Count} * {value}";
 
             int additionalBonus = 0;
-            List<string> descriptions = new List<string> { $"Multiple Pairs: {string.Join(", ", pairs.Select(rank => CardUtility.GetRankSymbol(Suit.Spade, rank)))}" };
+            List<string> descriptions = new List<string>
+            {
+                $"Multiple Pairs: {string.Join(", ", pairs.Select(rank => CardUtility.GetRankSymbol(Suit.Spade, rank)))}"
+            };
 
             if (GameMode.UseTrump && trumpCard != null && hand.HasTrumpCard(trumpCard))
             {
@@ -62,7 +67,8 @@ namespace OcentraAI.LLMGames.GameModes.Rules
                 bonusCalculationDescriptions += $" + {additionalBonus}";
             }
 
-            return CreateBonusDetails(RuleName, baseBonus, Priority, descriptions, bonusCalculationDescriptions, additionalBonus);
+            return CreateBonusDetails(RuleName, baseBonus, Priority, descriptions, bonusCalculationDescriptions,
+                additionalBonus);
         }
 
         public override bool Initialize(GameMode gameMode)
@@ -91,7 +97,8 @@ namespace OcentraAI.LLMGames.GameModes.Rules
                 }
             }
 
-            return TryCreateExample(RuleName, Description, BonusValue, playerExamples, llmExamples, playerTrumpExamples, llmTrumpExamples, gameMode.UseTrump);
+            return TryCreateExample(RuleName, Description, BonusValue, playerExamples, llmExamples, playerTrumpExamples,
+                llmTrumpExamples, gameMode.UseTrump);
         }
 
         public override string[] CreateExampleHand(int handSize, string trumpCardSymbol = null, bool coloured = true)
@@ -117,13 +124,13 @@ namespace OcentraAI.LLMGames.GameModes.Rules
                     Debug.LogError($"Failed to generate a valid Multiple Pairs hand after {maxAttempts} attempts.");
                     return Array.Empty<string>();
                 }
-            }
-            while (!HandUtility.ConvertFromSymbols(hand.ToArray()).IsMultiplePairs(trumpCard, GameMode.UseTrump, out _));
+            } while (!HandUtility.ConvertFromSymbols(hand.ToArray())
+                         .IsMultiplePairs(trumpCard, GameMode.UseTrump, out _));
 
             return hand.ToArray();
         }
 
-       
+
         private List<string> GeneratePotentialMultiplePairsHand(int handSize, Card trumpCard, bool coloured)
         {
             List<string> hand = new List<string>();

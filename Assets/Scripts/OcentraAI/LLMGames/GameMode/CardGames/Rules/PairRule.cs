@@ -18,7 +18,10 @@ namespace OcentraAI.LLMGames.GameModes.Rules
         public override bool Evaluate(Hand hand, out BonusDetail bonusDetail)
         {
             bonusDetail = null;
-            if (!hand.VerifyHand(GameMode, MinNumberOfCard)) return false;
+            if (!hand.VerifyHand(GameMode, MinNumberOfCard))
+            {
+                return false;
+            }
 
             Card trumpCard = GetTrumpCard();
 
@@ -28,8 +31,8 @@ namespace OcentraAI.LLMGames.GameModes.Rules
                 if (pairRank.Count == 1)
                 {
                     bonusDetail = CalculateBonus(pairRank[0]);
-
                 }
+
                 return true;
             }
 
@@ -39,8 +42,8 @@ namespace OcentraAI.LLMGames.GameModes.Rules
 
         private BonusDetail CalculateBonus(Rank pairRank)
         {
-            int baseBonus = BonusValue * (pairRank.Value * 2);
-            List<string> descriptions = new List<string> { $"Pair of {CardUtility.GetRankSymbol(Suit.Spade, pairRank)}" };
+            int baseBonus = BonusValue * pairRank.Value * 2;
+            List<string> descriptions = new List<string> {$"Pair of {CardUtility.GetRankSymbol(Suit.Spade, pairRank)}"};
             string bonusCalculationDescriptions = $"{BonusValue} * ({pairRank.Value} * 2)";
 
             return CreateBonusDetails(RuleName, baseBonus, Priority, descriptions, bonusCalculationDescriptions);
@@ -69,8 +72,8 @@ namespace OcentraAI.LLMGames.GameModes.Rules
                     Debug.LogError($"Failed to generate a valid Pair hand after {maxAttempts} attempts.");
                     return Array.Empty<string>();
                 }
-            }
-            while (!HandUtility.ConvertFromSymbols(hand).IsPair(trumpCard, GameMode.UseTrump, out List<Rank> pairRanks) && pairRanks.Count == 1);
+            } while (!HandUtility.ConvertFromSymbols(hand)
+                         .IsPair(trumpCard, GameMode.UseTrump, out List<Rank> pairRanks) && pairRanks.Count == 1);
 
             return hand;
         }
@@ -94,7 +97,9 @@ namespace OcentraAI.LLMGames.GameModes.Rules
             while (hand.Count < handSize)
             {
                 if (availableSuits.Count == 0)
+                {
                     availableSuits = CardUtility.GetAvailableSuits().ToList(); // Reset if needed
+                }
 
                 Suit suit = CardUtility.GetAndRemoveRandomSuit(availableSuits);
                 Rank rank;
@@ -111,10 +116,10 @@ namespace OcentraAI.LLMGames.GameModes.Rules
         }
 
 
-
         public override bool Initialize(GameMode gameMode)
         {
-            Description = "Exactly one pair of cards with the same rank (2 to A), valid only for hands of 3 to 9 cards, when no trump card is present, no other pairs or higher combinations exist, and the hand is not a potential sequence.";
+            Description =
+                "Exactly one pair of cards with the same rank (2 to A), valid only for hands of 3 to 9 cards, when no trump card is present, no other pairs or higher combinations exist, and the hand is not a potential sequence.";
 
             List<string> playerExamples = new List<string>();
             List<string> llmExamples = new List<string>();
@@ -129,7 +134,8 @@ namespace OcentraAI.LLMGames.GameModes.Rules
                 }
             }
 
-            return TryCreateExample(RuleName, Description, BonusValue, playerExamples, llmExamples, null, null, gameMode.UseTrump);
+            return TryCreateExample(RuleName, Description, BonusValue, playerExamples, llmExamples, null, null,
+                gameMode.UseTrump);
         }
 
         private string CreateExampleString(int cardCount)

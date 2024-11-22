@@ -10,12 +10,8 @@ namespace OcentraAI.LLMGames.GameModes
     [Serializable]
     public class Hand
     {
-        [OdinSerialize, ShowInInspector]
-        private  Card[] Cards { get;  set; }
-
         public Hand()
         {
-            
         }
 
         public Hand(IOrderedEnumerable<Card> cards)
@@ -33,6 +29,10 @@ namespace OcentraAI.LLMGames.GameModes
             Cards = cards.ToArray();
         }
 
+        [OdinSerialize][ShowInInspector] private Card[] Cards { get; set; }
+
+
+
         public void SetCards(Card[] newCards)
         {
             if (newCards == null || newCards.Length == 0)
@@ -47,6 +47,5 @@ namespace OcentraAI.LLMGames.GameModes
         {
             return Cards;
         }
-
     }
 }

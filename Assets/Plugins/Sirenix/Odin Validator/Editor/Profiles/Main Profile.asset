@@ -13,7 +13,7 @@ MonoBehaviour:
   m_Name: Main Profile
   m_EditorClassIdentifier: 
   Include:
-  - Enabled: 0
+  - Enabled: 1
     Type: 2
     Asset:
       Path: 
@@ -52,7 +52,7 @@ MonoBehaviour:
   - Enabled: 1
     Type: 0
     Asset:
-      Path: Assets/
+      Path: Assets
       Filter: 
     Object: {fileID: 0}
     Scene:

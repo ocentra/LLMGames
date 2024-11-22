@@ -4,7 +4,6 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using UnityEngine;
-using Random = UnityEngine.Random;
 
 namespace OcentraAI.LLMGames.GameModes.Rules
 {
@@ -19,7 +18,10 @@ namespace OcentraAI.LLMGames.GameModes.Rules
         public override bool Evaluate(Hand hand, out BonusDetail bonusDetail)
         {
             bonusDetail = null;
-            if (hand == null || !hand.VerifyHand(GameMode, MinNumberOfCard)) return false;
+            if (hand == null || !hand.VerifyHand(GameMode, MinNumberOfCard))
+            {
+                return false;
+            }
 
             if (hand.IsFullHouse(GetTrumpCard(), GameMode))
             {
@@ -32,11 +34,14 @@ namespace OcentraAI.LLMGames.GameModes.Rules
 
         private BonusDetail CalculateBonus(Hand hand)
         {
-            if (hand == null) return null;
+            if (hand == null)
+            {
+                return null;
+            }
 
             int totalBonus = BonusValue * hand.Sum();
             int additionalBonus = 0;
-            List<string> descriptions = new List<string> { "Full House" };
+            List<string> descriptions = new List<string> {"Full House"};
             string bonusCalculationDescriptions = $"{BonusValue} * {hand.Sum()}";
 
             if (GameMode.UseTrump && hand.Contains(GetTrumpCard()))
@@ -50,7 +55,8 @@ namespace OcentraAI.LLMGames.GameModes.Rules
                 bonusCalculationDescriptions += $" + {additionalBonus}";
             }
 
-            return CreateBonusDetails(RuleName, totalBonus, Priority, descriptions, bonusCalculationDescriptions, additionalBonus);
+            return CreateBonusDetails(RuleName, totalBonus, Priority, descriptions, bonusCalculationDescriptions,
+                additionalBonus);
         }
 
         public override string[] CreateExampleHand(int handSize, string trumpCardSymbol = null, bool coloured = true)
@@ -84,7 +90,6 @@ namespace OcentraAI.LLMGames.GameModes.Rules
                     Debug.LogError($"Failed to generate a valid Full House hand after {maxAttempts} attempts.");
                     return Array.Empty<string>();
                 }
-
             } while (!isFullHouse);
 
             return hand;
@@ -131,14 +136,10 @@ namespace OcentraAI.LLMGames.GameModes.Rules
         }
 
 
-
-
-
-
-
         public override bool Initialize(GameMode gameMode)
         {
-            Description = "Full House with at least 3 of the highest non-trump rank, adjusted according to the trump card's rank.";
+            Description =
+                "Full House with at least 3 of the highest non-trump rank, adjusted according to the trump card's rank.";
 
             List<string> playerExamples = new List<string>();
             List<string> llmExamples = new List<string>();
@@ -165,7 +166,8 @@ namespace OcentraAI.LLMGames.GameModes.Rules
                 }
             }
 
-            return TryCreateExample(RuleName, Description, BonusValue, playerExamples, llmExamples, playerTrumpExamples, llmTrumpExamples, gameMode.UseTrump);
+            return TryCreateExample(RuleName, Description, BonusValue, playerExamples, llmExamples, playerTrumpExamples,
+                llmTrumpExamples, gameMode.UseTrump);
         }
 
         private string CreateExampleString(int cardCount, bool useTrump = false)

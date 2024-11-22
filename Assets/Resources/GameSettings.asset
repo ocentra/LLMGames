@@ -12,8 +12,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 4aaefb2a8eadb794e996d63744ad3b9a, type: 3}
   m_Name: GameSettings
   m_EditorClassIdentifier: 
-  UnityLog: 0
-  UnityLogWarning: 0
-  UnityLogError: 1
+  DevModeEnabled: 0
   FileLog: 0
-  DevModeEnabled: 1
+  UnityLog: 0
+  UnityLogError: 0
+  UnityLogWarning: 0

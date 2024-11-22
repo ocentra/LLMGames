@@ -1,18 +1,15 @@
 using OcentraAI.LLMGames.Scriptable;
-using OcentraAI.LLMGames.Utilities;
-using System;
-using System.Collections.Generic;
 using UnityEngine;
 
 namespace OcentraAI.LLMGames.GameModes
 {
     /// <summary>
-    /// Contains operations for analyzing hands, such as finding the highest/worst cards, etc.
+    ///     Contains operations for analyzing hands, such as finding the highest/worst cards, etc.
     /// </summary>
     public static partial class HandUtility
     {
         /// <summary>
-        /// Finds the highest card in the hand that is greater than or equal to a specified minimum rank.
+        ///     Finds the highest card in the hand that is greater than or equal to a specified minimum rank.
         /// </summary>
         public static Card FindHighestCard(this Hand hand, Rank minimumRank = null)
         {
@@ -25,20 +22,26 @@ namespace OcentraAI.LLMGames.GameModes
             for (int i = 0; i < hand.GetCards().Length; i++)
             {
                 Card card = hand.GetCards()[i];
-                if (card.Rank.Value >= minimumRank.Value && (highestCard == null || card.Rank.Value > highestCard.Rank.Value))
+                if (card.Rank.Value >= minimumRank.Value &&
+                    (highestCard == null || card.Rank.Value > highestCard.Rank.Value))
                 {
                     highestCard = card;
                 }
             }
+
             return highestCard;
         }
 
         /// <summary>
-        /// Finds the worst card in the hand.
+        ///     Finds the worst card in the hand.
         /// </summary>
         public static Card FindWorstCard(this Hand hand)
         {
-            if (hand.GetCards().Length == 0) return null;
+            if (hand.GetCards().Length == 0)
+            {
+                return null;
+            }
+
             Card worstCard = hand.GetCards()[0];
             for (int i = 1; i < hand.GetCards().Length; i++)
             {
@@ -52,18 +55,18 @@ namespace OcentraAI.LLMGames.GameModes
         }
 
         /// <summary>
-        /// Cleans up the hand by destroying all card objects.
+        ///     Cleans up the hand by destroying all card objects.
         /// </summary>
         public static void CleanupHand(this Hand hand)
         {
             foreach (Card card in hand.GetCards())
             {
-                UnityEngine.Object.DestroyImmediate(card);
+                Object.DestroyImmediate(card);
             }
         }
 
         /// <summary>
-        /// Prints the hand to the console.
+        ///     Prints the hand to the console.
         /// </summary>
         public static void Print(this Hand hand)
         {
@@ -73,7 +76,7 @@ namespace OcentraAI.LLMGames.GameModes
                 return;
             }
 
-            string handAsString = GetHandAsSymbols(hand, true);
+            string handAsString = GetHandAsSymbols(hand);
             Debug.Log($"Hand: {handAsString}");
         }
     }

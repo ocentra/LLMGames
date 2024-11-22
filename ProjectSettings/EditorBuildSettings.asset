@@ -6,6 +6,20 @@ EditorBuildSettings:
   serializedVersion: 2
   m_Scenes:
   - enabled: 1
+    path: Assets/Scenes/MainMenu.unity
+    guid: 44087ce58b1346d43a855e33c427cf35
+  - enabled: 1
     path: Assets/Scenes/ThreeCardBrag.unity
     guid: 8c9cfa26abfee488c85f1582747f6a02
-  m_configObjects: {}
+  - enabled: 1
+    path: Assets/Scenes/ThreeCardBragOld.unity
+    guid: f54d82cc897fca94b8a0b6f737234f69
+  - enabled: 1
+    path: Assets/Scenes/TestingLoad.unity
+    guid: fe02efe16e365fc49881396a75fce8a7
+  m_configObjects:
+    com.unity.adaptiveperformance.loader_settings: {fileID: 11400000, guid: 6ace702fcf771cd4cb2230be2870b2bd,
+      type: 2}
+    com.unity.adaptiveperformance.simulator.provider_settings: {fileID: 11400000,
+      guid: 846b4a4bcb4faf44a9dbec6ee16672c3, type: 2}
+  m_UseUCBPForAssetBundles: 0

@@ -1,28 +1,32 @@
 using Sirenix.OdinInspector;
 using Sirenix.OdinInspector.Editor;
+using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+#if UNITY_EDITOR
 using UnityEditor;
+#endif
 using UnityEngine;
 
 public class CombineCsFilesEditor : OdinEditorWindow
 {
-    [FolderPath(AbsolutePath = true)]
-    public string StartDirectory = "Assets";
-
-    [ReadOnly]
-    public string OutputFile = "Assets/CombinedFiles.txt";
-
-    [ReadOnly]
-    public List<string> SelectedFiles = new List<string>();
     private readonly Dictionary<string, bool> fileSelectionMap = new Dictionary<string, bool>();
     private readonly Dictionary<string, bool> folderFoldoutMap = new Dictionary<string, bool>();
+
+    private bool manualSelectionFoldout = true; // Variable to manage the foldout state
+
+    [ReadOnly] public string OutputFile = "Assets/CombinedFiles.txt";
+
+    [ReadOnly] public List<string> SelectedFiles = new List<string>();
+
+    [FolderPath(AbsolutePath = true)] public string StartDirectory = "Assets";
+
     private Vector2 ScrollPosition { get; set; }
     private string ScriptFilePath { get; set; }
 
     private string SearchQuery { get; set; } = ""; // Search query
-    private string SearchResult { get; set; } = null; // Search result path
+    private string SearchResult { get; set; } // Search result path
 
     [MenuItem("Tools/Combine CS Files")]
     public static void ShowWindow()
@@ -34,7 +38,8 @@ public class CombineCsFilesEditor : OdinEditorWindow
     {
         ScriptFilePath = NormalizePath(AssetDatabase.GetAssetPath(MonoScript.FromScriptableObject(this)));
         StartDirectory = NormalizePath(PlayerPrefs.GetString("CombineCSFilesEditor_startDirectory", "Assets"));
-        OutputFile = NormalizePath(PlayerPrefs.GetString("CombineCSFilesEditor_outputFile", "Assets/CombinedFiles.txt"));
+        OutputFile =
+            NormalizePath(PlayerPrefs.GetString("CombineCSFilesEditor_outputFile", "Assets/CombinedFiles.txt"));
         RefreshFileList();
     }
 
@@ -74,7 +79,7 @@ public class CombineCsFilesEditor : OdinEditorWindow
             AssetDatabase.Refresh();
             EditorUtility.DisplayDialog("Success", $"All .cs files have been combined into {OutputFile}", "OK");
         }
-        catch (System.Exception ex)
+        catch (Exception ex)
         {
             EditorUtility.DisplayDialog("Error", $"An error occurred: {ex.Message}", "OK");
         }
@@ -119,15 +124,13 @@ public class CombineCsFilesEditor : OdinEditorWindow
                 }
             }
         }
-        catch (System.UnauthorizedAccessException)
+        catch (UnauthorizedAccessException)
         {
             // Skip directories that we cannot access
         }
 
         return hasCsFiles;
     }
-
-    private bool manualSelectionFoldout = true; // Variable to manage the foldout state
 
     protected override void OnImGUI()
     {
@@ -144,6 +147,7 @@ public class CombineCsFilesEditor : OdinEditorWindow
                     {
                         OpenSaveFileDialog();
                     }
+
                     GUILayout.EndHorizontal();
                 }
                 else
@@ -161,17 +165,22 @@ public class CombineCsFilesEditor : OdinEditorWindow
                 {
                     EditorUtility.DisplayDialog("Search Result", $"No file named {SearchQuery} found.", "OK");
                 }
+
                 Repaint();
             }
+
             GUILayout.EndHorizontal();
 
-            manualSelectionFoldout = EditorGUILayout.BeginFoldoutHeaderGroup(manualSelectionFoldout, "Manual File Selection");
+            manualSelectionFoldout =
+                EditorGUILayout.BeginFoldoutHeaderGroup(manualSelectionFoldout, "Manual File Selection");
             if (manualSelectionFoldout)
             {
-                ScrollPosition = EditorGUILayout.BeginScrollView(ScrollPosition, false, false, GUILayout.ExpandHeight(true));
+                ScrollPosition =
+                    EditorGUILayout.BeginScrollView(ScrollPosition, false, false, GUILayout.ExpandHeight(true));
                 DisplayFileTree(StartDirectory);
                 EditorGUILayout.EndScrollView();
             }
+
             EditorGUILayout.EndFoldoutHeaderGroup();
 
             GUILayout.Space(10);
@@ -189,7 +198,7 @@ public class CombineCsFilesEditor : OdinEditorWindow
     {
         string foundFile = fileSelectionMap.Keys
             .FirstOrDefault(file => Path.GetFileNameWithoutExtension(file)
-                .Equals(filename, System.StringComparison.OrdinalIgnoreCase));
+                .Equals(filename, StringComparison.OrdinalIgnoreCase));
 
         if (foundFile != null)
         {
@@ -210,7 +219,6 @@ public class CombineCsFilesEditor : OdinEditorWindow
             directoriesToExpand.Add(NormalizePath(StartDirectory));
 
 
-
             foreach (var dir in directoriesToExpand)
             {
                 folderFoldoutMap[dir] = true;
@@ -220,7 +228,8 @@ public class CombineCsFilesEditor : OdinEditorWindow
 
 
             string directoriesToExpandLog = "Directories to expand:\n" + string.Join("\n", directoriesToExpand);
-            string folderFoldoutMapLog = "State of folderFoldoutMap:\n" + string.Join("\n", folderFoldoutMap.Select(kvp => $"{kvp.Key}: {kvp.Value}"));
+            string folderFoldoutMapLog = "State of folderFoldoutMap:\n" +
+                                         string.Join("\n", folderFoldoutMap.Select(kvp => $"{kvp.Key}: {kvp.Value}"));
 
             //Debug.Log(directoriesToExpandLog);
             //Debug.Log(folderFoldoutMapLog);
@@ -232,7 +241,10 @@ public class CombineCsFilesEditor : OdinEditorWindow
     private void DisplayFileTree(string directory)
     {
         directory = NormalizePath(directory);
-        if (!DirectoryContainsCsFiles(directory)) return;
+        if (!DirectoryContainsCsFiles(directory))
+        {
+            return;
+        }
 
         EditorGUILayout.BeginVertical(EditorStyles.helpBox);
 
@@ -250,6 +262,7 @@ public class CombineCsFilesEditor : OdinEditorWindow
             SetFolderSelection(directory, newFolderSelection);
             Repaint();
         }
+
         EditorGUILayout.EndHorizontal();
 
         if (foldout)
@@ -296,10 +309,11 @@ public class CombineCsFilesEditor : OdinEditorWindow
                         UpdateSelectedFiles(file, newState);
                         Repaint();
                     }
+
                     EditorGUILayout.EndHorizontal();
                 }
             }
-            catch (System.UnauthorizedAccessException)
+            catch (UnauthorizedAccessException)
             {
                 // Skip directories that we cannot access
             }
@@ -402,9 +416,13 @@ public class CombineCsFilesEditor : OdinEditorWindow
     {
         directory = NormalizePath(directory);
         var parentDirectoryInfo = Directory.GetParent(directory);
-        if (parentDirectoryInfo == null) return;
+        if (parentDirectoryInfo == null)
+        {
+            return;
+        }
 
-        string parentDirectory = NormalizePath(parentDirectoryInfo.FullName.Replace(Application.dataPath.Replace("\\", "/"), "Assets"));
+        string parentDirectory =
+            NormalizePath(parentDirectoryInfo.FullName.Replace(Application.dataPath.Replace("\\", "/"), "Assets"));
 
         if (Directory.Exists(parentDirectory))
         {

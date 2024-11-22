@@ -19,7 +19,10 @@ namespace OcentraAI.LLMGames.GameModes.Rules
         public override bool Evaluate(Hand hand, out BonusDetail bonusDetail)
         {
             bonusDetail = null;
-            if (!GameMode.UseTrump || !hand.VerifyHand(GameMode, MinNumberOfCard)) return false;
+            if (!GameMode.UseTrump || !hand.VerifyHand(GameMode, MinNumberOfCard))
+            {
+                return false;
+            }
 
             Card trumpCard = GetTrumpCard();
             int trumpCount = hand.Count(card => card.Rank == trumpCard.Rank);
@@ -40,7 +43,8 @@ namespace OcentraAI.LLMGames.GameModes.Rules
         private BonusDetail CalculateBonus(Hand hand, Hand remainingCards = null)
         {
             int baseBonus = BonusValue * hand.Sum();
-            List<string> descriptions = new List<string> { $"Trump of a Kind: All {GameMode.NumberOfCards} of Trump Cards" };
+            List<string> descriptions =
+                new List<string> {$"Trump of a Kind: All {GameMode.NumberOfCards} of Trump Cards"};
 
             string bonusCalculationDescriptions = $"{BonusValue} * {hand.Sum()}";
             int additionalBonus = 0;
@@ -60,32 +64,43 @@ namespace OcentraAI.LLMGames.GameModes.Rules
                 bonusCalculationDescriptions += $" + {additionalBonus}";
             }
 
-            return CreateBonusDetails(RuleName, baseBonus, Priority, descriptions, bonusCalculationDescriptions, additionalBonus);
+            return CreateBonusDetails(RuleName, baseBonus, Priority, descriptions, bonusCalculationDescriptions,
+                additionalBonus);
         }
 
         private (string description, int bonus) EvaluateRemainingCards(Hand remainingHand)
         {
             if (remainingHand.IsRoyalSequence(GameMode))
-                return ("Royal Sequence: " + remainingHand.GetHandAsSymbols(), GameMode.TrumpBonusValues.RoyalFlushBonus);
+            {
+                return ("Royal Sequence: " + remainingHand.GetHandAsSymbols(),
+                    GameMode.TrumpBonusValues.RoyalFlushBonus);
+            }
 
             if (remainingHand.IsSequence())
             {
                 if (remainingHand.IsSameSuits())
-                    return ("Straight Flush: " + remainingHand.GetHandAsSymbols(), GameMode.TrumpBonusValues.StraightFlushBonus);
+                {
+                    return ("Straight Flush: " + remainingHand.GetHandAsSymbols(),
+                        GameMode.TrumpBonusValues.StraightFlushBonus);
+                }
 
-                return remainingHand.IsSameColorAndDifferentSuits() ?
-                    ("Same Color Sequence: " + remainingHand.GetHandAsSymbols(), GameMode.TrumpBonusValues.SameColorBonus) :
-                    ("Sequence: " + remainingHand.GetHandAsSymbols(), GameMode.TrumpBonusValues.SequenceBonus);
+                return remainingHand.IsSameColorAndDifferentSuits()
+                    ? ("Same Color Sequence: " + remainingHand.GetHandAsSymbols(),
+                        GameMode.TrumpBonusValues.SameColorBonus)
+                    : ("Sequence: " + remainingHand.GetHandAsSymbols(), GameMode.TrumpBonusValues.SequenceBonus);
             }
 
             switch (remainingHand.Count())
             {
                 case 5 when remainingHand.IsNOfAKind(Rank.A, 4) && remainingHand.Any(card => card.Rank == Rank.K):
-                    return ("Four of a Kind: " + remainingHand.GetHandAsSymbols(), GameMode.TrumpBonusValues.FourOfKindBonus);
+                    return ("Four of a Kind: " + remainingHand.GetHandAsSymbols(),
+                        GameMode.TrumpBonusValues.FourOfKindBonus);
                 case 4 when remainingHand.IsNOfAKind(Rank.A, 4):
-                    return ("Four of a Kind: " + remainingHand.GetHandAsSymbols(), GameMode.TrumpBonusValues.FourOfKindBonus);
+                    return ("Four of a Kind: " + remainingHand.GetHandAsSymbols(),
+                        GameMode.TrumpBonusValues.FourOfKindBonus);
                 case 3 when remainingHand.IsNOfAKind(Rank.A, 3):
-                    return ("Three of a Kind: " + remainingHand.GetHandAsSymbols(), GameMode.TrumpBonusValues.ThreeOfKindBonus);
+                    return ("Three of a Kind: " + remainingHand.GetHandAsSymbols(),
+                        GameMode.TrumpBonusValues.ThreeOfKindBonus);
                 case 2 when remainingHand.IsNOfAKind(Rank.A, 2):
                     return ("Two Pair: " + remainingHand.GetHandAsSymbols(), GameMode.TrumpBonusValues.PairBonus);
                 case 1 when remainingHand.IsNOfAKind(Rank.A, 1):
@@ -97,7 +112,10 @@ namespace OcentraAI.LLMGames.GameModes.Rules
 
         public override bool Initialize(GameMode gameMode)
         {
-            if (!gameMode.UseTrump) return false;
+            if (!gameMode.UseTrump)
+            {
+                return false;
+            }
 
             Description = $"All {gameMode.NumberOfCards} Trump cards Rank in the hand.";
 
@@ -113,11 +131,10 @@ namespace OcentraAI.LLMGames.GameModes.Rules
                     llmExamples.Add(exampleHand);
                     playerExamples.Add(HandUtility.GetHandAsSymbols(exampleHand.Split(", ").ToList()));
                 }
-
-
             }
 
-            return TryCreateExample(RuleName, Description, BonusValue, playerExamples, llmExamples, null, null, gameMode.UseTrump);
+            return TryCreateExample(RuleName, Description, BonusValue, playerExamples, llmExamples, null, null,
+                gameMode.UseTrump);
         }
 
         public override string[] CreateExampleHand(int handSize, string trumpCard = null, bool coloured = true)
@@ -139,16 +156,14 @@ namespace OcentraAI.LLMGames.GameModes.Rules
 
                 if (attempts >= maxAttempts)
                 {
-                    Debug.LogWarning($"Could not generate a valid hand meeting the condition after {maxAttempts} attempts.");
+                    Debug.LogWarning(
+                        $"Could not generate a valid hand meeting the condition after {maxAttempts} attempts.");
                     break;
                 }
-            }
-            while (!HandMeetsCriteria(hand, handSize, CardUtility.GetRankFromSymbol(trumpCard)));
+            } while (!HandMeetsCriteria(hand, handSize, CardUtility.GetRankFromSymbol(trumpCard)));
 
             return hand.ToArray();
         }
-
-
 
 
         private List<string> GeneratePotentialHand(int handSize, string trumpCard, bool coloured)
@@ -204,16 +219,13 @@ namespace OcentraAI.LLMGames.GameModes.Rules
         }
 
 
-
-
-
         private List<string> GenerateRandomHand(int handSize, Rank trumpRank, bool coloured)
         {
             List<string> hand = new List<string>();
 
             List<Suit> availableSuits = CardUtility.GetAvailableSuits().ToList();
 
-            int trumpCardsToInclude = GameMode.NumberOfCards == 3 ? 3 :4;
+            int trumpCardsToInclude = GameMode.NumberOfCards == 3 ? 3 : 4;
 
             for (int i = 0; i < trumpCardsToInclude; i++)
             {

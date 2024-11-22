@@ -21,15 +21,15 @@ MonoBehaviour:
     PrefabModificationsReferencedUnityObjects: []
     PrefabModifications: []
     SerializationNodes: []
-  suit:
+  id: NullCard_N
+  path: Assets/Images/Cards/NullCard_of_nones.png
+  rank:
+    alias: NullCard
+    name: NullCard
     value: 0
+  rankSymbol: None
+  texture2D: {fileID: 0}
+  suit:
     name: None
     symbol: N
-  rank:
     value: 0
-    name: NullCard
-    alias: NullCard
-  sprite: {fileID: 0}
-  path: Assets/Images/Cards/NullCard_of_nones.png
-  rankSymbol: None
-  id: NullCard_N

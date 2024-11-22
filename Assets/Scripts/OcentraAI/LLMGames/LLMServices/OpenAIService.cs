@@ -14,8 +14,5 @@ namespace OcentraAI.LLMGames.LLMServices
             var response = JsonConvert.DeserializeObject<OpenAIResponse>(jsonResponse);
             return response.Choices[0].Text;
         }
-
-
     }
 }
-

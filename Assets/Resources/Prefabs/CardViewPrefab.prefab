@@ -88,6 +88,12 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: d8ea65ae119513c4695f49583e52b94a, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  originalMainCardMaterials: []
+  copiedMainCardMaterials: []
+  originalHighlightMaterials: []
+  copiedHighlightMaterials: []
+  HighlightColor: {r: 0, g: 0, b: 0, a: 0}
+  MainCardColor: {r: 0, g: 0, b: 0, a: 0}
 --- !u!1 &5743402790814921477
 GameObject:
   m_ObjectHideFlags: 0

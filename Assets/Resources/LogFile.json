@@ -1,0 +1,28 @@
+{
+  "Timestamp": "2024-11-22 10:43:50",
+  "Level": "Info",
+  "Message": "EventBus.CollectEventTypesAsync.422 : Collect EventTypes completed in 815 ms",
+  "CloneId": "LLMgames_clone_0",
+  "PlayerName": ""
+}
+{
+  "Timestamp": "2024-11-22 10:49:38",
+  "Level": "Info",
+  "Message": "EventBus.CollectEventTypesAsync.422 : Collect EventTypes completed in 721 ms",
+  "CloneId": "",
+  "PlayerName": ""
+}
+{
+  "Timestamp": "2024-11-22 10:51:20",
+  "Level": "Info",
+  "Message": "EventBus.CollectEventTypesAsync.422 : Collect EventTypes completed in 684 ms",
+  "CloneId": "",
+  "PlayerName": ""
+}
+{
+  "Timestamp": "2024-11-22 11:02:48",
+  "Level": "Info",
+  "Message": "PlayerUI.ShowTimer.293 : PlayerTimer visibility set to False",
+  "CloneId": "",
+  "PlayerName": null
+}

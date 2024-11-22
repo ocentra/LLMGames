@@ -21,15 +21,15 @@ MonoBehaviour:
     PrefabModificationsReferencedUnityObjects: []
     PrefabModifications: []
     SerializationNodes: []
+  id: "queen_\u2663"
+  path: Assets/Images/Cards/queen_of_clubs.png
+  rank:
+    alias: queen
+    name: Q
+    value: 12
+  rankSymbol: "<color=#000000>Q</color><color=#000000>\u2663</color>"
+  texture2D: {fileID: 2800000, guid: c8877077aff17e64ab269268a8a2d3e6, type: 3}
   suit:
-    value: 3
     name: Club
     symbol: "\u2663"
-  rank:
-    value: 12
-    name: Q
-    alias: queen
-  sprite: {fileID: 21300000, guid: c8877077aff17e64ab269268a8a2d3e6, type: 3}
-  path: Assets/Images/Cards/queen_of_clubs.png
-  rankSymbol: "<color=#000000>Q</color><color=#000000>\u2663</color>"
-  id: "queen_\u2663"
+    value: 3

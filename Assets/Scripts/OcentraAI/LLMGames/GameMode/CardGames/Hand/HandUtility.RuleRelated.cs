@@ -8,13 +8,12 @@ using UnityEngine;
 namespace OcentraAI.LLMGames.GameModes
 {
     /// <summary>
-    /// Contains operations for combinations such as N-of-a-kind, Full House, Pair, etc.
+    ///     Contains operations for combinations such as N-of-a-kind, Full House, Pair, etc.
     /// </summary>
     public static partial class HandUtility
     {
-
         /// <summary>
-        /// Determines if the hand has N-of-a-Kind for a specific rank.
+        ///     Determines if the hand has N-of-a-Kind for a specific rank.
         /// </summary>
         public static bool IsNOfAKind(this Hand hand, Rank rank, int numberOfCards)
         {
@@ -26,11 +25,12 @@ namespace OcentraAI.LLMGames.GameModes
                     count++;
                 }
             }
+
             return count == numberOfCards;
         }
 
         /// <summary>
-        /// Determines if the hand has N-of-a-Kind for any rank.
+        ///     Determines if the hand has N-of-a-Kind for any rank.
         /// </summary>
         public static bool IsNOfAKind(this Hand hand, int numberOfCards)
         {
@@ -43,19 +43,30 @@ namespace OcentraAI.LLMGames.GameModes
                     return true;
                 }
             }
+
             return false;
         }
 
         /// <summary>
-        /// Gets the highest sequence of ranks in the hand.
+        ///     Gets the highest sequence of ranks in the hand.
         /// </summary>
         public static List<Rank> GetHighestSequence(int numberOfCards)
         {
             List<Rank> baseSequence = new List<Rank>
             {
-                Rank.Two, Rank.Three, Rank.Four, Rank.Five, Rank.Six,
-                Rank.Seven, Rank.Eight, Rank.Nine, Rank.Ten,
-                Rank.J, Rank.Q, Rank.K, Rank.A
+                Rank.Two,
+                Rank.Three,
+                Rank.Four,
+                Rank.Five,
+                Rank.Six,
+                Rank.Seven,
+                Rank.Eight,
+                Rank.Nine,
+                Rank.Ten,
+                Rank.J,
+                Rank.Q,
+                Rank.K,
+                Rank.A
             };
 
             List<Rank> result = new List<Rank>();
@@ -72,7 +83,7 @@ namespace OcentraAI.LLMGames.GameModes
         }
 
         /// <summary>
-        /// Generates a Straight Flush sequence for the specified number of cards.
+        ///     Generates a Straight Flush sequence for the specified number of cards.
         /// </summary>
         public static List<Rank> GetStraightFlush(int numberOfCards)
         {
@@ -97,7 +108,7 @@ namespace OcentraAI.LLMGames.GameModes
         }
 
         /// <summary>
-        /// Checks if a sequence is a Royal Sequence.
+        ///     Checks if a sequence is a Royal Sequence.
         /// </summary>
         private static bool IsRoyalSequence(IReadOnlyList<Rank> sequence, IReadOnlyList<Rank> royalSequence)
         {
@@ -113,6 +124,7 @@ namespace OcentraAI.LLMGames.GameModes
                     return false;
                 }
             }
+
             return true;
         }
 
@@ -126,13 +138,19 @@ namespace OcentraAI.LLMGames.GameModes
             Rank threeOfAKindRank = hand.GetThreeOfAKindRank(trumpCard, useTrump);
             return threeOfAKindRank != Rank.None;
         }
+
         public static bool IsMultiplePairs(this Hand hand, Card trumpCard, bool useTrump, out List<Rank> pairRanks)
         {
             pairRanks = new List<Rank>();
-            if (hand == null || hand.Count() < 4) return false;
+            if (hand == null || hand.Count() < 4)
+            {
+                return false;
+            }
 
             Dictionary<Rank, int> rankCounts = hand.GetRankCounts();
-            int trumpCount = useTrump && trumpCard != null ? hand.Count(c => c.Suit == trumpCard.Suit && c.Rank == trumpCard.Rank) : 0;
+            int trumpCount = useTrump && trumpCard != null
+                ? hand.Count(c => c.Suit == trumpCard.Suit && c.Rank == trumpCard.Rank)
+                : 0;
 
             pairRanks = rankCounts
                 .Where(kv => kv.Value >= 2 || (kv.Value == 1 && trumpCount > 0 && kv.Key == trumpCard.Rank))
@@ -144,7 +162,10 @@ namespace OcentraAI.LLMGames.GameModes
 
         public static bool IsMultipleTriplets(this Hand hand, Card trumpCard, GameMode gameMode)
         {
-            if (hand == null || hand.Count() < 6) return false;
+            if (hand == null || hand.Count() < 6)
+            {
+                return false;
+            }
 
             List<Rank> triplets = hand.GetTripletRanks(trumpCard, gameMode.UseTrump);
             return triplets.Count >= 2 && !triplets.Contains(Rank.A) && !triplets.Contains(Rank.K);
@@ -153,7 +174,9 @@ namespace OcentraAI.LLMGames.GameModes
         public static List<Rank> GetTripletRanks(this Hand hand, Card trumpCard, bool useTrump)
         {
             Dictionary<Rank, int> rankCounts = hand.GetRankCounts();
-            int trumpCount = useTrump && trumpCard != null ? hand.Count(c => c.Suit == trumpCard.Suit && c.Rank == trumpCard.Rank) : 0;
+            int trumpCount = useTrump && trumpCard != null
+                ? hand.Count(c => c.Suit == trumpCard.Suit && c.Rank == trumpCard.Rank)
+                : 0;
 
             return rankCounts
                 .Where(kv => kv.Value >= 3 || (kv.Value == 2 && trumpCount > 0 && kv.Key != trumpCard.Rank))
@@ -162,14 +185,21 @@ namespace OcentraAI.LLMGames.GameModes
         }
 
         /// <summary>
-        /// Gets a Royal Sequence as a list of ranks.
+        ///     Gets a Royal Sequence as a list of ranks.
         /// </summary>
         public static List<Rank> GetRoyalSequenceAsRank(int numberOfCards)
         {
             List<Rank> royalRanks = new List<Rank>
             {
-                Rank.A, Rank.K, Rank.Q, Rank.J, Rank.Ten,
-                Rank.Nine, Rank.Eight, Rank.Seven, Rank.Six
+                Rank.A,
+                Rank.K,
+                Rank.Q,
+                Rank.J,
+                Rank.Ten,
+                Rank.Nine,
+                Rank.Eight,
+                Rank.Seven,
+                Rank.Six
             };
 
             List<Rank> result = new List<Rank>();
@@ -185,11 +215,14 @@ namespace OcentraAI.LLMGames.GameModes
         }
 
         /// <summary>
-        /// Checks if the hand is a Royal Sequence.
+        ///     Checks if the hand is a Royal Sequence.
         /// </summary>
         public static bool IsRoyalSequence(this Hand hand, GameMode gameMode)
         {
-            if (!hand.IsSameSuits()) return false;
+            if (!hand.IsSameSuits())
+            {
+                return false;
+            }
 
             Rank[] ranks = new Rank[hand.GetCards().Length];
             for (int i = 0; i < hand.GetCards().Length; i++)
@@ -201,20 +234,25 @@ namespace OcentraAI.LLMGames.GameModes
 
             Rank[] royalSequence = Rank.GetTopNRanks(gameMode.NumberOfCards);
 
-            if (ranks.Length != royalSequence.Length) return false;
+            if (ranks.Length != royalSequence.Length)
+            {
+                return false;
+            }
 
             for (int i = 0; i < ranks.Length; i++)
             {
-                if (ranks[i] != royalSequence[i]) return false;
+                if (ranks[i] != royalSequence[i])
+                {
+                    return false;
+                }
             }
 
             return true;
         }
-        
 
 
         /// <summary>
-        /// Gets the rank counts of cards in the hand, optionally excluding certain ranks.
+        ///     Gets the rank counts of cards in the hand, optionally excluding certain ranks.
         /// </summary>
         public static Dictionary<Rank, int> GetRankCounts(this Hand hand, Rank[] ranksToExclude = null)
         {
@@ -228,11 +266,12 @@ namespace OcentraAI.LLMGames.GameModes
                     rankCounts[card.Rank]++;
                 }
             }
+
             return rankCounts;
         }
 
         /// <summary>
-        /// Determines if the hand is a Full House or N-of-a-Kind including trump cards.
+        ///     Determines if the hand is a Full House or N-of-a-Kind including trump cards.
         /// </summary>
         public static bool IsFullHouseOrTrumpOfKind(this Hand hand, Card trumpCard, GameMode gameMode)
         {
@@ -254,7 +293,7 @@ namespace OcentraAI.LLMGames.GameModes
 
 
         /// <summary>
-        /// Determines if the hand is a Full House, considering the presence of a trump card.
+        ///     Determines if the hand is a Full House, considering the presence of a trump card.
         /// </summary>
         public static bool IsFullHouse(this Hand hand, Card trumpCard, GameMode gameMode)
         {
@@ -268,7 +307,9 @@ namespace OcentraAI.LLMGames.GameModes
 
             int primaryCount = hand.Count(c => c != null && c.Rank == primaryRank);
             int secondaryCount = hand.Count(c => c != null && c.Rank == secondaryRank);
-            int trumpCount = trumpCard != null ? hand.Count(c => c != null && c.Suit == trumpCard.Suit && c.Rank == trumpCard.Rank) : 0;
+            int trumpCount = trumpCard != null
+                ? hand.Count(c => c != null && c.Suit == trumpCard.Suit && c.Rank == trumpCard.Rank)
+                : 0;
 
             // Adjust counts if the trump card is present and is not of the primary or secondary rank
             if (trumpCount > 0 && trumpCard != null && trumpCard.Rank != primaryRank && trumpCard.Rank != secondaryRank)
@@ -283,7 +324,7 @@ namespace OcentraAI.LLMGames.GameModes
                 }
             }
 
-            int requiredPrimaryCount = (hand.Count() == 3) ? 3 : 4;
+            int requiredPrimaryCount = hand.Count() == 3 ? 3 : 4;
 
             if (primaryCount < requiredPrimaryCount)
             {
@@ -298,7 +339,8 @@ namespace OcentraAI.LLMGames.GameModes
             // Only warn if we expected a Full House but didn't get one
             if (!isValid)
             {
-                Debug.LogWarning($"Not enough secondary rank cards for Full House. Primary Rank: {primaryRank}, Required: {requiredPrimaryCount}, Actual: {primaryCount}. Secondary Rank: {secondaryRank}, Required: {requiredSecondaryCount}, Actual: {secondaryCount}. Hand: {string.Join(", ", hand.Select(c => c.ToString()))}");
+                Debug.LogWarning(
+                    $"Not enough secondary rank cards for Full House. Primary Rank: {primaryRank}, Required: {requiredPrimaryCount}, Actual: {primaryCount}. Secondary Rank: {secondaryRank}, Required: {requiredSecondaryCount}, Actual: {secondaryCount}. Hand: {string.Join(", ", hand.Select(c => c.ToString()))}");
             }
 
             return isValid;
@@ -306,7 +348,7 @@ namespace OcentraAI.LLMGames.GameModes
 
 
         /// <summary>
-        /// Determines if the hand has N-of-a-Kind including trump cards.
+        ///     Determines if the hand has N-of-a-Kind including trump cards.
         /// </summary>
         public static bool IsNOfAKindOfTrump(this Hand hand, Card trumpCard, int numberOfCards)
         {
@@ -322,7 +364,7 @@ namespace OcentraAI.LLMGames.GameModes
         }
 
         /// <summary>
-        /// Determines if the hand has N-of-a-Kind including trump cards by rank.
+        ///     Determines if the hand has N-of-a-Kind including trump cards by rank.
         /// </summary>
         public static bool IsNOfAKindOfTrump(this Hand hand, Rank trumpRank, int numberOfCards)
         {
@@ -338,7 +380,7 @@ namespace OcentraAI.LLMGames.GameModes
         }
 
         /// <summary>
-        /// Finds the rank with the highest N-of-a-Kind in the hand.
+        ///     Finds the rank with the highest N-of-a-Kind in the hand.
         /// </summary>
         public static Rank TryGetHighestNOfKindRank(this Hand hand, int numberOfCards)
         {
@@ -358,7 +400,7 @@ namespace OcentraAI.LLMGames.GameModes
         }
 
         /// <summary>
-        /// Generates a hand with N-of-a-Kind cards.
+        ///     Generates a hand with N-of-a-Kind cards.
         /// </summary>
         public static Hand GetNOfAKindHand(int numberOfCards, Rank rank)
         {
@@ -369,11 +411,12 @@ namespace OcentraAI.LLMGames.GameModes
                 Suit suit = CardUtility.GetAndRemoveRandomSuit(availableSuits.ToList());
                 cards.Add(CardUtility.GetCard(suit, rank));
             }
+
             return new Hand(cards.ToArray());
         }
 
         /// <summary>
-        /// Determines if the hand contains a pair.
+        ///     Determines if the hand contains a pair.
         /// </summary>
         public static bool IsPair(this Hand hand, Card trumpCard, bool useTrump, out List<Rank> pairRanks)
         {
@@ -418,11 +461,11 @@ namespace OcentraAI.LLMGames.GameModes
         }
 
         /// <summary>
-        /// Finds the rank of the Three-of-a-Kind in the hand.
+        ///     Finds the rank of the Three-of-a-Kind in the hand.
         /// </summary>
         public static Rank GetThreeOfAKindRank(this Hand hand, Card trumpCard, bool useTrump)
         {
-            Rank[] ranksToExclude = useTrump && trumpCard != null ? new[] { Rank.A, trumpCard.Rank } : new[] { Rank.A };
+            Rank[] ranksToExclude = useTrump && trumpCard != null ? new[] {Rank.A, trumpCard.Rank} : new[] {Rank.A};
             Dictionary<Rank, int> rankCounts = hand.GetRankCounts(ranksToExclude);
             int trumpCount = 0;
             if (useTrump && trumpCard != null)
@@ -442,7 +485,8 @@ namespace OcentraAI.LLMGames.GameModes
                 {
                     return kvp.Key;
                 }
-                else if (kvp.Value == 2 && trumpCount == 1)
+
+                if (kvp.Value == 2 && trumpCount == 1)
                 {
                     return kvp.Key;
                 }
@@ -452,7 +496,7 @@ namespace OcentraAI.LLMGames.GameModes
         }
 
         /// <summary>
-        /// Determines if the hand is a Four-of-a-Kind.
+        ///     Determines if the hand is a Four-of-a-Kind.
         /// </summary>
         public static bool IsFourOfAKind(this Hand hand, Card trumpCard, bool useTrump)
         {
@@ -466,11 +510,11 @@ namespace OcentraAI.LLMGames.GameModes
         }
 
         /// <summary>
-        /// Finds the rank of the Four-of-a-Kind in the hand.
+        ///     Finds the rank of the Four-of-a-Kind in the hand.
         /// </summary>
         public static Rank GetFourOfAKindRank(this Hand hand, Card trumpCard, bool useTrump)
         {
-            Rank[] ranksToExclude = useTrump && trumpCard != null ? new[] { Rank.A, trumpCard.Rank } : new[] { Rank.A };
+            Rank[] ranksToExclude = useTrump && trumpCard != null ? new[] {Rank.A, trumpCard.Rank} : new[] {Rank.A};
             Dictionary<Rank, int> rankCounts = hand.GetRankCounts(ranksToExclude);
             int trumpCount = 0;
             if (useTrump && trumpCard != null)
@@ -490,7 +534,8 @@ namespace OcentraAI.LLMGames.GameModes
                 {
                     return kvp.Key;
                 }
-                else if (kvp.Value == 3 && trumpCount == 1)
+
+                if (kvp.Value == 3 && trumpCount == 1)
                 {
                     return kvp.Key;
                 }

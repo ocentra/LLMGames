@@ -1,19 +1,20 @@
 ﻿using OcentraAI.LLMGames.Scriptable;
 using OcentraAI.LLMGames.Scriptable.ScriptableSingletons;
-using System.Collections.Generic;
 using System;
+using System.Collections.Generic;
 using UnityEngine;
-using static OcentraAI.LLMGames.Utility;
+using static OcentraAI.LLMGames.Utilities.Utility;
+using Random = UnityEngine.Random;
 
 namespace OcentraAI.LLMGames.Utilities
 {
     /// <summary>
-    /// Provides utility methods for card-related operations.
+    ///     Provides utility methods for card-related operations.
     /// </summary>
     public static class CardUtility
     {
         /// <summary>
-        /// Gets the color string representation of a suit.
+        ///     Gets the color string representation of a suit.
         /// </summary>
         /// <param name="suit">The suit to get the color for.</param>
         /// <returns>A string representing the color of the suit.</returns>
@@ -28,11 +29,12 @@ namespace OcentraAI.LLMGames.Utilities
             {
                 color = "Black";
             }
+
             return color;
         }
 
         /// <summary>
-        /// Gets the Unity Color value for a suit.
+        ///     Gets the Unity Color value for a suit.
         /// </summary>
         /// <param name="suit">The suit to get the color for.</param>
         /// <returns>A Unity Color representing the color of the suit.</returns>
@@ -47,11 +49,12 @@ namespace OcentraAI.LLMGames.Utilities
             {
                 color = Color.black;
             }
+
             return color;
         }
 
         /// <summary>
-        /// Converts a character to its corresponding CardRank.
+        ///     Converts a character to its corresponding CardRank.
         /// </summary>
         /// <param name="rankChar">The character representing a card rank.</param>
         /// <returns>The corresponding CardRank.</returns>
@@ -60,26 +63,55 @@ namespace OcentraAI.LLMGames.Utilities
             Rank rank;
             switch (rankChar)
             {
-                case '2': rank = Rank.Two; break;
-                case '3': rank = Rank.Three; break;
-                case '4': rank = Rank.Four; break;
-                case '5': rank = Rank.Five; break;
-                case '6': rank = Rank.Six; break;
-                case '7': rank = Rank.Seven; break;
-                case '8': rank = Rank.Eight; break;
-                case '9': rank = Rank.Nine; break;
-                case 'T': rank = Rank.Ten; break;
-                case 'J': rank = Rank.J; break;
-                case 'Q': rank = Rank.Q; break;
-                case 'K': rank = Rank.K; break;
-                case 'A': rank = Rank.A; break;
-                default: rank = Rank.None; break;
+                case '2':
+                    rank = Rank.Two;
+                    break;
+                case '3':
+                    rank = Rank.Three;
+                    break;
+                case '4':
+                    rank = Rank.Four;
+                    break;
+                case '5':
+                    rank = Rank.Five;
+                    break;
+                case '6':
+                    rank = Rank.Six;
+                    break;
+                case '7':
+                    rank = Rank.Seven;
+                    break;
+                case '8':
+                    rank = Rank.Eight;
+                    break;
+                case '9':
+                    rank = Rank.Nine;
+                    break;
+                case 'T':
+                    rank = Rank.Ten;
+                    break;
+                case 'J':
+                    rank = Rank.J;
+                    break;
+                case 'Q':
+                    rank = Rank.Q;
+                    break;
+                case 'K':
+                    rank = Rank.K;
+                    break;
+                case 'A':
+                    rank = Rank.A;
+                    break;
+                default:
+                    rank = Rank.None;
+                    break;
             }
+
             return rank;
         }
 
         /// <summary>
-        /// Converts a character to its corresponding Suit.
+        ///     Converts a character to its corresponding Suit.
         /// </summary>
         /// <param name="suitChar">The character representing a suit.</param>
         /// <returns>The corresponding Suit.</returns>
@@ -88,17 +120,28 @@ namespace OcentraAI.LLMGames.Utilities
             Suit suit;
             switch (suitChar)
             {
-                case '♠': suit = Suit.Spade; break;
-                case '♥': suit = Suit.Heart; break;
-                case '♦': suit = Suit.Diamond; break;
-                case '♣': suit = Suit.Club; break;
-                default: suit = Suit.None; break;
+                case '♠':
+                    suit = Suit.Spade;
+                    break;
+                case '♥':
+                    suit = Suit.Heart;
+                    break;
+                case '♦':
+                    suit = Suit.Diamond;
+                    break;
+                case '♣':
+                    suit = Suit.Club;
+                    break;
+                default:
+                    suit = Suit.None;
+                    break;
             }
+
             return suit;
         }
 
         /// <summary>
-        /// Converts an array of card symbols to an array of Card objects.
+        ///     Converts an array of card symbols to an array of Card objects.
         /// </summary>
         /// <param name="cardSymbols">An array of card symbols.</param>
         /// <returns>An array of Card objects.</returns>
@@ -120,7 +163,7 @@ namespace OcentraAI.LLMGames.Utilities
         }
 
         /// <summary>
-        /// Creates a Card object from a card symbol.
+        ///     Creates a Card object from a card symbol.
         /// </summary>
         /// <param name="symbol">The card symbol.</param>
         /// <returns>A Card object, or null if the symbol is invalid.</returns>
@@ -150,7 +193,7 @@ namespace OcentraAI.LLMGames.Utilities
         }
 
         /// <summary>
-        /// Gets an array of available CardRanks, optionally excluding specified ranks.
+        ///     Gets an array of available CardRanks, optionally excluding specified ranks.
         /// </summary>
         /// <param name="excludeRanks">An array of CardRanks to exclude.</param>
         /// <returns>An array of available CardRanks.</returns>
@@ -170,7 +213,7 @@ namespace OcentraAI.LLMGames.Utilities
         }
 
         /// <summary>
-        /// Gets an array of all available Suits.
+        ///     Gets an array of all available Suits.
         /// </summary>
         /// <returns>An array of available Suits.</returns>
         public static Suit[] GetAvailableSuits()
@@ -183,11 +226,12 @@ namespace OcentraAI.LLMGames.Utilities
                     suits.Add(suit);
                 }
             }
+
             return suits.ToArray();
         }
 
         /// <summary>
-        /// Selects a list of CardRanks based on specified criteria.
+        ///     Selects a list of CardRanks based on specified criteria.
         /// </summary>
         /// <param name="count">The number of ranks to select.</param>
         /// <param name="allowSequence">Whether to allow sequential ranks.</param>
@@ -195,7 +239,8 @@ namespace OcentraAI.LLMGames.Utilities
         /// <param name="sameSuit">Whether all ranks should be of the same suit.</param>
         /// <param name="fixedSuit">A specific suit to use, if any.</param>
         /// <returns>A list of selected CardRanks.</returns>
-        public static List<Rank> SelectRanks(int count, bool allowSequence, bool sameColor = false, bool sameSuit = false, Suit fixedSuit = null)
+        public static List<Rank> SelectRanks(int count, bool allowSequence, bool sameColor = false,
+            bool sameSuit = false, Suit fixedSuit = null)
         {
             List<Rank> selectedRanks = new List<Rank>();
             Rank[] availableRanks = GetAvailableRanks();
@@ -209,9 +254,10 @@ namespace OcentraAI.LLMGames.Utilities
                 Rank randomRank;
                 do
                 {
-                    int randomIndex = UnityEngine.Random.Range(0, availableRanks.Length);
+                    int randomIndex = Random.Range(0, availableRanks.Length);
                     randomRank = availableRanks[randomIndex];
-                } while (!IsValidRankSelection(randomRank, selectedRanks, allowSequence, sameColor, sameSuit, selectedSuit, selectedColor));
+                } while (!IsValidRankSelection(randomRank, selectedRanks, allowSequence, sameColor, sameSuit,
+                             selectedSuit, selectedColor));
 
                 selectedRanks.Add(randomRank);
             }
@@ -220,9 +266,10 @@ namespace OcentraAI.LLMGames.Utilities
         }
 
         /// <summary>
-        /// Checks if a rank selection is valid based on specified criteria.
+        ///     Checks if a rank selection is valid based on specified criteria.
         /// </summary>
-        private static bool IsValidRankSelection(Rank newRank, List<Rank> selectedRanks, bool allowSequence, bool sameColor, bool sameSuit, Suit selectedSuit, Color selectedColor)
+        private static bool IsValidRankSelection(Rank newRank, List<Rank> selectedRanks, bool allowSequence,
+            bool sameColor, bool sameSuit, Suit selectedSuit, Color selectedColor)
         {
             // Handle sequence logic
             if (allowSequence)
@@ -232,7 +279,7 @@ namespace OcentraAI.LLMGames.Utilities
                     Rank lastSelectedRank = selectedRanks[selectedRanks.Count - 1];
                     if (Math.Abs(lastSelectedRank.Value - newRank.Value) != 1)
                     {
-                        return false; 
+                        return false;
                     }
                 }
             }
@@ -242,7 +289,7 @@ namespace OcentraAI.LLMGames.Utilities
                 {
                     if (Math.Abs(rank.Value - newRank.Value) == 1)
                     {
-                        return false; 
+                        return false;
                     }
                 }
             }
@@ -251,19 +298,18 @@ namespace OcentraAI.LLMGames.Utilities
             if (sameColor || sameSuit)
             {
                 Suit newSuit = GetValidSuit(newRank, sameColor, sameSuit, selectedSuit, selectedColor);
-                return newSuit != Suit.None; 
+                return newSuit != Suit.None;
             }
-            else
-            {
-                return true; 
-            }
+
+            return true;
         }
 
 
         /// <summary>
-        /// Gets a valid suit based on specified criteria.
+        ///     Gets a valid suit based on specified criteria.
         /// </summary>
-        private static Suit GetValidSuit(Rank rank, bool sameColor, bool sameSuit, Suit selectedSuit, Color selectedColor)
+        private static Suit GetValidSuit(Rank rank, bool sameColor, bool sameSuit, Suit selectedSuit,
+            Color selectedColor)
         {
             Suit[] validSuits = GetAvailableSuits();
 
@@ -271,7 +317,8 @@ namespace OcentraAI.LLMGames.Utilities
             {
                 return selectedSuit;
             }
-            else if (sameColor)
+
+            if (sameColor)
             {
                 foreach (Suit suit in validSuits)
                 {
@@ -282,12 +329,12 @@ namespace OcentraAI.LLMGames.Utilities
                 }
             }
 
-            int randomIndex = UnityEngine.Random.Range(0, validSuits.Length);
+            int randomIndex = Random.Range(0, validSuits.Length);
             return validSuits[randomIndex];
         }
 
         /// <summary>
-        /// Gets the color of a suit.
+        ///     Gets the color of a suit.
         /// </summary>
         private static Color GetColor(Suit suit)
         {
@@ -300,22 +347,23 @@ namespace OcentraAI.LLMGames.Utilities
             {
                 color = Color.black;
             }
+
             return color;
         }
 
         /// <summary>
-        /// Gets a random suit.
+        ///     Gets a random suit.
         /// </summary>
         /// <returns>A randomly selected Suit.</returns>
         public static Suit GetRandomSuit()
         {
             Suit[] availableSuits = GetAvailableSuits();
-            int randomIndex = UnityEngine.Random.Range(0, availableSuits.Length);
+            int randomIndex = Random.Range(0, availableSuits.Length);
             return availableSuits[randomIndex];
         }
 
         /// <summary>
-        /// Gets a string representation of a card's rank and suit.
+        ///     Gets a string representation of a card's rank and suit.
         /// </summary>
         /// <param name="suit">The card's suit.</param>
         /// <param name="rank">The card's rank.</param>
@@ -364,7 +412,7 @@ namespace OcentraAI.LLMGames.Utilities
         }
 
         /// <summary>
-        /// Gets the CardRank from a card symbol.
+        ///     Gets the CardRank from a card symbol.
         /// </summary>
         /// <param name="symbol">The card symbol.</param>
         /// <returns>The corresponding CardRank.</returns>
@@ -383,11 +431,12 @@ namespace OcentraAI.LLMGames.Utilities
             {
                 rank = Rank.None;
             }
+
             return rank;
         }
 
         /// <summary>
-        /// Determines the rank to use based on the trump card and specified ranks.
+        ///     Determines the rank to use based on the trump card and specified ranks.
         /// </summary>
         /// <param name="trumpCard">The trump card.</param>
         /// <param name="useTrump">Whether to use the trump card.</param>
@@ -405,24 +454,25 @@ namespace OcentraAI.LLMGames.Utilities
             {
                 result = primaryRank;
             }
+
             return result;
         }
 
         /// <summary>
-        /// Selects and removes a random suit from a list of available suits.
+        ///     Selects and removes a random suit from a list of available suits.
         /// </summary>
         /// <param name="availableSuits">The list of available suits.</param>
         /// <returns>The randomly selected and removed Suit.</returns>
         public static Suit GetAndRemoveRandomSuit(List<Suit> availableSuits)
         {
-            int index = UnityEngine.Random.Range(0, availableSuits.Count);
+            int index = Random.Range(0, availableSuits.Count);
             Suit selectedSuit = availableSuits[index];
             availableSuits.RemoveAt(index);
             return selectedSuit;
         }
 
         /// <summary>
-        /// Gets a Card object for a given suit and rank.
+        ///     Gets a Card object for a given suit and rank.
         /// </summary>
         /// <param name="suit">The suit of the card.</param>
         /// <param name="rank">The rank of the card.</param>

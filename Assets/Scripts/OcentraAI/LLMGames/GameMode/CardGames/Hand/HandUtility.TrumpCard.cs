@@ -1,19 +1,17 @@
 using OcentraAI.LLMGames.Scriptable;
-using OcentraAI.LLMGames.Utilities;
 using System;
 using System.Collections.Generic;
 
 namespace OcentraAI.LLMGames.GameModes
 {
     /// <summary>
-    /// Contains operations related to trump cards, such as checking if a rank is adjacent to trump, finding highest non-trump rank, etc.
+    ///     Contains operations related to trump cards, such as checking if a rank is adjacent to trump, finding highest
+    ///     non-trump rank, etc.
     /// </summary>
     public static partial class HandUtility
     {
-
-
         /// <summary>
-        /// Selects high-ranking non-trump cards from the hand.
+        ///     Selects high-ranking non-trump cards from the hand.
         /// </summary>
         public static List<Card> SelectHighRankingNonTrumpCards(this Hand hand, Card trumpCard)
         {
@@ -23,7 +21,8 @@ namespace OcentraAI.LLMGames.GameModes
             List<Card> availableCards = new List<Card>();
             foreach (Card card in hand.GetCards())
             {
-                if ((card.Rank == Rank.J || card.Rank == Rank.Q || card.Rank == Rank.K || card.Rank == Rank.A) && card != trumpCard)
+                if ((card.Rank == Rank.J || card.Rank == Rank.Q || card.Rank == Rank.K || card.Rank == Rank.A) &&
+                    card != trumpCard)
                 {
                     availableCards.Add(card);
                 }
@@ -43,7 +42,7 @@ namespace OcentraAI.LLMGames.GameModes
         }
 
         /// <summary>
-        /// Finds the first non-trump rank in the hand or returns Rank.None if none is found.
+        ///     Finds the first non-trump rank in the hand or returns Rank.None if none is found.
         /// </summary>
         public static Rank FirstNonTrumpRankOrDefault(this Hand hand, Card trumpCard)
         {
@@ -61,7 +60,7 @@ namespace OcentraAI.LLMGames.GameModes
         }
 
         /// <summary>
-        /// Determines if the hand contains a specified trump card.
+        ///     Determines if the hand contains a specified trump card.
         /// </summary>
         public static bool HasTrumpCard(this Hand hand, Card trumpCard)
         {
@@ -77,7 +76,7 @@ namespace OcentraAI.LLMGames.GameModes
         }
 
         /// <summary>
-        /// Determines if the rank is adjacent to the trump card rank.
+        ///     Determines if the rank is adjacent to the trump card rank.
         /// </summary>
         public static bool IsRankAdjacentToTrump(this Hand hand, Card trumpCard)
         {
@@ -94,7 +93,7 @@ namespace OcentraAI.LLMGames.GameModes
         }
 
         /// <summary>
-        /// Determines if the trump card is in the middle of the hand after sorting.
+        ///     Determines if the trump card is in the middle of the hand after sorting.
         /// </summary>
         public static bool IsTrumpInMiddle(this Hand hand, Card trumpCard)
         {
@@ -105,21 +104,23 @@ namespace OcentraAI.LLMGames.GameModes
                 int middleIndex = handSize / 2;
                 return orderedHand.GetCards()[middleIndex].Equals(trumpCard);
             }
-            else
+
+            int firstMiddleIndex = (handSize / 2) - 1;
+            int secondMiddleIndex = handSize / 2;
+            if (orderedHand.GetCards()[firstMiddleIndex].Equals(trumpCard))
             {
-                int firstMiddleIndex = (handSize / 2) - 1;
-                int secondMiddleIndex = handSize / 2;
-                if (orderedHand.GetCards()[firstMiddleIndex].Equals(trumpCard)) return true;
-                return orderedHand.GetCards()[secondMiddleIndex].Equals(trumpCard);
+                return true;
             }
+
+            return orderedHand.GetCards()[secondMiddleIndex].Equals(trumpCard);
         }
 
         /// <summary>
-        /// Determines if a rank is adjacent to another rank, considering Ace as adjacent to Two.
+        ///     Determines if a rank is adjacent to another rank, considering Ace as adjacent to Two.
         /// </summary>
         public static bool IsRankAdjacent(Rank rank1, Rank rank2)
         {
-            int rankDifference = Math.Abs((int)rank1.Value - (int)rank2.Value);
+            int rankDifference = Math.Abs(rank1.Value - rank2.Value);
 
             bool isNumericallyAdjacent = rankDifference == 1;
 

@@ -5,12 +5,12 @@ using System.Collections.Generic;
 namespace OcentraAI.LLMGames.GameModes
 {
     /// <summary>
-    /// Contains set operations on the Hand such as Concat, Except, Intersect, etc.
+    ///     Contains set operations on the Hand such as Concat, Except, Intersect, etc.
     /// </summary>
     public static partial class HandUtility
     {
         /// <summary>
-        /// Concatenates two hands into one.
+        ///     Concatenates two hands into one.
         /// </summary>
         public static Hand Concat(this Hand hand1, Hand hand2)
         {
@@ -21,7 +21,7 @@ namespace OcentraAI.LLMGames.GameModes
         }
 
         /// <summary>
-        /// Returns the set difference between two hands.
+        ///     Returns the set difference between two hands.
         /// </summary>
         public static Hand Except(this Hand hand, Hand hand2)
         {
@@ -39,7 +39,7 @@ namespace OcentraAI.LLMGames.GameModes
         }
 
         /// <summary>
-        /// Returns the intersection of two hands.
+        ///     Returns the intersection of two hands.
         /// </summary>
         public static Hand Intersect(this Hand hand1, Hand hand2)
         {

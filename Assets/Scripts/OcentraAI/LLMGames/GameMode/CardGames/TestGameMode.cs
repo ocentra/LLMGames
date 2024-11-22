@@ -9,13 +9,11 @@ namespace OcentraAI.LLMGames.GameModes
     [CreateAssetMenu(fileName = nameof(TestGameMode), menuName = "GameMode/TestGameMode")]
     public class TestGameMode : GameMode
     {
-        [OdinSerialize, ShowInInspector] public Card TrumpCard => Deck.Instance.GetCard(Suit.Heart, Rank.Six);
+        [OdinSerialize] [ShowInInspector] public Card TrumpCard => Deck.Instance.GetCard(Suit.Heart, Rank.Six);
 
-        [OdinSerialize, ShowInInspector]
-        public override int MaxRounds { get; protected set; } = 10;
+        [OdinSerialize] [ShowInInspector] public override int MaxRounds { get; protected set; } = 10;
 
-        [OdinSerialize, ShowInInspector]
-        public override float TurnDuration { get; protected set; } = 30.0f;
+        [OdinSerialize] [ShowInInspector] public override float TurnDuration { get; protected set; } = 30.0f;
 
         public override int InitialPlayerCoins { get; protected set; } = 100;
 
@@ -36,7 +34,7 @@ namespace OcentraAI.LLMGames.GameModes
         public override bool TryInitialize()
         {
             // Initialize any additional properties or configurations specific to the TestGameMode
-          return  TryInitializeGameMode();
+            return TryInitializeGameMode();
         }
 
         public void SetNumberOfCards(int numberOfCards)
@@ -48,7 +46,5 @@ namespace OcentraAI.LLMGames.GameModes
         {
             UseTrump = useTrump;
         }
-        
-
     }
 }

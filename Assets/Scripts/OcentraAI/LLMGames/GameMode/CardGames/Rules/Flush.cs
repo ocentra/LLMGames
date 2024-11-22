@@ -18,7 +18,10 @@ namespace OcentraAI.LLMGames.GameModes.Rules
         public override bool Evaluate(Hand hand, out BonusDetail bonusDetail)
         {
             bonusDetail = null;
-            if (hand == null || !hand.VerifyHand(GameMode, MinNumberOfCard)) return false;
+            if (hand == null || !hand.VerifyHand(GameMode, MinNumberOfCard))
+            {
+                return false;
+            }
 
             Card trumpCard = GetTrumpCard();
 
@@ -61,7 +64,7 @@ namespace OcentraAI.LLMGames.GameModes.Rules
         {
             int totalBonus = BonusValue * hand.Sum();
             int additionalBonus = 0;
-            List<string> descriptions = new List<string> { "Flush" };
+            List<string> descriptions = new List<string> {"Flush"};
             string bonusCalculationDescriptions = $"{BonusValue} * {hand.Sum()}";
 
             if (isTrumpAssisted && GameMode.UseTrump && hand.Contains(GetTrumpCard()))
@@ -89,7 +92,8 @@ namespace OcentraAI.LLMGames.GameModes.Rules
                 bonusCalculationDescriptions += $" + {additionalBonus}";
             }
 
-            return CreateBonusDetails(RuleName, totalBonus, Priority, descriptions, bonusCalculationDescriptions, additionalBonus);
+            return CreateBonusDetails(RuleName, totalBonus, Priority, descriptions, bonusCalculationDescriptions,
+                additionalBonus);
         }
 
         public override string[] CreateExampleHand(int handSize, string trumpCardSymbol = null, bool coloured = true)
@@ -116,8 +120,7 @@ namespace OcentraAI.LLMGames.GameModes.Rules
                     Debug.LogError($"Failed to generate a valid Flush hand after {maxAttempts} attempts.");
                     return Array.Empty<string>();
                 }
-            }
-            while (!IsFlushValid(HandUtility.ConvertFromSymbols(hand.ToArray()), trumpCard));
+            } while (!IsFlushValid(HandUtility.ConvertFromSymbols(hand.ToArray()), trumpCard));
 
             return hand.ToArray();
         }
@@ -126,7 +129,8 @@ namespace OcentraAI.LLMGames.GameModes.Rules
         {
             List<string> hand = new List<string>();
             Suit flushSuit = CardUtility.GetRandomSuit();
-            List<Rank> selectedRanks = AvoidSequencesAndDuplicates(Rank.GetStandardRanks().Except(new[] { Rank.None }).ToList());
+            List<Rank> selectedRanks =
+                AvoidSequencesAndDuplicates(Rank.GetStandardRanks().Except(new[] {Rank.None}).ToList());
 
             for (int i = 0; i < handSize - 1; i++)
             {
@@ -169,7 +173,8 @@ namespace OcentraAI.LLMGames.GameModes.Rules
 
         public override bool Initialize(GameMode gameMode)
         {
-            Description = "All cards of the same suit, without forming a sequence, pair, or n of a kind, optionally considering Trump Wild Card.";
+            Description =
+                "All cards of the same suit, without forming a sequence, pair, or n of a kind, optionally considering Trump Wild Card.";
 
             List<string> playerExamples = new List<string>();
             List<string> llmExamples = new List<string>();
@@ -196,7 +201,8 @@ namespace OcentraAI.LLMGames.GameModes.Rules
                 }
             }
 
-            return TryCreateExample(RuleName, Description, BonusValue, playerExamples, llmExamples, playerTrumpExamples, llmTrumpExamples, gameMode.UseTrump);
+            return TryCreateExample(RuleName, Description, BonusValue, playerExamples, llmExamples, playerTrumpExamples,
+                llmTrumpExamples, gameMode.UseTrump);
         }
     }
 }

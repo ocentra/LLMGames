@@ -1,42 +1,36 @@
-using OcentraAI.LLMGames.Authentication;
-using OcentraAI.LLMGames.ThreeCardBrag.Manager;
-using System.Threading.Tasks;
+using Cysharp.Threading.Tasks;
+using OcentraAI.LLMGames.LLMServices;
+using OcentraAI.LLMGames.Manager.Authentication;
+using System;
 using UnityEngine;
 
-namespace OcentraAI.LLMGames.LLMServices
+namespace OcentraAI.LLMGames.Manager.LLMServices
 {
     public class LLMManager : ManagerBase<LLMManager>
     {
-
-
         public LLMProvider CurrentProvider = LLMProvider.AzureOpenAI;
         private ILLMService CurrentLLMService { get; set; }
 
-        protected override async void Awake()
+
+        protected override async UniTask InitializeAsync()
         {
-            base.Awake();
-
-            await WaitForInitialization();
-
-           
-        }
-
-        private async Task WaitForInitialization()
-        {
-            if (UnityServicesManager.Instance != null)
+            if (Application.isPlaying)
             {
-                while (!UnityServicesManager.Instance.IsInitialized)
+                try
                 {
-                    await Task.Delay(100);
-                }
+                    await UnityServicesManager.GetInstance().WaitForInitializationAsync();
 
-                SetLLMProvider(CurrentProvider);
+                    SetLLMProvider(CurrentProvider);
+                }
+                catch (Exception ex)
+                {
+                    Debug.LogError($"Failed to initialize UnityServicesManager: {ex.Message}");
+                }
             }
-            else
-            {
-                Debug.Log($"UnityServicesManager is missing!");
-            }
+
+            await base.InitializeAsync();
         }
+
 
         public void SetLLMProvider(LLMProvider provider)
         {
@@ -63,7 +57,7 @@ namespace OcentraAI.LLMGames.LLMServices
             if (ValidateConfig(config))
             {
                 CurrentLLMService = LLMServiceFactory.CreateLLMService(config);
-                Debug.Log($"LLM Service initialized with direct config");
+                Debug.Log("LLM Service initialized with direct config");
             }
         }
 
@@ -77,16 +71,19 @@ namespace OcentraAI.LLMGames.LLMServices
                 errorMessage += "Endpoint ";
                 isValid = false;
             }
+
             if (string.IsNullOrEmpty(config.ApiKey))
             {
                 errorMessage += "ApiKey ";
                 isValid = false;
             }
+
             if (string.IsNullOrEmpty(config.ApiUrl))
             {
                 errorMessage += "ApiUrl ";
                 isValid = false;
             }
+
             if (string.IsNullOrEmpty(config.Model))
             {
                 errorMessage += "Model ";
@@ -101,7 +98,7 @@ namespace OcentraAI.LLMGames.LLMServices
             return isValid;
         }
 
-        public async Task<string> GetLLMResponse()
+        public async UniTask<string> GetLLMResponse()
         {
             var (systemMessage, userPrompt) = AIHelper.Instance.GetAIInstructions();
             if (CurrentLLMService == null)

@@ -12,20 +12,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 6a5d8133d7cc9234ebba1ce32d948976, type: 3}
   m_Name: DevModeManager
   m_EditorClassIdentifier: 
-  DevHand:
-  - {fileID: 11400000, guid: b06233a0b3f962f4493c416d51589555, type: 2}
-  - {fileID: 11400000, guid: 33e9fe6994509c248b7c534edfe48034, type: 2}
-  - {fileID: 11400000, guid: 87e4b24383464a946b3a5a5adbbbf808, type: 2}
-  DevHandComputer:
-  - {fileID: 11400000, guid: f6dc3b923cab49d45976775589bc5221, type: 2}
-  - {fileID: 11400000, guid: 63740855d63b7e44aa2e05bea8e4be3f, type: 2}
-  - {fileID: 11400000, guid: 6469208bbcb7ebf429ef15b13772baf8, type: 2}
-  TrumpDevCard: {fileID: 11400000, guid: c9de86a57007ef24993748ec23b48a27, type: 2}
-  GameMode: {fileID: 11400000, guid: 733bab288dca6884d9e3bf5a2afbc107, type: 2}
-  UseTrumpForPlayer: 0
-  UseTrumpForComputer: 0
-  SelectedPlayerRuleIndex: 7
-  SelectedComputerRuleIndex: 6
   DeckCards:
   - {fileID: 11400000, guid: 31c39b27d86c8294981508578b84a4f4, type: 2}
   - {fileID: 11400000, guid: b67ac520bf4aa8446b4dcf3167492ab5, type: 2}
@@ -67,4 +53,18 @@ MonoBehaviour:
   - {fileID: 11400000, guid: 97e7e44ba37ab4b42acbfd4da692e86c, type: 2}
   - {fileID: 11400000, guid: e14ef82c0e2fac746908307afe2a84b9, type: 2}
   - {fileID: 11400000, guid: 0708ba2579b000b48b6461dffe185a32, type: 2}
-  DevModeEnabled: 1
+  DevHand:
+  - {fileID: 11400000, guid: b06233a0b3f962f4493c416d51589555, type: 2}
+  - {fileID: 11400000, guid: 33e9fe6994509c248b7c534edfe48034, type: 2}
+  - {fileID: 11400000, guid: 87e4b24383464a946b3a5a5adbbbf808, type: 2}
+  DevHandComputer:
+  - {fileID: 11400000, guid: f6dc3b923cab49d45976775589bc5221, type: 2}
+  - {fileID: 11400000, guid: 63740855d63b7e44aa2e05bea8e4be3f, type: 2}
+  - {fileID: 11400000, guid: 6469208bbcb7ebf429ef15b13772baf8, type: 2}
+  DevModeEnabled: 0
+  GameMode: {fileID: 11400000, guid: 733bab288dca6884d9e3bf5a2afbc107, type: 2}
+  SelectedComputerRuleIndex: 6
+  SelectedPlayerRuleIndex: 7
+  TrumpDevCard: {fileID: 11400000, guid: c9de86a57007ef24993748ec23b48a27, type: 2}
+  UseTrumpForComputer: 0
+  UseTrumpForPlayer: 0

@@ -3,7 +3,9 @@ using Sirenix.OdinInspector.Editor;
 using Sirenix.Serialization;
 using System.Collections.Generic;
 using System.Linq;
+#if UNITY_EDITOR
 using UnityEditor;
+#endif
 using UnityEngine;
 
 namespace OcentraAI.LLMGames.GameModes
@@ -35,17 +37,21 @@ namespace OcentraAI.LLMGames.GameModes
                 GameMode.BaseBonusRulesTemplate = new Dictionary<BaseBonusRule, CustomRuleState>();
             }
 
-            Dictionary<BaseBonusRule, CustomRuleState> loadedTemplates = new Dictionary<BaseBonusRule, CustomRuleState>();
+            Dictionary<BaseBonusRule, CustomRuleState> loadedTemplates =
+                new Dictionary<BaseBonusRule, CustomRuleState>();
             if (!string.IsNullOrEmpty(GameMode.RulesTemplatePath))
             {
-                string[] assetGuids = AssetDatabase.FindAssets("t:BaseBonusRule", new[] { GameMode.RulesTemplatePath });
+                string[] assetGuids = AssetDatabase.FindAssets("t:BaseBonusRule", new[] {GameMode.RulesTemplatePath});
                 foreach (string guid in assetGuids)
                 {
                     string assetPath = AssetDatabase.GUIDToAssetPath(guid);
                     BaseBonusRule rule = AssetDatabase.LoadAssetAtPath<BaseBonusRule>(assetPath);
-                    if (rule != null && GameMode.NumberOfCards >= rule.MinNumberOfCard && !AssetDatabase.IsSubAsset(rule))
+                    if (rule != null && GameMode.NumberOfCards >= rule.MinNumberOfCard &&
+                        !AssetDatabase.IsSubAsset(rule))
                     {
-                        if (GameMode.BaseBonusRulesTemplate != null && GameMode.BaseBonusRulesTemplate.TryGetValue(rule, out CustomRuleState existingCustomRuleState))
+                        if (GameMode.BaseBonusRulesTemplate != null &&
+                            GameMode.BaseBonusRulesTemplate.TryGetValue(rule,
+                                out CustomRuleState existingCustomRuleState))
                         {
                             loadedTemplates[rule] = existingCustomRuleState;
                         }
@@ -56,6 +62,7 @@ namespace OcentraAI.LLMGames.GameModes
                     }
                 }
             }
+
             GameMode.BaseBonusRulesTemplate = loadedTemplates;
         }
 
@@ -65,6 +72,7 @@ namespace OcentraAI.LLMGames.GameModes
             {
                 return "Assets" + absolutePath.Substring(Application.dataPath.Length);
             }
+
             return absolutePath;
         }
 
@@ -97,10 +105,12 @@ namespace OcentraAI.LLMGames.GameModes
                 EditorGUILayout.BeginVertical(GUI.skin.box);
 
                 EditorGUILayout.BeginHorizontal();
-                GameMode.RulesTemplatePath = EditorGUILayout.TextField("Path to Rule Templates", GameMode.RulesTemplatePath);
+                GameMode.RulesTemplatePath =
+                    EditorGUILayout.TextField("Path to Rule Templates", GameMode.RulesTemplatePath);
                 if (GUILayout.Button("Browse", GUILayout.Width(70)))
                 {
-                    string selectedPath = EditorUtility.OpenFolderPanel("Select Rule Templates Folder", GameMode.RulesTemplatePath, "");
+                    string selectedPath = EditorUtility.OpenFolderPanel("Select Rule Templates Folder",
+                        GameMode.RulesTemplatePath, "");
                     if (!string.IsNullOrEmpty(selectedPath))
                     {
                         GameMode.RulesTemplatePath = GetRelativePath(selectedPath);
@@ -108,6 +118,7 @@ namespace OcentraAI.LLMGames.GameModes
                         SyncSelectedRules();
                     }
                 }
+
                 EditorGUILayout.EndHorizontal();
 
                 EditorGUILayout.Space();
@@ -127,11 +138,13 @@ namespace OcentraAI.LLMGames.GameModes
                     SelectAllRules();
                     TryInitialize();
                 }
+
                 if (GUILayout.Button("Deselect All", GUILayout.Width(80)))
                 {
                     DeselectAllRules();
                     TryInitialize();
                 }
+
                 EditorGUILayout.Space(10);
                 GameMode.Height = EditorGUILayout.Slider(GameMode.Height, 50, 500);
                 EditorGUILayout.Space(10);
@@ -141,9 +154,11 @@ namespace OcentraAI.LLMGames.GameModes
 
                 if (GameMode.BaseBonusRulesTemplate.Count > 0)
                 {
-                    ScrollPosition = EditorGUILayout.BeginScrollView(ScrollPosition, GUILayout.Height(GameMode.Height), GUILayout.ExpandHeight(true));
+                    ScrollPosition = EditorGUILayout.BeginScrollView(ScrollPosition, GUILayout.Height(GameMode.Height),
+                        GUILayout.ExpandHeight(true));
 
-                    foreach (KeyValuePair<BaseBonusRule, CustomRuleState> ruleStatePair in GameMode.BaseBonusRulesTemplate)
+                    foreach (KeyValuePair<BaseBonusRule, CustomRuleState> ruleStatePair in GameMode
+                                 .BaseBonusRulesTemplate)
                     {
                         BaseBonusRule rule = ruleStatePair.Key;
                         CustomRuleState customRuleState = ruleStatePair.Value;
@@ -170,16 +185,18 @@ namespace OcentraAI.LLMGames.GameModes
 
                         if (EditorGUI.EndChangeCheck())
                         {
-                            rule.UpdateRule(bonusValue: (int)customRuleState.BonusValue, priority: (int)customRuleState.Priority);
+                            rule.UpdateRule((int)customRuleState.BonusValue, (int)customRuleState.Priority);
                             SyncSelectedRules();
                         }
                     }
+
                     EditorGUILayout.EndScrollView();
                 }
                 else
                 {
                     EditorGUILayout.HelpBox("No rule templates found in the selected folder.", MessageType.Info);
                 }
+
                 EditorGUILayout.EndVertical();
             }
 
@@ -200,16 +217,21 @@ namespace OcentraAI.LLMGames.GameModes
                 ToggleSortingOrder(SortingCriteria.NameAscending, SortingCriteria.NameDescending);
                 ApplySorting();
             }
-            if (DrawSortButton("Sort by Priority", SortingCriteria.PriorityAscending, SortingCriteria.PriorityDescending))
+
+            if (DrawSortButton("Sort by Priority", SortingCriteria.PriorityAscending,
+                    SortingCriteria.PriorityDescending))
             {
                 ToggleSortingOrder(SortingCriteria.PriorityAscending, SortingCriteria.PriorityDescending);
                 ApplySorting();
             }
-            if (DrawSortButton("Sort by Bonus Value", SortingCriteria.BonusValueAscending, SortingCriteria.BonusValueDescending))
+
+            if (DrawSortButton("Sort by Bonus Value", SortingCriteria.BonusValueAscending,
+                    SortingCriteria.BonusValueDescending))
             {
                 ToggleSortingOrder(SortingCriteria.BonusValueAscending, SortingCriteria.BonusValueDescending);
                 ApplySorting();
             }
+
             EditorGUILayout.EndHorizontal();
             EditorGUILayout.Space(10);
         }
@@ -279,6 +301,7 @@ namespace OcentraAI.LLMGames.GameModes
             {
                 ruleStatePair.Value.IsSelected = true;
             }
+
             TryInitialize();
         }
 
@@ -288,6 +311,7 @@ namespace OcentraAI.LLMGames.GameModes
             {
                 ruleStatePair.Value.IsSelected = false;
             }
+
             TryInitialize();
         }
 
@@ -300,11 +324,12 @@ namespace OcentraAI.LLMGames.GameModes
         {
             GUIStyle style = new GUIStyle(EditorStyles.toolbarButton)
             {
-                normal = { background = MakeTex(2, 2, Color.clear), textColor = Color.white },
-                hover = { background = MakeTex(2, 2, Color.gray), textColor = Color.white }
+                normal = {background = MakeTex(2, 2, Color.clear), textColor = Color.white},
+                hover = {background = MakeTex(2, 2, Color.gray), textColor = Color.white}
             };
 
-            if (GameMode.CurrentSortingCriteria == ascendingCriteria || GameMode.CurrentSortingCriteria == descendingCriteria)
+            if (GameMode.CurrentSortingCriteria == ascendingCriteria ||
+                GameMode.CurrentSortingCriteria == descendingCriteria)
             {
                 style.normal.textColor = Color.green;
             }
@@ -320,14 +345,14 @@ namespace OcentraAI.LLMGames.GameModes
         {
             Color[] pix = new Color[width * height];
             for (int i = 0; i < pix.Length; i++)
+            {
                 pix[i] = col;
+            }
+
             Texture2D result = new Texture2D(width, height);
             result.SetPixels(pix);
             result.Apply();
             return result;
         }
     }
-
-
-
 }

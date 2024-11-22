@@ -17,8 +17,11 @@ namespace OcentraAI.LLMGames.GameModes.Rules
         public override bool Evaluate(Hand hand, out BonusDetail bonusDetail)
         {
             bonusDetail = null;
-            if (!hand.VerifyHand(GameMode, MinNumberOfCard)) return false;
-            
+            if (!hand.VerifyHand(GameMode, MinNumberOfCard))
+            {
+                return false;
+            }
+
             if (hand.IsRoyalSequence(GameMode))
             {
                 bonusDetail = CalculateBonus(hand);
@@ -31,7 +34,7 @@ namespace OcentraAI.LLMGames.GameModes.Rules
         private BonusDetail CalculateBonus(Hand hand)
         {
             int baseBonus = BonusValue * hand.Sum();
-            List<string> descriptions = new List<string> { "Royal Flush" };
+            List<string> descriptions = new List<string> {"Royal Flush"};
             string bonusCalculationDescriptions = $"{BonusValue} * {hand.Sum()}";
             return CreateBonusDetails(RuleName, baseBonus, Priority, descriptions, bonusCalculationDescriptions);
         }
@@ -52,7 +55,8 @@ namespace OcentraAI.LLMGames.GameModes.Rules
             do
             {
                 Suit flushSuit = CardUtility.GetRandomSuit();
-                List<Rank> royalRanks = HandUtility.GetRoyalSequenceAsRank(GameMode.NumberOfCards).Take(handSize).ToList();
+                List<Rank> royalRanks =
+                    HandUtility.GetRoyalSequenceAsRank(GameMode.NumberOfCards).Take(handSize).ToList();
 
                 hand = royalRanks.Select(rank => CardUtility.GetRankSymbol(flushSuit, rank, coloured)).ToArray();
 
@@ -68,7 +72,6 @@ namespace OcentraAI.LLMGames.GameModes.Rules
                     Debug.LogError($"Failed to generate a valid Royal Flush hand after {maxAttempts} attempts.");
                     return Array.Empty<string>();
                 }
-
             } while (!isValidRoyalFlush);
 
             return hand;
@@ -83,7 +86,8 @@ namespace OcentraAI.LLMGames.GameModes.Rules
 
         public override bool Initialize(GameMode gameMode)
         {
-            Description = $"A sequence of the highest {gameMode.NumberOfCards} cards (starting from Ace) all in the same suit.";
+            Description =
+                $"A sequence of the highest {gameMode.NumberOfCards} cards (starting from Ace) all in the same suit.";
 
             List<string> playerExamples = new List<string>();
             List<string> llmExamples = new List<string>();

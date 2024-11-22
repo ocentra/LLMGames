@@ -1,10 +1,13 @@
 using OcentraAI.LLMGames.GameModes.Rules;
-using OcentraAI.LLMGames.ThreeCardBrag.Manager;
+using OcentraAI.LLMGames.Manager.Utilities;
 using OcentraAI.LLMGames.ThreeCardBrag.Rules;
 using Sirenix.OdinInspector;
 using Sirenix.Serialization;
 using System.Collections.Generic;
 using System.Linq;
+#if UNITY_EDITOR
+using UnityEditor;
+#endif
 using UnityEngine;
 using static System.String;
 
@@ -12,85 +15,122 @@ namespace OcentraAI.LLMGames.GameModes
 {
     public abstract class GameMode : SerializedScriptableObject, ISaveScriptable
     {
-        #region Fields and Properties
-        [OdinSerialize, HideInInspector] public Dictionary<BaseBonusRule, CustomRuleState> BaseBonusRulesTemplate { get; set; } = new Dictionary<BaseBonusRule, CustomRuleState>();
-        [OdinSerialize, HideInInspector] public float Height { get; set; } = 100;
-        [OdinSerialize, HideInInspector] public SortingCriteria CurrentSortingCriteria { get; set; } = SortingCriteria.PriorityAscending;
+        #region Utility Methods
 
-        [FolderPath(AbsolutePath = true), ReadOnly]
-        [OdinSerialize, ShowInInspector] public string RulesTemplatePath { get; set; } = "Assets/Resources/GameMode";
-        [OdinSerialize, HideInInspector] public bool Foldout { get; set; } = false;
+        [Button]
+        public virtual void SaveChanges()
+        {
+#if UNITY_EDITOR
+            EditorSaveManager.RequestSave(this);
+#endif
+        }
+
+        #endregion
+
+        #region Fields and Properties
+
+        [OdinSerialize]
+        [HideInInspector]
+        public Dictionary<BaseBonusRule, CustomRuleState> BaseBonusRulesTemplate { get; set; } =
+            new Dictionary<BaseBonusRule, CustomRuleState>();
+
+        [OdinSerialize] [HideInInspector] public float Height { get; set; } = 100;
+
+        [OdinSerialize]
+        [HideInInspector]
+        public SortingCriteria CurrentSortingCriteria { get; set; } = SortingCriteria.PriorityAscending;
+
+        [FolderPath(AbsolutePath = true)]
+        [ReadOnly]
+        [OdinSerialize]
+        [ShowInInspector]
+        public string RulesTemplatePath { get; set; } = "Assets/Resources/GameMode";
+
+        [OdinSerialize] [HideInInspector] public bool Foldout { get; set; }
 
         // abstract props
-        [OdinSerialize, ShowInInspector] public abstract int MaxRounds { get; protected set; }
+        [OdinSerialize] [ShowInInspector] public abstract int MaxRounds { get; protected set; }
 
-        [OdinSerialize, ShowInInspector] public abstract float TurnDuration { get; protected set; }
+        [OdinSerialize] [ShowInInspector] public abstract float TurnDuration { get; protected set; }
 
-        [OdinSerialize, ShowInInspector] public abstract int InitialPlayerCoins { get; protected set; }
+        [OdinSerialize] [ShowInInspector] public abstract int InitialPlayerCoins { get; protected set; }
 
-        [OdinSerialize, ShowInInspector] public abstract int BaseBet { get; protected set; }
+        [OdinSerialize] [ShowInInspector] public abstract int BaseBet { get; protected set; }
 
-        [OdinSerialize, ShowInInspector] public abstract int BaseBlindMultiplier { get; protected set; }
+        [OdinSerialize] [ShowInInspector] public abstract int BaseBlindMultiplier { get; protected set; }
 
-        [OdinSerialize, ShowInInspector] public abstract bool UseTrump { get; protected set; }
+        [OdinSerialize] [ShowInInspector] public abstract bool UseTrump { get; protected set; }
 
-        [OdinSerialize, ShowInInspector] public abstract bool UseMagicCards { get; protected set; }
+        [OdinSerialize] [ShowInInspector] public abstract bool UseMagicCards { get; protected set; }
 
-        [OdinSerialize, ShowInInspector] public abstract bool DrawFromDeckAllowed { get; protected set; }
+        [OdinSerialize] [ShowInInspector] public abstract bool DrawFromDeckAllowed { get; protected set; }
 
 
-        [OdinSerialize, ShowInInspector, ReadOnly] public abstract string GameName { get; protected set; }
-        [OdinSerialize, ShowInInspector, ReadOnly] public abstract int MaxPlayers { get; protected set; }
-        [OdinSerialize, ShowInInspector, ReadOnly] public abstract int NumberOfCards { get; protected set; }
+        [OdinSerialize]
+        [ShowInInspector]
+        [ReadOnly]
+        public abstract string GameName { get; protected set; }
 
+        [OdinSerialize]
+        [ShowInInspector]
+        [ReadOnly]
+        public abstract int MaxPlayers { get; protected set; }
+
+        [OdinSerialize]
+        [ShowInInspector]
+        [ReadOnly]
+        public abstract int NumberOfCards { get; protected set; }
 
 
         // public props
 
-        [OdinSerialize, ShowInInspector]
-        public GameRulesContainer GameRules { get; protected set; }
+        [OdinSerialize] [ShowInInspector] public GameRulesContainer GameRules { get; protected set; }
 
-        [OdinSerialize, ShowInInspector]
-        public GameRulesContainer GameDescription { get; protected set; }
+        [OdinSerialize] [ShowInInspector] public GameRulesContainer GameDescription { get; protected set; }
 
-        [OdinSerialize, ShowInInspector]
-        public GameRulesContainer StrategyTips { get; protected set; }
+        [OdinSerialize] [ShowInInspector] public GameRulesContainer StrategyTips { get; protected set; }
 
-        [OdinSerialize, ShowInInspector]
+        [OdinSerialize]
+        [ShowInInspector]
         public List<BaseBonusRule> BonusRules { get; protected set; } = new List<BaseBonusRule>();
 
-        [OdinSerialize, ShowInInspector, ReadOnly]
+        [OdinSerialize]
+        [ShowInInspector]
+        [ReadOnly]
         public CardRanking[] CardRankings { get; protected set; }
 
-        [OdinSerialize, ShowInInspector, ReadOnly]
+        [OdinSerialize]
+        [ShowInInspector]
+        [ReadOnly]
         public TrumpBonusValues TrumpBonusValues { get; protected set; } = new TrumpBonusValues();
 
         // protected props 
 
-        [OdinSerialize, ShowInInspector, ReadOnly]
+        [OdinSerialize]
+        [ShowInInspector]
+        [ReadOnly]
         protected Dictionary<PossibleMoves, string> MoveValidityConditions { get; set; }
 
-        [OdinSerialize, ShowInInspector, ReadOnly]
+        [OdinSerialize]
+        [ShowInInspector]
+        [ReadOnly]
         protected Dictionary<DifficultyLevels, string> BluffSettingConditions { get; set; }
 
-        [OdinSerialize, ShowInInspector, ReadOnly]
+        [OdinSerialize]
+        [ShowInInspector]
+        [ReadOnly]
         protected Dictionary<HandType, string> ExampleHandOdds { get; set; }
-
-
 
         #endregion
 
         #region Initialization Methods
 
-
-
         public abstract bool TryInitialize();
 
         protected virtual bool TryInitializeBonusRules()
         {
-
 #if UNITY_EDITOR
-            
+
             List<BaseBonusRule> bonusRulesTemplate = new List<BaseBonusRule>();
             foreach (var ruleStatePair in BaseBonusRulesTemplate)
             {
@@ -100,8 +140,8 @@ namespace OcentraAI.LLMGames.GameModes
                 }
             }
 
-            string gameModePath = UnityEditor.AssetDatabase.GetAssetPath(this);
-            Object[] assets = UnityEditor.AssetDatabase.LoadAllAssetsAtPath(gameModePath);
+            string gameModePath = AssetDatabase.GetAssetPath(this);
+            Object[] assets = AssetDatabase.LoadAllAssetsAtPath(gameModePath);
 
             // Remove any corrupt or invalid assets
             foreach (Object asset in assets)
@@ -113,16 +153,18 @@ namespace OcentraAI.LLMGames.GameModes
                         DestroyImmediate(asset, true);
                     }
                 }
-                if (asset == null || asset.GetType() == typeof(UnityEditor.MonoScript) || IsNullOrEmpty(asset.name))
+
+                if (asset == null || asset.GetType() == typeof(MonoScript) || IsNullOrEmpty(asset.name))
                 {
                     Debug.LogWarning($"Found and removing invalid asset: {asset}");
                     DestroyImmediate(asset, true);
                 }
             }
 
-            assets = UnityEditor.AssetDatabase.LoadAllAssetsAtPath(gameModePath);
+            assets = AssetDatabase.LoadAllAssetsAtPath(gameModePath);
 
-            List<BaseBonusRule> existingChildRules = assets.OfType<BaseBonusRule>().Where(r => r.RuleName != Empty).ToList();
+            List<BaseBonusRule> existingChildRules =
+                assets.OfType<BaseBonusRule>().Where(r => r.RuleName != Empty).ToList();
 
             // Ensure unique keys for existing rules
             Dictionary<string, BaseBonusRule> existingRulesDict = new Dictionary<string, BaseBonusRule>();
@@ -130,7 +172,8 @@ namespace OcentraAI.LLMGames.GameModes
             {
                 if (!existingRulesDict.TryAdd(rule.RuleName, rule))
                 {
-                    Debug.LogWarning($"Duplicate rule name found in existing rules: {rule.RuleName}. Skipping duplicate.");
+                    Debug.LogWarning(
+                        $"Duplicate rule name found in existing rules: {rule.RuleName}. Skipping duplicate.");
                 }
             }
 
@@ -140,7 +183,8 @@ namespace OcentraAI.LLMGames.GameModes
             {
                 if (!templateRulesDict.TryAdd(rule.RuleName, rule))
                 {
-                    Debug.LogWarning($"Duplicate rule name found in template rules: {rule.RuleName}. Skipping duplicate.");
+                    Debug.LogWarning(
+                        $"Duplicate rule name found in template rules: {rule.RuleName}. Skipping duplicate.");
                 }
             }
 
@@ -160,14 +204,12 @@ namespace OcentraAI.LLMGames.GameModes
                     if (newRule.SetGameMode(this))
                     {
                         updatedRules.Add(newRule);
-                        UnityEditor.AssetDatabase.AddObjectToAsset(newRule, this);
+                        AssetDatabase.AddObjectToAsset(newRule, this);
                     }
                     else
                     {
                         return false;
                     }
-
-
                 }
             }
 
@@ -186,10 +228,6 @@ namespace OcentraAI.LLMGames.GameModes
 #endif
             return true;
         }
-
-
-
-
 
 
         protected virtual void InitializeGameRules()
@@ -224,21 +262,15 @@ namespace OcentraAI.LLMGames.GameModes
 
         protected virtual void InitializeCardRankings()
         {
-            CardRankings = new CardRanking[]
+            CardRankings = new[]
             {
-                new CardRanking { CardName = "A", Value = 14 },
-                new CardRanking { CardName = "K", Value = 13 },
-                new CardRanking { CardName = "Q", Value = 12 },
-                new CardRanking { CardName = "J", Value = 11 },
-                new CardRanking { CardName = "10", Value = 10 },
-                new CardRanking { CardName = "9", Value = 9 },
-                new CardRanking { CardName = "8", Value = 8 },
-                new CardRanking { CardName = "7", Value = 7 },
-                new CardRanking { CardName = "6", Value = 6 },
-                new CardRanking { CardName = "5", Value = 5 },
-                new CardRanking { CardName = "4", Value = 4 },
-                new CardRanking { CardName = "3", Value = 3 },
-                new CardRanking { CardName = "2", Value = 2 }
+                new CardRanking {CardName = "A", Value = 14}, new CardRanking {CardName = "K", Value = 13},
+                new CardRanking {CardName = "Q", Value = 12}, new CardRanking {CardName = "J", Value = 11},
+                new CardRanking {CardName = "10", Value = 10}, new CardRanking {CardName = "9", Value = 9},
+                new CardRanking {CardName = "8", Value = 8}, new CardRanking {CardName = "7", Value = 7},
+                new CardRanking {CardName = "6", Value = 6}, new CardRanking {CardName = "5", Value = 5},
+                new CardRanking {CardName = "4", Value = 4}, new CardRanking {CardName = "3", Value = 3},
+                new CardRanking {CardName = "2", Value = 2}
             };
         }
 
@@ -284,18 +316,6 @@ namespace OcentraAI.LLMGames.GameModes
         public T GetBonusRule<T>() where T : BaseBonusRule
         {
             return BonusRules.OfType<T>().FirstOrDefault();
-        }
-
-        #endregion
-
-        #region Utility Methods
-
-        [Button]
-        public virtual void SaveChanges()
-        {
-#if UNITY_EDITOR
-            EditorSaveManager.RequestSave(this);
-#endif
         }
 
         #endregion

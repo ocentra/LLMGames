@@ -18,7 +18,10 @@ namespace OcentraAI.LLMGames.GameModes.Rules
         public override bool Evaluate(Hand hand, out BonusDetail bonusDetail)
         {
             bonusDetail = null;
-            if (!hand.VerifyHand(GameMode, MinNumberOfCard)) return false;
+            if (!hand.VerifyHand(GameMode, MinNumberOfCard))
+            {
+                return false;
+            }
 
 
             // Check for royal flush
@@ -43,7 +46,8 @@ namespace OcentraAI.LLMGames.GameModes.Rules
                 {
                     Hand trumpHand = hand.Where(c => c != trumpCard);
 
-                    bool canFormStraightFlush = trumpHand.IsSameSuits() && trumpHand.CanFormSequenceWithWild() || (hand.IsSequence() && trumpHand.IsSameSuits());
+                    bool canFormStraightFlush = (trumpHand.IsSameSuits() && trumpHand.CanFormSequenceWithWild()) ||
+                                                (hand.IsSequence() && trumpHand.IsSameSuits());
 
                     if (canFormStraightFlush)
                     {
@@ -62,7 +66,7 @@ namespace OcentraAI.LLMGames.GameModes.Rules
             string bonusCalculationDescriptions = $"{BonusValue} * {hand.Sum()}";
 
             int additionalBonus = 0;
-            List<string> descriptions = new List<string> { "Straight Flush:" };
+            List<string> descriptions = new List<string> {"Straight Flush:"};
 
             if (isTrumpAssisted)
             {
@@ -86,11 +90,14 @@ namespace OcentraAI.LLMGames.GameModes.Rules
                     descriptions.Add($"Trump Rank Adjacent: +{GameMode.TrumpBonusValues.RankAdjacentBonus}");
                 }
             }
+
             if (additionalBonus > 0)
             {
                 bonusCalculationDescriptions = $"{BonusValue} * {hand.Sum()} + {additionalBonus} ";
             }
-            return CreateBonusDetails(RuleName, baseBonus, Priority, descriptions, bonusCalculationDescriptions, additionalBonus);
+
+            return CreateBonusDetails(RuleName, baseBonus, Priority, descriptions, bonusCalculationDescriptions,
+                additionalBonus);
         }
 
         public override string[] CreateExampleHand(int handSize, string trumpCard = null, bool coloured = true)
@@ -110,7 +117,8 @@ namespace OcentraAI.LLMGames.GameModes.Rules
             {
                 List<string> tempHand = new List<string>();
                 Suit flushSuit = CardUtility.GetRandomSuit();
-                List<Rank> selectedRanks = CardUtility.SelectRanks(handSize, allowSequence: true, sameSuit: true, fixedSuit: flushSuit);
+                List<Rank> selectedRanks =
+                    CardUtility.SelectRanks(handSize, true, sameSuit: true, fixedSuit: flushSuit);
                 selectedRanks.Sort();
 
                 for (int i = 0; i < handSize; i++)
@@ -138,7 +146,6 @@ namespace OcentraAI.LLMGames.GameModes.Rules
                     Debug.LogError($"Failed to generate a valid Straight Flush hand after {maxAttempts} attempts.");
                     return Array.Empty<string>();
                 }
-
             } while (!isValidStraightFlush);
 
             return hand;
@@ -184,7 +191,8 @@ namespace OcentraAI.LLMGames.GameModes.Rules
                 }
             }
 
-            return TryCreateExample(RuleName, Description, BonusValue, playerExamples, llmExamples, playerTrumpExamples, llmTrumpExamples, gameMode.UseTrump);
+            return TryCreateExample(RuleName, Description, BonusValue, playerExamples, llmExamples, playerTrumpExamples,
+                llmTrumpExamples, gameMode.UseTrump);
         }
     }
 }

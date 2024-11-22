@@ -3,28 +3,28 @@
 using OcentraAI.LLMGames.GameModes;
 using Sirenix.OdinInspector.Editor;
 using Sirenix.Serialization;
+#if UNITY_EDITOR
 using UnityEditor;
+#endif
 using UnityEngine;
 
 namespace OcentraAI.LLMGames.Editor
 {
     public class GameRulesContainerDrawer : OdinValueDrawer<GameRulesContainer>
     {
-        private Vector2 playerScrollPosition;
+        [OdinSerialize] private const float widthPadding = 30f;
+
+        [OdinSerialize] private float llmDisplayHeight = 100;
+
         private Vector2 llmScrollPosition;
 
-        [OdinSerialize]
-        private float playerDisplayHeight = 100;
+        [OdinSerialize] private float playerDisplayHeight = 100;
 
-        [OdinSerialize]
-        private float llmDisplayHeight = 100;
-
-        [OdinSerialize]
-        private const float widthPadding = 30f;
+        private Vector2 playerScrollPosition;
 
         protected override void DrawPropertyLayout(GUIContent label)
         {
-            var value = this.ValueEntry.SmartValue;
+            var value = ValueEntry.SmartValue;
 
             if (value != null)
             {
@@ -32,12 +32,12 @@ namespace OcentraAI.LLMGames.Editor
 
                 playerDisplayHeight = EditorGUILayout.FloatField("Player", playerDisplayHeight);
 
-               // GUILayout.Label("Player Rules", EditorStyles.boldLabel);
+                // GUILayout.Label("Player Rules", EditorStyles.boldLabel);
                 playerScrollPosition = DrawScrollableTextArea(playerScrollPosition, value.Player, playerDisplayHeight);
 
                 llmDisplayHeight = EditorGUILayout.FloatField("LLM", llmDisplayHeight);
 
-              //  GUILayout.Label("LLM Rules", EditorStyles.boldLabel);
+                //  GUILayout.Label("LLM Rules", EditorStyles.boldLabel);
                 llmScrollPosition = DrawScrollableTextArea(llmScrollPosition, value.LLM, llmDisplayHeight);
 
                 EditorGUILayout.EndVertical();
@@ -46,11 +46,7 @@ namespace OcentraAI.LLMGames.Editor
 
         private Vector2 DrawScrollableTextArea(Vector2 scrollPosition, string text, float scrollViewHeight)
         {
-            var style = new GUIStyle(EditorStyles.textArea)
-            {
-                richText = true,
-                wordWrap = true
-            };
+            var style = new GUIStyle(EditorStyles.textArea) {richText = true, wordWrap = true};
 
             // Measure the height of the text based on the current view width minus some padding
             var content = new GUIContent(text);

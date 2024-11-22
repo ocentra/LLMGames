@@ -14,8 +14,5 @@ namespace OcentraAI.LLMGames.LLMServices
             var response = JsonConvert.DeserializeObject<ClaudeResponse>(jsonResponse);
             return response.Responses[0];
         }
-
-
-
     }
 }

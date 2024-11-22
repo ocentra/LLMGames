@@ -19,7 +19,10 @@ namespace OcentraAI.LLMGames.GameModes.Rules
         public override bool Evaluate(Hand hand, out BonusDetail bonusDetail)
         {
             bonusDetail = null;
-            if (!hand.VerifyHand(GameMode, MinNumberOfCard)) return false;
+            if (!hand.VerifyHand(GameMode, MinNumberOfCard))
+            {
+                return false;
+            }
 
             Card trumpCard = GameMode.UseTrump ? GetTrumpCard() : null;
 
@@ -40,7 +43,10 @@ namespace OcentraAI.LLMGames.GameModes.Rules
 
             string bonusCalculationDescriptions = $"{BonusValue} * {triplets.Count} * {value}";
 
-            List<string> descriptions = new List<string> { $"Multiple Triplets: {string.Join(", ", triplets.Select(rank => CardUtility.GetRankSymbol(Suit.Spade, rank)))}" };
+            List<string> descriptions = new List<string>
+            {
+                $"Multiple Triplets: {string.Join(", ", triplets.Select(rank => CardUtility.GetRankSymbol(Suit.Spade, rank)))}"
+            };
 
             int additionalBonus = 0;
             if (GameMode.UseTrump && hand.Contains(trumpCard))
@@ -50,7 +56,8 @@ namespace OcentraAI.LLMGames.GameModes.Rules
                 bonusCalculationDescriptions += $" + {additionalBonus}";
             }
 
-            return CreateBonusDetails(RuleName, baseBonus, Priority, descriptions, bonusCalculationDescriptions, additionalBonus);
+            return CreateBonusDetails(RuleName, baseBonus, Priority, descriptions, bonusCalculationDescriptions,
+                additionalBonus);
         }
 
         public override string[] CreateExampleHand(int handSize, string trumpCardSymbol = null, bool coloured = true)
@@ -76,8 +83,7 @@ namespace OcentraAI.LLMGames.GameModes.Rules
                     Debug.LogError($"Failed to generate a valid Multiple Triplets hand after {maxAttempts} attempts.");
                     return Array.Empty<string>();
                 }
-            }
-            while (!HandUtility.ConvertFromSymbols(hand.ToArray()).IsMultipleTriplets(trumpCard, GameMode));
+            } while (!HandUtility.ConvertFromSymbols(hand.ToArray()).IsMultipleTriplets(trumpCard, GameMode));
 
             return hand.ToArray();
         }
@@ -148,7 +154,8 @@ namespace OcentraAI.LLMGames.GameModes.Rules
                 }
             }
 
-            return TryCreateExample(RuleName, Description, BonusValue, playerExamples, llmExamples, playerTrumpExamples, llmTrumpExamples, gameMode.UseTrump);
+            return TryCreateExample(RuleName, Description, BonusValue, playerExamples, llmExamples, playerTrumpExamples,
+                llmTrumpExamples, gameMode.UseTrump);
         }
 
         private string CreateExampleString(int cardCount, bool isPlayer, bool useTrump = false)

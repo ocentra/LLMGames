@@ -21,15 +21,15 @@ MonoBehaviour:
     PrefabModificationsReferencedUnityObjects: []
     PrefabModifications: []
     SerializationNodes: []
+  id: "2_\u2665"
+  path: Assets/Images/Cards/2_of_hearts.png
+  rank:
+    alias: 2
+    name: 2
+    value: 2
+  rankSymbol: "<color=#FF0000>2</color><color=#FF0000>\u2665</color>"
+  texture2D: {fileID: 2800000, guid: 5780c12119a3184448029a2bee7b72ae, type: 3}
   suit:
-    value: 1
     name: Heart
     symbol: "\u2665"
-  rank:
-    value: 2
-    name: 2
-    alias: 2
-  sprite: {fileID: 21300000, guid: 5780c12119a3184448029a2bee7b72ae, type: 3}
-  path: Assets/Images/Cards/2_of_hearts.png
-  rankSymbol: "<color=#FF0000>2</color><color=#FF0000>\u2665</color>"
-  id: "2_\u2665"
+    value: 1

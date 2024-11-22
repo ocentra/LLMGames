@@ -21,15 +21,15 @@ MonoBehaviour:
     PrefabModificationsReferencedUnityObjects: []
     PrefabModifications: []
     SerializationNodes: []
+  id: "9_\u2660"
+  path: Assets/Images/Cards/9_of_spades.png
+  rank:
+    alias: 9
+    name: 9
+    value: 9
+  rankSymbol: "<color=#000000>9</color><color=#000000>\u2660</color>"
+  texture2D: {fileID: 2800000, guid: b9487e50b6ad4fa418f57d4a9003915e, type: 3}
   suit:
-    value: 4
     name: Spade
     symbol: "\u2660"
-  rank:
-    value: 9
-    name: 9
-    alias: 9
-  sprite: {fileID: 21300000, guid: b9487e50b6ad4fa418f57d4a9003915e, type: 3}
-  path: Assets/Images/Cards/9_of_spades.png
-  rankSymbol: "<color=#000000>9</color><color=#000000>\u2660</color>"
-  id: "9_\u2660"
+    value: 4

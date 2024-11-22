@@ -20,9 +20,15 @@ namespace OcentraAI.LLMGames.GameModes.Rules
         {
             bonusDetail = null;
 
-            if (!hand.VerifyHand(GameMode, MinNumberOfCard)) return false;
+            if (!hand.VerifyHand(GameMode, MinNumberOfCard))
+            {
+                return false;
+            }
 
-            if (!hand.IsSequence()) return false;
+            if (!hand.IsSequence())
+            {
+                return false;
+            }
 
 
             // Check for royal flush
@@ -46,7 +52,9 @@ namespace OcentraAI.LLMGames.GameModes.Rules
                 {
                     Hand nonTrumpHand = hand.Where(c => c != trumpCard);
                     bool canFormSequence = hand.CanFormSequenceWithWild();
-                    bool sameColorNonTrump = nonTrumpHand.All(card => CardUtility.GetColorValue(card.Suit) == CardUtility.GetColorValue(nonTrumpHand.GetCard(0).Suit));
+                    bool sameColorNonTrump = nonTrumpHand.All(card =>
+                        CardUtility.GetColorValue(card.Suit) ==
+                        CardUtility.GetColorValue(nonTrumpHand.GetCard(0).Suit));
 
                     if (canFormSequence && sameColorNonTrump)
                     {
@@ -63,7 +71,7 @@ namespace OcentraAI.LLMGames.GameModes.Rules
         {
             int baseBonus = BonusValue * hand.Sum();
             int additionalBonus = 0;
-            List<string> descriptions = new List<string> { "Same Colors Sequence:" };
+            List<string> descriptions = new List<string> {"Same Colors Sequence:"};
             string bonusCalculationDescriptions = $"{BonusValue} * {hand.Sum()}";
 
             if (isTrumpAssisted)
@@ -94,7 +102,8 @@ namespace OcentraAI.LLMGames.GameModes.Rules
                 bonusCalculationDescriptions = $"{BonusValue} * {hand.Sum()} + {additionalBonus} ";
             }
 
-            return CreateBonusDetails(RuleName, baseBonus, Priority, descriptions, bonusCalculationDescriptions, additionalBonus);
+            return CreateBonusDetails(RuleName, baseBonus, Priority, descriptions, bonusCalculationDescriptions,
+                additionalBonus);
         }
 
         public override string[] CreateExampleHand(int handSize, string trumpCard = null, bool coloured = true)
@@ -114,8 +123,8 @@ namespace OcentraAI.LLMGames.GameModes.Rules
             {
                 List<string> tempHand = new List<string>();
                 bool isRed = Random.value > 0.5f;
-                Suit[] suits = isRed ? new[] { Suit.Heart, Suit.Diamond } : new[] { Suit.Spade, Suit.Club };
-                List<Rank> selectedRanks = CardUtility.SelectRanks(handSize, allowSequence: true, sameColor: true);
+                Suit[] suits = isRed ? new[] {Suit.Heart, Suit.Diamond} : new[] {Suit.Spade, Suit.Club};
+                List<Rank> selectedRanks = CardUtility.SelectRanks(handSize, true, true);
                 selectedRanks.Sort();
 
                 for (int i = 0; i < handSize; i++)
@@ -141,10 +150,10 @@ namespace OcentraAI.LLMGames.GameModes.Rules
 
                 if (attempts >= maxAttempts)
                 {
-                    Debug.LogError($"Failed to generate a valid Same Color Sequence hand after {maxAttempts} attempts.");
+                    Debug.LogError(
+                        $"Failed to generate a valid Same Color Sequence hand after {maxAttempts} attempts.");
                     return Array.Empty<string>();
                 }
-
             } while (!isValidSameColorSequence);
 
             return hand;
@@ -171,7 +180,8 @@ namespace OcentraAI.LLMGames.GameModes.Rules
 
         public override bool Initialize(GameMode gameMode)
         {
-            Description = "A sequence of cards all of the same color (red or black), optionally considering Trump Wild Card.";
+            Description =
+                "A sequence of cards all of the same color (red or black), optionally considering Trump Wild Card.";
 
             List<string> playerExamples = new List<string>();
             List<string> llmExamples = new List<string>();
@@ -190,7 +200,8 @@ namespace OcentraAI.LLMGames.GameModes.Rules
                 }
             }
 
-            return TryCreateExample(RuleName, Description, BonusValue, playerExamples, llmExamples, playerTrumpExamples, llmTrumpExamples, gameMode.UseTrump);
+            return TryCreateExample(RuleName, Description, BonusValue, playerExamples, llmExamples, playerTrumpExamples,
+                llmTrumpExamples, gameMode.UseTrump);
         }
     }
 }

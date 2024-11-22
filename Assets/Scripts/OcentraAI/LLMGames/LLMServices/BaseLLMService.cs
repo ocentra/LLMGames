@@ -1,4 +1,6 @@
+using Cysharp.Threading.Tasks;
 using Newtonsoft.Json;
+using System;
 using System.Text;
 using System.Threading.Tasks;
 using UnityEngine;
@@ -8,14 +10,6 @@ namespace OcentraAI.LLMGames.LLMServices
 {
     public abstract class BaseLLMService : ILLMService
     {
-        protected string Endpoint { get; set; }
-        protected string ApiKey { get; set; }
-        protected string ApiUrl { get; set; }
-        protected string Model { get; set; }
-        protected int MaxTokens { get; set; }
-        protected double Temperature { get; set; }
-        protected bool Stream { get; set; }
-
         protected BaseLLMService(LLMConfig config)
         {
             Endpoint = config.Endpoint;
@@ -27,7 +21,15 @@ namespace OcentraAI.LLMGames.LLMServices
             Stream = config.Stream;
         }
 
-        public async Task<string> GetResponseAsync(string systemMessage, string userPrompt)
+        protected string Endpoint { get; set; }
+        protected string ApiKey { get; set; }
+        protected string ApiUrl { get; set; }
+        protected string Model { get; set; }
+        protected int MaxTokens { get; set; }
+        protected double Temperature { get; set; }
+        protected bool Stream { get; set; }
+
+        public async UniTask<string> GetResponseAsync(string systemMessage, string userPrompt)
         {
             try
             {
@@ -52,17 +54,16 @@ namespace OcentraAI.LLMGames.LLMServices
                 {
                     return ProcessResponse(webRequest.downloadHandler.text);
                 }
-                else
-                {
-                    string errorContent = webRequest.downloadHandler.text;
-                    Debug.LogError($"Error calling LLM API: {webRequest.responseCode} - {webRequest.error} - {errorContent}");
-                    return $"Error";
-                }
+
+                string errorContent = webRequest.downloadHandler.text;
+                Debug.LogError(
+                    $"Error calling LLM API: {webRequest.responseCode} - {webRequest.error} - {errorContent}");
+                return "Error";
             }
-            catch (System.Exception ex)
+            catch (Exception ex)
             {
                 Debug.LogError($"Exception occurred: {ex.Message}");
-                return $"Error";
+                return "Error";
             }
         }
 
@@ -74,15 +75,12 @@ namespace OcentraAI.LLMGames.LLMServices
             {
                 messages = new[]
                 {
-                    new { role = "system", content = systemMessage},
-                    new { role = "user", content = userPrompt }
+                    new {role = "system", content = systemMessage}, new {role = "user", content = userPrompt}
                 },
                 temperature = Temperature,
                 max_tokens = MaxTokens,
                 stream = Stream
             };
         }
-
-  
     }
 }

@@ -1,5 +1,6 @@
 #if UNITY_EDITOR
 
+
 using OcentraAI.LLMGames.GameModes;
 using OcentraAI.LLMGames.GameModes.Rules;
 using OcentraAI.LLMGames.Scriptable;
@@ -9,19 +10,33 @@ using Sirenix.OdinInspector.Editor;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+#if UNITY_EDITOR
 using UnityEditor;
+#endif
 using UnityEngine;
 using static System.String;
 
-namespace OcentraAI.LLMGames.ThreeCardBrag.Manager
+namespace OcentraAI.LLMGames.DevTools
 {
     [CustomEditor(typeof(DevModeManager))]
     public class DevModeManagerEditor : OdinEditor
     {
-        public DevModeManager Manager => (DevModeManager)target;
+        private GameLoggerScriptable GameLoggerScriptable => GameLoggerScriptable.Instance;
+
         public Dictionary<string, BaseBonusRule> RuleDictionary;
-        public int SelectedPlayerRuleIndex { get => Manager.SelectedPlayerRuleIndex; set => Manager.SelectedPlayerRuleIndex = value; }
-        public int SelectedComputerRuleIndex { get => Manager.SelectedComputerRuleIndex; set => Manager.SelectedComputerRuleIndex = value; }
+        public DevModeManager Manager => (DevModeManager)target;
+
+        public int SelectedPlayerRuleIndex
+        {
+            get => Manager.SelectedPlayerRuleIndex;
+            set => Manager.SelectedPlayerRuleIndex = value;
+        }
+
+        public int SelectedComputerRuleIndex
+        {
+            get => Manager.SelectedComputerRuleIndex;
+            set => Manager.SelectedComputerRuleIndex = value;
+        }
 
         #region Unity Editor Methods
 
@@ -32,7 +47,6 @@ namespace OcentraAI.LLMGames.ThreeCardBrag.Manager
             // Remove cards in hand from the deck
             RemoveUsedCards(Manager.DevHand);
             RemoveUsedCards(Manager.DevHandComputer);
-
         }
 
         public override void OnInspectorGUI()
@@ -49,7 +63,8 @@ namespace OcentraAI.LLMGames.ThreeCardBrag.Manager
                 GameSettings.Instance.SaveChanges();
             }
 
-            Manager.GameMode = (GameMode)EditorGUILayout.ObjectField("Game Mode", Manager.GameMode, typeof(GameMode), false);
+            Manager.GameMode =
+                (GameMode)EditorGUILayout.ObjectField("Game Mode", Manager.GameMode, typeof(GameMode), false);
 
             if (Manager.GameMode == null)
             {
@@ -76,7 +91,6 @@ namespace OcentraAI.LLMGames.ThreeCardBrag.Manager
             {
                 GameSettings.Instance.SaveChanges();
                 Manager.SaveChanges();
-               
             }
         }
 
@@ -158,8 +172,8 @@ namespace OcentraAI.LLMGames.ThreeCardBrag.Manager
                 GUILayout.Label(new GUIContent(devCard.RankSymbol), GetRichTextStyle());
                 GUILayout.EndVertical();
             }
-            GUILayout.EndHorizontal();
 
+            GUILayout.EndHorizontal();
         }
 
         private void DrawTrumpCard()
@@ -185,10 +199,7 @@ namespace OcentraAI.LLMGames.ThreeCardBrag.Manager
             }
 
             GUILayout.EndHorizontal();
-
-
         }
-
 
 
         private void DrawResetButtons()
@@ -198,13 +209,11 @@ namespace OcentraAI.LLMGames.ThreeCardBrag.Manager
             if (GUILayout.Button("Reset Dev Hand", GUILayout.Width(150)))
             {
                 Manager.ResetDevHand();
-               
             }
 
             if (GUILayout.Button("Reset Computer Hand", GUILayout.Width(200)))
             {
                 Manager.ResetDevComputerHand();
-               
             }
 
             if (GUILayout.Button("Reset All", GUILayout.Width(200)))
@@ -254,7 +263,7 @@ namespace OcentraAI.LLMGames.ThreeCardBrag.Manager
             }
             else
             {
-                GameLogger.LogWarning($"Cannot enable 'Use Trump' for {(isPlayer ? "Player" : "Computer")}. TrumpOfAKind is already in use by the other hand.");
+                GameLoggerScriptable.LogWarning($"Cannot enable 'Use Trump' for {(isPlayer ? "Player" : "Computer")}. TrumpOfAKind is already in use by the other hand.", null);
             }
         }
 
@@ -266,26 +275,31 @@ namespace OcentraAI.LLMGames.ThreeCardBrag.Manager
             {
                 ruleKeys[index++] = key;
             }
+
             return ruleKeys;
         }
 
         private bool IsTrumpCardAvailable()
         {
-            return Manager.TrumpDevCard != null && Manager.TrumpDevCard.Rank != Rank.None && Manager.TrumpDevCard.Suit != Suit.None;
+            return Manager.TrumpDevCard != null && Manager.TrumpDevCard.Rank != Rank.None &&
+                   Manager.TrumpDevCard.Suit != Suit.None;
         }
 
         private static GUIStyle GetRichTextStyle()
         {
-            return new GUIStyle(EditorStyles.boldLabel) { richText = true };
+            return new GUIStyle(EditorStyles.boldLabel) {richText = true};
         }
 
         private bool IsUsingTrumpOfAKind(int ruleIndex)
         {
             if (ruleIndex < 0 || ruleIndex >= RuleDictionary.Count)
+            {
                 return false;
+            }
 
             string ruleName = RuleDictionary.Keys.ElementAt(ruleIndex);
-            return RuleDictionary.TryGetValue(ruleName, out BaseBonusRule rule) && rule?.RuleName == nameof(TrumpOfAKind);
+            return RuleDictionary.TryGetValue(ruleName, out BaseBonusRule rule) &&
+                   rule?.RuleName == nameof(TrumpOfAKind);
         }
 
         private void SetUseTrumpForHand(bool isPlayerHand, bool useTrump)
@@ -336,6 +350,7 @@ namespace OcentraAI.LLMGames.ThreeCardBrag.Manager
 
                 usedCards.Add(devCard.Id);
             }
+
             return true;
         }
 
@@ -401,7 +416,6 @@ namespace OcentraAI.LLMGames.ThreeCardBrag.Manager
             Suit selectedSuit = standardSuits[newIndex];
 
 
-
             return selectedSuit;
         }
 
@@ -412,7 +426,8 @@ namespace OcentraAI.LLMGames.ThreeCardBrag.Manager
 
             for (int i = 0; i < currentHand.Length; i++)
             {
-                if (currentHand[i].Suit == Manager.TrumpDevCard.Suit && currentHand[i].Rank == Manager.TrumpDevCard.Rank)
+                if (currentHand[i].Suit == Manager.TrumpDevCard.Suit &&
+                    currentHand[i].Rank == Manager.TrumpDevCard.Rank)
                 {
                     containsTrump = true;
                     break;
@@ -438,17 +453,23 @@ namespace OcentraAI.LLMGames.ThreeCardBrag.Manager
                     selectedRuleName = key;
                     break;
                 }
+
                 i++;
             }
 
-            if (selectedRuleName != null && RuleDictionary.TryGetValue(selectedRuleName, out BaseBonusRule selectedRule))
+            if (selectedRuleName != null &&
+                RuleDictionary.TryGetValue(selectedRuleName, out BaseBonusRule selectedRule))
             {
                 if (selectedRule == null)
                 {
                     if (isPlayerHand)
+                    {
                         Manager.ResetDevHand();
+                    }
                     else
+                    {
                         Manager.ResetDevComputerHand();
+                    }
                 }
                 else
                 {
@@ -461,13 +482,13 @@ namespace OcentraAI.LLMGames.ThreeCardBrag.Manager
 
                         if (otherHandUsingTrumpOfAKind)
                         {
-                            GameLogger.LogWarning($"Cannot apply TrumpOfAKind to {(isPlayerHand ? "Player" : "Computer")} hand. It's already in use by the other hand.");
+                            GameLoggerScriptable.LogWarning($"Cannot apply TrumpOfAKind to {(isPlayerHand ? "Player" : "Computer")} hand. It's already in use by the other hand.", this);
                             return;
                         }
 
                         useTrump = true;
                         SetUseTrumpForHand(isPlayerHand, true);
-                        GameLogger.Log($"'Use Trump' has been automatically enabled for the TrumpOfAKind rule for {(isPlayerHand ? "Player" : "Computer")}.");
+                        GameLoggerScriptable.Log($"'Use Trump' has been automatically enabled for the TrumpOfAKind rule for {(isPlayerHand ? "Player" : "Computer")}.", this);
                     }
 
                     SetupHandForRule(selectedRule, isPlayerHand, useTrump);
@@ -486,7 +507,7 @@ namespace OcentraAI.LLMGames.ThreeCardBrag.Manager
             bool validHand = false;
             int attempts = 0;
             const int maxAttempts = 20;
-            string[] cardSymbols = new[] { Empty };
+            string[] cardSymbols = {Empty};
             while (!validHand && attempts < maxAttempts)
             {
                 cardSymbols = rule.CreateExampleHand(Manager.GameMode.NumberOfCards, trumpCardText, false);
@@ -512,7 +533,7 @@ namespace OcentraAI.LLMGames.ThreeCardBrag.Manager
             }
             else
             {
-                GameLogger.LogWarning($"Failed to generate a valid hand after multiple attempts. cardSymbols {Join("", cardSymbols)} devCards {Join(", ", GetDevCardTexts(devCards))}");
+                GameLoggerScriptable.LogWarning($"Failed to generate a valid hand after multiple attempts. cardSymbols {Join("", cardSymbols)} devCards {Join(", ", GetDevCardTexts(devCards))}", null);
             }
         }
 
@@ -525,6 +546,7 @@ namespace OcentraAI.LLMGames.ThreeCardBrag.Manager
                     return true;
                 }
             }
+
             return false;
         }
 
@@ -549,7 +571,7 @@ namespace OcentraAI.LLMGames.ThreeCardBrag.Manager
             }
 
             // If deck is empty, reset it
-            if (Manager.DeckCards is { Count: 0 })
+            if (Manager.DeckCards is {Count: 0})
             {
                 Manager.ResetDeck();
             }
@@ -585,7 +607,7 @@ namespace OcentraAI.LLMGames.ThreeCardBrag.Manager
         {
             if (devCards == null || devCards.Length != Manager.GameMode.NumberOfCards)
             {
-                GameLogger.LogError($"Invalid devCards array: {(devCards == null ? "null" : $"length {devCards.Length}")}");
+                GameLoggerScriptable.LogError($"Invalid devCards array: {(devCards == null ? "null" : $"length {devCards.Length}")}", null);
                 return;
             }
 
@@ -611,7 +633,8 @@ namespace OcentraAI.LLMGames.ThreeCardBrag.Manager
 
             if (devHand.Length != Manager.GameMode.NumberOfCards)
             {
-                errorMessage = $"Dev hand must contain exactly {Manager.GameMode.NumberOfCards} cards. Current count: {devHand.Length}";
+                errorMessage =
+                    $"Dev hand must contain exactly {Manager.GameMode.NumberOfCards} cards. Current count: {devHand.Length}";
                 return false;
             }
 
@@ -659,12 +682,17 @@ namespace OcentraAI.LLMGames.ThreeCardBrag.Manager
 
         private string[] GetDevCardTexts(Card[] devCards)
         {
-            if (devCards == null) return Array.Empty<string>();
+            if (devCards == null)
+            {
+                return Array.Empty<string>();
+            }
+
             string[] texts = new string[devCards.Length];
             for (int i = 0; i < devCards.Length; i++)
             {
                 texts[i] = devCards[i].RankSymbol;
             }
+
             return texts;
         }
 
@@ -674,11 +702,9 @@ namespace OcentraAI.LLMGames.ThreeCardBrag.Manager
             Manager.ResetDevComputerHand();
             Manager.ResetDeck();
             Manager.SetTrumpDevCard();
-
         }
 
         #endregion
-
     }
 }
 

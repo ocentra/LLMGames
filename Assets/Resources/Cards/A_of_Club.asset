@@ -21,15 +21,15 @@ MonoBehaviour:
     PrefabModificationsReferencedUnityObjects: []
     PrefabModifications: []
     SerializationNodes: []
+  id: "ace_\u2663"
+  path: Assets/Images/Cards/ace_of_clubs.png
+  rank:
+    alias: ace
+    name: A
+    value: 14
+  rankSymbol: "<color=#000000>A</color><color=#000000>\u2663</color>"
+  texture2D: {fileID: 2800000, guid: 3ad401396f1654645b79988f7de195ae, type: 3}
   suit:
-    value: 3
     name: Club
     symbol: "\u2663"
-  rank:
-    value: 14
-    name: A
-    alias: ace
-  sprite: {fileID: 21300000, guid: 3ad401396f1654645b79988f7de195ae, type: 3}
-  path: Assets/Images/Cards/ace_of_clubs.png
-  rankSymbol: "<color=#000000>A</color><color=#000000>\u2663</color>"
-  id: "ace_\u2663"
+    value: 3

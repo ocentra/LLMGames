@@ -6,16 +6,17 @@ using UnityEngine;
 namespace OcentraAI.LLMGames.GameModes
 {
     /// <summary>
-    /// Contains comparison operations on the Hand such as verifying hand, checking flushes, sequences, etc.
+    ///     Contains comparison operations on the Hand such as verifying hand, checking flushes, sequences, etc.
     /// </summary>
     public static partial class HandUtility
     {
         /// <summary>
-        /// Verifies if the hand is valid for a specific game mode.
+        ///     Verifies if the hand is valid for a specific game mode.
         /// </summary>
         public static bool VerifyHand(this Hand hand, GameMode gameMode, int minNumberOfCard)
         {
-            if (hand != null && gameMode != null && gameMode.NumberOfCards >= minNumberOfCard && hand.Count() == gameMode.NumberOfCards)
+            if (hand != null && gameMode != null && gameMode.NumberOfCards >= minNumberOfCard &&
+                hand.Count() == gameMode.NumberOfCards)
             {
                 for (int i = 0; i < hand.GetCards().Length; i++)
                 {
@@ -32,26 +33,36 @@ namespace OcentraAI.LLMGames.GameModes
         }
 
         /// <summary>
-        /// Determines if the hand is a flush (all cards have the same suit).
+        ///     Determines if the hand is a flush (all cards have the same suit).
         /// </summary>
         public static bool IsFlush(this Hand hand)
         {
-            if (hand.GetCards().Length == 0) return false;
+            if (hand.GetCards().Length == 0)
+            {
+                return false;
+            }
+
             Suit firstSuit = hand.GetCards()[0].Suit;
             for (int i = 1; i < hand.GetCards().Length; i++)
             {
-                if (hand.GetCards()[i].Suit != firstSuit) return false;
+                if (hand.GetCards()[i].Suit != firstSuit)
+                {
+                    return false;
+                }
             }
 
             return true;
         }
 
         /// <summary>
-        /// Determines if all cards in the hand are of the same color but different suits.
+        ///     Determines if all cards in the hand are of the same color but different suits.
         /// </summary>
         public static bool IsSameColorAndDifferentSuits(this Hand hand)
         {
-            if (hand == null || hand.Count() == 0) return false;
+            if (hand == null || hand.Count() == 0)
+            {
+                return false;
+            }
 
             Color firstCardColor = CardUtility.GetColorValue(hand.GetCards()[0].Suit);
 
@@ -68,26 +79,37 @@ namespace OcentraAI.LLMGames.GameModes
 
 
         /// <summary>
-        /// Determines if all cards in the hand have the same suit.
+        ///     Determines if all cards in the hand have the same suit.
         /// </summary>
         public static bool IsSameSuits(this Hand hand)
         {
-            if (hand.GetCards().Length == 0) return true;
+            if (hand.GetCards().Length == 0)
+            {
+                return true;
+            }
+
             Suit firstSuit = hand.GetCards()[0].Suit;
             for (int i = 1; i < hand.GetCards().Length; i++)
             {
-                if (hand.GetCards()[i].Suit != firstSuit) return false;
+                if (hand.GetCards()[i].Suit != firstSuit)
+                {
+                    return false;
+                }
             }
 
             return true;
         }
 
         /// <summary>
-        /// Determines if the hand forms a sequence.
+        ///     Determines if the hand forms a sequence.
         /// </summary>
         public static bool IsSequence(this Hand hand)
         {
-            if (hand.GetCards().Length < 2) return false;
+            if (hand.GetCards().Length < 2)
+            {
+                return false;
+            }
+
             int[] ranks = new int[hand.GetCards().Length];
             for (int i = 0; i < hand.GetCards().Length; i++)
             {
@@ -102,7 +124,10 @@ namespace OcentraAI.LLMGames.GameModes
         {
             for (int i = 1; i < sortedRanks.Count; i++)
             {
-                if (sortedRanks[i] != sortedRanks[i - 1] + 1) return false;
+                if (sortedRanks[i] != sortedRanks[i - 1] + 1)
+                {
+                    return false;
+                }
             }
 
             return true;

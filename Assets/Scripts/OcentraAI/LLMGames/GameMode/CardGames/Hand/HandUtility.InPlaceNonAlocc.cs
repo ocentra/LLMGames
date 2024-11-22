@@ -5,12 +5,12 @@ using System.Collections.Generic;
 namespace OcentraAI.LLMGames.GameModes
 {
     /// <summary>
-    /// Contains operations that modify the Hand in-place, such as WhereInPlace, OrderByInPlace, etc.
+    ///     Contains operations that modify the Hand in-place, such as WhereInPlace, OrderByInPlace, etc.
     /// </summary>
     public static partial class HandUtility
     {
         /// <summary>
-        /// Filters the hand in place based on a predicate.
+        ///     Filters the hand in place based on a predicate.
         /// </summary>
         public static Hand WhereInPlace(this Hand hand, Func<Card, bool> predicate)
         {
@@ -22,13 +22,14 @@ namespace OcentraAI.LLMGames.GameModes
                     newCards.Add(hand.GetCards()[i]);
                 }
             }
+
             hand.SetCards(newCards.ToArray());
 
             return hand;
         }
 
         /// <summary>
-        /// Orders the hand in place based on a key selector function.
+        ///     Orders the hand in place based on a key selector function.
         /// </summary>
         public static Hand OrderByInPlace(this Hand hand, Func<Card, IComparable> keySelector)
         {
@@ -37,7 +38,7 @@ namespace OcentraAI.LLMGames.GameModes
         }
 
         /// <summary>
-        /// Orders the hand in place in descending order based on a key selector function.
+        ///     Orders the hand in place in descending order based on a key selector function.
         /// </summary>
         public static Hand OrderByDescendingInPlace(this Hand hand, Func<Card, IComparable> keySelector)
         {
@@ -46,7 +47,7 @@ namespace OcentraAI.LLMGames.GameModes
         }
 
         /// <summary>
-        /// Takes the first specified number of cards from the hand in place.
+        ///     Takes the first specified number of cards from the hand in place.
         /// </summary>
         public static Hand TakeInPlace(this Hand hand, int count)
         {
@@ -61,7 +62,7 @@ namespace OcentraAI.LLMGames.GameModes
         }
 
         /// <summary>
-        /// Skips a specified number of cards in place and returns the rest.
+        ///     Skips a specified number of cards in place and returns the rest.
         /// </summary>
         public static Hand SkipInPlace(this Hand hand, int count)
         {
@@ -81,7 +82,7 @@ namespace OcentraAI.LLMGames.GameModes
         }
 
         /// <summary>
-        /// Removes duplicate cards from the hand in place.
+        ///     Removes duplicate cards from the hand in place.
         /// </summary>
         public static Hand DistinctInPlace(this Hand hand)
         {
@@ -97,18 +98,20 @@ namespace OcentraAI.LLMGames.GameModes
                         break;
                     }
                 }
+
                 if (!isDuplicate)
                 {
                     distinctCards.Add(hand.GetCards()[i]);
                 }
             }
+
             hand.SetCards(distinctCards.ToArray());
 
             return hand;
         }
 
         /// <summary>
-        /// Modifies the hand in place by selecting cards based on a selector function.
+        ///     Modifies the hand in place by selecting cards based on a selector function.
         /// </summary>
         public static Hand SelectInPlace(this Hand hand, Func<Card, Card> selector)
         {

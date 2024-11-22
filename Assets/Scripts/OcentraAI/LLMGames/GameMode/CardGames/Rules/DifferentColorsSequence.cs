@@ -20,13 +20,25 @@ namespace OcentraAI.LLMGames.GameModes.Rules
         {
             bonusDetail = null;
 
-            if (!hand.VerifyHand(GameMode, MinNumberOfCard)) return false;
+            if (!hand.VerifyHand(GameMode, MinNumberOfCard))
+            {
+                return false;
+            }
 
-            if (!hand.IsSequence()) return false;
+            if (!hand.IsSequence())
+            {
+                return false;
+            }
 
-            if (hand.IsRoyalSequence(GameMode)) return false;
+            if (hand.IsRoyalSequence(GameMode))
+            {
+                return false;
+            }
 
-            if (hand.IsSameColorAndDifferentSuits()) return false;
+            if (hand.IsSameColorAndDifferentSuits())
+            {
+                return false;
+            }
 
             bonusDetail = CalculateBonus(hand, false);
 
@@ -36,10 +48,12 @@ namespace OcentraAI.LLMGames.GameModes.Rules
                 Card trumpCard = GetTrumpCard();
                 if (hand.HasTrumpCard(trumpCard))
                 {
-                   Hand nonTrumpCards = hand.Where(c => c != trumpCard);
+                    Hand nonTrumpCards = hand.Where(c => c != trumpCard);
                     bool canFormSequence = hand.CanFormSequenceWithWild();
 
-                    bool differentColorsNonTrump = nonTrumpCards.Select(card => CardUtility.GetColorValue(card.Suit)).Distinct().Count() == nonTrumpCards.Count();
+                    bool differentColorsNonTrump =
+                        nonTrumpCards.Select(card => CardUtility.GetColorValue(card.Suit)).Distinct().Count() ==
+                        nonTrumpCards.Count();
 
                     if (canFormSequence && differentColorsNonTrump)
                     {
@@ -56,7 +70,7 @@ namespace OcentraAI.LLMGames.GameModes.Rules
         {
             int baseBonus = BonusValue * hand.Sum();
             int additionalBonus = 0;
-            List<string> descriptions = new List<string> { "Different Colors Sequence:" };
+            List<string> descriptions = new List<string> {"Different Colors Sequence:"};
             string bonusCalculationDescriptions = $"{BonusValue} * {hand.Sum()}";
 
             if (isTrumpAssisted)
@@ -87,7 +101,8 @@ namespace OcentraAI.LLMGames.GameModes.Rules
                 bonusCalculationDescriptions = $"{BonusValue} * {hand.Sum()} + {additionalBonus} ";
             }
 
-            return CreateBonusDetails(RuleName, baseBonus, Priority, descriptions, bonusCalculationDescriptions, additionalBonus);
+            return CreateBonusDetails(RuleName, baseBonus, Priority, descriptions, bonusCalculationDescriptions,
+                additionalBonus);
         }
 
         public override string[] CreateExampleHand(int handSize, string trumpCard = null, bool coloured = true)
@@ -108,11 +123,11 @@ namespace OcentraAI.LLMGames.GameModes.Rules
                 List<string> tempHand = new List<string>();
 
                 // Use SelectRanks to generate a valid sequence of ranks
-                List<Rank> selectedRanks = CardUtility.SelectRanks(handSize, allowSequence: true);
+                List<Rank> selectedRanks = CardUtility.SelectRanks(handSize, true);
                 selectedRanks.Sort();
 
-                Suit[] redSuits = { Suit.Heart, Suit.Diamond };
-                Suit[] blackSuits = { Suit.Spade, Suit.Club };
+                Suit[] redSuits = {Suit.Heart, Suit.Diamond};
+                Suit[] blackSuits = {Suit.Spade, Suit.Club};
 
                 // Generate a sequence with alternating colors
                 for (int i = 0; i < handSize; i++)
@@ -125,7 +140,7 @@ namespace OcentraAI.LLMGames.GameModes.Rules
                     {
                         // Alternate between red and black suits
                         Suit[] currentSuits = i % 2 == 0 ? redSuits : blackSuits;
-                        Suit randomSuit = currentSuits[UnityEngine.Random.Range(0, currentSuits.Length)];
+                        Suit randomSuit = currentSuits[Random.Range(0, currentSuits.Length)];
                         tempHand.Add(CardUtility.GetRankSymbol(randomSuit, selectedRanks[i], coloured));
                     }
                 }
@@ -135,7 +150,8 @@ namespace OcentraAI.LLMGames.GameModes.Rules
 
                 // Validate if the generated hand is a sequence and alternates colors
                 isValidSequence = handToValidate.IsSequence() &&
-                                  handToValidate.Select(card => CardUtility.GetColorValue(card.Suit)).Distinct().Count() == 2;
+                                  handToValidate.Select(card => CardUtility.GetColorValue(card.Suit)).Distinct()
+                                      .Count() == 2;
 
                 attempts++;
 
@@ -144,12 +160,10 @@ namespace OcentraAI.LLMGames.GameModes.Rules
                     Debug.LogError($"Failed to generate a valid sequence after {maxAttempts} attempts.");
                     return Array.Empty<string>();
                 }
-
             } while (!isValidSequence);
 
             return hand;
         }
-
 
 
         private string CreateExampleString(int cardCount, bool isPlayer, bool useTrump = false)
@@ -172,7 +186,8 @@ namespace OcentraAI.LLMGames.GameModes.Rules
 
         public override bool Initialize(GameMode gameMode)
         {
-            Description = "A sequence of cards with alternating colors (red and black), optionally considering Trump Wild Card.";
+            Description =
+                "A sequence of cards with alternating colors (red and black), optionally considering Trump Wild Card.";
 
             List<string> playerExamples = new List<string>();
             List<string> llmExamples = new List<string>();
@@ -191,7 +206,8 @@ namespace OcentraAI.LLMGames.GameModes.Rules
                 }
             }
 
-            return TryCreateExample(RuleName, Description, BonusValue, playerExamples, llmExamples, playerTrumpExamples, llmTrumpExamples, gameMode.UseTrump);
+            return TryCreateExample(RuleName, Description, BonusValue, playerExamples, llmExamples, playerTrumpExamples,
+                llmTrumpExamples, gameMode.UseTrump);
         }
     }
 }

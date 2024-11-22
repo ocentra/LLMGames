@@ -1,6 +1,7 @@
 using OcentraAI.LLMGames.GameModes;
 using OcentraAI.LLMGames.GameModes.Rules;
-using OcentraAI.LLMGames.ThreeCardBrag.Manager;
+using OcentraAI.LLMGames.Manager;
+using OcentraAI.LLMGames.Manager.Authentication;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -9,8 +10,6 @@ namespace OcentraAI.LLMGames.LLMServices
 {
     public class AIHelper : ManagerBase<AIHelper>
     {
-        
-      
         private GameManager GameManager => GameManager.Instance;
         private PlayerManager PlayerManager => PlayerManager.Instance;
         private ScoreManager ScoreManager => ScoreManager.Instance;
@@ -19,16 +18,10 @@ namespace OcentraAI.LLMGames.LLMServices
         private GameMode GameMode => GameManager.GameMode;
 
 
-        protected override void Awake()
-        {
-            base.Awake();
-           
-        }
-
         public string GetSystemMessage()
         {
-            return $"You are an expert AI player in a Three Card Brag game. " +
-                   $"Your goal is to make the best betting decisions based on the strength of your hand, the game rules, and the behavior of the human player. " +
+            return "You are an expert AI player in a Three Card Brag game. " +
+                   "Your goal is to make the best betting decisions based on the strength of your hand, the game rules, and the behavior of the human player. " +
                    $"Game Rules: {GameMode.GameRules.LLM}. " +
                    $"Card Rankings: {GameMode.CardRankings}. " +
                    $"Bonus Rules: {GetBonusRules(GameMode.BonusRules)}. " +
@@ -41,12 +34,14 @@ namespace OcentraAI.LLMGames.LLMServices
 
         public string GetUserPrompt()
         {
-            return $"Current Hand: {GetHandDetails()}. " +
-                   $"Current Hand Value: {PlayerManager.GetComputerPlayer().CalculateHandValue()}. " +
-                   $"Current Bet: {ScoreManager.CurrentBet}, Pot Size: {ScoreManager.Pot}. " +
-                   $"Your Coins: {PlayerManager.GetComputerPlayer().Coins}, Opponent's Coins: {PlayerManager.GetHumanPlayer().Coins}. " +
-                   $"Current Game State: {GetGameStateDetails()}. " +
-                   $"Move Options: {GetMoveWord()}";
+            return ""; // todo
+
+            //return $"Current Hand: {GetHandDetails()}. " +
+            //       $"Current Hand Value: {PlayerManager.GetComputerPlayer().CalculateHandValue()}. " +
+            //       $"Current Bet: {ScoreManager.CurrentBet}, Pot Size: {ScoreManager.Pot}. " +
+            //       $"Your Coins: {PlayerManager.GetComputerPlayer().Coins}, Opponent's Coins: {PlayerManager.GetPlayerById(AuthenticationManager.Instance.GetAuthPlayerData().PlayerID).Coins}. " +
+            //       $"Current Game State: {GetGameStateDetails()}. " +
+            //       $"Move Options: {GetMoveWord()}";
         }
 
         private string GetBonusRules(List<BaseBonusRule> rules)
@@ -55,8 +50,10 @@ namespace OcentraAI.LLMGames.LLMServices
             for (int index = 0; index < rules.Count; index++)
             {
                 BaseBonusRule bonusRule = rules[index];
-                bonusRules += $"bonusRule {index + 1}: {bonusRule.Description} Points {bonusRule.BonusValue} {Environment.NewLine}";
+                bonusRules +=
+                    $"bonusRule {index + 1}: {bonusRule.Description} Points {bonusRule.BonusValue} {Environment.NewLine}";
             }
+
             return bonusRules;
         }
 
@@ -87,10 +84,12 @@ namespace OcentraAI.LLMGames.LLMServices
 
         private string GetHandDetails()
         {
-            return string.Join(", ", PlayerManager.GetComputerPlayer().Hand.Select((card, index) => $"Card {index + 1}: {card.Rank} of {card.Suit}"));
+            return string.Join(", ",
+                PlayerManager.GetComputerPlayer().Hand
+                    .Select((card, index) => $"Card {index + 1}: {card.Rank} of {card.Suit}"));
         }
 
-        private  string GetGameStateDetails()
+        private string GetGameStateDetails()
         {
             return $"Pot: {GetPotDetails()}{Environment.NewLine}" +
                    $"Deck: {GetDeckDetails()}{Environment.NewLine}" +
@@ -108,7 +107,7 @@ namespace OcentraAI.LLMGames.LLMServices
             return $"Remaining cards in deck: {DeckManager.RemainingCards}";
         }
 
-        private  string GetFloorDetails()
+        private string GetFloorDetails()
         {
             string floorCardDetails = DeckManager.FloorCard != null
                 ? $"{DeckManager.FloorCard.Rank} of {DeckManager.FloorCard.Suit}"
@@ -119,8 +118,11 @@ namespace OcentraAI.LLMGames.LLMServices
 
         private string GetPlayerDetails()
         {
-            return $"Human: {PlayerManager.GetHumanPlayer().Coins} coins, Computer: {PlayerManager.GetComputerPlayer().Coins} coins, " +
-                   $"Human playing blind: {!PlayerManager.GetHumanPlayer().HasSeenHand}, Computer playing blind: {!PlayerManager.GetComputerPlayer().HasSeenHand}";
+            return ""; // todo
+
+            //return
+            //    $"Human: {PlayerManager.GetHumanPlayer().Coins} coins, Computer: {PlayerManager.GetComputerPlayer().Coins} coins, " +
+            //    $"Human playing blind: {!PlayerManager.GetHumanPlayer().HasSeenHand}, Computer playing blind: {!PlayerManager.GetComputerPlayer().HasSeenHand}";
         }
 
 
@@ -130,6 +132,5 @@ namespace OcentraAI.LLMGames.LLMServices
             string userPrompt = GetUserPrompt();
             return (systemMessage, userPrompt);
         }
-
     }
 }

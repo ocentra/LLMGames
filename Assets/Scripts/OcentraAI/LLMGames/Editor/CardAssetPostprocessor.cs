@@ -1,11 +1,14 @@
-using OcentraAI.LLMGames;
 using OcentraAI.LLMGames.Scriptable;
+using System.IO;
+#if UNITY_EDITOR
 using UnityEditor;
+#endif
 using UnityEngine;
 
 public class CardAssetPostprocessor : AssetPostprocessor
 {
-    private static void OnPostprocessAllAssets(string[] importedAssets, string[] deletedAssets, string[] movedAssets, string[] movedFromAssetPaths)
+    private static void OnPostprocessAllAssets(string[] importedAssets, string[] deletedAssets, string[] movedAssets,
+        string[] movedFromAssetPaths)
     {
         foreach (string assetPath in importedAssets)
         {
@@ -15,11 +18,11 @@ public class CardAssetPostprocessor : AssetPostprocessor
                 string resourcesPath = "Assets/Resources/Cards/";
                 if (!assetPath.StartsWith(resourcesPath))
                 {
-                    string assetName = System.IO.Path.GetFileName(assetPath);
+                    string assetName = Path.GetFileName(assetPath);
                     string newAssetPath = resourcesPath + assetName;
 
                     // Ensure the directory exists
-                    System.IO.Directory.CreateDirectory(resourcesPath);
+                    Directory.CreateDirectory(resourcesPath);
 
                     // Move the asset to the new path
                     AssetDatabase.MoveAsset(assetPath, newAssetPath);

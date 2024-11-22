@@ -1,4 +1,4 @@
-using System;
+using OcentraAI.LLMGames.Manager.LLMServices;
 using UnityEngine;
 
 namespace OcentraAI.LLMGames.LLMServices
@@ -7,7 +7,6 @@ namespace OcentraAI.LLMGames.LLMServices
     {
         public static ILLMService CreateLLMService(LLMConfig config)
         {
-            
             switch (LLMManager.Instance.CurrentProvider)
             {
                 case LLMProvider.AzureOpenAI:
@@ -21,8 +20,6 @@ namespace OcentraAI.LLMGames.LLMServices
                 default:
                     Debug.LogError("Invalid LLM provider");
                     return new AzureOpenAIService(config);
-                
-                
             }
         }
     }

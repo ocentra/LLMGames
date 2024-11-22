@@ -4,12 +4,12 @@ using System;
 namespace OcentraAI.LLMGames.GameModes
 {
     /// <summary>
-    /// Contains aggregation operations on the Hand such as Sum, Max, Min, etc.
+    ///     Contains aggregation operations on the Hand such as Sum, Max, Min, etc.
     /// </summary>
     public static partial class HandUtility
     {
         /// <summary>
-        /// Sums the rank values of all cards in the hand.
+        ///     Sums the rank values of all cards in the hand.
         /// </summary>
         public static int Sum(this Hand hand)
         {
@@ -17,7 +17,7 @@ namespace OcentraAI.LLMGames.GameModes
         }
 
         /// <summary>
-        /// Sums the result of applying a selector function to each card in the hand.
+        ///     Sums the result of applying a selector function to each card in the hand.
         /// </summary>
         public static int Sum(this Hand hand, Func<Card, int> selector)
         {
@@ -26,11 +26,12 @@ namespace OcentraAI.LLMGames.GameModes
             {
                 sum += selector(card);
             }
+
             return sum;
         }
 
         /// <summary>
-        /// Finds the card with the maximum rank value in the hand.
+        ///     Finds the card with the maximum rank value in the hand.
         /// </summary>
         public static int Max(this Hand hand)
         {
@@ -39,11 +40,14 @@ namespace OcentraAI.LLMGames.GameModes
         }
 
         /// <summary>
-        /// Finds the card with the maximum value based on a selector function.
+        ///     Finds the card with the maximum value based on a selector function.
         /// </summary>
         public static Card Max(this Hand hand, Func<Card, IComparable> selector)
         {
-            if (hand.GetCards().Length == 0) return null;
+            if (hand.GetCards().Length == 0)
+            {
+                return null;
+            }
 
             Card maxCard = hand.GetCards()[0];
             IComparable maxValue = selector(maxCard);
@@ -56,11 +60,12 @@ namespace OcentraAI.LLMGames.GameModes
                     maxValue = currentValue;
                 }
             }
+
             return maxCard;
         }
 
         /// <summary>
-        /// Finds the card with the minimum rank value in the hand.
+        ///     Finds the card with the minimum rank value in the hand.
         /// </summary>
         public static int Min(this Hand hand)
         {
@@ -70,11 +75,14 @@ namespace OcentraAI.LLMGames.GameModes
         }
 
         /// <summary>
-        /// Finds the card with the minimum value based on a selector function.
+        ///     Finds the card with the minimum value based on a selector function.
         /// </summary>
         public static Card Min(this Hand hand, Func<Card, IComparable> selector)
         {
-            if (hand.GetCards().Length == 0) return null;
+            if (hand.GetCards().Length == 0)
+            {
+                return null;
+            }
 
             Card minCard = hand.GetCards()[0];
             IComparable minValue = selector(minCard);
@@ -87,6 +95,7 @@ namespace OcentraAI.LLMGames.GameModes
                     minValue = currentValue;
                 }
             }
+
             return minCard;
         }
     }

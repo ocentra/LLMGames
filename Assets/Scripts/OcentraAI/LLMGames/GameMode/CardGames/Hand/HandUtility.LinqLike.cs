@@ -5,14 +5,12 @@ using System.Collections.Generic;
 namespace OcentraAI.LLMGames.GameModes
 {
     /// <summary>
-    /// Contains LINQ-like operations on the Hand such as Where, Select, OrderBy, etc.
+    ///     Contains LINQ-like operations on the Hand such as Where, Select, OrderBy, etc.
     /// </summary>
     public static partial class HandUtility
     {
-
-
         /// <summary>
-        /// Copies the cards from the source hand to the result hand, filtering by a predicate.
+        ///     Copies the cards from the source hand to the result hand, filtering by a predicate.
         /// </summary>
         public static Hand WhereTo(this Hand sourceHand, Hand resultHand, Func<Card, bool> predicate)
         {
@@ -24,13 +22,14 @@ namespace OcentraAI.LLMGames.GameModes
                     newCards.Add(sourceHand.GetCards()[i]);
                 }
             }
+
             resultHand.SetCards(newCards.ToArray());
 
             return resultHand;
         }
 
         /// <summary>
-        /// Concatenates two hands and stores the result in the result hand.
+        ///     Concatenates two hands and stores the result in the result hand.
         /// </summary>
         public static Hand ConcatTo(this Hand hand1, Hand hand2, Hand resultHand)
         {
@@ -43,7 +42,7 @@ namespace OcentraAI.LLMGames.GameModes
         }
 
         /// <summary>
-        /// Removes the cards in hand2 from hand1 and stores the result in the result hand.
+        ///     Removes the cards in hand2 from hand1 and stores the result in the result hand.
         /// </summary>
         public static Hand ExceptTo(this Hand hand1, Hand hand2, Hand resultHand)
         {
@@ -56,13 +55,14 @@ namespace OcentraAI.LLMGames.GameModes
                     newCards.Add(hand1.GetCards()[i]);
                 }
             }
+
             resultHand.SetCards(newCards.ToArray());
 
             return resultHand;
         }
 
         /// <summary>
-        /// Finds the intersection of two hands and stores the result in the result hand.
+        ///     Finds the intersection of two hands and stores the result in the result hand.
         /// </summary>
         public static Hand IntersectTo(this Hand hand1, Hand hand2, Hand resultHand)
         {
@@ -75,6 +75,7 @@ namespace OcentraAI.LLMGames.GameModes
                     newCards.Add(hand1.GetCards()[i]);
                 }
             }
+
             resultHand.SetCards(newCards.ToArray());
 
             return resultHand;
@@ -82,7 +83,7 @@ namespace OcentraAI.LLMGames.GameModes
 
 
         /// <summary>
-        /// Filters the cards in the hand based on a predicate.
+        ///     Filters the cards in the hand based on a predicate.
         /// </summary>
         public static Hand Where(this Hand hand, Func<Card, bool> predicate)
         {
@@ -99,7 +100,7 @@ namespace OcentraAI.LLMGames.GameModes
         }
 
         /// <summary>
-        /// Orders the cards in the hand by rank value in ascending order.
+        ///     Orders the cards in the hand by rank value in ascending order.
         /// </summary>
         public static Hand OrderBy(this Hand hand)
         {
@@ -107,7 +108,7 @@ namespace OcentraAI.LLMGames.GameModes
         }
 
         /// <summary>
-        /// Orders the cards in the hand based on a key selector function.
+        ///     Orders the cards in the hand based on a key selector function.
         /// </summary>
         public static Hand OrderBy(this Hand hand, Func<Card, IComparable> keySelector)
         {
@@ -117,7 +118,7 @@ namespace OcentraAI.LLMGames.GameModes
         }
 
         /// <summary>
-        /// Orders the cards in the hand by rank value in descending order.
+        ///     Orders the cards in the hand by rank value in descending order.
         /// </summary>
         public static Hand OrderByDescending(this Hand hand)
         {
@@ -125,7 +126,7 @@ namespace OcentraAI.LLMGames.GameModes
         }
 
         /// <summary>
-        /// Orders the cards in the hand based on a key selector function in descending order.
+        ///     Orders the cards in the hand based on a key selector function in descending order.
         /// </summary>
         public static Hand OrderByDescending(this Hand hand, Func<Card, IComparable> keySelector)
         {
@@ -135,7 +136,7 @@ namespace OcentraAI.LLMGames.GameModes
         }
 
         /// <summary>
-        /// Selects a subset of cards from the hand.
+        ///     Selects a subset of cards from the hand.
         /// </summary>
         public static Hand Take(this Hand hand, int count)
         {
@@ -146,7 +147,7 @@ namespace OcentraAI.LLMGames.GameModes
         }
 
         /// <summary>
-        /// Skips a specified number of cards in the hand and returns the rest.
+        ///     Skips a specified number of cards in the hand and returns the rest.
         /// </summary>
         public static Hand Skip(this Hand hand, int count)
         {
@@ -154,6 +155,7 @@ namespace OcentraAI.LLMGames.GameModes
             {
                 return new Hand(Array.Empty<Card>());
             }
+
             int newCount = hand.GetCards().Length - count;
             Card[] newCards = new Card[newCount];
             Array.Copy(hand.GetCards(), count, newCards, 0, newCount);
@@ -161,7 +163,7 @@ namespace OcentraAI.LLMGames.GameModes
         }
 
         /// <summary>
-        /// Returns distinct cards from the hand.
+        ///     Returns distinct cards from the hand.
         /// </summary>
         public static Hand Distinct(this Hand hand)
         {
@@ -177,16 +179,18 @@ namespace OcentraAI.LLMGames.GameModes
                         break;
                     }
                 }
+
                 if (!isDuplicate)
                 {
                     distinctCards.Add(hand.GetCards()[i]);
                 }
             }
+
             return new Hand(distinctCards);
         }
 
         /// <summary>
-        /// Selects cards from the hand based on a selector function.
+        ///     Selects cards from the hand based on a selector function.
         /// </summary>
         public static Hand Select(this Hand hand, Func<Card, Card> selector)
         {
@@ -200,7 +204,7 @@ namespace OcentraAI.LLMGames.GameModes
         }
 
         /// <summary>
-        /// Selects cards from the hand and applies a function with an index.
+        ///     Selects cards from the hand and applies a function with an index.
         /// </summary>
         public static IEnumerable<TResult> Select<TResult>(this Hand hand, Func<Card, int, TResult> selector)
         {
@@ -212,7 +216,7 @@ namespace OcentraAI.LLMGames.GameModes
         }
 
         /// <summary>
-        /// Selects cards from the hand and applies a function.
+        ///     Selects cards from the hand and applies a function.
         /// </summary>
         public static IEnumerable<TResult> Select<TResult>(this Hand hand, Func<Card, TResult> selector)
         {

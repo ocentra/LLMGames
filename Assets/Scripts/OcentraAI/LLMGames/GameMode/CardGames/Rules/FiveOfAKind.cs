@@ -19,7 +19,10 @@ namespace OcentraAI.LLMGames.GameModes.Rules
         public override bool Evaluate(Hand hand, out BonusDetail bonusDetail)
         {
             bonusDetail = null;
-            if (!GameMode.UseTrump || !hand.VerifyHand(GameMode, MinNumberOfCard)) return false;
+            if (!GameMode.UseTrump || !hand.VerifyHand(GameMode, MinNumberOfCard))
+            {
+                return false;
+            }
 
             Card trumpCard = GetTrumpCard();
 
@@ -39,7 +42,7 @@ namespace OcentraAI.LLMGames.GameModes.Rules
                 return false;
             }
 
-            Rank[] ranksToExclude = { Rank.A, trumpCard.Rank };
+            Rank[] ranksToExclude = {Rank.A, trumpCard.Rank};
             Dictionary<Rank, int> rankCounts = hand.GetRankCounts(ranksToExclude);
             int trumpCount = hand.Count(c => c != null && c == trumpCard);
 
@@ -56,10 +59,13 @@ namespace OcentraAI.LLMGames.GameModes.Rules
 
         private BonusDetail CalculateBonus(Hand hand, Card trumpCard)
         {
-            if (hand == null) return null;
+            if (hand == null)
+            {
+                return null;
+            }
 
             Rank fourOfAKindRank = hand.GetFourOfAKindRank(trumpCard, GameMode.UseTrump);
-            int baseBonus = BonusValue * (fourOfAKindRank.Value * 5);
+            int baseBonus = BonusValue * fourOfAKindRank.Value * 5;
             string bonusCalculationDescriptions = $"{BonusValue} * ({fourOfAKindRank.Value} * 5)";
 
             int additionalBonus = GameMode.TrumpBonusValues.FiveOfKindBonus;
@@ -71,7 +77,8 @@ namespace OcentraAI.LLMGames.GameModes.Rules
 
             bonusCalculationDescriptions += $" + {additionalBonus}";
 
-            return CreateBonusDetails(RuleName, baseBonus, Priority, descriptions, bonusCalculationDescriptions, additionalBonus);
+            return CreateBonusDetails(RuleName, baseBonus, Priority, descriptions, bonusCalculationDescriptions,
+                additionalBonus);
         }
 
         public override string[] CreateExampleHand(int handSize, string trumpCardSymbol = null, bool coloured = true)
@@ -97,8 +104,7 @@ namespace OcentraAI.LLMGames.GameModes.Rules
                     Debug.LogError($"Failed to generate a valid Five of a Kind hand after {maxAttempts} attempts.");
                     return Array.Empty<string>();
                 }
-            }
-            while (!IsFiveOfAKind(HandUtility.ConvertFromSymbols(hand), trumpCard));
+            } while (!IsFiveOfAKind(HandUtility.ConvertFromSymbols(hand), trumpCard));
 
             return hand;
         }
@@ -113,7 +119,7 @@ namespace OcentraAI.LLMGames.GameModes.Rules
                 fourOfAKindRank = Rank.GetStandardRanks()[randomIndex];
             } while (fourOfAKindRank == Rank.A || fourOfAKindRank == trumpCard.Rank);
 
-            List<Suit> availableSuits = new List<Suit> { Suit.Heart, Suit.Diamond, Suit.Club, Suit.Spade };
+            List<Suit> availableSuits = new List<Suit> {Suit.Heart, Suit.Diamond, Suit.Club, Suit.Spade};
 
             // Add four cards of the same rank
             for (int i = 0; i < 4; i++)
@@ -130,7 +136,10 @@ namespace OcentraAI.LLMGames.GameModes.Rules
 
         public override bool Initialize(GameMode gameMode)
         {
-            if (!gameMode.UseTrump || gameMode.NumberOfCards < 5) return false;
+            if (!gameMode.UseTrump || gameMode.NumberOfCards < 5)
+            {
+                return false;
+            }
 
             Description = "Four cards of the same rank (2 to K, excluding A and trump rank) plus the trump card.";
 
@@ -144,7 +153,8 @@ namespace OcentraAI.LLMGames.GameModes.Rules
                 playerExamples.Add(HandUtility.GetHandAsSymbols(exampleHand.Split(", ").ToList()));
             }
 
-            return TryCreateExample(RuleName, Description, BonusValue, playerExamples, llmExamples, null, null, gameMode.UseTrump);
+            return TryCreateExample(RuleName, Description, BonusValue, playerExamples, llmExamples, null, null,
+                gameMode.UseTrump);
         }
 
         private string CreateExampleString(int cardCount)

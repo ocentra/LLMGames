@@ -21,15 +21,15 @@ MonoBehaviour:
     PrefabModificationsReferencedUnityObjects: []
     PrefabModifications: []
     SerializationNodes: []
+  id: "9_\u2666"
+  path: Assets/Images/Cards/9_of_diamonds.png
+  rank:
+    alias: 9
+    name: 9
+    value: 9
+  rankSymbol: "<color=#FF0000>9</color><color=#FF0000>\u2666</color>"
+  texture2D: {fileID: 2800000, guid: 263f723ee2cab264d904189d3dd36195, type: 3}
   suit:
-    value: 2
     name: Diamond
     symbol: "\u2666"
-  rank:
-    value: 9
-    name: 9
-    alias: 9
-  sprite: {fileID: 21300000, guid: 263f723ee2cab264d904189d3dd36195, type: 3}
-  path: Assets/Images/Cards/9_of_diamonds.png
-  rankSymbol: "<color=#FF0000>9</color><color=#FF0000>\u2666</color>"
-  id: "9_\u2666"
+    value: 2

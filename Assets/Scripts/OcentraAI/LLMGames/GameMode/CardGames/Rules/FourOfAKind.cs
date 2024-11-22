@@ -19,11 +19,14 @@ namespace OcentraAI.LLMGames.GameModes.Rules
         public override bool Evaluate(Hand hand, out BonusDetail bonusDetail)
         {
             bonusDetail = null;
-            if (!hand.VerifyHand(GameMode, MinNumberOfCard)) return false;
+            if (!hand.VerifyHand(GameMode, MinNumberOfCard))
+            {
+                return false;
+            }
 
             Card trumpCard = GetTrumpCard();
 
-            if (hand.IsFourOfAKind( trumpCard, GameMode.UseTrump))
+            if (hand.IsFourOfAKind(trumpCard, GameMode.UseTrump))
             {
                 bonusDetail = CalculateBonus(hand, trumpCard);
                 return true;
@@ -33,10 +36,12 @@ namespace OcentraAI.LLMGames.GameModes.Rules
         }
 
 
-
         private BonusDetail CalculateBonus(Hand hand, Card trumpCard)
         {
-            if (hand == null) return null;
+            if (hand == null)
+            {
+                return null;
+            }
 
             Rank fourOfAKindRank = hand.GetFourOfAKindRank(trumpCard, GameMode.UseTrump);
             int baseBonus;
@@ -50,12 +55,15 @@ namespace OcentraAI.LLMGames.GameModes.Rules
             }
             else
             {
-                baseBonus = BonusValue * (fourOfAKindRank.Value * 4);
+                baseBonus = BonusValue * fourOfAKindRank.Value * 4;
                 bonusCalculationDescriptions = $"{BonusValue} * ({fourOfAKindRank.Value} * 4)";
             }
 
             int additionalBonus = 0;
-            List<string> descriptions = new List<string> { $"Four of a Kind: {CardUtility.GetRankSymbol(Suit.Spade, fourOfAKindRank)}" };
+            List<string> descriptions = new List<string>
+            {
+                $"Four of a Kind: {CardUtility.GetRankSymbol(Suit.Spade, fourOfAKindRank)}"
+            };
 
             if (GameMode.UseTrump && hand.Contains(trumpCard))
             {
@@ -68,9 +76,9 @@ namespace OcentraAI.LLMGames.GameModes.Rules
                 bonusCalculationDescriptions += $" + {additionalBonus}";
             }
 
-            return CreateBonusDetails(RuleName, baseBonus, Priority, descriptions, bonusCalculationDescriptions, additionalBonus);
+            return CreateBonusDetails(RuleName, baseBonus, Priority, descriptions, bonusCalculationDescriptions,
+                additionalBonus);
         }
-
 
 
         public override string[] CreateExampleHand(int handSize, string trumpCardSymbol = null, bool coloured = true)
@@ -96,8 +104,7 @@ namespace OcentraAI.LLMGames.GameModes.Rules
                     Debug.LogError($"Failed to generate a valid Four of a Kind hand after {maxAttempts} attempts.");
                     return Array.Empty<string>();
                 }
-            }
-            while (!HandUtility.ConvertFromSymbols(hand).IsFourOfAKind(trumpCard, GameMode.UseTrump));
+            } while (!HandUtility.ConvertFromSymbols(hand).IsFourOfAKind(trumpCard, GameMode.UseTrump));
 
             return hand;
         }
@@ -121,7 +128,7 @@ namespace OcentraAI.LLMGames.GameModes.Rules
             int randomIndex = Random.Range(0, validRanks.Count);
             fourOfAKindRank = validRanks[randomIndex];
 
-            List<Suit> availableSuits = new List<Suit> { Suit.Heart, Suit.Diamond, Suit.Club, Suit.Spade };
+            List<Suit> availableSuits = new List<Suit> {Suit.Heart, Suit.Diamond, Suit.Club, Suit.Spade};
 
             // Add four cards of the same rank (or three if using trump)
             int cardsToAdd = useTrump && trumpCard != null ? 3 : 4;
@@ -142,7 +149,8 @@ namespace OcentraAI.LLMGames.GameModes.Rules
 
         public override bool Initialize(GameMode gameMode)
         {
-            Description = "Four cards of the same rank (2 to K, excluding A and trump rank), optionally using one Trump card to upgrade Three of a Kind.";
+            Description =
+                "Four cards of the same rank (2 to K, excluding A and trump rank), optionally using one Trump card to upgrade Three of a Kind.";
 
             List<string> playerExamples = new List<string>();
             List<string> llmExamples = new List<string>();
@@ -166,7 +174,8 @@ namespace OcentraAI.LLMGames.GameModes.Rules
                 }
             }
 
-            return TryCreateExample(RuleName, Description, BonusValue, playerExamples, llmExamples, playerTrumpExamples, llmTrumpExamples, gameMode.UseTrump);
+            return TryCreateExample(RuleName, Description, BonusValue, playerExamples, llmExamples, playerTrumpExamples,
+                llmTrumpExamples, gameMode.UseTrump);
         }
 
         private string CreateExampleString(int cardCount, bool useTrump = false)

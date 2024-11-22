@@ -19,7 +19,10 @@ namespace OcentraAI.LLMGames.GameModes.Rules
         public override bool Evaluate(Hand hand, out BonusDetail bonusDetail)
         {
             bonusDetail = null;
-            if (!hand.VerifyHand(GameMode, MinNumberOfCard)) return false;
+            if (!hand.VerifyHand(GameMode, MinNumberOfCard))
+            {
+                return false;
+            }
 
             // Check for valid hand size (8 or 9 cards)
             if (hand.Count() < 8)
@@ -54,7 +57,10 @@ namespace OcentraAI.LLMGames.GameModes.Rules
             int baseBonus = BonusValue * fourOfAKinds.Count * value;
             string bonusCalculationDescriptions = $"{BonusValue} * {fourOfAKinds.Count} * {value}";
 
-            List<string> descriptions = new List<string> { $"Multiple Four of a Kinds: {string.Join(", ", fourOfAKinds.Select(rank => CardUtility.GetRankSymbol(Suit.Spade, rank)))}" };
+            List<string> descriptions = new List<string>
+            {
+                $"Multiple Four of a Kinds: {string.Join(", ", fourOfAKinds.Select(rank => CardUtility.GetRankSymbol(Suit.Spade, rank)))}"
+            };
 
             return CreateBonusDetails(RuleName, baseBonus, Priority, descriptions, bonusCalculationDescriptions);
         }
@@ -85,7 +91,8 @@ namespace OcentraAI.LLMGames.GameModes.Rules
                 }
             }
 
-            return TryCreateExample(RuleName, Description, BonusValue, playerExamples, llmExamples, playerTrumpExamples, llmTrumpExamples, gameMode.UseTrump);
+            return TryCreateExample(RuleName, Description, BonusValue, playerExamples, llmExamples, playerTrumpExamples,
+                llmTrumpExamples, gameMode.UseTrump);
         }
 
         public override string[] CreateExampleHand(int handSize, string trumpCard = null, bool coloured = true)

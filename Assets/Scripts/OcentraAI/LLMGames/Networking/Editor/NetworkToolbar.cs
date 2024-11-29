@@ -55,9 +55,7 @@ public static class NetworkToolbar
         ToolBarExt.ToolbarGUI.Add(OnToolbarGUI);
 
     }
-
-
-
+    
     private static void UpdateToolbar()
     {
         if (Application.isPlaying) { return; }
@@ -121,9 +119,6 @@ public static class NetworkToolbar
             }
         }
     }
-
-
-
     private static void OnToolbarGUI()
     {
         if (Application.isPlaying) { return; }
@@ -306,8 +301,6 @@ public static class NetworkToolbar
         }
         GUI.Label(new Rect(sceneButtonRect.x + sceneButtonRect.width - 15, sceneButtonRect.y, 15, sceneButtonRect.height), "▼", arrowStyle);
     }
-
-
     private static Texture2D MakeTex(int width, int height, Color col)
     {
         Color[] pix = new Color[width * height];
@@ -318,9 +311,6 @@ public static class NetworkToolbar
         tex.Apply();
         return tex;
     }
-
-
-
     private static void OpenScene(string scenePath)
     {
         if (Application.isPlaying) { return; }
@@ -345,10 +335,6 @@ public static class NetworkToolbar
 
 
     }
-
-
-
-
     private static bool CheckCurrentSceneInBuildSettings(out string scenePath)
     {
         if (Application.isPlaying)

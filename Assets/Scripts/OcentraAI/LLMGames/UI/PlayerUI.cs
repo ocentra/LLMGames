@@ -13,7 +13,7 @@ using UnityEngine;
 namespace OcentraAI.LLMGames.Players.UI
 {
     [ExecuteAlways]
-    public class PlayerUI : MonoBehaviour
+    public class PlayerUI : MonoBehaviour, IPlayerUI
     {
         [ShowInInspector] private MeshRenderer greenRingRenderer;
 
@@ -21,10 +21,11 @@ namespace OcentraAI.LLMGames.Players.UI
         [SerializeField] private Material originalGreenMaterial;
         [SerializeField] private Material originalRedMaterial;
 
-        [SerializeField]
-        [ReadOnly]
-        [ShowInInspector]
-        public int PlayerIndex;
+
+        [SerializeField, ReadOnly, ShowInInspector]
+
+        private int playerIndex;
+        public int PlayerIndex => playerIndex;
 
         [ShowInInspector] private MeshRenderer redRingRenderer;
         [Required][ShowInInspector] private TextMeshPro TurnCountdownText { get; set; }
@@ -195,7 +196,7 @@ namespace OcentraAI.LLMGames.Players.UI
 
         public void SetPlayerIndex(int index)
         {
-            PlayerIndex = index;
+            playerIndex = index;
         }
 
         public void UpdatePlayerCoins(LLMPlayer llmPlayer)
@@ -290,7 +291,7 @@ namespace OcentraAI.LLMGames.Players.UI
                 RingRedMaterial.SetFloat("_FillAmount", 0);
             }
 
-            GameLoggerScriptable.Instance.Log($"PlayerTimer visibility set to {show}", this);
+
         }
 
         private void OnDestroy()
@@ -306,5 +307,7 @@ namespace OcentraAI.LLMGames.Players.UI
                 DestroyImmediate(RingRedMaterial);
             }
         }
+
+
     }
 }

@@ -1,5 +1,7 @@
-using OcentraAI.LLMGames.ThreeCardBrag.UI;
+using Newtonsoft.Json;
 using Sirenix.OdinInspector;
+using System;
+using System.Collections.Generic;
 using TMPro;
 #if UNITY_EDITOR
 using UnityEditor;
@@ -84,7 +86,9 @@ namespace OcentraAI.LLMGames.UI
         [SerializeField] private readonly float TextRectMinSize = 50f;
 
         [SerializeField] private bool applyOffset = false;
-        public void OnPointerClick(PointerEventData eventData)
+
+
+        public virtual void OnPointerClick(PointerEventData eventData)
         {
             if (!Interactable) return;
 
@@ -176,8 +180,9 @@ namespace OcentraAI.LLMGames.UI
             }
         }
 
-        private void Init()
+        protected virtual void Init()
         {
+
             if (!isForSelf)
             {
                 cardViewsToHighlight = transform.GetComponentsInChildren<CardView>(true);
@@ -477,5 +482,53 @@ namespace OcentraAI.LLMGames.UI
                 }
             }
         }
+
+        // Serialize the properties into a dictionary
+        public Dictionary<string, object> SerializeToDictionary()
+        {
+            return new Dictionary<string, object>
+    {
+        { nameof(blendShapePercentage), blendShapePercentage },
+        { nameof(buttonName), buttonName },
+        { nameof(disabledColor), disabledColor },
+        { nameof(highlightedColor), highlightedColor },
+        { nameof(highlightedColor2), highlightedColor2 },
+        { nameof(pressedColor), pressedColor },
+        { nameof(normalColor), normalColor },
+        { nameof(baseMaterialIndex), baseMaterialIndex },
+        { nameof(highlightMaterialIndex1), highlightMaterialIndex1 },
+        { nameof(highlightMaterialIndex2), highlightMaterialIndex2 },
+        { nameof(isForSelf), isForSelf },
+        { nameof(maxXSize), maxXSize },
+        { nameof(minXSize), minXSize },
+        { nameof(applyOffset), applyOffset }
+    };
+        }
+
+        // Deserialize and apply properties from a dictionary
+        public void DeserializeFromDictionary(Dictionary<string, object> data)
+        {
+            if (data == null) return;
+
+            blendShapePercentage = (float)data[nameof(blendShapePercentage)];
+            buttonName = (string)data[nameof(buttonName)];
+            disabledColor = (Color)data[nameof(disabledColor)];
+            highlightedColor = (Color)data[nameof(highlightedColor)];
+            highlightedColor2 = (Color)data[nameof(highlightedColor2)];
+            pressedColor = (Color)data[nameof(pressedColor)];
+            normalColor = (Color)data[nameof(normalColor)];
+            baseMaterialIndex = (int)data[nameof(baseMaterialIndex)];
+            highlightMaterialIndex1 = (int)data[nameof(highlightMaterialIndex1)];
+            highlightMaterialIndex2 = (int)data[nameof(highlightMaterialIndex2)];
+            isForSelf = (bool)data[nameof(isForSelf)];
+            maxXSize = (float)data[nameof(maxXSize)];
+            minXSize = (float)data[nameof(minXSize)];
+            applyOffset = (bool)data[nameof(applyOffset)];
+
+
+        }
+
+
+
     }
 }

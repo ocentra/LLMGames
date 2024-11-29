@@ -22,36 +22,36 @@ namespace OcentraAI.LLMGames.UI.Controllers
 
         #region UI Elements
 
-        [Required] [ShowInInspector] private Button3D ShowPlayerHand { get; set; }
-        [Required] [ShowInInspector] private Button3D PlayBlind { get; set; }
-        [Required] [ShowInInspector] private Button3D RaiseBet { get; set; }
-        [Required] [ShowInInspector] private Button3D Fold { get; set; }
-        [Required] [ShowInInspector] private Button3D Bet { get; set; }
-        [Required] [ShowInInspector] private Button3D DrawFromDeck { get; set; }
-        [Required] [ShowInInspector] private Button3D ShowCall { get; set; }
+        [Required][ShowInInspector] private Button3D ShowPlayerHand { get; set; }
+        [Required][ShowInInspector] private Button3D PlayBlind { get; set; }
+        [Required][ShowInInspector] private Button3D RaiseBet { get; set; }
+        [Required][ShowInInspector] private Button3D Fold { get; set; }
+        [Required][ShowInInspector] private Button3D Bet { get; set; }
+        [Required][ShowInInspector] private Button3D DrawFromDeck { get; set; }
+        [Required][ShowInInspector] private Button3D ShowCall { get; set; }
 
 
-        [Required] [ShowInInspector] private Button3D PurchaseCoins { get; set; }
-        [Required] [ShowInInspector] private Transform MessageHolder { get; set; }
-        [Required] [ShowInInspector] private TMP_InputField RaiseAmount { get; set; }
-        [Required] [ShowInInspector] private TextMeshProUGUI Message { get; set; }
-        [Required] [ShowInInspector] private TextMeshPro Pot { get; set; }
-        [Required] [ShowInInspector] private TextMeshPro CurrentBet { get; set; }
-        [ShowInInspector] [Required] public GameObject MainTable { get; set; }
+        [Required][ShowInInspector] private Button3D PurchaseCoins { get; set; }
+        [Required][ShowInInspector] private Transform MessageHolder { get; set; }
+        [Required][ShowInInspector] private TMP_InputField RaiseAmount { get; set; }
+        [Required][ShowInInspector] private TextMeshProUGUI Message { get; set; }
+        [Required][ShowInInspector] private TextMeshPro Pot { get; set; }
+        [Required][ShowInInspector] private TextMeshPro CurrentBet { get; set; }
+        [ShowInInspector][Required] public GameObject MainTable { get; set; }
 
 
         [ShowInInspector] public PlayerUI CurrentPlayerUI { get; set; }
         [ShowInInspector] public LLMPlayer CurrentLLMPlayer { get; set; }
 
-        [Required] [ShowInInspector] private CardView FloorCardView { get; set; }
-        [Required] [ShowInInspector] private CardView TrumpCardView { get; set; }
-        [Required] [ShowInInspector] private CardView MagicCard0 { get; set; }
-        [Required] [ShowInInspector] private CardView MagicCard1 { get; set; }
-        [Required] [ShowInInspector] private CardView MagicCard2 { get; set; }
-        [Required] [ShowInInspector] private CardView MagicCard3 { get; set; }
+        [Required][ShowInInspector] private CardView FloorCardView { get; set; }
+        [Required][ShowInInspector] private CardView TrumpCardView { get; set; }
+        [Required][ShowInInspector] private CardView MagicCard0 { get; set; }
+        [Required][ShowInInspector] private CardView MagicCard1 { get; set; }
+        [Required][ShowInInspector] private CardView MagicCard2 { get; set; }
+        [Required][ShowInInspector] private CardView MagicCard3 { get; set; }
 
-        [Required] [ShowInInspector] public CardView[] LocalPlayerCardViews { get; set; }
-        [Required] [ShowInInspector] public LeftPanelController LeftPanelController { get; set; }
+        [Required][ShowInInspector] public CardView[] LocalPlayerCardViews { get; set; }
+        [Required][ShowInInspector] public LeftPanelController LeftPanelController { get; set; }
 
         [ShowInInspector] public ButtonState ButtonState { get; private set; } = ButtonState.TakeAction;
 
@@ -144,7 +144,7 @@ namespace OcentraAI.LLMGames.UI.Controllers
                 ShowPlayerHand.SetInteractable(true);
             }
 
-            if (LocalPlayerCardViews is {Length: > 0})
+            if (LocalPlayerCardViews is { Length: > 0 })
             {
                 foreach (var cardView in LocalPlayerCardViews)
                 {
@@ -254,7 +254,7 @@ namespace OcentraAI.LLMGames.UI.Controllers
 
         private void OnPlayBlind(Button3D button)
         {
-            button.SetInteractable(false); 
+            button.SetInteractable(false);
             TakeAction(PlayerAction.PlayBlind, ButtonState.ActionTaken);
         }
 
@@ -426,14 +426,14 @@ namespace OcentraAI.LLMGames.UI.Controllers
                     cardView.SetActive();
                 }
             }
-            
+
             Update(TrumpCardView, "TrumpCard", e.GameMode.UseTrump);
             Update(MagicCard0, nameof(MagicCard0), e.GameMode.UseMagicCards);
             Update(MagicCard1, nameof(MagicCard1), e.GameMode.UseMagicCards);
             Update(MagicCard2, nameof(MagicCard2), e.GameMode.UseMagicCards);
             Update(MagicCard3, nameof(MagicCard3), e.GameMode.UseMagicCards);
         }
-        
+
         private void OnUpdateWildCardsHighlight(UpdateWildCardsHighlightEvent<Card> e)
         {
             TrumpCardView.SetHighlight(e.WildCardsInHand.TryGetValue("TrumpCard", out Card _));
@@ -526,7 +526,7 @@ namespace OcentraAI.LLMGames.UI.Controllers
             {
                 DrawFromDeck.SetInteractable(isLocalPlayerTurn && hasSeenHand &&
                                              buttonState != ButtonState.ActionTaken && buttonState != ButtonState.Draw &&
-                                             buttonState != ButtonState.DrawnFromDeck); 
+                                             buttonState != ButtonState.DrawnFromDeck);
             }
         }
 

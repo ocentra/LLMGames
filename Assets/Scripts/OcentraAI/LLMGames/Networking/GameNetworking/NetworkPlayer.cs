@@ -1,155 +1,162 @@
 using Cysharp.Threading.Tasks;
 using OcentraAI.LLMGames.Events;
-using OcentraAI.LLMGames.Networking.Manager;
+using OcentraAI.LLMGames.GameModes;
+using OcentraAI.LLMGames.GameModes.Rules;
+using OcentraAI.LLMGames.Scriptable;
 using OcentraAI.LLMGames.Utilities;
 using Sirenix.OdinInspector;
-using System;
+using System.Collections.Generic;
 using Unity.Collections;
 using Unity.Netcode;
-using Unity.Services.Authentication;
-using Unity.Services.Lobbies.Models;
-using static System.String;
+using UnityEngine;
+using ReadOnlyAttribute = Sirenix.OdinInspector.ReadOnlyAttribute;
 
 namespace OcentraAI.LLMGames.GamesNetworking
 {
-    public class NetworkPlayer : NetworkBehaviour, IPlayerData
+    public class NetworkPlayer : NetworkBehaviour, IPlayerBase
     {
-        private GameLoggerScriptable GameLoggerScriptable => GameLoggerScriptable.Instance;
+        protected GameLoggerScriptable GameLoggerScriptable => GameLoggerScriptable.Instance;
 
-        [ShowInInspector, Sirenix.OdinInspector.ReadOnly] public NetworkVariable<int> PlayerIndex { get; private set; } = new NetworkVariable<int>();
+        [ShowInInspector, ReadOnly] public NetworkVariable<int> PlayerIndex { get; private set; } = new NetworkVariable<int>();
+        [ShowInInspector, ReadOnly] public NetworkVariable<bool> HasSeenHand { get; set; } = new NetworkVariable<bool>();
 
-        [ShowInInspector, Sirenix.OdinInspector.ReadOnly]
+
+        public GameObject GameObject { get; set; }
+
+        [ShowInInspector, ReadOnly]
         public NetworkVariable<FixedString64Bytes> AuthenticatedPlayerId { get; private set; } = new NetworkVariable<FixedString64Bytes>(
-                new FixedString64Bytes(),
-                NetworkVariableReadPermission.Everyone,
-                NetworkVariableWritePermission.Owner);
+            new FixedString64Bytes(),
+            NetworkVariableReadPermission.Everyone,
+            NetworkVariableWritePermission.Owner);
 
-        [ShowInInspector, Sirenix.OdinInspector.ReadOnly] public NetworkVariable<FixedString64Bytes> PlayerName { get; private set; } = new NetworkVariable<FixedString64Bytes>();
+        [ShowInInspector] public IPlayerManager PlayerManager { get; set; }
+        [ShowInInspector]
+        public NetworkVariable<ulong> PlayerId { get; set; } = new NetworkVariable<ulong>(ulong.MaxValue);
 
-        [ShowInInspector] public bool IsPlayerRegistered { get; set; } = false;
-        [ShowInInspector] public bool NameSet { get; set; } = false;
-        public Player LobbyPlayerData { get; private set; }
-        [ShowInInspector] private PlayerViewer PlayerViewer { get; set; } = null;
+        [ShowInInspector, ReadOnly] public NetworkVariable<FixedString64Bytes> PlayerName { get; private set; } = new NetworkVariable<FixedString64Bytes>();
 
-        // Temporary public field to show the time taken in seconds for syncing
-        [ShowInInspector] public float TimeTakenToSyncAuthId { get; private set; }
-        [ShowInInspector] public string AuthenticatedPlayerIdViewer { get; private set; }
+        [ShowInInspector] public NetworkVariable<bool> IsPlayerRegistered { get; set; } = new NetworkVariable<bool>();
+        [ShowInInspector] public NetworkVariable<bool> ReadyForNewGame { get; set; } = new NetworkVariable<bool>();
+        [ShowInInspector] public NetworkVariable<bool> IsPlayerTurn { get; set; } = new NetworkVariable<bool>();
+
+        [ShowInInspector] private GameMode GameMode { get; set; }
+
+
+
+        [ShowInInspector, ReadOnly]
+        public List<BaseBonusRule> AppliedRules { get; private set; } = new List<BaseBonusRule>();
+        [ShowInInspector, ReadOnly] public List<BonusDetail> BonusDetails { get; private set; }
+
+        [ShowInInspector, ReadOnly] public int HandRankSum { get; private set; }
+        [ShowInInspector, ReadOnly] public int HandValue { get; private set; }
+        [ShowInInspector, ReadOnly] public Hand Hand { get; private set; }
+
+        protected Card FloorCard { get; set; }
+
+
+        public PlayerDecision PlayerDecision;
 
         public override async void OnNetworkSpawn()
         {
-
             base.OnNetworkSpawn();
-
-
-            GameLoggerScriptable.Log($"Setting AuthenticatedPlayerId.Value For {OwnerClientId}", this);
-
-            PlayerManager findAnyObjectByType = null;
-            while (findAnyObjectByType == null)
-            {
-                GameLoggerScriptable.Log($"Stuck in setting AuthenticatedPlayerId.Value For {OwnerClientId}", this);
-
-                findAnyObjectByType = FindAnyObjectByType<PlayerManager>();
-                await UniTask.DelayFrame(10);
-            }
-
-            DateTime startTime = DateTime.Now;
-
-
-
-
-            while (AuthenticatedPlayerId.Value.IsEmpty)
-            {
-                GameLoggerScriptable.Log($"Stuck in setting AuthenticatedPlayerId.Value For {OwnerClientId}", this);
-                if (IsOwner)
-                {
-                    AuthenticatedPlayerId.Value = AuthenticationService.Instance.PlayerId;
-                }
-
-
-                await UniTask.WaitForSeconds(1);
-            }
-
-            GameLoggerScriptable.Log($" AuthenticatedPlayerId.Value For {OwnerClientId} Value {AuthenticatedPlayerId.Value.Value}", this);
-
-
-            AuthenticatedPlayerIdViewer = AuthenticatedPlayerId.Value.Value;
-
-            UniTaskCompletionSource<(bool success, Player player)> lobbyDataSource = new UniTaskCompletionSource<(bool success, Player player)>();
-            await EventBus.Instance.PublishAsync(new RequestLobbyPlayerDataEvent(lobbyDataSource, AuthenticatedPlayerId.Value.Value));
-            (bool success, Player player) result = await lobbyDataSource.Task;
-
-            LobbyPlayerData = result.player;
-
-            string playerName = Empty;
-
-            if (result.player != null)
-            {
-                LobbyPlayerData = result.player;
-
-                if (LobbyPlayerData.Data.TryGetValue(nameof(PlayerName), out PlayerDataObject dataObject) && !IsNullOrEmpty(dataObject.Value))
-                {
-                    playerName = $"Player_{OwnerClientId} {dataObject.Value}";
-                }
-
-                if (IsNullOrEmpty(playerName))
-                {
-                    if (LobbyPlayerData.Profile != null)
-                    {
-                        playerName = !IsNullOrEmpty(LobbyPlayerData.Profile.Name) ? $"Player_{OwnerClientId} {LobbyPlayerData.Profile.Name}" : $"Player_{OwnerClientId} LobbyPlayerData Profile Name Null";
-                    }
-                    else
-                    {
-                        playerName = $"Player_{OwnerClientId} LobbyPlayerData Null ";
-                        GameLoggerScriptable.Log($"LobbyPlayerData.Profile is null playerName is {playerName}", this);
-                    }
-                }
-
-
-
-                PlayerViewer = new PlayerViewer(LobbyPlayerData);
-            }
-
-            while (PlayerName.Value.IsEmpty)
-            {
-                GameLoggerScriptable.Log($"Stuck In while loop setting PlayerName.Value For {OwnerClientId}  @ OnNetworkSpawn", this);
-
-                if (IsServer)
-                {
-                    PlayerName.Value = playerName;
-                }
-
-
-                await UniTask.WaitForSeconds(1);
-            }
-
             if (IsServer)
             {
-                if (IsPlayerRegistered) return;
+                PlayerId.Value = OwnerClientId;
+            }
+            else
+            {
+                await UniTask.WaitUntil(() => PlayerId.Value != ulong.MaxValue);
+            }
 
-                UniTaskCompletionSource<IPlayerData> completionSource = new UniTaskCompletionSource<IPlayerData>();
-                await EventBus.Instance.PublishAsync(new RegisterPlayerEvent(this, completionSource));
-                IPlayerData playerData = await completionSource.Task;
+            int maxFrames = 500;
+            while (PlayerManager == null && maxFrames > 0)
+            {
+                GameLoggerScriptable.Log($"Stuck in setting AuthenticatedPlayerId.Value For {PlayerId.Value}. Frames left: {maxFrames}", this);
 
-                if (playerData != null)
+                foreach (NetworkObject networkObject in NetworkManager.Singleton.SpawnManager.SpawnedObjects.Values)
                 {
-                    PlayerIndex = playerData.PlayerIndex;
+                    IPlayerManager playerManager = networkObject.GetComponent<IPlayerManager>();
+                    if (playerManager != null)
+                    {
+                        PlayerManager = playerManager;
+                        break;
+                    }
                 }
 
-                IsPlayerRegistered = true;
+                await UniTask.DelayFrame(10);
+                maxFrames--;
+            }
+
+            if (PlayerManager == null)
+            {
+                GameLoggerScriptable.LogError("Failed to find PlayerManager within timeout.", this);
+            }
+            else
+            {
+                ScriptableObject scriptableObject = PlayerManager.GetGameMode();
+
+                if (scriptableObject is GameMode gameMode)
+                {
+                    GameMode = gameMode;
+                }
             }
 
 
-            GameLoggerScriptable.Log($"PlayerName.Value For {OwnerClientId} @  OnNetworkSpawn Value {PlayerName.Value.Value}", this);
+
+            SubscribeToEvents();
+        }
 
 
-            gameObject.name = PlayerName.Value.Value;
-            TimeSpan timeTaken = DateTime.Now - startTime;
-            TimeTakenToSyncAuthId = (float)timeTaken.TotalSeconds;
+        public override void OnNetworkDespawn()
+        {
+            base.OnNetworkDespawn();
+            GameLoggerScriptable.Log($"Player : {PlayerName.Value.Value} Index: {PlayerIndex.Value} despawned", this);
+            UnsubscribeFromEvents();
+        }
+
+
+        public int CalculateHandValue()
+        {
+            AppliedRules = new List<BaseBonusRule>();
+            BonusDetails = new List<BonusDetail>();
+            HandRankSum = Hand.Sum();
+            HandValue = HandRankSum;
+            List<BaseBonusRule> bonusRules = GameMode.BonusRules;
+            foreach (BaseBonusRule rule in bonusRules)
+            {
+                if (rule.Evaluate(Hand, out BonusDetail bonusDetails))
+                {
+                    HandValue += bonusDetails.TotalBonus;
+
+                    if (!AppliedRules.Contains(rule))
+                    {
+                        AppliedRules.Add(rule);
+                    }
+
+                    if (!BonusDetails.Contains(bonusDetails))
+                    {
+                        BonusDetails.Add(bonusDetails);
+                    }
+                }
+            }
+
+            return HandValue;
+        }
+
+        void Awake()
+        {
+            GameObject = gameObject;
+        }
+
+        void OnValidate()
+        {
+            GameObject = gameObject;
 
         }
 
 
-        public void SetPlayerIndex(int index)
+
+        public virtual void SetPlayerIndex(int index)
         {
 
             if (IsServer)
@@ -157,17 +164,79 @@ namespace OcentraAI.LLMGames.GamesNetworking
                 PlayerIndex.Value = index;
             }
         }
-
-        public override async void OnNetworkDespawn()
+        public virtual void SetPlayerRegistered(bool value = true)
         {
-            base.OnNetworkDespawn();
-
             if (IsServer)
             {
-                await EventBus.Instance.PublishAsync(new UnRegisterPlayerEvent(this));
+                IsPlayerRegistered.Value = value;
+            }
+        }
+
+
+
+        public virtual void SetReadyForGame(bool value = true)
+        {
+            if (IsServer)
+            {
+                ReadyForNewGame.Value = value;
+            }
+        }
+
+        public virtual void SetIsPlayerTurn(bool value = true)
+        {
+            if (IsServer)
+            {
+                IsPlayerTurn.Value = value;
+            }
+        }
+
+
+
+
+
+        public virtual void SubscribeToEvents()
+        {
+            EventBus.Instance.SubscribeAsync<PlayerDecisionEvent>(OnPlayerDecision);
+        }
+
+        public virtual void UnsubscribeFromEvents()
+        {
+            EventBus.Instance.UnsubscribeAsync<PlayerDecisionEvent>(OnPlayerDecision);
+        }
+
+
+        public virtual async UniTask OnPlayerDecision(PlayerDecisionEvent decisionEvent)
+        {
+            if (!IsLocalPlayer) return;
+
+            if (!IsPlayerTurn.Value)
+            {
+                Debug.Log($" {PlayerName.Value.Value} Is not PlayerTurn!!! ");
+                return;
             }
 
-            GameLoggerScriptable.Log($"Player {PlayerName.Value} with Client ID {OwnerClientId} despawned", this);
+            if (!IsServer)
+            {
+                ProcessDecisionServerRpc(decisionEvent, PlayerId.Value);
+            }
+            else
+            {
+                await EventBus.Instance.PublishAsync(new ProcessDecisionEvent(decisionEvent, PlayerId.Value));
+            }
+
+            await UniTask.Yield();
         }
+
+
+        [ServerRpc(RequireOwnership = false)]
+        protected virtual void ProcessDecisionServerRpc(PlayerDecisionEvent decisionEvent, ulong playerId)
+        {
+            EventBus.Instance.Publish(new ProcessDecisionEvent(decisionEvent, playerId));
+        }
+
+
+
+
+
     }
 }

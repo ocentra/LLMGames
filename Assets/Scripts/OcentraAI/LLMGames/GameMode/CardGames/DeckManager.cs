@@ -149,21 +149,21 @@ namespace OcentraAI.LLMGames.Manager
                 // Editor-specific DevModeManager logic
                 if (GameSettings.Instance.DevModeEnabled && Application.isEditor)
                 {
+                    //todo Fix this 
 
+//#if UNITY_EDITOR
+//                    Card devTrumpCard = DevTools.DevModeManager.Instance.TrumpDevCard;
+//                    if (devTrumpCard != null)
+//                    {
+//                        trumpCard = cards.FirstOrDefault(
+//                            c => c.Suit == devTrumpCard.Suit && c.Rank == devTrumpCard.Rank);
+//                        if (trumpCard != null)
+//                        {
+//                            WildCards["TrumpCard"] = trumpCard;
+//                        }
+//                    }
 
-#if UNITY_EDITOR
-                    Card devTrumpCard = DevTools.DevModeManager.Instance.TrumpDevCard;
-                    if (devTrumpCard != null)
-                    {
-                        trumpCard = cards.FirstOrDefault(
-                            c => c.Suit == devTrumpCard.Suit && c.Rank == devTrumpCard.Rank);
-                        if (trumpCard != null)
-                        {
-                            WildCards["TrumpCard"] = trumpCard;
-                        }
-                    }
-
-#endif
+//#endif
 
                 }
 

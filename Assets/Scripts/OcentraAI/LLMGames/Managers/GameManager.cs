@@ -278,7 +278,7 @@ namespace OcentraAI.LLMGames.Manager
             UnsubscribeFromEvents();
         }
 
-        protected override void SubscribeToEvents()
+        public override void SubscribeToEvents()
         {
             EventBus.Instance.SubscribeAsync<StartMainGameEvent>(OnStartMainGame);
             EventBus.Instance.SubscribeAsync<PlayerActionStartNewGameEvent>(OnPlayerActionStartNewGame);
@@ -289,7 +289,7 @@ namespace OcentraAI.LLMGames.Manager
             EventBus.Instance.Subscribe<PurchaseCoinsEvent>(OnPurchaseCoins);
         }
 
-        protected override void UnsubscribeFromEvents()
+        public override void UnsubscribeFromEvents()
         {
             EventBus.Instance.UnsubscribeAsync<StartMainGameEvent>(OnStartMainGame);
             EventBus.Instance.UnsubscribeAsync<PlayerActionStartNewGameEvent>(OnPlayerActionStartNewGame);

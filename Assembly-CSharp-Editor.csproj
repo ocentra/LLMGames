@@ -1987,6 +1987,10 @@
       <Project>{78D3CA34-1D2F-C149-6A2D-E6A598DEAB67}</Project>
       <Name>Unity.2D.SpriteShape.Editor</Name>
     </ProjectReference>
+    <ProjectReference Include="LLMGames.GameMode.csproj">
+      <Project>{4BE6DBA6-06A1-E222-A3B0-F76BF0D76711}</Project>
+      <Name>LLMGames.GameMode</Name>
+    </ProjectReference>
     <ProjectReference Include="Unity.Multiplayer.Tools.NetVis.Configuration.csproj">
       <Project>{2BF0E8D9-3486-BF9D-C094-D6B8C26850C5}</Project>
       <Name>Unity.Multiplayer.Tools.NetVis.Configuration</Name>

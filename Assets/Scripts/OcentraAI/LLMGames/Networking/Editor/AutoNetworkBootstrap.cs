@@ -33,7 +33,7 @@ namespace OcentraAI.LLMGames.Scriptable.ScriptableSingletons
     [GlobalConfig("Assets/Resources/")]
     public class AutoNetworkBootstrap : CustomGlobalConfig<AutoNetworkBootstrap>
     {
-
+        public bool ToEditor = true;
         private readonly object @lock = new object();
         private bool areAllPlayersReady = false;
 
@@ -60,8 +60,10 @@ namespace OcentraAI.LLMGames.Scriptable.ScriptableSingletons
         [ShowInInspector, ReadOnly] private bool IsGameStartManagerCreated { get; set; }
         [ShowInInspector] private int MaxRetries { get; set; } = 10;
         [ShowInInspector] private float InitialRetryDelay { get; set; } = 1;
-        [ShowInInspector] private NetworkManager NetworkManager { get; set; }
-        [ShowInInspector] private GameStartManager GameStartManager { get; set; }
+
+        [SerializeField, HideInInspector] private NetworkManager networkManager;
+        [ShowInInspector] private NetworkManager NetworkManager { get => networkManager; set => networkManager = value; }
+        [ShowInInspector] private NetworkGameManager NetworkGameManager { get; set; }
         [ShowInInspector] private ConfigManager ConfigManager { get; set; }
 
         [ReadOnly] public EditorData EditorData;
@@ -85,6 +87,10 @@ namespace OcentraAI.LLMGames.Scriptable.ScriptableSingletons
         public string EditorSyncFilePath = Application.isEditor ? Path.Combine(Application.dataPath, "Resources", "EditorSync.json") : Path.Combine(Application.persistentDataPath, "EditorSync.json");
 
         private GameLoggerScriptable GameLoggerScriptable => GameLoggerScriptable.Instance;
+
+        [SerializeField]
+        private List<string> aiList = new List<string> { "ChatGPT" };
+
 
         private bool IsValidJsonFile(string path)
         {
@@ -149,7 +155,7 @@ namespace OcentraAI.LLMGames.Scriptable.ScriptableSingletons
                 {
                     string customArgument = ClonesManager.GetArgument();
                     PlayerSettings.productName = customArgument;
-                    GameLoggerScriptable.Log($"Product name set to: {PlayerSettings.productName}", this);
+                    GameLoggerScriptable.Log($"Product name set to: {PlayerSettings.productName}", this,ToEditor);
                 }
                 else
                 {
@@ -160,7 +166,7 @@ namespace OcentraAI.LLMGames.Scriptable.ScriptableSingletons
 
 
 
-                GameLoggerScriptable.Log($"{nameof(AutoNetworkBootstrap)}", this);
+                GameLoggerScriptable.Log($"{nameof(AutoNetworkBootstrap)}", this,ToEditor);
 
             }
 
@@ -193,17 +199,17 @@ namespace OcentraAI.LLMGames.Scriptable.ScriptableSingletons
                                 instance.transform.SetParent(null);
                                 NetworkManager = instance.GetComponent<NetworkManager>();
                                 IsNetworkManagerCreated = true;
-                                GameLoggerScriptable.Log($" IsNetworkManagerCreated {IsNetworkManagerCreated}", this);
+                                GameLoggerScriptable.Log($" IsNetworkManagerCreated {IsNetworkManagerCreated}", this, ToEditor);
                             }
                             else
                             {
-                                GameLoggerScriptable.LogError("Failed to instantiate the prefab as a linked instance.", this);
+                                GameLoggerScriptable.LogError("Failed to instantiate the prefab as a linked instance.", this, ToEditor);
 
                             }
                         }
                         else
                         {
-                            GameLoggerScriptable.LogError($"Prefab '{nameof(NetworkManager)}' not found in Resources/Prefabs.", this);
+                            GameLoggerScriptable.LogError($"Prefab '{nameof(NetworkManager)}' not found in Resources/Prefabs.", this, ToEditor);
 
                         }
                     }
@@ -213,27 +219,27 @@ namespace OcentraAI.LLMGames.Scriptable.ScriptableSingletons
             }
             catch (Exception ex)
             {
-                GameLoggerScriptable.LogError($"Error initializing NetworkManager: {ex.Message}\nStack Trace: {ex.StackTrace}", this);
+                GameLoggerScriptable.LogError($"Error initializing NetworkManager: {ex.Message}\nStack Trace: {ex.StackTrace}", this, ToEditor);
 
             }
         }
 
 
-        private async UniTask<GameStartManager> CreateGameStartManagerServer(List<Player> playerList)
+        private async UniTask<NetworkGameManager> CreateGameStartManagerServer(List<Player> playerList)
         {
             await UniTask.WaitUntil(() => NetworkManager.Singleton.IsListening);
 
             if (Application.isPlaying)
             {
-                GameStartManager gameStartManager = FindAnyObjectByType<GameStartManager>();
+                NetworkGameManager networkGameManager = FindAnyObjectByType<NetworkGameManager>();
 
-                if (gameStartManager == null)
+                if (networkGameManager == null)
                 {
-                    NetworkObject prefab = Resources.Load<NetworkObject>($"Prefabs/{nameof(GameStartManager)}");
+                    NetworkObject prefab = Resources.Load<NetworkObject>($"Prefabs/{nameof(NetworkGameManager)}");
 
                     if (prefab != null)
                     {
-                        GameLoggerScriptable.Log($"GameStartManager is null; prefab found. Creating one.", this);
+                        GameLoggerScriptable.Log($"GameStartManager is null; prefab found. Creating one.", this, ToEditor);
 
                         if (NetworkManager.Singleton != null)
                         {
@@ -241,31 +247,31 @@ namespace OcentraAI.LLMGames.Scriptable.ScriptableSingletons
 
                             if (instance != null)
                             {
-                                instance.gameObject.name = nameof(GameStartManager);
+                                instance.gameObject.name = nameof(NetworkGameManager);
                                 instance.transform.SetParent(null);
-                                gameStartManager = instance.GetComponent<GameStartManager>();
-                                gameStartManager.Init(playerList);
+                                networkGameManager = instance.GetComponent<NetworkGameManager>();
+                                networkGameManager.Init(playerList, aiList);
                                 IsGameStartManagerCreated = true;
-                                GameLoggerScriptable.Log($"IsGameStartManagerCreated {IsGameStartManagerCreated}", this);
-                                return gameStartManager;
+                                GameLoggerScriptable.Log($"IsGameStartManagerCreated {IsGameStartManagerCreated}", this, ToEditor);
+                                return networkGameManager;
                             }
                         }
                         else
                         {
-                            GameLoggerScriptable.LogError($"NetworkManager.Singleton is null or not running as server.", this);
+                            GameLoggerScriptable.LogError($"NetworkManager.Singleton is null or not running as server.", this, ToEditor);
                         }
                     }
                     else
                     {
-                        GameLoggerScriptable.LogError($"NetworkObject prefab not found.", this);
+                        GameLoggerScriptable.LogError($"NetworkObject prefab not found.", this, ToEditor);
                     }
                 }
                 else
                 {
                     IsGameStartManagerCreated = false;
-                    gameStartManager.Init(playerList);
-                    GameLoggerScriptable.Log($"GameStartManager exists; initialized.", this);
-                    return gameStartManager;
+                    networkGameManager.Init(playerList, aiList);
+                    GameLoggerScriptable.Log($"GameStartManager exists; initialized.", this, ToEditor);
+                    return networkGameManager;
                 }
 
 
@@ -275,36 +281,36 @@ namespace OcentraAI.LLMGames.Scriptable.ScriptableSingletons
             return null;
         }
 
-        private async UniTask<GameStartManager> CreateGameStartManagerClient(List<Player> playerList)
+        private async UniTask<NetworkGameManager> CreateGameStartManagerClient(List<Player> playerList)
         {
 
             if (Application.isPlaying)
             {
-                GameStartManager gameStartManager = FindAnyObjectByType<GameStartManager>();
+                NetworkGameManager networkGameManager = FindAnyObjectByType<NetworkGameManager>();
 
-                if (gameStartManager == null)
+                if (networkGameManager == null)
                 {
-                    GameLoggerScriptable.Log($"Client-side: Waiting for GameStartManager to become available.", this);
+                    GameLoggerScriptable.Log($"Client-side: Waiting for GameStartManager to become available.", this, ToEditor);
 
                     // Wait until the GameStartManager is available
-                    while (gameStartManager == null)
+                    while (networkGameManager == null)
                     {
-                        GameLoggerScriptable.Log($"Looking for GameStartManager on the client.", this);
+                        GameLoggerScriptable.Log($"Looking for GameStartManager on the client.", this, ToEditor);
                         await UniTask.Delay(100); // Adding a slight delay to avoid excessive logging
-                        gameStartManager = FindAnyObjectByType<GameStartManager>();
+                        networkGameManager = FindAnyObjectByType<NetworkGameManager>();
                     }
 
                     IsGameStartManagerCreated = false;
-                    gameStartManager.Init(playerList);
-                    GameLoggerScriptable.Log($"GameStartManager found and initialized on client.", this);
-                    return gameStartManager;
+                    networkGameManager.Init(playerList, aiList);
+                    GameLoggerScriptable.Log($"GameStartManager found and initialized on client.", this, ToEditor);
+                    return networkGameManager;
                 }
                 else
                 {
                     IsGameStartManagerCreated = false;
-                    gameStartManager.Init(playerList);
-                    GameLoggerScriptable.Log($"GameStartManager already exists on client; initialized.", this);
-                    return gameStartManager;
+                    networkGameManager.Init(playerList, aiList);
+                    GameLoggerScriptable.Log($"GameStartManager already exists on client; initialized.", this, ToEditor);
+                    return networkGameManager;
                 }
 
 
@@ -355,7 +361,7 @@ namespace OcentraAI.LLMGames.Scriptable.ScriptableSingletons
                 }
                 catch (Exception e)
                 {
-                    GameLoggerScriptable.LogError(e.StackTrace, this);
+                    GameLoggerScriptable.LogError(e.StackTrace, this, ToEditor);
                     return false;
                 }
             }
@@ -370,13 +376,13 @@ namespace OcentraAI.LLMGames.Scriptable.ScriptableSingletons
                 {
                     AuthenticationService.Instance.ClearSessionToken();
                     await AuthenticationService.Instance.SignInAnonymouslyAsync().AsUniTask();
-                    GameLoggerScriptable.Log($"Signed in with ID: {AuthenticationService.Instance.PlayerId}", this);
+                    GameLoggerScriptable.Log($"Signed in with ID: {AuthenticationService.Instance.PlayerId}", this, ToEditor);
                 }
                 return true;
             }
             catch (Exception e)
             {
-                GameLoggerScriptable.LogError($"Authentication failed: {e.Message}\nStack Trace: {e.StackTrace}", this);
+                GameLoggerScriptable.LogError($"Authentication failed: {e.Message}\nStack Trace: {e.StackTrace}", this, ToEditor);
                 return false;
             }
         }
@@ -427,7 +433,7 @@ namespace OcentraAI.LLMGames.Scriptable.ScriptableSingletons
                             }
                             else
                             {
-                                GameLoggerScriptable.LogError("NetworkManager.Singleton is null. Ensure that it is properly initialized.", this);
+                                GameLoggerScriptable.LogError("NetworkManager.Singleton is null. Ensure that it is properly initialized.", this, ToEditor);
                             }
 
 
@@ -435,7 +441,7 @@ namespace OcentraAI.LLMGames.Scriptable.ScriptableSingletons
                         catch (Exception ex)
                         {
                             string message = $"Error during initialization in play mode: {ex.Message}\nStack Trace: {ex.StackTrace}";
-                            GameLoggerScriptable.LogError(message, this);
+                            GameLoggerScriptable.LogError(message, this, ToEditor);
                         }
 
                         break;
@@ -448,7 +454,7 @@ namespace OcentraAI.LLMGames.Scriptable.ScriptableSingletons
                         }
                         catch (Exception ex)
                         {
-                            GameLoggerScriptable.LogError($"Error during cleanup in play mode: {ex.Message}\nStack Trace: {ex.StackTrace}", this);
+                            GameLoggerScriptable.LogError($"Error during cleanup in play mode: {ex.Message}\nStack Trace: {ex.StackTrace}", this, ToEditor);
                         }
                         break;
                 }
@@ -457,7 +463,7 @@ namespace OcentraAI.LLMGames.Scriptable.ScriptableSingletons
             }
             catch (Exception ex)
             {
-                GameLoggerScriptable.LogError($"Unhandled error in OnPlayModeStateChanged: {ex.Message}\nStack Trace: {ex.StackTrace}", this);
+                GameLoggerScriptable.LogError($"Unhandled error in OnPlayModeStateChanged: {ex.Message}\nStack Trace: {ex.StackTrace}", this, ToEditor);
             }
         }
 
@@ -467,16 +473,17 @@ namespace OcentraAI.LLMGames.Scriptable.ScriptableSingletons
         // we Start for join code get joinAllocation and then SetRelayServerData we wont start game yet we need to check if we are ready
         private async UniTask<OperationResult<bool>> StartHost()
         {
-            GameLoggerScriptable.Log("StartHost process initiated", this);
+
+            GameLoggerScriptable.Log("StartHost process initiated", this, ToEditor);
 
             try
             {
-                GameLoggerScriptable.Log("Waiting for player authentication", this);
+                GameLoggerScriptable.Log("Waiting for player authentication", this, ToEditor);
                 await UniTask.WaitUntil(() => AuthenticationService.Instance.IsSignedIn);
 
                 GameLoggerScriptable.Log("Creating and initializing a lobby", this);
                 Lobby currentLobby = await CreateAndInitializeLobby();
-                GameLoggerScriptable.Log($"Lobby created successfully with ID: {currentLobby.Id}", this);
+                GameLoggerScriptable.Log($"Lobby created successfully with ID: {currentLobby.Id}", this, ToEditor);
 
                 GameLoggerScriptable.Log("Saving lobby data to file", this);
                 bool dataset = await ClonesManagerExtensions.TrySetLobbyDataAsync(EditorSyncFilePath, currentLobby);
@@ -484,18 +491,19 @@ namespace OcentraAI.LLMGames.Scriptable.ScriptableSingletons
                 await UniTask.WaitUntil(() => dataset);
 
                 int maxRetries = 100;
-                GameLoggerScriptable.Log("Checking and waiting until all players are ready", this);
+                GameLoggerScriptable.Log("Checking and waiting until all players are ready", this, ToEditor);
+               
                 if (!await CheckAndWaitUntilAllPlayersAreReady(currentLobby.Id, 1, maxRetries))
                 {
-                    GameLoggerScriptable.LogError("Players not ready after maximum retries", this);
+                    GameLoggerScriptable.LogError("Players not ready after maximum retries", this, ToEditor);
                     return new OperationResult<bool>(false, false, maxRetries, "Players not ready after maximum retries");
                 }
 
                 if (StartAsServer)
                 {
-                    GameLoggerScriptable.Log("Starting as server", this);
+                    GameLoggerScriptable.Log("Starting as server", this, ToEditor);
                     NetworkManager.Singleton.StartServer();
-                    GameLoggerScriptable.Log("Server started successfully", this);
+                    GameLoggerScriptable.Log("Server started successfully", this, ToEditor);
 
 
 
@@ -503,53 +511,53 @@ namespace OcentraAI.LLMGames.Scriptable.ScriptableSingletons
                     OperationResult<Lobby> operationResult = await SetServerReady(currentLobby.Id, true);
                     if (!operationResult.IsSuccess)
                     {
-                        GameLoggerScriptable.LogError("Failed to set server ready", this);
+                        GameLoggerScriptable.LogError("Failed to set server ready", this, ToEditor);
                         return new OperationResult<bool>(false, false, 0, "Failed to set server ready");
                     }
 
                     currentLobby = operationResult.Value;
                     await CreateGameStartManagerServer(currentLobby.Players);
 
-                    GameLoggerScriptable.Log("Starting client as part of host setup", this);
+                    GameLoggerScriptable.Log("Starting client as part of host setup", this, ToEditor);
                     OperationResult<bool> clientResult = await StartClient();
                     return new OperationResult<bool>(clientResult.IsSuccess, clientResult.Value);
                 }
                 else
                 {
-                    GameLoggerScriptable.Log("Starting as host", this);
+                    GameLoggerScriptable.Log("Starting as host", this, ToEditor);
                     if (!NetworkManager.Singleton.StartHost())
                     {
                         GameLoggerScriptable.LogError("Host failed to start", this);
                         return new OperationResult<bool>(false, false, 0, "Host failed to start");
                     }
 
-                    GameLoggerScriptable.Log("Host started successfully", this);
+                    GameLoggerScriptable.Log("Host started successfully", this, ToEditor);
                     await CreateGameStartManagerServer(currentLobby.Players);
 
-                    GameLoggerScriptable.Log("Setting server ready state to true", this);
+                    GameLoggerScriptable.Log("Setting server ready state to true", this, ToEditor);
                     OperationResult<Lobby> operationResult = await SetServerReady(currentLobby.Id, true);
 
                     if (!operationResult.IsSuccess)
                     {
-                        GameLoggerScriptable.LogError("Failed to set server ready", this);
+                        GameLoggerScriptable.LogError("Failed to set server ready", this, ToEditor);
                         return new OperationResult<bool>(false, false, 0, "Failed to set server ready");
                     }
 
                     currentLobby = operationResult.Value;
 
-                    GameLoggerScriptable.Log("Initializing LobbyViewer", this);
+                    GameLoggerScriptable.Log("Initializing LobbyViewer", this, ToEditor);
                     LobbyViewer = new LobbyViewer(currentLobby);
 
-                    GameLoggerScriptable.Log("Publishing StartLobbyAsHostEvent event", this);
+                    GameLoggerScriptable.Log("Publishing StartLobbyAsHostEvent event", this, ToEditor);
                     await EventBus.Instance.PublishAsync(new StartLobbyAsHostEvent(currentLobby.Id));
 
-                    GameLoggerScriptable.Log("Host started successfully and game initialization event published", this);
+                    GameLoggerScriptable.Log("Host started successfully and game initialization event published", this, ToEditor);
                     return new OperationResult<bool>(true, true, 0, "Host started successfully");
                 }
             }
             catch (Exception ex)
             {
-                GameLoggerScriptable.LogError($"StartHost failed with exception: {ex.Message}\n{ex.StackTrace}", this);
+                GameLoggerScriptable.LogError($"StartHost failed with exception: {ex.Message}\n{ex.StackTrace}", this, ToEditor);
                 return new OperationResult<bool>(false, false, 0, ex.Message);
             }
         }
@@ -558,7 +566,7 @@ namespace OcentraAI.LLMGames.Scriptable.ScriptableSingletons
         {
             try
             {
-                GameLoggerScriptable.Log($"Setting server ready status to {isReady} for lobby ID: {lobbyId}", this);
+                GameLoggerScriptable.Log($"Setting server ready status to {isReady} for lobby ID: {lobbyId}", this, ToEditor);
                 string readyStatus = isReady ? "true" : "false";
 
                 Lobby currentLobby = await LobbyService.Instance.UpdateLobbyAsync(lobbyId, new UpdateLobbyOptions
@@ -569,26 +577,26 @@ namespace OcentraAI.LLMGames.Scriptable.ScriptableSingletons
                     }
                 }).AsUniTask();
 
-                GameLoggerScriptable.Log($"Server ready status successfully set to {readyStatus} for lobby ID: {lobbyId}", this);
+                GameLoggerScriptable.Log($"Server ready status successfully set to {readyStatus} for lobby ID: {lobbyId}", this, ToEditor);
                 return new OperationResult<Lobby>(true, currentLobby);
             }
             catch (Exception ex)
             {
-                GameLoggerScriptable.LogError($"Failed to set server ready status for lobby ID: {lobbyId} with exception: {ex.Message}", this);
+                GameLoggerScriptable.LogError($"Failed to set server ready status for lobby ID: {lobbyId} with exception: {ex.Message}", this, ToEditor);
                 return new OperationResult<Lobby>(false, null);
             }
         }
 
         private async UniTask<Lobby> CreateAndInitializeLobby()
         {
-            GameLoggerScriptable.Log("Creating and initializing a new lobby", this);
+            GameLoggerScriptable.Log("Creating and initializing a new lobby", this, ToEditor);
 
             try
             {
                 string playerName = AuthenticationService.Instance.PlayerName ?? "Guest_" + UnityEngine.Random.Range(0, 9999);
                 string playerId = AuthenticationService.Instance.PlayerId ?? Guid.NewGuid().ToString();
 
-                GameLoggerScriptable.Log($"Player name set to: {playerName}, Player ID set to: {playerId}", this);
+                GameLoggerScriptable.Log($"Player name set to: {playerName}, Player ID set to: {playerId}", this, ToEditor);
 
                 Player player = new Player
                 {
@@ -613,12 +621,25 @@ namespace OcentraAI.LLMGames.Scriptable.ScriptableSingletons
                 GameLoggerScriptable.Log("Attempting to create a lobby", this);
                 Lobby newLobby = await LobbyService.Instance.CreateLobbyAsync(LobbyName, EditorData.HumanPlayersCount, createLobbyOptions).AsUniTask();
 
-                GameLoggerScriptable.Log("Lobby created successfully with initial ServerReady state set to false", this);
+                GameLoggerScriptable.Log($"Lobby created successfully with initial ServerReady state set to " +
+                                         $"AvailableSlots {newLobby.AvailableSlots} AvailableSlots {newLobby.Data.Count}", this, ToEditor);
+
+                foreach (KeyValuePair<string, DataObject> pair in newLobby.Data)
+                {
+                    string key = pair.Key;
+                    DataObject value = pair.Value;
+                    string st = value.Value;
+
+                    GameLoggerScriptable.Log($"Lobby key{key} " +
+                                             $"value {value} value.value {st}", this, ToEditor);
+                }
+
+
                 return newLobby;
             }
             catch (Exception ex)
             {
-                GameLoggerScriptable.LogError($"Failed to create and initialize lobby with exception: {ex.Message}", this);
+                GameLoggerScriptable.LogError($"Failed to create and initialize lobby with exception: {ex.Message}", this, ToEditor);
                 throw;
             }
         }
@@ -628,31 +649,31 @@ namespace OcentraAI.LLMGames.Scriptable.ScriptableSingletons
         // we look for join code get joinAllocation and then SetRelayServerData we wont start game yet
         private async UniTask<OperationResult<bool>> StartClient()
         {
-            GameLoggerScriptable.Log("StartClient process initiated", this);
+            GameLoggerScriptable.Log("StartClient process initiated", this, ToEditor);
 
             (bool success, Lobby lobbyData) result = await ClonesManagerExtensions.TryGetLobbyDataAsync(EditorSyncFilePath);
 
             if (!result.success)
             {
-                GameLoggerScriptable.LogError("Failed to get lobby data from file", this);
+                GameLoggerScriptable.LogError("Failed to get lobby data from file", this, ToEditor);
                 return new OperationResult<bool>(false, default, 0, "TryGetLobbyDataAsync not successful");
             }
 
             if (result.lobbyData == null)
             {
-                GameLoggerScriptable.LogError("Lobby data is null", this);
+                GameLoggerScriptable.LogError("Lobby data is null", this, ToEditor);
                 return new OperationResult<bool>(false, default, 0, "Failed to get lobby data from file");
             }
 
             try
             {
-                GameLoggerScriptable.Log("Waiting for player authentication", this);
+                GameLoggerScriptable.Log("Waiting for player authentication", this, ToEditor);
                 await UniTask.WaitUntil(() => AuthenticationService.Instance.IsSignedIn);
 
                 string playerName = AuthenticationService.Instance.PlayerName ?? "Guest_" + UnityEngine.Random.Range(0, 9999);
                 string playerId = AuthenticationService.Instance.PlayerId ?? Guid.NewGuid().ToString();
 
-                GameLoggerScriptable.Log($"Player name: {playerName}, Player ID: {playerId}", this);
+                GameLoggerScriptable.Log($"Player name: {playerName}, Player ID: {playerId}", this, ToEditor);
 
                 Player player = new Player
                 {
@@ -666,22 +687,22 @@ namespace OcentraAI.LLMGames.Scriptable.ScriptableSingletons
 
                 JoinLobbyByCodeOptions joinOptions = new JoinLobbyByCodeOptions { Player = player };
 
-                GameLoggerScriptable.Log($"Attempting to join lobby with code: {result.lobbyData.LobbyCode}", this);
+                GameLoggerScriptable.Log($"Attempting to join lobby with code: {result.lobbyData.LobbyCode}", this, ToEditor);
                 Lobby currentLobby = await LobbyService.Instance.JoinLobbyByCodeAsync(result.lobbyData.LobbyCode, joinOptions).AsUniTask();
 
                 if (currentLobby == null)
                 {
-                    GameLoggerScriptable.LogError("Failed to join lobby", this);
+                    GameLoggerScriptable.LogError("Failed to join lobby", this, ToEditor);
                     return new OperationResult<bool>(false, default, 0, "Failed to join lobby");
                 }
 
                 if (IsNullOrWhiteSpace(currentLobby.LobbyCode))
                 {
-                    GameLoggerScriptable.LogError("Joined lobby has no code", this);
+                    GameLoggerScriptable.LogError("Joined lobby has no code", this, ToEditor);
                     return new OperationResult<bool>(false, default, 0, "Joined lobby has no code");
                 }
 
-                GameLoggerScriptable.Log("Setting client ready state", this);
+                GameLoggerScriptable.Log("Setting client ready state", this, ToEditor);
 
                 currentLobby = await LobbyService.Instance.UpdatePlayerAsync(
                     currentLobby.Id,
@@ -695,13 +716,13 @@ namespace OcentraAI.LLMGames.Scriptable.ScriptableSingletons
                     }
                 ).AsUniTask();
 
-                GameLoggerScriptable.Log("Waiting for server ready state", this);
+                GameLoggerScriptable.Log("Waiting for server ready state", this, ToEditor);
 
                 int maxRetries = 100;
                 OperationResult<Lobby> operationResult = await WaitForServerReady(currentLobby.Id, 1, maxRetries);
                 if (!operationResult.IsSuccess)
                 {
-                    GameLoggerScriptable.LogError("WaitForServerReady maxed out", this);
+                    GameLoggerScriptable.LogError("WaitForServerReady maxed out", this, ToEditor);
                     return new OperationResult<bool>(false, false, maxRetries, "WaitForServerReady maxed out");
                 }
 
@@ -713,19 +734,19 @@ namespace OcentraAI.LLMGames.Scriptable.ScriptableSingletons
 
                     GameLoggerScriptable.Log("Starting client", this);
                     bool startClient = NetworkManager.Singleton.StartClient();
-                    GameLoggerScriptable.Log($"Starting client Success? {startClient}", this);
+                    GameLoggerScriptable.Log($"Starting client Success? {startClient}", this, ToEditor);
 
                     await UniTask.WaitUntil(() => startClient);
 
-                    GameStartManager gameStartManager = await CreateGameStartManagerClient(currentLobby.Players);
+                    NetworkGameManager networkGameManager = await CreateGameStartManagerClient(currentLobby.Players);
 
 
-                    GameLoggerScriptable.Log($"Client started successfully , GameStartManager found? {gameStartManager != null} ", this);
+                    GameLoggerScriptable.Log($"Client started successfully , GameStartManager found? {networkGameManager != null} ", this, ToEditor);
                     return new OperationResult<bool>(true, true, 0, "Client started successfully");
                 }
                 else
                 {
-                    GameLoggerScriptable.LogError("Client Could not Start !!!successfully", this);
+                    GameLoggerScriptable.LogError("Client Could not Start !!!successfully", this, ToEditor);
 
                     return new OperationResult<bool>(false, false);
                 }
@@ -733,7 +754,7 @@ namespace OcentraAI.LLMGames.Scriptable.ScriptableSingletons
             }
             catch (Exception ex)
             {
-                GameLoggerScriptable.LogException($"StartClient failed with exception: {ex.Message}\n{ex.StackTrace}", this);
+                GameLoggerScriptable.LogException($"StartClient failed with exception: {ex.Message}\n{ex.StackTrace}", this, ToEditor);
                 return new OperationResult<bool>(false, false, 0, ex.Message);
             }
         }
@@ -856,14 +877,14 @@ namespace OcentraAI.LLMGames.Scriptable.ScriptableSingletons
 
         private async UniTask<bool> CheckAndWaitUntilAllPlayersAreReady(string lobbyId, int initialDelaySeconds = 1, int maxRetries = 100)
         {
-            GameLoggerScriptable.Log($"CheckAndWaitUntilAllPlayersAreReady started for lobby ID: {lobbyId}", this);
+            GameLoggerScriptable.Log($"CheckAndWaitUntilAllPlayersAreReady started for lobby ID: {lobbyId}", this, ToEditor);
 
             int currentDelaySeconds = initialDelaySeconds;
             int attempt = 0;
 
             while (attempt < maxRetries)
             {
-                GameLoggerScriptable.Log($"Attempt {attempt + 1}/{maxRetries} - Current delay before next attempt: {currentDelaySeconds} seconds", this);
+                GameLoggerScriptable.Log($"Attempt {attempt + 1}/{maxRetries} - Current delay before next attempt: {currentDelaySeconds} seconds", this, ToEditor);
 
                 try
                 {
@@ -871,7 +892,7 @@ namespace OcentraAI.LLMGames.Scriptable.ScriptableSingletons
 
                     if (!lobbyResult.IsSuccess)
                     {
-                        GameLoggerScriptable.Log($"Failed to fetch lobby. OperationResult was not successful. Attempt {attempt + 1}.", this);
+                        GameLoggerScriptable.Log($"Failed to fetch lobby. OperationResult was not successful. Attempt {attempt + 1}.", this, ToEditor);
                         attempt++;
                         await UniTask.Delay(TimeSpan.FromSeconds(currentDelaySeconds));
                         currentDelaySeconds = Math.Min(currentDelaySeconds * 2, 60);
@@ -880,7 +901,7 @@ namespace OcentraAI.LLMGames.Scriptable.ScriptableSingletons
 
                     if (lobbyResult.Value == null)
                     {
-                        GameLoggerScriptable.Log($"Lobby result is null. Attempt {attempt + 1}. Retrying...", this);
+                        GameLoggerScriptable.Log($"Lobby result is null. Attempt {attempt + 1}. Retrying...", this, ToEditor);
                         attempt++;
                         await UniTask.Delay(TimeSpan.FromSeconds(currentDelaySeconds));
                         currentDelaySeconds = Math.Min(currentDelaySeconds * 2, 60);
@@ -888,11 +909,11 @@ namespace OcentraAI.LLMGames.Scriptable.ScriptableSingletons
                     }
 
                     Lobby lobby = lobbyResult.Value;
-                    GameLoggerScriptable.Log($"Lobby fetched successfully. Players in lobby: {lobby.Players.Count}/{lobby.MaxPlayers}", this);
+                    GameLoggerScriptable.Log($"Lobby fetched successfully. Players in lobby: {lobby.Players.Count}/{lobby.MaxPlayers}", this, ToEditor);
 
                     if (lobby.Players.Count < lobby.MaxPlayers)
                     {
-                        GameLoggerScriptable.Log($"Not all players have joined the lobby. Current: {lobby.Players.Count}/{lobby.MaxPlayers}. Waiting for more players to join.", this);
+                        GameLoggerScriptable.Log($"Not all players have joined the lobby. Current: {lobby.Players.Count}/{lobby.MaxPlayers}. Waiting for more players to join.", this, ToEditor);
                         attempt++;
                         await UniTask.Delay(TimeSpan.FromSeconds(currentDelaySeconds));
                         currentDelaySeconds = Math.Min(currentDelaySeconds * 2, 60);
@@ -905,7 +926,7 @@ namespace OcentraAI.LLMGames.Scriptable.ScriptableSingletons
                     {
                         if (player.Id == lobby.HostId)
                         {
-                            GameLoggerScriptable.Log($"Skipping readiness check for host player (Player ID: {player.Id})", this);
+                            GameLoggerScriptable.Log($"Skipping readiness check for host player (Player ID: {player.Id})", this, ToEditor);
                             continue;
                         }
 
@@ -913,14 +934,14 @@ namespace OcentraAI.LLMGames.Scriptable.ScriptableSingletons
                         {
                             if (playerDataObject?.Value != "true")
                             {
-                                GameLoggerScriptable.Log($"Player {player.Id} is not ready. Value: {playerDataObject?.Value}", this);
+                                GameLoggerScriptable.Log($"Player {player.Id} is not ready. Value: {playerDataObject?.Value}", this, ToEditor);
                                 allPlayersReady = false;
                                 break;
                             }
                         }
                         else
                         {
-                            GameLoggerScriptable.Log($"ClientReady data not found for player {player.Id}.", this);
+                            GameLoggerScriptable.Log($"ClientReady data not found for player {player.Id}.", this, ToEditor);
                             allPlayersReady = false;
                             break;
                         }
@@ -928,12 +949,12 @@ namespace OcentraAI.LLMGames.Scriptable.ScriptableSingletons
 
                     if (allPlayersReady)
                     {
-                        GameLoggerScriptable.Log($"All players are ready in the lobby.", this);
+                        GameLoggerScriptable.Log($"All players are ready in the lobby.", this, ToEditor);
                         return true;
                     }
                     else
                     {
-                        GameLoggerScriptable.Log($"Not all players are ready. Retrying...", this);
+                        GameLoggerScriptable.Log($"Not all players are ready. Retrying...", this, ToEditor);
                     }
 
                     attempt++;
@@ -942,14 +963,14 @@ namespace OcentraAI.LLMGames.Scriptable.ScriptableSingletons
                 }
                 catch (Exception ex)
                 {
-                    GameLoggerScriptable.LogError($"Exception encountered: {ex.Message}. Attempt {attempt + 1}. Retrying...", this);
+                    GameLoggerScriptable.LogError($"Exception encountered: {ex.Message}. Attempt {attempt + 1}. Retrying...", this, ToEditor);
                     attempt++;
                     await UniTask.Delay(TimeSpan.FromSeconds(currentDelaySeconds));
                     currentDelaySeconds = Math.Min(currentDelaySeconds * 2, 60);
                 }
             }
 
-            GameLoggerScriptable.LogError($"Max retries reached. Exiting CheckAndWaitUntilAllPlayersAreReady without success.", this);
+            GameLoggerScriptable.LogError($"Max retries reached. Exiting CheckAndWaitUntilAllPlayersAreReady without success.", this, ToEditor);
             return false;
         }
 
@@ -960,7 +981,7 @@ namespace OcentraAI.LLMGames.Scriptable.ScriptableSingletons
 
             for (int i = 0; i < maxRetries; i++)
             {
-                GameLoggerScriptable.Log($"Attempt {i + 1}/{maxRetries} - Trying to fetch lobby with ID: {lobbyId}", this);
+                GameLoggerScriptable.Log($"Attempt {i + 1}/{maxRetries} - Trying to fetch lobby with ID: {lobbyId}", this, ToEditor);
 
                 try
                 {
@@ -968,33 +989,33 @@ namespace OcentraAI.LLMGames.Scriptable.ScriptableSingletons
 
                     if (result == null)
                     {
-                        GameLoggerScriptable.LogError($"Attempt {i + 1} - Lobby result is null. Retrying after {delay} seconds delay.", this);
+                        GameLoggerScriptable.LogError($"Attempt {i + 1} - Lobby result is null. Retrying after {delay} seconds delay.", this, ToEditor);
                         await UniTask.Delay(TimeSpan.FromSeconds(delay));
                         delay = Math.Min(delay * 2, maxDelay);
                         continue;
                     }
 
-                    GameLoggerScriptable.Log($"Attempt {i + 1} - Lobby fetched successfully.", this);
+                    GameLoggerScriptable.Log($"Attempt {i + 1} - Lobby fetched successfully.", this, ToEditor);
                     return new OperationResult<Lobby>(true, result, maxRetries);
                 }
                 catch (Exception ex)
                 {
-                    GameLoggerScriptable.LogError($"Attempt {i + 1} - Exception encountered: {ex.Message}", this);
+                    GameLoggerScriptable.LogError($"Attempt {i + 1} - Exception encountered: {ex.Message}", this, ToEditor);
 
                     // Check if this is the last attempt or if the exception is not related to rate limiting
                     if (i == maxRetries - 1 || !(ex is LobbyServiceException { Reason: LobbyExceptionReason.RateLimited }))
                     {
-                        GameLoggerScriptable.LogError($"Attempt {i + 1} - Max retries reached or non-rate limiting exception. Returning failure result.", this);
+                        GameLoggerScriptable.LogError($"Attempt {i + 1} - Max retries reached or non-rate limiting exception. Returning failure result.", this, ToEditor);
                         return new OperationResult<Lobby>(false, null, i + 1, ex.Message);
                     }
 
-                    GameLoggerScriptable.Log($"Attempt {i + 1} - Rate limiting encountered. Retrying after {delay} seconds delay.", this);
+                    GameLoggerScriptable.Log($"Attempt {i + 1} - Rate limiting encountered. Retrying after {delay} seconds delay.", this, ToEditor);
                     await UniTask.Delay(TimeSpan.FromSeconds(delay));
                     delay = Math.Min(delay * 2, maxDelay);
                 }
             }
 
-            GameLoggerScriptable.LogError($"Max retries ({maxRetries}) exhausted without success. Returning failure result.", this);
+            GameLoggerScriptable.LogError($"Max retries ({maxRetries}) exhausted without success. Returning failure result.", this, ToEditor);
             return new OperationResult<Lobby>(false, null, maxRetries, "Max retries exhausted without success.");
         }
 
@@ -1004,10 +1025,10 @@ namespace OcentraAI.LLMGames.Scriptable.ScriptableSingletons
 
             try
             {
-                if (GameStartManager != null && IsGameStartManagerCreated)
+                if (NetworkGameManager != null && IsGameStartManagerCreated)
                 {
-                    DestroyImmediate(GameStartManager.gameObject);
-                    GameStartManager = null;
+                    DestroyImmediate(NetworkGameManager.gameObject);
+                    NetworkGameManager = null;
                     IsGameStartManagerCreated = false;
                 }
 
@@ -1050,7 +1071,7 @@ namespace OcentraAI.LLMGames.Scriptable.ScriptableSingletons
             }
             catch (Exception e)
             {
-                GameLoggerScriptable.LogError($"Error disposing cancellation token: {e.Message} {e.StackTrace}", this);
+                GameLoggerScriptable.LogError($"Error disposing cancellation token: {e.Message} {e.StackTrace}", this, ToEditor);
             }
         }
 

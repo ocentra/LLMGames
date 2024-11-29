@@ -58,7 +58,7 @@ namespace OcentraAI.LLMGames.Manager.Authentication
         }
 
 
-        protected override async void SubscribeToEvents()
+        public override async void SubscribeToEvents()
         {
             await UniTask.WaitUntil(() => UnityServices.State == ServicesInitializationState.Initialized);
 
@@ -85,7 +85,7 @@ namespace OcentraAI.LLMGames.Manager.Authentication
             EventBus.Instance.Subscribe<CreateAccountEvent>(OnCreateAccount);
         }
 
-        protected override void UnsubscribeFromEvents()
+        public override void UnsubscribeFromEvents()
         {
             base.UnsubscribeFromEvents();
 

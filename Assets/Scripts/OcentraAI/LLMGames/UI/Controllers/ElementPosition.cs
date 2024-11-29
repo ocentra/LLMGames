@@ -1,4 +1,3 @@
-using OcentraAI.LLMGames.UI.Managers;
 using Sirenix.OdinInspector;
 #if UNITY_EDITOR
 using UnityEditor;
@@ -17,11 +16,11 @@ namespace OcentraAI.LLMGames.UI
 
         [SerializeField] [HideInInspector] private Vector3 lastLocalPosition;
 
-        [ReadOnly]
-        [Required]
-        [ShowInInspector]
-        public MainTableUI MainTableUI { get; set; }
 
+        public void SetPlayerCount(int playerCount)
+        {
+            currentPlayerCount = playerCount;
+        }
 
         private void Awake()
         {
@@ -44,7 +43,6 @@ namespace OcentraAI.LLMGames.UI
 
         public void HandlePlayerCountChanged()
         {
-            currentPlayerCount = MainTableUI.PlayerCount;
             if (currentPlayerCount is >= 2 and <= 10)
             {
                 int index = currentPlayerCount - 2;
@@ -64,7 +62,7 @@ namespace OcentraAI.LLMGames.UI
 #if UNITY_EDITOR
             if (transform.localPosition != lastLocalPosition)
             {
-                currentPlayerCount = MainTableUI.PlayerCount;
+               
 
                 EditorUtility.SetDirty(this);
                 if (currentPlayerCount is >= 2 and <= 10)
@@ -84,7 +82,6 @@ namespace OcentraAI.LLMGames.UI
         [ShowIf(nameof(CanCopyPreviousPosition))]
         private void CopyPreviousPosition()
         {
-            currentPlayerCount = MainTableUI.PlayerCount;
 
             int currentIndex = currentPlayerCount - 2;
             int previousIndex = currentIndex - 1;
@@ -103,7 +100,6 @@ namespace OcentraAI.LLMGames.UI
 
         private bool CanCopyPreviousPosition()
         {
-            currentPlayerCount = MainTableUI.PlayerCount;
             if (currentPlayerCount is <= 2 or > 10)
             {
                 return false;

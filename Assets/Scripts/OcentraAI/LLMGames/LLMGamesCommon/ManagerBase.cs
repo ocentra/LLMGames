@@ -1,4 +1,5 @@
 using Cysharp.Threading.Tasks;
+using OcentraAI.LLMGames.Events;
 using OcentraAI.LLMGames.Utilities;
 using Sirenix.OdinInspector;
 using Sirenix.Utilities;
@@ -6,7 +7,7 @@ using UnityEngine;
 
 namespace OcentraAI.LLMGames.Manager
 {
-    public abstract class ManagerBase<T> : SerializedMonoBehaviour where T : Component
+    public abstract class ManagerBase<T> : SerializedMonoBehaviour,IEventHandler where T : Component
     {
         [Header("File Logging Settings")]
         [ShowInInspector] public bool ToEditor { get; set; } = true;
@@ -118,13 +119,13 @@ namespace OcentraAI.LLMGames.Manager
             UnsubscribeFromEvents();
         }
 
-        protected virtual void SubscribeToEvents()
+        public virtual void SubscribeToEvents()
         {
           
 
         }
 
-        protected virtual void UnsubscribeFromEvents()
+        public virtual void UnsubscribeFromEvents()
         {
            
 

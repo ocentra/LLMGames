@@ -261,7 +261,6 @@ namespace Assets.Plugins.ParrelSync.Editor
                         return await SaveArgumentsAsync(filePath, arguments);
                     }
 
-                    Debug.LogWarning($"Key '{nameof(Lobby)}' not found in the argument file.");
                     return false;
                 }
                 catch (IOException ioEx)

@@ -29,7 +29,9 @@
         "LLMGames.Commons",
         "LLMGames.Events",
         "LLMGames.DTO",
-        "LLMGames"
+        "LLMGames",
+        "Unity.Collections",
+        "LLMGames.GameMode"
     ],
     "includePlatforms": [],
     "excludePlatforms": [],

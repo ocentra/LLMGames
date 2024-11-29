@@ -28,7 +28,8 @@
         "Zenject",
         "LLMGames.Commons",
         "LLMGames.DTO",
-        "Unity.Collections"
+        "Unity.Collections",
+        "LLMGames.GameMode"
     ],
     "includePlatforms": [],
     "excludePlatforms": [],

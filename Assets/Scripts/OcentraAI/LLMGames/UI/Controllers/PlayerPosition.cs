@@ -1,3 +1,4 @@
+using OcentraAI.LLMGames.Events;
 using OcentraAI.LLMGames.Players;
 using OcentraAI.LLMGames.Players.UI;
 using Sirenix.OdinInspector;
@@ -23,7 +24,8 @@ namespace OcentraAI.LLMGames.ThreeCardBrag.UI
 
         [SerializeField] [TableList] private Vector3[] playerPositions = new Vector3[9];
 
-        [SerializeField] [ReadOnly] private PlayerUI playerUI;
+        [ShowInInspector, ReadOnly]  protected IPlayerUI PlayerUI;
+
 
         [ReadOnly] [ShowInInspector] public bool HasPlayerUI => transform.childCount > 0;
 
@@ -39,6 +41,11 @@ namespace OcentraAI.LLMGames.ThreeCardBrag.UI
 
         private void Init()
         {
+            if (PlayerUI == null)
+            {
+                PlayerUI = transform.GetComponentInChildren<IPlayerUI>();
+            }
+
             if (playerPositions == null)
             {
                 playerPositions = new Vector3[9];
@@ -49,19 +56,19 @@ namespace OcentraAI.LLMGames.ThreeCardBrag.UI
 
         public void SetPlayerUIIndex()
         {
-            if (playerUI == null)
+            if (PlayerUI == null)
             {
-                PlayerUI[] playerUIArray = GetComponentsInChildren<PlayerUI>(true);
-                foreach (PlayerUI ui in playerUIArray)
+                IPlayerUI[] playerUIArray = GetComponentsInChildren<IPlayerUI>(true);
+                foreach (IPlayerUI playerUI in playerUIArray)
                 {
-                    playerUI = ui;
+                    PlayerUI = playerUI;
                     break;
                 }
             }
 
-            if (playerUI != null)
+            if (PlayerUI != null)
             {
-                playerUI.PlayerIndex = PlayerIndex;
+                PlayerUI.SetPlayerIndex(PlayerIndex);
             }
         }
 

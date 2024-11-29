@@ -7,6 +7,10 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Runtime.CompilerServices;
+using System.Threading;
+#if true
+using UnityEditor;
+#endif
 using UnityEngine;
 using static System.String;
 using Object = UnityEngine.Object;
@@ -19,32 +23,93 @@ namespace OcentraAI.LLMGames.Utilities
     public class GameLoggerScriptable : CustomGlobalConfig<GameLoggerScriptable>
     {
         [Header("Global Logging Settings")]
+        [SerializeField, HideInInspector] private int logFrequencyInSeconds = 10;
+        [SerializeField, HideInInspector] private bool logToFile = false;
+        [SerializeField, HideInInspector] private bool logStackTrace = true;
+        [SerializeField, HideInInspector] private bool loggingEnabled = true;
+        [SerializeField, HideInInspector] private bool logWarnings = true;
+        [SerializeField, HideInInspector] private bool logErrors = true;
+        [SerializeField, HideInInspector] private bool logException = true;
 
-        [SerializeField, HideInInspector] private bool toEditor  = true;
-        [SerializeField, HideInInspector] private bool toFile  =false;
-        [SerializeField, HideInInspector] private bool useStackTrace = true;
-        [SerializeField, HideInInspector] private bool isLoggingEnabled = true;
-        [SerializeField, HideInInspector] private bool logWarningsEnabled  = true;
-        [SerializeField, HideInInspector] private bool logErrorsEnabled  = true;
+        [ShowInInspector]
+        private bool ToFile
+        {
+            get => logToFile;
+            set
+            {
+                logToFile = value;
+                OnValueChanged(nameof(ToFile), value);
+            }
+        }
 
-        [ShowInInspector] public bool ToEditor { get=> toEditor; set => toEditor = value; } 
-        [ShowInInspector] public bool ToFile { get => toFile; set => toFile = value; }
-        [ShowInInspector] public bool UseStackTrace { get => useStackTrace; set => useStackTrace = value; }
-        [ShowInInspector] public bool IsLoggingEnabled { get => isLoggingEnabled; set => isLoggingEnabled = value; }
-        [ShowInInspector] public bool LogWarningsEnabled { get => logWarningsEnabled; set => logWarningsEnabled = value; }
-        [ShowInInspector] public bool LogErrorsEnabled { get => logErrorsEnabled; set => logErrorsEnabled = value; }
+        [ShowInInspector]
+        private bool UseStackTrace
+        {
+            get => logStackTrace;
+            set
+            {
+                logStackTrace = value;
+                OnValueChanged(nameof(UseStackTrace), value);
+            }
+        }
+
+        [ShowInInspector]
+        private bool IsLoggingEnabled
+        {
+            get => loggingEnabled;
+            set
+            {
+                loggingEnabled = value;
+                OnValueChanged(nameof(IsLoggingEnabled), value);
+            }
+        }
+
+        [ShowInInspector]
+        private bool LogWarningsEnabled
+        {
+            get => logWarnings;
+            set
+            {
+                logWarnings = value;
+                OnValueChanged(nameof(LogWarningsEnabled), value);
+            }
+        }
+
+        [ShowInInspector]
+        private bool LogErrorsEnabled
+        {
+            get => logErrors;
+            set
+            {
+                logErrors = value;
+                OnValueChanged(nameof(LogErrorsEnabled), value);
+            }
+        }
+
+        [ShowInInspector]
+        private bool LogExceptionEnabled
+        {
+            get => logException;
+            set
+            {
+                logException = value;
+                OnValueChanged(nameof(LogExceptionEnabled), value);
+            }
+        }
+
+
 
         [ShowInInspector, ReadOnly] private string PlayerName { get; set; }
 
-        public int LogFrequencyInSeconds { get; set; } = 10;
-        private  Queue<LogEntry> LogQueue { get; set; } = new Queue<LogEntry>();
+
+        private Queue<LogEntry> LogQueue { get; set; } = new Queue<LogEntry>();
         private float LastFlushTime { get; set; }
 
         private readonly object logQueueLock = new object();
         private readonly object logFilePathWriteLock = new object();
 
-        [FilePath(AbsolutePath = true, Extensions = "json"), ValidateInput(nameof(IsValidJsonFile), "Selected file is not a valid JSON file.")]
-        public string LogFilePath  = Application.isEditor ? Path.Combine(Application.dataPath, "Resources", "LogFile.json") : Path.Combine(Application.persistentDataPath, "LogFile.json");
+        [Sirenix.OdinInspector.FilePath(AbsolutePath = true, Extensions = "json"), ValidateInput(nameof(IsValidJsonFile), "Selected file is not a valid JSON file.")]
+        public string LogFilePath = Application.isEditor ? Path.Combine(Application.dataPath, "Resources", "LogFile.json") : Path.Combine(Application.persistentDataPath, "LogFile.json");
 
         private bool IsValidJsonFile(string path)
         {
@@ -55,15 +120,23 @@ namespace OcentraAI.LLMGames.Utilities
             return true;
         }
 
+        private void OnValueChanged(string propertyName, object newValue)
+        {
+
+#if UNITY_EDITOR
+            EditorUtility.SetDirty(this);
+            Debug.Log($"{propertyName} changed to {newValue}");
+            SaveChanges();
+#endif
+        }
+
         void Awake()
         {
             PlayerName = null;
-            toFile = !IsNullOrEmpty(LogFilePath);
             LogQueue = new Queue<LogEntry>();
-            toEditor = toEditor && Application.isEditor;
             LastFlushTime = 0;
         }
-        
+
 
         public void Log(string message, Object context, bool toEditor = default, bool toFile = default, bool useStackTrace = true, [CallerMemberName] string method = "", [CallerLineNumber] int sourceLineNumber = 0)
         {
@@ -71,13 +144,13 @@ namespace OcentraAI.LLMGames.Utilities
             string className = context.GetType().Name;
             string fullMessage = $"{className}.{method}.{sourceLineNumber} : {message}";
 
-            toEditor = toEditor == default ? this.toEditor && isLoggingEnabled : Application.isEditor;
-            toFile = toFile == default ? this.toFile : IsNullOrEmpty(LogFilePath) && !Application.isEditor;
-            useStackTrace = useStackTrace == default ? this.useStackTrace : Application.isEditor;
+            toEditor = toEditor == default ? IsLoggingEnabled : Application.isEditor;
+            toFile = toFile == default ? ToFile : IsNullOrEmpty(LogFilePath) && !Application.isEditor;
+            useStackTrace = useStackTrace == default ? UseStackTrace : Application.isEditor;
 
             if (toEditor)
             {
-                UnityEngine.Debug.LogFormat(LogType.Log, useStackTrace ? LogOption.None : LogOption.NoStacktrace, context, "{0}.{1}. Line: {2}: {3}", className, method, sourceLineNumber, message);
+                Debug.LogFormat(LogType.Log, useStackTrace ? LogOption.None : LogOption.NoStacktrace, context, "{0}.{1}. Line: {2}: {3}", className, method, sourceLineNumber, message);
             }
 
             if (toFile)
@@ -91,15 +164,14 @@ namespace OcentraAI.LLMGames.Utilities
             string className = context.GetType().Name;
             string fullMessage = $"[Warning]{className}.{method}.{sourceLineNumber} : {message}";
 
-            toEditor = toEditor == default ? this.toEditor && logWarningsEnabled : Application.isEditor;
+            toEditor = toEditor == default ? LogWarningsEnabled : Application.isEditor;
+            toFile = toFile == default ? ToFile : IsNullOrEmpty(LogFilePath) && !Application.isEditor;
 
-            toFile = toFile == default ? this.toFile : IsNullOrEmpty(LogFilePath) && !Application.isEditor;
-
-            useStackTrace = useStackTrace == default ? this.useStackTrace : Application.isEditor;
+            useStackTrace = useStackTrace == default ? UseStackTrace : Application.isEditor;
 
             if (toEditor)
             {
-                UnityEngine.Debug.LogFormat(LogType.Warning, useStackTrace ? LogOption.None : LogOption.NoStacktrace, context, "{0}.{1}. Line: {2}: {3}", className, method, sourceLineNumber, message);
+                Debug.LogFormat(LogType.Warning, useStackTrace ? LogOption.None : LogOption.NoStacktrace, context, "{0}.{1}. Line: {2}: {3}", className, method, sourceLineNumber, message);
             }
 
             if (toFile)
@@ -113,12 +185,12 @@ namespace OcentraAI.LLMGames.Utilities
             string className = context.GetType().Name;
             string fullMessage = $"[Error]{className}.{method}.{sourceLineNumber} : {message}";
 
-            toEditor = toEditor == default ? this.toEditor && logErrorsEnabled : Application.isEditor;
-            toFile = toFile == default ? this.toFile : IsNullOrEmpty(LogFilePath) && !Application.isEditor;
-            useStackTrace = useStackTrace == default ? this.useStackTrace : Application.isEditor;
+            toEditor = toEditor == default ? LogErrorsEnabled : Application.isEditor;
+            toFile = toFile == default ? ToFile : IsNullOrEmpty(LogFilePath) && !Application.isEditor;
+            useStackTrace = useStackTrace == default ? UseStackTrace : Application.isEditor;
             if (toEditor)
             {
-                UnityEngine.Debug.LogFormat(LogType.Error, useStackTrace ? LogOption.None : LogOption.NoStacktrace, context, "{0}.{1}. Line: {2}: {3}", className, method, sourceLineNumber, message);
+                Debug.LogFormat(LogType.Error, useStackTrace ? LogOption.None : LogOption.NoStacktrace, context, "{0}.{1}. Line: {2}: {3}", className, method, sourceLineNumber, message);
             }
 
             if (toFile)
@@ -127,18 +199,18 @@ namespace OcentraAI.LLMGames.Utilities
             }
         }
 
-        public void LogException(string message, Object context, bool toEditor = default, bool toFile = default, bool useStackTrace = true,[CallerMemberName] string method = "", [CallerLineNumber] int sourceLineNumber = 0)
+        public void LogException(string message, Object context, bool toEditor = default, bool toFile = default, bool useStackTrace = true, [CallerMemberName] string method = "", [CallerLineNumber] int sourceLineNumber = 0)
         {
             string className = context.GetType().Name;
             string fullMessage = $"[Exception]{className}.{method}.{sourceLineNumber} : {message}";
 
-            toEditor = toEditor == default ? this.toEditor && logErrorsEnabled : Application.isEditor;
-            toFile = toFile == default ? this.toFile : IsNullOrEmpty(LogFilePath) && !Application.isEditor;
-            useStackTrace = useStackTrace == default ? this.useStackTrace : Application.isEditor;
+            toEditor = toEditor == default ? LogExceptionEnabled : Application.isEditor;
+            toFile = toFile == default ? ToFile : IsNullOrEmpty(LogFilePath) && !Application.isEditor;
+            useStackTrace = useStackTrace == default ? UseStackTrace : Application.isEditor;
 
             if (toEditor)
             {
-                UnityEngine.Debug.LogFormat(LogType.Exception, useStackTrace ? LogOption.None : LogOption.NoStacktrace, context, "{0}.{1}. Line: {2}: {3}", className, method, sourceLineNumber, message);
+                Debug.LogFormat(LogType.Exception, useStackTrace ? LogOption.None : LogOption.NoStacktrace, context, "{0}.{1}. Line: {2}: {3}", className, method, sourceLineNumber, message);
             }
 
             if (toFile)
@@ -146,29 +218,33 @@ namespace OcentraAI.LLMGames.Utilities
                 AddToLogQueue(fullMessage);
             }
         }
-        
+
 
         private async void AddToLogQueue(string message, string level = "Info")
         {
-            if (IsNullOrEmpty(PlayerName) && Application.isPlaying )
+            if (IsNullOrEmpty(PlayerName) && Application.isPlaying)
             {
                 UniTaskCompletionSource<OperationResult<IPlayerData>> uniTaskCompletionSource = new UniTaskCompletionSource<OperationResult<IPlayerData>>();
-                await EventBus.Instance.PublishAsync(new GetLocalPlayer(uniTaskCompletionSource));
+                bool resultOperation = await EventBus.Instance.PublishAsync(new GetLocalPlayerEvent(uniTaskCompletionSource));
 
-                OperationResult<IPlayerData> result = null;
-                try
+                if (resultOperation)
                 {
-                    result = await uniTaskCompletionSource.Task;
-                }
-                catch (Exception ex)
-                {
-                    UnityEngine.Debug.LogError($"Failed to retrieve local player data: {ex.Message}");
+                    OperationResult<IPlayerData> result = null;
+                    try
+                    {
+                        result = await uniTaskCompletionSource.Task;
+                    }
+                    catch (Exception ex)
+                    {
+                        Debug.LogError($"Failed to retrieve local player data: {ex.Message}");
+                    }
+
+                    if (result is { IsSuccess: true })
+                    {
+                        PlayerName = result.Value.PlayerName.Value.Value;
+                    }
                 }
 
-                if (result is { IsSuccess: true })
-                {
-                    PlayerName = result.Value.PlayerName.Value.Value;
-                }
             }
 
 
@@ -178,54 +254,63 @@ namespace OcentraAI.LLMGames.Utilities
                 LogQueue.Enqueue(logEntry);
             }
 
-            if (Time.realtimeSinceStartup - LastFlushTime > LogFrequencyInSeconds)
+            if (Time.realtimeSinceStartup - LastFlushTime > logFrequencyInSeconds)
             {
                 await FlushLogToFile();
                 LastFlushTime = Time.realtimeSinceStartup;
             }
         }
 
+        private readonly SemaphoreSlim fileWriteSemaphore = new SemaphoreSlim(1, 1);
+
         public async UniTask<bool> FlushLogToFile()
         {
+            List<LogEntry> entriesToWrite = new List<LogEntry>();
+
+            // Safely dequeue log entries
+            lock (logQueueLock)
+            {
+                while (LogQueue.Count > 0)
+                {
+                    entriesToWrite.Add(LogQueue.Dequeue());
+                }
+            }
+
+            // Use SemaphoreSlim for asynchronous locking
+            await fileWriteSemaphore.WaitAsync().AsUniTask();
             try
             {
-                List<LogEntry> entriesToWrite = new List<LogEntry>();
-
-                lock (logQueueLock)
+                using (StreamWriter writer = new StreamWriter(LogFilePath, append: true))
                 {
-                    while (LogQueue.Count > 0)
-                    {
-                        entriesToWrite.Add(LogQueue.Dequeue());
-                    }
-                }
-
-                lock (logFilePathWriteLock)
-                {
-                    using StreamWriter writer = new StreamWriter(LogFilePath, append: true);
                     foreach (LogEntry entry in entriesToWrite)
                     {
                         string jsonEntry = JsonConvert.SerializeObject(entry, Formatting.Indented);
-                        writer.WriteLineAsync(jsonEntry).AsUniTask();
+                        await writer.WriteLineAsync(jsonEntry).AsUniTask();
                     }
                 }
-                await UniTask.Yield();
+
+                return true;
             }
             catch (Exception ex)
             {
-                UnityEngine.Debug.LogError($"Failed to write to log file: {ex.Message}");
+                Debug.LogError($"Failed to write to log file: {ex.Message}");
                 return false;
             }
-
-            return true;
+            finally
+            {
+                fileWriteSemaphore.Release(); // Ensure the semaphore is released
+            }
         }
-        
+
+
+
 
         [Button]
         public void ClearLogFile()
         {
             if (IsNullOrEmpty(LogFilePath) || !File.Exists(LogFilePath))
             {
-                UnityEngine.Debug.LogWarning("Log file path is invalid or the file does not exist.");
+                Debug.LogWarning("Log file path is invalid or the file does not exist.");
                 return;
             }
 
@@ -235,15 +320,15 @@ namespace OcentraAI.LLMGames.Utilities
                 {
                     using (StreamWriter writer = new StreamWriter(LogFilePath, false))
                     {
-                        writer.Write(string.Empty);
+                        writer.Write(Empty);
                     }
                 }
 
-                UnityEngine.Debug.Log("Log file cleared successfully.");
+                Debug.Log("Log file cleared successfully.");
             }
             catch (Exception ex)
             {
-                UnityEngine.Debug.LogError($"Failed to clear the log file: {ex.Message}");
+                Debug.LogError($"Failed to clear the log file: {ex.Message}");
             }
         }
 
@@ -251,12 +336,14 @@ namespace OcentraAI.LLMGames.Utilities
         {
             await base.ApplicationWantsToQuit();
 
-            if (toFile)
+            if (ToFile)
             {
                 await FlushLogToFile();
             }
 
             return true;
         }
+
+
     }
 }

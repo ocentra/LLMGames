@@ -20,7 +20,7 @@ namespace OcentraAI.LLMGames.Networking.Manager
 
 
 
-        protected override void SubscribeToEvents()
+        public override void SubscribeToEvents()
         {
             EventBus.Instance.SubscribeAsync<CreateProfileEvent>(OnCreateProfile);
             EventBus.Instance.SubscribeAsync<CreateLobbyEvent>(OnCreateLobby);
@@ -28,7 +28,7 @@ namespace OcentraAI.LLMGames.Networking.Manager
             EventBus.Instance.SubscribeAsync<UpdateLobbyEvent>(OnUpdateLobby);
             EventBus.Instance.SubscribeAsync<PlayerLeftLobbyEvent>(OnPlayerLeave);
         }
-        protected override void UnsubscribeFromEvents()
+        public override void UnsubscribeFromEvents()
         {
             EventBus.Instance.UnsubscribeAsync<CreateProfileEvent>(OnCreateProfile);
             EventBus.Instance.UnsubscribeAsync<CreateLobbyEvent>(OnCreateLobby);

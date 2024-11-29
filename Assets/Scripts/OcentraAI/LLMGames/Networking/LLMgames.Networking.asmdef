@@ -29,7 +29,8 @@
         "LLMGames.Commons",
         "LLMGames.DTO",
         "Unity.Collections",
-        "ParrelSync"
+        "ParrelSync",
+        "LLMGames.GameMode"
     ],
     "includePlatforms": [],
     "excludePlatforms": [],

@@ -43,7 +43,7 @@ MonoBehaviour:
       Data: 0
     - Name: Examples
       Entry: 7
-      Data: 0|OcentraAI.LLMGames.GameModes.GameRulesContainer, LLMGames
+      Data: 0|OcentraAI.LLMGames.GameModes.GameRulesContainer, LLMGames.GameMode
     - Name: LLM
       Entry: 1
       Data: "ThreeOfAKind Three cards of the same rank (2 to K), optionally using
@@ -101,7 +101,7 @@ MonoBehaviour:
       Data: 0
     - Name: Examples
       Entry: 7
-      Data: 0|OcentraAI.LLMGames.GameModes.GameRulesContainer, LLMGames
+      Data: 0|OcentraAI.LLMGames.GameModes.GameRulesContainer, LLMGames.GameMode
     - Name: LLM
       Entry: 1
       Data: "TrumpOfAKind All 3 Trump cards Rank in the hand.\r\nTrumpOfAKind Bonus:
@@ -156,7 +156,7 @@ MonoBehaviour:
       Data: 0
     - Name: Examples
       Entry: 7
-      Data: 0|OcentraAI.LLMGames.GameModes.GameRulesContainer, LLMGames
+      Data: 0|OcentraAI.LLMGames.GameModes.GameRulesContainer, LLMGames.GameMode
     - Name: LLM
       Entry: 1
       Data: "HighCard The highest card in the hand, with the trump card being the
@@ -172,14 +172,14 @@ MonoBehaviour:
 
         Examples:
 
-        
+
 
         Trump
         Examples:
 
-        
 
-        
+
+
 
 '
     - Name: 
@@ -229,11 +229,12 @@ MonoBehaviour:
     - Name: BaseBonusRulesTemplate
       Entry: 7
       Data: 0|System.Collections.Generic.Dictionary`2[[OcentraAI.LLMGames.GameModes.Rules.BaseBonusRule,
-        LLMGames],[OcentraAI.LLMGames.GameModes.CustomRuleState, LLMGames]], mscorlib
+        LLMGames.GameMode],[OcentraAI.LLMGames.GameModes.CustomRuleState, LLMGames.GameMode]],
+        mscorlib
     - Name: comparer
       Entry: 7
       Data: 1|System.Collections.Generic.ObjectEqualityComparer`1[[OcentraAI.LLMGames.GameModes.Rules.BaseBonusRule,
-        LLMGames]], mscorlib
+        LLMGames.GameMode]], mscorlib
     - Name: 
       Entry: 8
       Data: 
@@ -248,7 +249,7 @@ MonoBehaviour:
       Data: 0
     - Name: $v
       Entry: 7
-      Data: 2|OcentraAI.LLMGames.GameModes.CustomRuleState, LLMGames
+      Data: 2|OcentraAI.LLMGames.GameModes.CustomRuleState, LLMGames.GameMode
     - Name: Priority
       Entry: 4
       Data: 86
@@ -272,7 +273,7 @@ MonoBehaviour:
       Data: 1
     - Name: $v
       Entry: 7
-      Data: 3|OcentraAI.LLMGames.GameModes.CustomRuleState, LLMGames
+      Data: 3|OcentraAI.LLMGames.GameModes.CustomRuleState, LLMGames.GameMode
     - Name: Priority
       Entry: 4
       Data: 87
@@ -296,7 +297,7 @@ MonoBehaviour:
       Data: 2
     - Name: $v
       Entry: 7
-      Data: 4|OcentraAI.LLMGames.GameModes.CustomRuleState, LLMGames
+      Data: 4|OcentraAI.LLMGames.GameModes.CustomRuleState, LLMGames.GameMode
     - Name: Priority
       Entry: 4
       Data: 88
@@ -320,7 +321,7 @@ MonoBehaviour:
       Data: 3
     - Name: $v
       Entry: 7
-      Data: 5|OcentraAI.LLMGames.GameModes.CustomRuleState, LLMGames
+      Data: 5|OcentraAI.LLMGames.GameModes.CustomRuleState, LLMGames.GameMode
     - Name: Priority
       Entry: 4
       Data: 89
@@ -344,7 +345,7 @@ MonoBehaviour:
       Data: 4
     - Name: $v
       Entry: 7
-      Data: 6|OcentraAI.LLMGames.GameModes.CustomRuleState, LLMGames
+      Data: 6|OcentraAI.LLMGames.GameModes.CustomRuleState, LLMGames.GameMode
     - Name: Priority
       Entry: 4
       Data: 90
@@ -368,7 +369,7 @@ MonoBehaviour:
       Data: 5
     - Name: $v
       Entry: 7
-      Data: 7|OcentraAI.LLMGames.GameModes.CustomRuleState, LLMGames
+      Data: 7|OcentraAI.LLMGames.GameModes.CustomRuleState, LLMGames.GameMode
     - Name: Priority
       Entry: 4
       Data: 91
@@ -392,7 +393,7 @@ MonoBehaviour:
       Data: 6
     - Name: $v
       Entry: 7
-      Data: 8|OcentraAI.LLMGames.GameModes.CustomRuleState, LLMGames
+      Data: 8|OcentraAI.LLMGames.GameModes.CustomRuleState, LLMGames.GameMode
     - Name: Priority
       Entry: 4
       Data: 95
@@ -416,7 +417,7 @@ MonoBehaviour:
       Data: 7
     - Name: $v
       Entry: 7
-      Data: 9|OcentraAI.LLMGames.GameModes.CustomRuleState, LLMGames
+      Data: 9|OcentraAI.LLMGames.GameModes.CustomRuleState, LLMGames.GameMode
     - Name: Priority
       Entry: 4
       Data: 96
@@ -440,7 +441,7 @@ MonoBehaviour:
       Data: 8
     - Name: $v
       Entry: 7
-      Data: 10|OcentraAI.LLMGames.GameModes.CustomRuleState, LLMGames
+      Data: 10|OcentraAI.LLMGames.GameModes.CustomRuleState, LLMGames.GameMode
     - Name: Priority
       Entry: 4
       Data: 98
@@ -464,7 +465,7 @@ MonoBehaviour:
       Data: 9
     - Name: $v
       Entry: 7
-      Data: 11|OcentraAI.LLMGames.GameModes.CustomRuleState, LLMGames
+      Data: 11|OcentraAI.LLMGames.GameModes.CustomRuleState, LLMGames.GameMode
     - Name: Priority
       Entry: 4
       Data: 100
@@ -503,7 +504,7 @@ MonoBehaviour:
       Data: 10
     - Name: TurnDuration
       Entry: 4
-      Data: 60
+      Data: 10
     - Name: InitialPlayerCoins
       Entry: 3
       Data: 10000
@@ -533,7 +534,7 @@ MonoBehaviour:
       Data: 3
     - Name: GameRules
       Entry: 7
-      Data: 12|OcentraAI.LLMGames.GameModes.GameRulesContainer, LLMGames
+      Data: 12|OcentraAI.LLMGames.GameModes.GameRulesContainer, LLMGames.GameMode
     - Name: LLM
       Entry: 1
       Data: "Three Card Brag: 3 cards dealt each round. Bet blind or see hand. Blind
@@ -602,7 +603,7 @@ MonoBehaviour:
       Data: 
     - Name: GameDescription
       Entry: 7
-      Data: 13|OcentraAI.LLMGames.GameModes.GameRulesContainer, LLMGames
+      Data: 13|OcentraAI.LLMGames.GameModes.GameRulesContainer, LLMGames.GameMode
     - Name: LLM
       Entry: 1
       Data: 'Three Card Brag is an exciting card game that combines elements of poker
@@ -628,7 +629,7 @@ MonoBehaviour:
       Data: 
     - Name: StrategyTips
       Entry: 7
-      Data: 14|OcentraAI.LLMGames.GameModes.GameRulesContainer, LLMGames
+      Data: 14|OcentraAI.LLMGames.GameModes.GameRulesContainer, LLMGames.GameMode
     - Name: LLM
       Entry: 1
       Data: 'Three Card Brag is an exciting card game that combines elements of poker
@@ -660,7 +661,7 @@ MonoBehaviour:
     - Name: BonusRules
       Entry: 7
       Data: 15|System.Collections.Generic.List`1[[OcentraAI.LLMGames.GameModes.Rules.BaseBonusRule,
-        LLMGames]], mscorlib
+        LLMGames.GameMode]], mscorlib
     - Name: 
       Entry: 12
       Data: 10
@@ -702,13 +703,13 @@ MonoBehaviour:
       Data: 
     - Name: CardRankings
       Entry: 7
-      Data: 16|OcentraAI.LLMGames.CardRanking[], LLMGames
+      Data: 16|OcentraAI.LLMGames.CardRanking[], LLMGames.GameMode
     - Name: 
       Entry: 12
       Data: 13
     - Name: 
       Entry: 7
-      Data: OcentraAI.LLMGames.CardRanking, LLMGames
+      Data: OcentraAI.LLMGames.CardRanking, LLMGames.GameMode
     - Name: CardName
       Entry: 1
       Data: A
@@ -720,7 +721,7 @@ MonoBehaviour:
       Data: 
     - Name: 
       Entry: 7
-      Data: OcentraAI.LLMGames.CardRanking, LLMGames
+      Data: OcentraAI.LLMGames.CardRanking, LLMGames.GameMode
     - Name: CardName
       Entry: 1
       Data: K
@@ -732,7 +733,7 @@ MonoBehaviour:
       Data: 
     - Name: 
       Entry: 7
-      Data: OcentraAI.LLMGames.CardRanking, LLMGames
+      Data: OcentraAI.LLMGames.CardRanking, LLMGames.GameMode
     - Name: CardName
       Entry: 1
       Data: Q
@@ -744,7 +745,7 @@ MonoBehaviour:
       Data: 
     - Name: 
       Entry: 7
-      Data: OcentraAI.LLMGames.CardRanking, LLMGames
+      Data: OcentraAI.LLMGames.CardRanking, LLMGames.GameMode
     - Name: CardName
       Entry: 1
       Data: J
@@ -756,7 +757,7 @@ MonoBehaviour:
       Data: 
     - Name: 
       Entry: 7
-      Data: OcentraAI.LLMGames.CardRanking, LLMGames
+      Data: OcentraAI.LLMGames.CardRanking, LLMGames.GameMode
     - Name: CardName
       Entry: 1
       Data: 10
@@ -768,7 +769,7 @@ MonoBehaviour:
       Data: 
     - Name: 
       Entry: 7
-      Data: OcentraAI.LLMGames.CardRanking, LLMGames
+      Data: OcentraAI.LLMGames.CardRanking, LLMGames.GameMode
     - Name: CardName
       Entry: 1
       Data: 9
@@ -780,7 +781,7 @@ MonoBehaviour:
       Data: 
     - Name: 
       Entry: 7
-      Data: OcentraAI.LLMGames.CardRanking, LLMGames
+      Data: OcentraAI.LLMGames.CardRanking, LLMGames.GameMode
     - Name: CardName
       Entry: 1
       Data: 8
@@ -792,7 +793,7 @@ MonoBehaviour:
       Data: 
     - Name: 
       Entry: 7
-      Data: OcentraAI.LLMGames.CardRanking, LLMGames
+      Data: OcentraAI.LLMGames.CardRanking, LLMGames.GameMode
     - Name: CardName
       Entry: 1
       Data: 7
@@ -804,7 +805,7 @@ MonoBehaviour:
       Data: 
     - Name: 
       Entry: 7
-      Data: OcentraAI.LLMGames.CardRanking, LLMGames
+      Data: OcentraAI.LLMGames.CardRanking, LLMGames.GameMode
     - Name: CardName
       Entry: 1
       Data: 6
@@ -816,7 +817,7 @@ MonoBehaviour:
       Data: 
     - Name: 
       Entry: 7
-      Data: OcentraAI.LLMGames.CardRanking, LLMGames
+      Data: OcentraAI.LLMGames.CardRanking, LLMGames.GameMode
     - Name: CardName
       Entry: 1
       Data: 5
@@ -828,7 +829,7 @@ MonoBehaviour:
       Data: 
     - Name: 
       Entry: 7
-      Data: OcentraAI.LLMGames.CardRanking, LLMGames
+      Data: OcentraAI.LLMGames.CardRanking, LLMGames.GameMode
     - Name: CardName
       Entry: 1
       Data: 4
@@ -840,7 +841,7 @@ MonoBehaviour:
       Data: 
     - Name: 
       Entry: 7
-      Data: OcentraAI.LLMGames.CardRanking, LLMGames
+      Data: OcentraAI.LLMGames.CardRanking, LLMGames.GameMode
     - Name: CardName
       Entry: 1
       Data: 3
@@ -852,7 +853,7 @@ MonoBehaviour:
       Data: 
     - Name: 
       Entry: 7
-      Data: OcentraAI.LLMGames.CardRanking, LLMGames
+      Data: OcentraAI.LLMGames.CardRanking, LLMGames.GameMode
     - Name: CardName
       Entry: 1
       Data: 2
@@ -870,7 +871,7 @@ MonoBehaviour:
       Data: 
     - Name: TrumpBonusValues
       Entry: 7
-      Data: 17|OcentraAI.LLMGames.ThreeCardBrag.Rules.TrumpBonusValues, LLMGames
+      Data: 17|OcentraAI.LLMGames.ThreeCardBrag.Rules.TrumpBonusValues, LLMGames.GameMode
     - Name: CardInMiddleBonus
       Entry: 3
       Data: 5
@@ -928,11 +929,11 @@ MonoBehaviour:
     - Name: MoveValidityConditions
       Entry: 7
       Data: 18|System.Collections.Generic.Dictionary`2[[OcentraAI.LLMGames.PossibleMoves,
-        LLMGames],[System.String, mscorlib]], mscorlib
+        LLMGames.GameMode],[System.String, mscorlib]], mscorlib
     - Name: comparer
       Entry: 7
       Data: 19|System.Collections.Generic.EnumEqualityComparer`1[[OcentraAI.LLMGames.PossibleMoves,
-        LLMGames]], mscorlib
+        LLMGames.GameMode]], mscorlib
     - Name: 
       Entry: 12
       Data: 0
@@ -1074,11 +1075,11 @@ MonoBehaviour:
     - Name: BluffSettingConditions
       Entry: 7
       Data: 20|System.Collections.Generic.Dictionary`2[[OcentraAI.LLMGames.DifficultyLevels,
-        LLMGames],[System.String, mscorlib]], mscorlib
+        LLMGames.Commons],[System.String, mscorlib]], mscorlib
     - Name: comparer
       Entry: 7
       Data: 21|System.Collections.Generic.EnumEqualityComparer`1[[OcentraAI.LLMGames.DifficultyLevels,
-        LLMGames]], mscorlib
+        LLMGames.Commons]], mscorlib
     - Name: 
       Entry: 12
       Data: 0
@@ -1136,11 +1137,11 @@ MonoBehaviour:
     - Name: ExampleHandOdds
       Entry: 7
       Data: 22|System.Collections.Generic.Dictionary`2[[OcentraAI.LLMGames.HandType,
-        LLMGames],[System.String, mscorlib]], mscorlib
+        LLMGames.Commons],[System.String, mscorlib]], mscorlib
     - Name: comparer
       Entry: 7
       Data: 23|System.Collections.Generic.EnumEqualityComparer`1[[OcentraAI.LLMGames.HandType,
-        LLMGames]], mscorlib
+        LLMGames.Commons]], mscorlib
     - Name: 
       Entry: 12
       Data: 0
@@ -1238,7 +1239,7 @@ MonoBehaviour:
       Data: 0
     - Name: Examples
       Entry: 7
-      Data: 0|OcentraAI.LLMGames.GameModes.GameRulesContainer, LLMGames
+      Data: 0|OcentraAI.LLMGames.GameModes.GameRulesContainer, LLMGames.GameMode
     - Name: LLM
       Entry: 1
       Data: "StraightFlush A sequence of cards in the same suit, optionally considering
@@ -1253,14 +1254,14 @@ MonoBehaviour:
 
         Examples:
 
-        
+
 
         Trump
         Examples:
 
-        
 
-        
+
+
 
 '
     - Name: 
@@ -1310,7 +1311,7 @@ MonoBehaviour:
       Data: 0
     - Name: Examples
       Entry: 7
-      Data: 0|OcentraAI.LLMGames.GameModes.GameRulesContainer, LLMGames
+      Data: 0|OcentraAI.LLMGames.GameModes.GameRulesContainer, LLMGames.GameMode
     - Name: LLM
       Entry: 1
       Data: "PairRule Exactly one pair of cards with the same rank (2 to A), valid
@@ -1370,7 +1371,7 @@ MonoBehaviour:
       Data: 0
     - Name: Examples
       Entry: 7
-      Data: 0|OcentraAI.LLMGames.GameModes.GameRulesContainer, LLMGames
+      Data: 0|OcentraAI.LLMGames.GameModes.GameRulesContainer, LLMGames.GameMode
     - Name: LLM
       Entry: 1
       Data: "SameColorsSequence A sequence of cards all of the same color (red or
@@ -1387,13 +1388,13 @@ MonoBehaviour:
 
         Examples:
 
-        
+
 
         Trump Examples:
 
-        
 
-        
+
+
 
 '
     - Name: 
@@ -1442,7 +1443,7 @@ MonoBehaviour:
       Data: 0
     - Name: Examples
       Entry: 7
-      Data: 0|OcentraAI.LLMGames.GameModes.GameRulesContainer, LLMGames
+      Data: 0|OcentraAI.LLMGames.GameModes.GameRulesContainer, LLMGames.GameMode
     - Name: LLM
       Entry: 1
       Data: "RoyalFlush A sequence of the highest 3 cards (starting from Ace) all
@@ -1504,7 +1505,7 @@ MonoBehaviour:
       Data: 0
     - Name: Examples
       Entry: 7
-      Data: 0|OcentraAI.LLMGames.GameModes.GameRulesContainer, LLMGames
+      Data: 0|OcentraAI.LLMGames.GameModes.GameRulesContainer, LLMGames.GameMode
     - Name: LLM
       Entry: 1
       Data: "DifferentColorsSequence A sequence of cards with alternating colors
@@ -1521,13 +1522,13 @@ MonoBehaviour:
 
         Examples:
 
-        
+
 
         Trump Examples:
 
-        
 
-        
+
+
 
 '
     - Name: 
@@ -1576,7 +1577,7 @@ MonoBehaviour:
       Data: 0
     - Name: Examples
       Entry: 7
-      Data: 0|OcentraAI.LLMGames.GameModes.GameRulesContainer, LLMGames
+      Data: 0|OcentraAI.LLMGames.GameModes.GameRulesContainer, LLMGames.GameMode
     - Name: LLM
       Entry: 1
       Data: "Flush All cards of the same suit, without forming a sequence, pair,
@@ -1635,7 +1636,7 @@ MonoBehaviour:
       Data: 0
     - Name: Examples
       Entry: 7
-      Data: 0|OcentraAI.LLMGames.GameModes.GameRulesContainer, LLMGames
+      Data: 0|OcentraAI.LLMGames.GameModes.GameRulesContainer, LLMGames.GameMode
     - Name: LLM
       Entry: 1
       Data: "FullHouse Full House with at least 3 of the highest non-trump rank,

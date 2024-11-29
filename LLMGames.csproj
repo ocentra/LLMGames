@@ -62,43 +62,15 @@
     <Analyzer Include="C:\Program Files\Unity\Hub\Editor\6000.0.23f1\Editor\Data\Tools\Unity.SourceGenerators\Unity.UIToolkit.SourceGenerator.dll" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="Assets\Scripts\OcentraAI\LLMGames\Scriptable\ScriptableSingletons\Card.cs" />
-    <Compile Include="Assets\Scripts\OcentraAI\LLMGames\GameMode\CardGames\Card\CardUtility.cs" />
-    <Compile Include="Assets\Scripts\OcentraAI\LLMGames\Scriptable\ScriptableSingletons\TrumpBonusValues.cs" />
-    <Compile Include="Assets\Scripts\OcentraAI\LLMGames\GameMode\CardGames\GameMode.cs" />
     <Compile Include="Assets\Scripts\OcentraAI\LLMGames\Managers\DevCard.cs" />
     <Compile Include="Assets\Scripts\OcentraAI\LLMGames\Players\ComputerLLMPlayer.cs" />
-    <Compile Include="Assets\Scripts\OcentraAI\LLMGames\GameMode\CardGames\Hand\HandUtility.Aggregate.cs" />
     <Compile Include="Assets\Scripts\OcentraAI\LLMGames\LLMServices\ClaudeResponse.cs" />
-    <Compile Include="Assets\Scripts\OcentraAI\LLMGames\GameMode\CardGames\Rules\StraightFlush.cs" />
-    <Compile Include="Assets\Scripts\OcentraAI\LLMGames\GameMode\CardGames\Rules\MultipleTriplets.cs" />
-    <Compile Include="Assets\Scripts\OcentraAI\LLMGames\GameMode\CardGames\Rules\SameColorsSequence.cs" />
-    <Compile Include="Assets\Scripts\OcentraAI\LLMGames\GameMode\CardGames\Hand\HandUtility.TrumpCard.cs" />
-    <Compile Include="Assets\Scripts\OcentraAI\LLMGames\LLMServices\CardRanking.cs" />
-    <Compile Include="Assets\Scripts\OcentraAI\LLMGames\Managers\DeckManager.cs" />
     <Compile Include="Assets\Scripts\OcentraAI\LLMGames\Managers\GameManager.cs" />
     <Compile Include="Assets\Scripts\OcentraAI\LLMGames\Managers\UnityServicesManager.cs" />
-    <Compile Include="Assets\Scripts\OcentraAI\LLMGames\GameMode\CardGames\Hand\HandUtility.IterationOperations.cs" />
-    <Compile Include="Assets\Scripts\OcentraAI\LLMGames\Scriptable\ScriptableSingletons\Deck.cs" />
-    <Compile Include="Assets\Scripts\OcentraAI\LLMGames\GameMode\CardGames\Hand\HandUtility.Comparison.cs" />
-    <Compile Include="Assets\Scripts\OcentraAI\LLMGames\GameMode\CardGames\Hand\HandUtility.Set.cs" />
-    <Compile Include="Assets\Scripts\OcentraAI\LLMGames\GameMode\CardGames\Rules\BonusDetail.cs" />
     <Compile Include="Assets\Scripts\OcentraAI\LLMGames\Players\PlayerAction.cs" />
-    <Compile Include="Assets\Scripts\OcentraAI\LLMGames\GameMode\CardGames\Hand\HandUtility.HandAnalysis.cs" />
-    <Compile Include="Assets\Scripts\OcentraAI\LLMGames\GameMode\CardGames\Rules\FiveOfAKind.cs" />
     <Compile Include="Assets\Scripts\OcentraAI\LLMGames\LLMServices\LocalLLMService.cs" />
-    <Compile Include="Assets\Scripts\OcentraAI\LLMGames\GameMode\CardGames\Rules\FullHouse.cs" />
-    <Compile Include="Assets\Scripts\OcentraAI\LLMGames\GameMode\CardGames\Rules\MultiplePairs.cs" />
-    <Compile Include="Assets\Scripts\OcentraAI\LLMGames\GameMode\CardGames\Rules\GameRulesContainer.cs" />
-    <Compile Include="Assets\Scripts\OcentraAI\LLMGames\GameMode\CardGames\Rules\RoyalFlush.cs" />
-    <Compile Include="Assets\Scripts\OcentraAI\LLMGames\GameMode\CardGames\TestGameMode.cs" />
-    <Compile Include="Assets\Scripts\OcentraAI\LLMGames\GameMode\CardGames\Rules\BaseBonusRule.cs" />
     <Compile Include="Assets\Scripts\OcentraAI\LLMGames\LLMServices\LocalLLMResponse.cs" />
     <Compile Include="Assets\Scripts\OcentraAI\LLMGames\LLMServices\Choice.cs" />
-    <Compile Include="Assets\Scripts\OcentraAI\LLMGames\Managers\TurnTimer.cs" />
-    <Compile Include="Assets\Scripts\OcentraAI\LLMGames\GameMode\CardGames\Hand\HandUtility.InPlaceNonAlocc.cs" />
-    <Compile Include="Assets\Scripts\OcentraAI\LLMGames\LLMServices\PossibleMoves.cs" />
-    <Compile Include="Assets\Scripts\OcentraAI\LLMGames\GameMode\CardGames\Rules\PairRule.cs" />
     <Compile Include="Assets\Scripts\OcentraAI\LLMGames\Players\LLMPlayer.cs" />
     <Compile Include="Assets\Scripts\OcentraAI\LLMGames\LLMServices\OpenAIService.cs" />
     <Compile Include="Assets\Scripts\OcentraAI\LLMGames\LLMServices\ILLMService.cs" />
@@ -107,40 +79,21 @@
     <Compile Include="Assets\Scripts\OcentraAI\LLMGames\Managers\RoundRecord.cs" />
     <Compile Include="Assets\Scripts\OcentraAI\LLMGames\Editor\CombineCSFilesEditor.cs" />
     <Compile Include="Assets\Scripts\OcentraAI\LLMGames\LLMServices\Result.cs" />
-    <Compile Include="Assets\Scripts\OcentraAI\LLMGames\GameMode\CardGames\Utility\UnityRandom.cs" />
-    <Compile Include="Assets\Scripts\OcentraAI\LLMGames\GameMode\CardGames\Hand\HandUtility.Symbol.cs" />
-    <Compile Include="Assets\Scripts\OcentraAI\LLMGames\GameMode\CardGames\Utility\IRandom.cs" />
-    <Compile Include="Assets\Scripts\OcentraAI\LLMGames\GameMode\CardGames\Rules\DifferentColorsSequence.cs" />
-    <Compile Include="Assets\Scripts\OcentraAI\LLMGames\GameMode\CardGames\Rules\FourOfAKind.cs" />
     <Compile Include="Assets\Scripts\OcentraAI\LLMGames\LLMServices\AzureOpenAIService.cs" />
     <Compile Include="Assets\Scripts\OcentraAI\LLMGames\Editor\CardEditor.cs" />
-    <Compile Include="Assets\Scripts\OcentraAI\LLMGames\Managers\ITurnTimer.cs" />
-    <Compile Include="Assets\Scripts\OcentraAI\LLMGames\GameMode\CardGames\Rules\HighCard.cs" />
     <Compile Include="Assets\Scripts\OcentraAI\LLMGames\Editor\CardAssetPostprocessor.cs" />
-    <Compile Include="Assets\Scripts\OcentraAI\LLMGames\GameMode\CardGames\Hand\HandUtility.Misc.cs" />
-    <Compile Include="Assets\Scripts\OcentraAI\LLMGames\GameMode\CardGames\Rules\MultipleFourOfAKind.cs" />
-    <Compile Include="Assets\Scripts\OcentraAI\LLMGames\GameMode\CardGames\Hand\HandUtility.Basic.cs" />
     <Compile Include="Assets\Scripts\OcentraAI\LLMGames\Editor\GameModeEditor.cs" />
-    <Compile Include="Assets\Scripts\OcentraAI\LLMGames\GameMode\CardGames\CustomRuleState.cs" />
     <Compile Include="Assets\Scripts\OcentraAI\LLMGames\Managers\PlayerManager.cs" />
     <Compile Include="Assets\Scripts\OcentraAI\LLMGames\LLMServices\OpenAIResponse.cs" />
     <Compile Include="Assets\Scripts\OcentraAI\LLMGames\Managers\ScoreManager.cs" />
     <Compile Include="Assets\Scripts\OcentraAI\LLMGames\LLMServices\BaseLLMService.cs" />
-    <Compile Include="Assets\Scripts\OcentraAI\LLMGames\GameMode\CardGames\Hand\Hand.cs" />
     <Compile Include="Assets\Scripts\OcentraAI\LLMGames\Managers\DevModeManager.cs" />
     <Compile Include="Assets\Scripts\OcentraAI\LLMGames\LLMServices\LLMServiceFactory.cs" />
     <Compile Include="Assets\Scripts\OcentraAI\LLMGames\LLMServices\ClaudeService.cs" />
-    <Compile Include="Assets\Scripts\OcentraAI\LLMGames\GameMode\CardGames\Hand\HandUtility.RuleRelated.cs" />
-    <Compile Include="Assets\Scripts\OcentraAI\LLMGames\GameMode\CardGames\Rules\Flush.cs" />
     <Compile Include="Assets\Scripts\OcentraAI\LLMGames\Scores\RoundScore.cs" />
     <Compile Include="Assets\Scripts\OcentraAI\LLMGames\Managers\TurnManager.cs" />
     <Compile Include="Assets\Scripts\OcentraAI\LLMGames\Editor\DevModeManagerEditor.cs" />
-    <Compile Include="Assets\Scripts\OcentraAI\LLMGames\GameMode\CardGames\ThreeCardGameMode.cs" />
-    <Compile Include="Assets\Scripts\OcentraAI\LLMGames\GameMode\CardGames\Rules\TrumpOfAKind.cs" />
-    <Compile Include="Assets\Scripts\OcentraAI\LLMGames\GameMode\CardGames\Rules\ThreeOfAKind.cs" />
-    <Compile Include="Assets\Scripts\OcentraAI\LLMGames\GameMode\CardGames\Card\CardExtensions.cs" />
     <Compile Include="Assets\Scripts\OcentraAI\LLMGames\LLMServices\LLMManager.cs" />
-    <Compile Include="Assets\Scripts\OcentraAI\LLMGames\GameMode\CardGames\Hand\HandUtility.LinqLike.cs" />
     <Compile Include="Assets\Scripts\OcentraAI\LLMGames\Editor\GameRulesContainerDrawer.cs" />
     <Compile Include="Assets\Scripts\OcentraAI\LLMGames\Players\HumanLLMPlayer.cs" />
   </ItemGroup>
@@ -1401,6 +1354,10 @@
     <ProjectReference Include="Unity.Collections.csproj">
       <Project>{C016C931-2C4F-32AC-8071-5ADBD82246BC}</Project>
       <Name>Unity.Collections</Name>
+    </ProjectReference>
+    <ProjectReference Include="LLMGames.GameMode.csproj">
+      <Project>{4BE6DBA6-06A1-E222-A3B0-F76BF0D76711}</Project>
+      <Name>LLMGames.GameMode</Name>
     </ProjectReference>
     <ProjectReference Include="UnityEditor.UI.csproj">
       <Project>{D91F857F-6876-E8DC-AE39-193904D1856F}</Project>

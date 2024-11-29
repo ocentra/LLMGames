@@ -71,17 +71,19 @@ namespace OcentraAI.LLMGames.UI.Managers
             Init();
             SetMainTableElements();
         }
+        
 
-        protected override void OnEnable()
+
+        public override void SubscribeToEvents()
         {
+            base.SubscribeToEvents();
             EventBus.Instance.SubscribeAsync<InitializeUIPlayersEvent<LLMPlayer>>(OnInitializeUIPlayers);
-
         }
 
-        protected override void OnDisable()
+        public override void UnsubscribeFromEvents()
         {
+            base.UnsubscribeFromEvents();
             EventBus.Instance.UnsubscribeAsync<InitializeUIPlayersEvent<LLMPlayer>>(OnInitializeUIPlayers);
-
         }
 
         private UniTask OnInitializeUIPlayers(InitializeUIPlayersEvent<LLMPlayer> initializeUIPlayers)
@@ -100,7 +102,7 @@ namespace OcentraAI.LLMGames.UI.Managers
                 }
             }
 
-            foreach (var (player, playerUI) in matchedPlayerUIs)
+            foreach ((LLMPlayer player, PlayerUI playerUI) in matchedPlayerUIs)
             {
                 playerUI.SetPlayer(player);
                 playerUI.ShowTimer(false);
@@ -161,10 +163,11 @@ namespace OcentraAI.LLMGames.UI.Managers
             AllPlayerUI = transform.GetComponentsInChildren<PlayerUI>(true);
             elementPositions = FindObjectsByType<ElementPosition>(FindObjectsSortMode.None);
 
-            for (int i = 0; i < elementPositions.Length; i++)
+            foreach (ElementPosition elementPosition in elementPositions)
             {
-                elementPositions[i].MainTableUI = this;
+                elementPosition.SetPlayerCount(PlayerCount);
             }
+            
         }
 
 
@@ -248,7 +251,7 @@ namespace OcentraAI.LLMGames.UI.Managers
         {
             for (int i = 0; i < elementPositions.Length; i++)
             {
-                elementPositions[i].MainTableUI = this;
+                elementPositions[i].SetPlayerCount(PlayerCount);
                 elementPositions[i].HandlePlayerCountChanged();
             }
 
@@ -322,7 +325,7 @@ namespace OcentraAI.LLMGames.UI.Managers
             {
                 Transform childTransform = playerPosition.transform.GetChild(0);
 
-                PlayerUI component = childTransform.GetComponent<PlayerUI>();
+                IPlayerUI component = childTransform.GetComponent<IPlayerUI>();
                 if (component != null)
                 {
                     component.SetPlayerIndex(playerPosition.PlayerIndex);
@@ -361,5 +364,7 @@ namespace OcentraAI.LLMGames.UI.Managers
             }
 #endif
         }
+
+
     }
 }

@@ -88,7 +88,6 @@
     <Compile Include="Assets\TextMesh Pro\Examples &amp; Extras\Scripts\TMP_TextSelector_B.cs" />
     <Compile Include="Assets\Scripts\MultiplayerManager.cs" />
     <Compile Include="Assets\TextMesh Pro\Examples &amp; Extras\Scripts\TMP_TextInfoDebugTool.cs" />
-    <Compile Include="Assets\Scripts\RoslynTest.cs" />
     <Compile Include="Assets\TextMesh Pro\Examples &amp; Extras\Scripts\TMP_DigitValidator.cs" />
     <Compile Include="Assets\TextMesh Pro\Examples &amp; Extras\Scripts\Benchmark01.cs" />
     <Compile Include="Assets\TextMesh Pro\Examples &amp; Extras\Scripts\TextMeshSpawner.cs" />
@@ -1842,6 +1841,10 @@
     <ProjectReference Include="Unity.2D.SpriteShape.Editor.csproj">
       <Project>{78D3CA34-1D2F-C149-6A2D-E6A598DEAB67}</Project>
       <Name>Unity.2D.SpriteShape.Editor</Name>
+    </ProjectReference>
+    <ProjectReference Include="LLMGames.GameMode.csproj">
+      <Project>{4BE6DBA6-06A1-E222-A3B0-F76BF0D76711}</Project>
+      <Name>LLMGames.GameMode</Name>
     </ProjectReference>
     <ProjectReference Include="Unity.Multiplayer.Tools.NetVis.Configuration.csproj">
       <Project>{2BF0E8D9-3486-BF9D-C094-D6B8C26850C5}</Project>

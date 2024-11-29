@@ -11,8 +11,11 @@ GameObject:
   - component: {fileID: 230803243370014002}
   - component: {fileID: 3040201925165019529}
   - component: {fileID: 1051292432186322544}
+  - component: {fileID: 4242455543583800734}
+  - component: {fileID: 6916408058262558625}
+  - component: {fileID: 3615075625192412183}
   m_Layer: 0
-  m_Name: GameStartManager
+  m_Name: NetworkGameManager
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -45,7 +48,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: d5a57f767e5e46a458fc5d3c628d0cbb, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  GlobalObjectIdHash: 2602122691
+  GlobalObjectIdHash: 340318201
   InScenePlacedSourceGlobalObjectIdHash: 0
   DeferredDespawnTick: 0
   Ownership: 1
@@ -72,3 +75,47 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   ShowTopMostFoldoutHeaderGroup: 1
   SceneToLoad: Assets/Scenes/ThreeCardBrag.unity
+  gameMode: {fileID: 11400000, guid: 733bab288dca6884d9e3bf5a2afbc107, type: 2}
+--- !u!114 &4242455543583800734
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 3883575402071216308}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 94b6ee14c040d6e448138b2b61c0fc00, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  ShowTopMostFoldoutHeaderGroup: 1
+  EditorLog: 0
+  gameMode: {fileID: 0}
+--- !u!114 &6916408058262558625
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 3883575402071216308}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: a023cae69a21fd846adfa0ce0461b6bc, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  ShowTopMostFoldoutHeaderGroup: 1
+  gameMode: {fileID: 11400000, guid: 733bab288dca6884d9e3bf5a2afbc107, type: 2}
+--- !u!114 &3615075625192412183
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 3883575402071216308}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 49059a047bb343c46bd327635825942c, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  ShowTopMostFoldoutHeaderGroup: 1
+  gameMode: {fileID: 11400000, guid: 733bab288dca6884d9e3bf5a2afbc107, type: 2}

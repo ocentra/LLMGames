@@ -816,7 +816,7 @@ MonoBehaviour:
   originalGreenMaterial: {fileID: 2100000, guid: de7cb652574698a43811e361d9724dc3,
     type: 2}
   originalRedMaterial: {fileID: 2100000, guid: 025ae8b54a7046d46bdc94ac188fb0f6, type: 2}
-  PlayerIndex: 0
+  playerIndex: 0
 --- !u!4 &6363289220436177504 stripped
 Transform:
   m_CorrespondingSourceObject: {fileID: -8679921383154817045, guid: dbbec461f9950ad4597cf6f2839ca161,

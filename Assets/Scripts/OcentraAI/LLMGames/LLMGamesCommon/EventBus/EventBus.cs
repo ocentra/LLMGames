@@ -15,13 +15,14 @@ using UnityEditor;
 
 using UnityEngine;
 using Assembly = System.Reflection.Assembly;
-using Object = UnityEngine.Object;
 using System.Reflection;
 using System.IO;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
 using Microsoft.CodeAnalysis.CSharp;
 using System.Diagnostics;
 using System.Collections.Concurrent;
+using System.Threading.Tasks;
+using System.Diagnostics.Tracing;
 
 namespace OcentraAI.LLMGames.Events
 {
@@ -33,86 +34,72 @@ namespace OcentraAI.LLMGames.Events
 
 
         private GameLoggerScriptable GameLoggerScriptable => GameLoggerScriptable.Instance;
-        private object LockObj { get; } = new object();
 
         [ShowInInspector, DictionaryDrawerSettings(DisplayMode = DictionaryDisplayOptions.ExpandedFoldout)]
-        private Dictionary<Type, List<Delegate>> Subscribers { get; } = new Dictionary<Type, List<Delegate>>();
+        private ConcurrentDictionary<Type, List<Delegate>> Subscribers { get; } = new ConcurrentDictionary<Type, List<Delegate>>();
 
         [ShowInInspector, DictionaryDrawerSettings(DisplayMode = DictionaryDisplayOptions.ExpandedFoldout)]
-        private Dictionary<Type, List<Delegate>> AsyncSubscribers { get; } = new Dictionary<Type, List<Delegate>>();
+        private ConcurrentDictionary<Type, List<Delegate>> AsyncSubscribers { get; } = new ConcurrentDictionary<Type, List<Delegate>>();
 
         [ShowInInspector, DictionaryDrawerSettings(DisplayMode = DictionaryDisplayOptions.ExpandedFoldout)]
-        private Dictionary<Type, Queue<SubscribeQueue> > QueuedEvents { get; } = new Dictionary<Type, Queue<SubscribeQueue>>();
-
-        [ShowInInspector, ReadOnly] private bool IsInitialized { get; set; }
+        private ConcurrentDictionary<Type, ConcurrentQueue<SubscribeQueue>> QueuedEvents { get; } = new ConcurrentDictionary<Type, ConcurrentQueue<SubscribeQueue>>();
         [ShowInInspector] private float InitializationTimeout { get; set; } = 5f;
         [ShowInInspector] private float CheckInterval { get; set; } = 0.1f;
 
         [SerializeField]
         public class SubscribeQueue
         {
-            public IEventArgs IEventArgs { get; }
+            public IEventArgs Event { get; }
             public List<Type> MonoList { get; }
-            public SubscribeQueue(IEventArgs eventArgs, List<Type> monoList)
+            public SubscribeQueue(IEventArgs @event, List<Type> monoList)
             {
-                IEventArgs = eventArgs;
+                Event = @event;
                 MonoList = monoList;
             }
         }
 
         public void Subscribe<T>(Action<T> subscriber) where T : IEventArgs
         {
-            lock (LockObj)
+            Type eventType = typeof(T);
+            if (!Subscribers.TryGetValue(eventType, out List<Delegate> subscriberList))
             {
-                Type eventType = typeof(T);
-                if (!Subscribers.TryGetValue(eventType, out List<Delegate> subscriberList))
-                {
-                    subscriberList = new List<Delegate>();
-                    Subscribers[eventType] = subscriberList;
-                }
-
-                subscriberList.Add(subscriber);
-                ProcessQueuedEvents<T>();
+                subscriberList = new List<Delegate>();
+                Subscribers[eventType] = subscriberList;
             }
+
+            subscriberList.Add(subscriber);
+
+            ProcessQueuedEventsAsync<T>().Forget();
+
         }
 
         public void SubscribeAsync<T>(Func<T, UniTask> subscriber) where T : IEventArgs
         {
-            lock (LockObj)
+            Type eventType = typeof(T);
+            if (!AsyncSubscribers.TryGetValue(eventType, out List<Delegate> subscriberList))
             {
-                Type eventType = typeof(T);
-                if (!AsyncSubscribers.TryGetValue(eventType, out List<Delegate> subscriberList))
-                {
-                    subscriberList = new List<Delegate>();
-                    AsyncSubscribers[eventType] = subscriberList;
-                }
-
-                subscriberList.Add(subscriber);
-                ProcessQueuedEvents<T>();
+                subscriberList = new List<Delegate>();
+                AsyncSubscribers[eventType] = subscriberList;
             }
+
+            subscriberList.Add(subscriber);
+
+            ProcessQueuedEventsAsync<T>().Forget();
         }
 
         public void Unsubscribe<T>(Action<T> subscriber) where T : IEventArgs
         {
-            lock (LockObj)
+            if (Subscribers.TryGetValue(typeof(T), out List<Delegate> subscriberList))
             {
-                Type eventType = typeof(T);
-                if (Subscribers.TryGetValue(eventType, out List<Delegate> subscriberList))
-                {
-                    subscriberList.Remove(subscriber);
-                }
+                subscriberList.Remove(subscriber);
             }
         }
 
         public void UnsubscribeAsync<T>(Func<T, UniTask> subscriber) where T : IEventArgs
         {
-            lock (LockObj)
+            if (AsyncSubscribers.TryGetValue(typeof(T), out List<Delegate> subscriberList))
             {
-                Type eventType = typeof(T);
-                if (AsyncSubscribers.TryGetValue(eventType, out List<Delegate> subscriberList))
-                {
-                    subscriberList.RemoveAll(s => s.Target == subscriber.Target && s.Method == subscriber.Method);
-                }
+                subscriberList.RemoveAll(s => s.Target == subscriber.Target && s.Method == subscriber.Method);
             }
         }
 
@@ -120,11 +107,6 @@ namespace OcentraAI.LLMGames.Events
         {
             try
             {
-                if (!IsInitialized)
-                {
-                    InitializeAsync(eventArgs).Forget();
-                }
-
                 PublishInternal(eventArgs, false).Forget();
             }
             catch (Exception ex)
@@ -137,16 +119,6 @@ namespace OcentraAI.LLMGames.Events
         {
             try
             {
-                if (!IsInitialized)
-                {
-                    bool initialized = await InitializeAsync(eventArgs);
-                    if (!initialized)
-                    {
-                        GameLoggerScriptable.LogError("Initialization failed, cannot publish eventUsageInfos.", this);
-                        return false;
-                    }
-                }
-
                 return await PublishInternal(eventArgs, true);
             }
             catch (Exception ex)
@@ -156,22 +128,81 @@ namespace OcentraAI.LLMGames.Events
             }
         }
 
-        private async UniTask<bool> PublishInternal<T>(T eventArgs, bool awaitAsyncSubscribers)
-            where T : IEventArgs
+        private async UniTask<bool> PublishInternal<T>(T eventArgs, bool awaitAsyncSubscribers) where T : IEventArgs
         {
-            List<Delegate> subscriberList;
-            List<Delegate> asyncSubscriberList;
 
-            lock (LockObj)
+            bool eventHandled = await HandlePublishActionAsync(eventArgs, awaitAsyncSubscribers);
+
+            if (!eventHandled)
             {
-                Type eventType = typeof(T);
-                subscriberList = Subscribers.TryGetValue(eventType, out List<Delegate> tempList)
-                    ? tempList.ToList()
-                    : null;
-                asyncSubscriberList = AsyncSubscribers.TryGetValue(eventType, out List<Delegate> asyncTempList)
-                    ? asyncTempList.ToList()
-                    : null;
+                await UniTask.WaitForSeconds(2);
+
+                if (expectedEventTypes is { Count: > 0 })
+                {
+                    OperationResult<List<Type>> result = await TryGetSubscribers(eventArgs, expectedEventTypes);
+
+                    if (result.IsSuccess)
+                    {
+                        List<Type> potentialSubscribers = result.Value;
+
+                        if (potentialSubscribers is { Count: > 0 })
+                        {
+                            bool allSubscribersHandled = true;
+
+                            foreach (Type type in potentialSubscribers)
+                            {
+                                bool isHandled = Subscribers.ContainsKey(type) || AsyncSubscribers.ContainsKey(type);
+
+                                if (!isHandled)
+                                {
+                                    allSubscribersHandled = false;
+                                    break;
+                                }
+                            }
+
+                            if (!allSubscribersHandled)
+                            {
+                                bool success = await QueueEvent(eventArgs, potentialSubscribers);
+
+                                if (success)
+                                {
+                                    GameLoggerScriptable.LogWarning($"Event of type {typeof(T).Name} was published but " +
+                                                                    $"not all potential subscribers are registered. Queuing for later processing.", this);
+                                }
+                                else
+                                {
+                                    GameLoggerScriptable.LogError($"Failed to queue event of type {typeof(T).Name}.", this);
+                                    return false;
+                                }
+                            }
+                        }
+                        else
+                        {
+                            GameLoggerScriptable.LogError($"Event of type {typeof(T).Name} was published but has no subscribers and is not part of expected event types.", this);
+                            return false;
+                        }
+                    }
+                    else
+                    {
+                      //  GameLoggerScriptable.LogError($"Failed to Get expected event types for {typeof(T).Name}.", this);
+                        return false;
+                    }
+                }
+                else
+                {
+                    GameLoggerScriptable.LogError($"Event of type {typeof(T).Name} was published with no subscribers and no expected types.", this);
+                    return false;
+                }
             }
+
+            return eventHandled;
+        }
+
+        private async UniTask<bool> HandlePublishActionAsync<T>(T eventArgs, bool awaitAsyncSubscribers) where T : IEventArgs
+        {
+            List<Delegate> subscriberList = Subscribers.TryGetValue(typeof(T), out List<Delegate> tempList) ? tempList.ToList() : null;
+
+            List<Delegate> asyncSubscriberList = AsyncSubscribers.TryGetValue(typeof(T), out List<Delegate> asyncTempList) ? asyncTempList.ToList() : null;
 
             bool eventHandled = false;
 
@@ -185,8 +216,7 @@ namespace OcentraAI.LLMGames.Events
                     }
                     catch (Exception ex)
                     {
-                        GameLoggerScriptable.LogError(
-                            $"Error in subscriber for event type {typeof(T).Name}: {ex.Message} {ex.StackTrace}", this);
+                        GameLoggerScriptable.LogError($"Error in subscriber for event type {typeof(T).Name}: {ex.Message} {ex.StackTrace}", this);
                     }
                 }
 
@@ -213,185 +243,286 @@ namespace OcentraAI.LLMGames.Events
                     }
                     catch (Exception ex)
                     {
-                        GameLoggerScriptable.LogError(
-                            $"Error in async subscriber for event type {typeof(T).Name}: {ex.Message} {ex.StackTrace}",
-                            this);
+                        GameLoggerScriptable.LogError($"Error in async subscriber for event type {typeof(T).Name}: {ex.Message} {ex.StackTrace}", this);
                     }
                 }
 
                 eventHandled = true;
             }
 
-            if (!eventHandled)
-            {
-               
-                if (TryGetSubscribers(eventArgs, out List<Type> gameObjects))
-                {
-                    GameLoggerScriptable.LogError($"Event of type {typeof(T).Name} was published but has no subscribers. Queueing for later processing.", this);
-                    QueueEvent(eventArgs, gameObjects);
-                }
-                else
-                {
-                    GameLoggerScriptable.LogError($"Event of type {typeof(T).Name} was published but has no subscribers and is not registered as an expected event type.", this);
-                }
-            }
-
+            await UniTask.Yield();
             return eventHandled;
         }
 
-        private async UniTask<bool> InitializeAsync(IEventArgs eventArgs)
+        public async UniTask<OperationResult<List<Type>>> TryGetSubscribers<T>(T eventArgs, List<EventUsageInfo> eventUsageInfos)
         {
-            float elapsedTime = 0f;
-
-            while (elapsedTime < InitializationTimeout && !AreAllExpectedSubscribersInitialized())
+            List<Type> subscribers = new List<Type>();
+            try
             {
-                await UniTask.Delay(TimeSpan.FromSeconds(CheckInterval));
-                elapsedTime += CheckInterval;
-            }
 
-            if (!AreAllExpectedSubscribersInitialized())
-            {
-                GameLoggerScriptable.LogError("Timeout: Not all expected subscribers were initialized.", this);
-                return false;
-            }
-
-            IsInitialized = true;
-            return true;
-        }
-
-
-        private bool AreAllExpectedSubscribersInitialized()
-        {
-            lock (LockObj)
-            {
-                //return ExpectedEventTypes.All(eventType =>
-                //    (Subscribers.ContainsKey(eventType) && Subscribers[eventType].Count > 0) ||
-                //    (AsyncSubscribers.ContainsKey(eventType) && AsyncSubscribers[eventType].Count > 0));
-                return true;
-            }
-        }
-
-        private void QueueEvent<T>(T eventArgs, List<Type> monoList) where T : IEventArgs
-        {
-            lock (LockObj)
-            {
-                Type eventType = typeof(T);
-
-                
-                if (!QueuedEvents.TryGetValue(eventType, out Queue<SubscribeQueue> eventQueue))
+                if (eventUsageInfos is { Count: > 0 })
                 {
-                    eventQueue = new Queue<SubscribeQueue>();
-                    QueuedEvents[eventType] = eventQueue;
-                }
-
-                
-                SubscribeQueue queueItem = new SubscribeQueue(eventArgs, monoList);
-                eventQueue.Enqueue(queueItem);
-            }
-        }
-
-
-
-        private void ProcessQueuedEvents<T>() where T : IEventArgs
-        {
-            lock (LockObj)
-            {
-                Type eventType = typeof(T);
-                if (QueuedEvents.TryGetValue(eventType, out Queue<SubscribeQueue> eventQueue) && eventQueue != null)
-                {
-                    while (eventQueue.Count > 0)
+                    foreach (EventUsageInfo eventUsageInfo in eventUsageInfos)
                     {
-                        SubscribeQueue queuedEvent = eventQueue.Peek(); // Peek first to check
-                        bool hasActiveSubscriber = false;
-
-                        // Check for active subscribers
-                        foreach (Type type in queuedEvent.MonoList)
+                        foreach (ScriptInfo subscriber in eventUsageInfo.SubscribeMethods)
                         {
-                            if (Object.FindObjectsByType(type, FindObjectsSortMode.None) is MonoBehaviour[] monoBehaviours)
+                            if (eventUsageInfo.ScriptInfo.ScriptType == typeof(T) && typeof(MonoBehaviour).IsAssignableFrom(subscriber.ScriptType))
                             {
-                                foreach (MonoBehaviour mono in monoBehaviours)
-                                {
-                                    if (mono != null && mono.gameObject != null && mono.gameObject.activeInHierarchy)
-                                    {
-                                        hasActiveSubscriber = true;
-                                        break;
-                                    }
-                                }
+                                subscribers.Add(subscriber.ScriptType);
                             }
-                            if (hasActiveSubscriber) break;
-                        }
-
-                        if (hasActiveSubscriber)
-                        {
-                            eventQueue.Dequeue(); // Only dequeue if we found an active subscriber
-                            PublishInternal((T)queuedEvent.IEventArgs, false).Forget();
-                        }
-                        else
-                        {
-                            break; // No active subscribers, keep event in queue
                         }
                     }
                 }
+                await UniTask.Yield();
+
+                return new OperationResult<List<Type>>(false, subscribers, 0, "Players not ready after maximum retries");
             }
+            catch (Exception e)
+            {
+                GameLoggerScriptable.LogException($"TryGetSubscribers failed: {e.Message} {e.StackTrace}", this);
+
+                return new OperationResult<List<Type>>(false, null, 0, e.Message);
+
+            }
+
         }
 
 
+        private async UniTask<bool> QueueEvent<T>(T eventArgs, List<Type> monoList) where T : IEventArgs
+        {
+            try
+            {
+                Type eventType = typeof(T);
 
+                if (!QueuedEvents.TryGetValue(eventType, out ConcurrentQueue<SubscribeQueue> eventQueue))
+                {
+                    eventQueue = new ConcurrentQueue<SubscribeQueue>();
+                    QueuedEvents[eventType] = eventQueue;
+                }
+
+                eventQueue.Enqueue(new SubscribeQueue(eventArgs, monoList));
+
+                await UniTask.Yield();
+                return true;
+            }
+            catch (Exception e)
+            {
+                GameLoggerScriptable.LogException($"QueueEvent failed: {e.Message} {e.StackTrace}", this);
+                return false;
+            }
+        }
+
+        private async UniTask ProcessQueuedEventsAsync<T>() where T : IEventArgs
+        {
+            Type eventType = typeof(T);
+
+            if (QueuedEvents.TryGetValue(eventType, out ConcurrentQueue<SubscribeQueue> eventQueue) && eventQueue != null)
+            {
+                ConcurrentQueue<SubscribeQueue> tempQueue = new();
+                const int batchSize = 10;
+
+                while (!eventQueue.IsEmpty)
+                {
+                    for (int i = 0; i < batchSize && eventQueue.TryDequeue(out SubscribeQueue queuedItem); i++)
+                    {
+                        bool allSubscribersHandled = true;
+
+                        foreach (Type type in queuedItem.MonoList)
+                        {
+                            if (!Subscribers.ContainsKey(type) && !AsyncSubscribers.ContainsKey(type))
+                            {
+                                allSubscribersHandled = false;
+                                break;
+                            }
+                        }
+
+                        try
+                        {
+                            if (allSubscribersHandled)
+                            {
+                                await HandlePublishActionAsync((T)queuedItem.Event, false).Timeout(TimeSpan.FromSeconds(5));
+                            }
+                            else
+                            {
+                              
+                                tempQueue.Enqueue(queuedItem);
+                            }
+                        }
+                        catch (TimeoutException)
+                        {
+                            GameLoggerScriptable.LogError($"Timeout occurred while processing PublishAction for event type {eventType}", this);
+                        }
+                        catch (Exception ex)
+                        {
+                            GameLoggerScriptable.LogException($"Unexpected error during PublishAction for event type {eventType}: {ex.Message}\n{ex.StackTrace}", this);
+                        }
+                    }
+
+                    await UniTask.Yield(); 
+                }
+
+                if (!tempQueue.IsEmpty)
+                {
+                    QueuedEvents[eventType] = tempQueue;
+                }
+                else
+                {
+                    QueuedEvents.TryRemove(eventType, out _); 
+                }
+            }
+        }
 
 
 
         public void Clear()
         {
-            lock (LockObj)
+            // Ensure any ongoing event processing is safely terminated before clearing
+            if (!Subscribers.IsEmpty || !AsyncSubscribers.IsEmpty || !QueuedEvents.IsEmpty)
             {
-                Subscribers.Clear();
-                AsyncSubscribers.Clear();
-                QueuedEvents.Clear();
-                IsInitialized = false;
+                GameLoggerScriptable.LogWarning("EventBus is being cleared. All current subscribers and queued events will be removed.", this);
             }
+
+            Subscribers.Clear(); 
+            AsyncSubscribers.Clear(); 
+            QueuedEvents.Clear(); 
         }
+
 
         #endregion
 
 
 
-#if UNITY_EDITOR
-
-        [SerializeField, HideInInspector]
+        [SerializeField, ShowInInspector, FoldoutGroup("Event Settings")]
         private List<EventUsageInfo> expectedEventTypes = new List<EventUsageInfo>();
 
-        [SerializeField, HideInInspector]
+        [SerializeField, ShowInInspector, FoldoutGroup("Event Settings")]
         private List<ScriptInfo> consumerScripts = new List<ScriptInfo>();
-
-        [ShowInInspector, FoldoutGroup("Event Settings")]
-        public List<EventUsageInfo> ExpectedEventTypes => expectedEventTypes;
 
         [FoldoutGroup("Event Settings"), FolderPath(AbsolutePath = false)]
         public string MainDirectoryName = "Assets/Scripts/OcentraAI/LLMGames/LLMGamesCommon/EventBus/";
 
         [ShowInInspector, FoldoutGroup("Event Settings")]
-        public List<MonoScript> ConsumerScripts = new List<MonoScript>();
+        protected List<MonoScript> EventScripts = new List<MonoScript>();
 
-        [ShowInInspector, FoldoutGroup("Event Settings")]
-        public List<MonoScript> EventScripts = new List<MonoScript>();
+        [SerializeField, ShowInInspector, FoldoutGroup("Event Settings")]
+        protected List<MonoScript> UnusedScripts = new List<MonoScript>();
 
-        [SerializeField,ShowInInspector, FoldoutGroup("Event Settings")]
-        public List<MonoScript> UnusedScripts = new List<MonoScript>();
+        [SerializeField, ShowInInspector, FoldoutGroup("Event Settings")]
+        protected List<MonoScript> NoTypeMatch = new List<MonoScript>();
 
-        [SerializeField,ShowInInspector, FoldoutGroup("Event Settings")]
-        private List<MonoScript> noTypeMatch;
-
-        [SerializeField,ShowInInspector, FoldoutGroup("Event Settings")]
-        private List<MonoScript> isEnumIsInterfaceIsValueType;
+        [SerializeField, ShowInInspector, FoldoutGroup("Event Settings")]
+        protected List<MonoScript> IsEnumIsInterfaceIsValueType;
 
 
+        [Serializable]
+        public class ScriptInfo
+        {
+            [ShowInInspector, AssetsOnly, ReadOnly, LabelText("Script")]
+            public MonoScript MonoScript;
+
+            [HideInInspector] public Type ScriptType;
+
+            [ShowInInspector] public string DisplayName;
+
+            [HideInInspector] public string MonoScriptPath;
+
+            public ScriptInfo(Type scriptType, MonoScript monoScript, string monoScriptPath)
+            {
+                ScriptType = scriptType;
+                MonoScript = monoScript;
+                MonoScriptPath = monoScriptPath;
+                GetFormattedTypeName();
+            }
+
+            public ScriptInfo(Type scriptType, string monoScriptPath)
+            {
+                ScriptType = scriptType;
+                MonoScript = null;
+                MonoScriptPath = monoScriptPath;
+                GetFormattedTypeName();
+            }
+
+            private void GetFormattedTypeName()
+            {
+                if (ScriptType is { IsGenericType: true })
+                {
+                    string typeName = ScriptType.Name;
+                    int backtickIndex = typeName.IndexOf('`');
+                    if (backtickIndex > 0)
+                    {
+                        typeName = typeName.Substring(0, backtickIndex);
+                    }
+
+                    DisplayName = typeName;
+                }
+                else
+                {
+                    DisplayName = ScriptType.Name;
+                }
+            }
+
+        }
+
+
+
+        [Serializable]
+        public class ScriptCollection
+        {
+            public List<ScriptInfo> ConsumerScripts;
+            public List<EventUsageInfo> EventUsageInfos;
+            public ScriptCollection(List<ScriptInfo> consumerScripts, List<EventUsageInfo> eventUsageInfos)
+            {
+                ConsumerScripts = consumerScripts;
+                EventUsageInfos = eventUsageInfos;
+            }
+        }
+
+
+        [Serializable]
+        public class EventUsageInfo
+        {
+            public ScriptInfo ScriptInfo;
+
+            [HideInInspector] public List<ScriptInfo> SubscribeMethods = new List<ScriptInfo>();
+            [HideInInspector] public List<ScriptInfo> UnsubscribeMethods = new List<ScriptInfo>();
+            [HideInInspector] public List<ScriptInfo> PublishMethods = new List<ScriptInfo>();
+
+            [ShowInInspector, ReadOnly] bool IsPublished => PublishMethods.Count > 0;
+            [ShowInInspector, ReadOnly]
+            bool IsSubscribeValid => SubscribeMethods.Count > 0 &&
+                                                                 SubscribeMethods.Count == UnsubscribeMethods.Count &&
+                                                                 UnsubscribeMethods.All(scriptInfo => SubscribeMethods.Any(sub => sub.MonoScript == scriptInfo.MonoScript));
+
+            [SerializeField, ReadOnly] public string LastAnalyzed { get; set; }
+            [SerializeField, ReadOnly] public int TotalUsageCount => SubscribeMethods.Count + UnsubscribeMethods.Count + PublishMethods.Count;
+            public EventUsageInfo(ScriptInfo scriptInfo)
+            {
+                ScriptInfo = scriptInfo;
+                LastAnalyzed = $"{DateTime.UtcNow.ToLongDateString()} {DateTime.UtcNow.ToLongTimeString()}";
+            }
+
+
+            [ShowInInspector, ReadOnly]
+            public List<(string DisplayName, MonoScript MonoScript, string ScriptPath)> SubscribeMethodNames =>
+                SubscribeMethods.Select(info => (info.DisplayName, info.MonoScript, info.MonoScriptPath)).ToList();
+
+            [ShowInInspector, ReadOnly]
+            public List<(string DisplayName, MonoScript MonoScript, string ScriptPath)> UnsubscribeMethodNames =>
+                UnsubscribeMethods.Select(info => (info.DisplayName, info.MonoScript, info.MonoScriptPath)).ToList();
+
+            [ShowInInspector, ReadOnly]
+            public List<(string DisplayName, MonoScript MonoScript, string ScriptPath)> PublishMethodNames =>
+                PublishMethods.Select(info => (info.DisplayName, info.MonoScript, info.MonoScriptPath)).ToList();
+
+
+        }
+
+#if UNITY_EDITOR
 
         [Button]
         public async UniTaskVoid CollectEventTypesAsync()
         {
-            consumerScripts = new List<ScriptInfo>();
-            ConsumerScripts = new List<MonoScript>();
-
+            EditorUtility.SetDirty(this);
 
             Stopwatch overallStopwatch = Stopwatch.StartNew();
 
@@ -407,26 +538,13 @@ namespace OcentraAI.LLMGames.Events
             {
                 consumerScripts = scriptCollection.ConsumerScripts;
 
-                foreach (ScriptInfo scriptInfo in consumerScripts)
-                {
-                    MonoScript monoScript = scriptInfo.MonoScript;
-                    if (!ConsumerScripts.Contains(monoScript))
-                    {
-                        ConsumerScripts.Add(monoScript);
-                    }
-                }
-
                 Stopwatch mapConsumerMethodsStopwatch = Stopwatch.StartNew();
                 await MapConsumerMethodsToEventsWithRoslynAsync(scriptCollection);
                 mapConsumerMethodsStopwatch.Stop();
                 GameLoggerScriptable.Log($"Collect EventTypes completed in {mapConsumerMethodsStopwatch.ElapsedMilliseconds} ms", this);
 
 
-                EditorApplication.delayCall += () =>
-                {
-                    EditorUtility.SetDirty(this);
-                    AssetDatabase.SaveAssets();
-                };
+                EditorApplication.delayCall += AssetDatabase.SaveAssets;
 
             }
             else
@@ -470,13 +588,13 @@ namespace OcentraAI.LLMGames.Events
             }
 
             List<UniTask> tasks = new List<UniTask>();
-            lock (noTypeMatch)
+            lock (NoTypeMatch)
             {
-                noTypeMatch = new List<MonoScript>();
+                NoTypeMatch = new List<MonoScript>();
             }
-            lock (isEnumIsInterfaceIsValueType)
+            lock (IsEnumIsInterfaceIsValueType)
             {
-                isEnumIsInterfaceIsValueType = new List<MonoScript>();
+                IsEnumIsInterfaceIsValueType = new List<MonoScript>();
             }
 
             foreach ((MonoScript script, string assetPath, Type scriptType, string scriptName) scriptData in scriptDataList)
@@ -490,11 +608,11 @@ namespace OcentraAI.LLMGames.Events
                         scriptType = FindTypeByName(scriptName, assemblyTypes);
                         if (scriptType == null)
                         {
-                            lock (noTypeMatch)
+                            lock (NoTypeMatch)
                             {
-                                if (!noTypeMatch.Contains(script))
+                                if (!NoTypeMatch.Contains(script))
                                 {
-                                    noTypeMatch.Add(script);
+                                    NoTypeMatch.Add(script);
                                 }
                             }
                             return;
@@ -503,11 +621,11 @@ namespace OcentraAI.LLMGames.Events
 
                     if (scriptType.IsEnum || scriptType.IsInterface || scriptType.IsValueType)
                     {
-                        lock (isEnumIsInterfaceIsValueType)
+                        lock (IsEnumIsInterfaceIsValueType)
                         {
-                            if (!isEnumIsInterfaceIsValueType.Contains(script))
+                            if (!IsEnumIsInterfaceIsValueType.Contains(script))
                             {
-                                isEnumIsInterfaceIsValueType.Add(script);
+                                IsEnumIsInterfaceIsValueType.Add(script);
                             }
 
                         }
@@ -557,8 +675,6 @@ namespace OcentraAI.LLMGames.Events
 
             return new ScriptCollection(consumerScriptsList, eventScriptsList);
         }
-
-
         public static Type[] GetAssemblyTypesInDirectory(string directoryPath)
         {
             List<Type> assemblyTypes = new List<Type>();
@@ -593,9 +709,6 @@ namespace OcentraAI.LLMGames.Events
             }
             return assemblyTypes.ToArray();
         }
-
-
-
         private Type FindTypeByName(string scriptName, Type[] assemblyTypes)
         {
             foreach (Type type in assemblyTypes)
@@ -644,9 +757,6 @@ namespace OcentraAI.LLMGames.Events
             }
             return null;
         }
-
-
-
         private async UniTask MapConsumerMethodsToEventsWithRoslynAsync(ScriptCollection scriptCollection)
         {
             List<UniTask> scriptTasks = new List<UniTask>();
@@ -884,7 +994,7 @@ namespace OcentraAI.LLMGames.Events
             {
                 bool found = false;
 
-                foreach ((string key, EventUsageInfo processedEventInfo) in sortedEntries)
+                foreach ((string _, EventUsageInfo processedEventInfo) in sortedEntries)
                 {
                     if (processedEventInfo.ScriptInfo.MonoScript == eventUsageInfo.ScriptInfo.MonoScript)
                     {
@@ -900,127 +1010,6 @@ namespace OcentraAI.LLMGames.Events
             }
 
             await UniTask.Yield();
-        }
-
-
-        [Serializable]
-        public class ScriptInfo
-        {
-            [ShowInInspector, AssetsOnly, ReadOnly, LabelText("Script")]
-            public MonoScript MonoScript { get; private set; }
-
-            [HideInInspector]
-            public Type ScriptType { get; private set; }
-
-            [ShowInInspector]
-            public string DisplayName { get; private set; }
-
-            [HideInInspector]
-            public string MonoScriptPath { get; private set; }
-
-            public ScriptInfo(Type scriptType, MonoScript monoScript, string monoScriptPath)
-            {
-                ScriptType = scriptType;
-                MonoScript = monoScript;
-                MonoScriptPath = monoScriptPath;
-                GetFormattedTypeName();
-            }
-
-            public ScriptInfo(Type scriptType, string monoScriptPath)
-            {
-                ScriptType = scriptType;
-                MonoScript = null;
-                MonoScriptPath = monoScriptPath;
-                GetFormattedTypeName();
-            }
-
-            private void GetFormattedTypeName()
-            {
-                if (ScriptType is { IsGenericType: true })
-                {
-                    string typeName = ScriptType.Name;
-                    int backtickIndex = typeName.IndexOf('`');
-                    if (backtickIndex > 0)
-                    {
-                        typeName = typeName.Substring(0, backtickIndex);
-                    }
-
-                    DisplayName = typeName;
-                }
-                else
-                {
-                    DisplayName = ScriptType.Name;
-                }
-            }
-
-        }
-
-        public bool TryGetSubscribers<T>(T eventArgs,out List<Type> subscribers)
-        {
-            subscribers = new List<Type>();
-
-            foreach (EventUsageInfo eventUsageInfo in expectedEventTypes)
-            {
-                foreach (ScriptInfo subscriber in eventUsageInfo.SubscribeMethods)
-                {
-                    if (eventUsageInfo.ScriptInfo.ScriptType == typeof(T) && typeof(MonoBehaviour).IsAssignableFrom(subscriber.ScriptType))
-                    {
-                        subscribers.Add(subscriber.ScriptType);
-                    }
-                }
-            }
-            return subscribers.Count > 0;
-        }
-
-        [Serializable]
-        public class ScriptCollection
-        {
-            public List<ScriptInfo> ConsumerScripts { get; private set; }
-            public List<EventUsageInfo> EventUsageInfos { get; private set; }
-            public ScriptCollection(List<ScriptInfo> consumerScripts, List<EventUsageInfo> eventUsageInfos)
-            {
-                ConsumerScripts = consumerScripts;
-                EventUsageInfos = eventUsageInfos;
-            }
-        }
-
-
-        [Serializable]
-        public class EventUsageInfo
-        {
-            [ShowInInspector] public ScriptInfo ScriptInfo { get; set; }
-            public List<ScriptInfo> SubscribeMethods { get; set; } = new List<ScriptInfo>();
-            public List<ScriptInfo> UnsubscribeMethods { get; set; } = new List<ScriptInfo>();
-            public List<ScriptInfo> PublishMethods { get; set; } = new List<ScriptInfo>();
-
-            [ShowInInspector, ReadOnly] bool IsPublished => PublishMethods.Count > 0;
-            [ShowInInspector, ReadOnly]
-            bool IsSubscribeValid => SubscribeMethods.Count > 0 &&
-                                     SubscribeMethods.Count == UnsubscribeMethods.Count &&
-                                     UnsubscribeMethods.All(scriptInfo => SubscribeMethods.Any(sub => sub.MonoScript == scriptInfo.MonoScript));
-
-            [ShowInInspector, ReadOnly] public string LastAnalyzed { get; set; }
-            [ShowInInspector, ReadOnly] public int TotalUsageCount => SubscribeMethods.Count + UnsubscribeMethods.Count + PublishMethods.Count;
-            public EventUsageInfo(ScriptInfo scriptInfo)
-            {
-                ScriptInfo = scriptInfo;
-                LastAnalyzed = $"{DateTime.UtcNow.ToLongDateString()} {DateTime.UtcNow.ToLongTimeString()}";
-            }
-
-
-            [ShowInInspector, ReadOnly]
-            public List<(string DisplayName, MonoScript MonoScript, string ScriptPath)> SubscribeMethodNames =>
-                SubscribeMethods.Select(info => (info.DisplayName, info.MonoScript, info.MonoScriptPath)).ToList();
-
-            [ShowInInspector, ReadOnly]
-            public List<(string DisplayName, MonoScript MonoScript, string ScriptPath)> UnsubscribeMethodNames =>
-                UnsubscribeMethods.Select(info => (info.DisplayName, info.MonoScript, info.MonoScriptPath)).ToList();
-
-            [ShowInInspector, ReadOnly]
-            public List<(string DisplayName, MonoScript MonoScript, string ScriptPath)> PublishMethodNames =>
-                PublishMethods.Select(info => (info.DisplayName, info.MonoScript, info.MonoScriptPath)).ToList();
-
-
         }
 
 #endif

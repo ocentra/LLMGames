@@ -12,10 +12,11 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: e208b428a3eafa64f90c4409794a8653, type: 3}
   m_Name: GameLoggerScriptable
   m_EditorClassIdentifier: 
-  toEditor: 1
-  toFile: 0
-  useStackTrace: 1
-  isLoggingEnabled: 1
-  logWarningsEnabled: 1
-  logErrorsEnabled: 1
+  logFrequencyInSeconds: 10
+  logToFile: 0
+  logStackTrace: 0
+  loggingEnabled: 0
+  logWarnings: 0
+  logErrors: 1
+  logException: 1
   LogFilePath: E:/LLMgames/Assets\Resources\LogFile.json

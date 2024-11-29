@@ -1,3 +1,4 @@
+using OcentraAI.LLMGames.Events;
 using Unity.Netcode;
 
 namespace OcentraAI.LLMGames.Networking.Manager
@@ -6,18 +7,18 @@ namespace OcentraAI.LLMGames.Networking.Manager
     public struct PlayerDataDTO : INetworkSerializable
     {
         public int PlayerIndex;
-        public ulong OwnerClientId;
+        public ulong PlayerId;
 
-        public PlayerDataDTO(int playerIndex, ulong ownerClientId)
+        public PlayerDataDTO(IPlayerBase playerBase)
         {
-            PlayerIndex = playerIndex;
-            OwnerClientId = ownerClientId;
+            PlayerIndex = playerBase.PlayerIndex.Value;
+            PlayerId = playerBase.PlayerId.Value;
         }
 
         public void NetworkSerialize<T>(BufferSerializer<T> serializer) where T : IReaderWriter
         {
             serializer.SerializeValue(ref PlayerIndex);
-            serializer.SerializeValue(ref OwnerClientId);
+            serializer.SerializeValue(ref PlayerId);
         }
     }
 }

@@ -6,7 +6,12 @@ using UnityEngine;
 [ExecuteAlways]
 public class TopCardView : CardView
 {
-    [ShowInInspector] protected Button3D Button3D;
+    [ShowInInspector,Required] protected Button3D Button3D;
+
+    void OnValidate()
+    {
+        transform.FindChildWithComponent(ref Button3D, nameof(Button3D));
+    }
 
     public override void SetActive(bool show = false)
     {

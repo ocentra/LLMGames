@@ -12,12 +12,16 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 55684237254d1fa4b81c2290f8903c96, type: 3}
   m_Name: AutoNetworkBootstrap
   m_EditorClassIdentifier: 
+  ToEditor: 0
+  networkManager: {fileID: 0}
   EditorData:
     HumanPlayersCount: 1
-    AIPlayersCount: 0
-    ScenePath: Assets/Scenes/TestingLoad.unity
+    AIPlayersCount: 1
+    ScenePath: Assets/Scenes/ThreeCardBrag.unity
     SyncEnabled: 1
     IsNewSceneLoaded: 0
   StartAsServer: 0
-  MainLoginScene: 
+  MainLoginScene: MainMenu
   EditorSyncFilePath: E:/LLMgames/Assets\Resources\EditorSync.json
+  aiList:
+  - ChatGPT

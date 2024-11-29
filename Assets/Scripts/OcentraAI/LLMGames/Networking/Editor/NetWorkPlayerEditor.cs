@@ -3,8 +3,13 @@ using OcentraAI.LLMGames.GamesNetworking;
 using Sirenix.OdinInspector.Editor;
 using UnityEditor;
 
-[CustomEditor(typeof(NetworkPlayer))]
+[CustomEditor(typeof(NetworkHumanPlayer))]
 public class NetWorkPlayerEditor : OdinEditor
+{
+}
+
+[CustomEditor(typeof(NetworkComputerPlayer))]
+public class NetworkComputerPlayerEditor : OdinEditor
 {
 }
 #endif

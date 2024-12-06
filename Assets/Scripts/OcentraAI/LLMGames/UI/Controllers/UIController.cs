@@ -207,15 +207,9 @@ namespace OcentraAI.LLMGames.UI.Controllers
         {
             EventBus.Instance.Subscribe<NewGameEvent<GameManager>>(OnNewGame);
             EventBus.Instance.Subscribe<NewRoundEvent<GameManager>>(OnNewRound);
-            EventBus.Instance.Subscribe<UpdateGameStateEvent<GameManager>>(OnUpdateGameState);
-            EventBus.Instance.Subscribe<PlayerStartCountDownEvent<TurnManager>>(OnPlayerStartCountDown);
-            EventBus.Instance.Subscribe<UpdateTurnStateEvent<LLMPlayer>>(OnUpdateTurnState);
+            EventBus.Instance.Subscribe<UpdateGameStateEvent>(OnUpdateGameState);
             EventBus.Instance.Subscribe<PlayerStopCountDownEvent<LLMPlayer>>(OnPlayerStopCountDown);
             EventBus.Instance.Subscribe<UpdateFloorCardEvent<Card>>(OnUpdateFloorCard);
-            EventBus.Instance.Subscribe<UpdateWildCardsEvent<GameMode, Card>>(OnUpdateWildCards);
-            EventBus.Instance.Subscribe<UpdateWildCardsHighlightEvent<Card>>(OnUpdateWildCardsHighlight);
-            EventBus.Instance.Subscribe<UpdateFloorCardListEvent<Card>>(OnUpdateFloorCardList);
-            EventBus.Instance.Subscribe<UpdatePlayerHandDisplayEvent<LLMPlayer>>(OnUpdatePlayerHandDisplay);
             EventBus.Instance.Subscribe<UpdateRoundDisplayEvent<ScoreManager>>(OnUpdateRoundDisplay);
             EventBus.Instance.Subscribe<OfferContinuationEvent>(OnOfferContinuation);
             EventBus.Instance.Subscribe<OfferNewGameEvent>(OnOfferNewGame);
@@ -226,16 +220,10 @@ namespace OcentraAI.LLMGames.UI.Controllers
         {
             EventBus.Instance.Unsubscribe<NewGameEvent<GameManager>>(OnNewGame);
             EventBus.Instance.Unsubscribe<NewRoundEvent<GameManager>>(OnNewRound);
-            EventBus.Instance.Unsubscribe<UpdateGameStateEvent<GameManager>>(OnUpdateGameState);
-            EventBus.Instance.Unsubscribe<PlayerStartCountDownEvent<TurnManager>>(OnPlayerStartCountDown);
-            EventBus.Instance.Unsubscribe<UpdateTurnStateEvent<LLMPlayer>>(OnUpdateTurnState);
+            EventBus.Instance.Unsubscribe<UpdateGameStateEvent>(OnUpdateGameState);
             EventBus.Instance.Unsubscribe<PlayerStopCountDownEvent<LLMPlayer>>(OnPlayerStopCountDown);
             EventBus.Instance.Unsubscribe<UpdateFloorCardEvent<Card>>(OnUpdateFloorCard);
-            EventBus.Instance.Unsubscribe<UpdateWildCardsEvent<GameMode, Card>>(OnUpdateWildCards);
-            EventBus.Instance.Unsubscribe<UpdateWildCardsHighlightEvent<Card>>(OnUpdateWildCardsHighlight);
 
-            EventBus.Instance.Unsubscribe<UpdateFloorCardListEvent<Card>>(OnUpdateFloorCardList);
-            EventBus.Instance.Unsubscribe<UpdatePlayerHandDisplayEvent<LLMPlayer>>(OnUpdatePlayerHandDisplay);
             EventBus.Instance.Unsubscribe<UpdateRoundDisplayEvent<ScoreManager>>(OnUpdateRoundDisplay);
             EventBus.Instance.Unsubscribe<OfferContinuationEvent>(OnOfferContinuation);
             EventBus.Instance.Unsubscribe<OfferNewGameEvent>(OnOfferNewGame);
@@ -331,7 +319,7 @@ namespace OcentraAI.LLMGames.UI.Controllers
         }
 
 
-        private void OnUpdateGameState(UpdateGameStateEvent<GameManager> e)
+        private void OnUpdateGameState(UpdateGameStateEvent e)
         {
             UpdateUI();
         }
@@ -345,47 +333,8 @@ namespace OcentraAI.LLMGames.UI.Controllers
         }
 
 
-        private void OnPlayerStartCountDown(PlayerStartCountDownEvent<TurnManager> e)
-        {
-            CurrentLLMPlayer = e.TurnManager.CurrentLLMPlayer;
 
 
-            if (CurrentPlayerUI != null)
-            {
-                CurrentPlayerUI.StartTimer(e.TurnManager);
-            }
-            else
-            {
-                Debug.Log(" CurrentPlayerUI not found !!!");
-            }
-        }
-
-        private void OnUpdateTurnState(UpdateTurnStateEvent<LLMPlayer> e)
-        {
-            CurrentLLMPlayer = e.CurrentLLMPlayer;
-
-            if (CurrentPlayerUI == null || CurrentPlayerUI.PlayerIndex != CurrentLLMPlayer.PlayerIndex)
-            {
-                if (MainTableUI.Instance.TryGetPlayerUI(e.CurrentLLMPlayer.PlayerIndex, out PlayerUI playerUI))
-                {
-                    CurrentPlayerUI = playerUI;
-                }
-            }
-            // todo only update local player 
-
-            if (e.IsHumanTurn)
-            {
-                SetCardHighlights(LocalPlayerCardViews, true);
-                SetButtonState(ButtonState.TakeAction);
-            }
-            else if (e.IsComputerTurn && CurrentLLMPlayer is ComputerLLMPlayer computerPlayer)
-            {
-                SetCardHighlights(LocalPlayerCardViews, false);
-                computerPlayer.ResetState();
-            }
-
-            EnablePlayerActions();
-        }
 
         private void OnPlayerStopCountDown(PlayerStopCountDownEvent<LLMPlayer> e)
         {
@@ -410,61 +359,22 @@ namespace OcentraAI.LLMGames.UI.Controllers
             }
         }
 
-        private void OnUpdateWildCards(UpdateWildCardsEvent<GameMode, Card> e)
-        {
-            void Update(CardView cardView, string cardViewName, bool useCondition)
-            {
-                if (useCondition)
-                {
-                    if (e.WildCards.TryGetValue(cardViewName, out Card card))
-                    {
-                        UpdateCardView(cardView, card);
-                    }
-                }
-                else
-                {
-                    cardView.SetActive();
-                }
-            }
 
-            Update(TrumpCardView, "TrumpCard", e.GameMode.UseTrump);
-            Update(MagicCard0, nameof(MagicCard0), e.GameMode.UseMagicCards);
-            Update(MagicCard1, nameof(MagicCard1), e.GameMode.UseMagicCards);
-            Update(MagicCard2, nameof(MagicCard2), e.GameMode.UseMagicCards);
-            Update(MagicCard3, nameof(MagicCard3), e.GameMode.UseMagicCards);
-        }
 
-        private void OnUpdateWildCardsHighlight(UpdateWildCardsHighlightEvent<Card> e)
-        {
-            TrumpCardView.SetHighlight(e.WildCardsInHand.TryGetValue("TrumpCard", out Card _));
-            MagicCard0.SetHighlight(e.WildCardsInHand.TryGetValue(nameof(MagicCard0), out Card _));
-            MagicCard1.SetHighlight(e.WildCardsInHand.TryGetValue(nameof(MagicCard1), out Card _));
-            MagicCard2.SetHighlight(e.WildCardsInHand.TryGetValue(nameof(MagicCard2), out Card _));
-            MagicCard3.SetHighlight(e.WildCardsInHand.TryGetValue(nameof(MagicCard3), out Card _));
-        }
+
 
 
         private void OnUpdateFloorCard(UpdateFloorCardEvent<Card> e)
         {
             UpdateCardView(FloorCardView, e.Card);
-            FloorCardView.SetActive(FloorCardView.Card != null);
+            FloorCardView.SetInteractable(FloorCardView.Card != null);
         }
 
-        private void OnUpdateFloorCardList(UpdateFloorCardListEvent<Card> e)
-        {
-            LeftPanelController.AddCard(e.Card, e.Reset);
-        }
+        //private void OnUpdateFloorCardList(UpdateFloorCardListEvent<Card> e)
+        //{
+        //}
 
-        // todo only update current local players hand
-        private void OnUpdatePlayerHandDisplay(UpdatePlayerHandDisplayEvent<LLMPlayer> e)
-        {
-            switch (e.Player)
-            {
-                case HumanLLMPlayer humanPlayer:
-                    UpdateHumanPlayerHandDisplay(humanPlayer, e.IsRoundEnd);
-                    break;
-            }
-        }
+
 
         private void OnUpdateRoundDisplay(UpdateRoundDisplayEvent<ScoreManager> e)
         {

@@ -3,12 +3,11 @@ using System;
 
 namespace OcentraAI.LLMGames.Events
 {
-    public class UpdateGameStateEvent<T> : EventArgsBase
+    public class UpdateGameStateEvent : EventArgsBase
     {
-        public T GameManager { get; }
-        public UpdateGameStateEvent(T gameManager)
+        public UpdateGameStateEvent()
         {
-            GameManager = gameManager;
+           
         }
 
 

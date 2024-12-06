@@ -90,25 +90,18 @@ namespace OcentraAI.LLMGames.Manager
                     {
 #if UNITY_EDITOR
 
-                        if (DevTools.DevModeManager.Instance != null )
+                        bool devModeHandled = DevTools.DevModeManager.Instance.InitializeDevModeHands(this, deckManager, humanLLMPlayer, computerLLMPlayer);
+
+                        if (!devModeHandled || !DevTools.DevModeManager.Instance.IsPlayerHandInitialized(humanLLMPlayer))
                         {
-                            bool devModeHandled = DevTools.DevModeManager.Instance.InitializeDevModeHands(this,deckManager, humanLLMPlayer, computerLLMPlayer);
-
-                            if (!devModeHandled || !DevTools.DevModeManager.Instance.IsPlayerHandInitialized(humanLLMPlayer))
-                            {
-                                LogError("Human player's hand not initialized in Dev Mode; initializing manually.", this);
-                                humanLLMPlayer.ResetForNewRound(deckManager);
-                            }
-
-                            if (!devModeHandled || !DevTools.DevModeManager.Instance.IsPlayerHandInitialized(computerLLMPlayer))
-                            {
-                                LogError("Computer player's hand not initialized in Dev Mode; initializing manually.", this);
-                                computerLLMPlayer.ResetForNewRound(deckManager);
-                            }
+                            LogError("Human player's hand not initialized in Dev Mode; initializing manually.", this);
+                            humanLLMPlayer.ResetForNewRound(deckManager);
                         }
-                        else
+
+                        if (!devModeHandled || !DevTools.DevModeManager.Instance.IsPlayerHandInitialized(computerLLMPlayer))
                         {
-                            LogError("DevModeManager instance is null; unable to handle DevMode initialization.", this);
+                            LogError("Computer player's hand not initialized in Dev Mode; initializing manually.", this);
+                            computerLLMPlayer.ResetForNewRound(deckManager);
                         }
 #endif
                     }

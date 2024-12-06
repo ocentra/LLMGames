@@ -1,48 +1,52 @@
 using OcentraAI.LLMGames.Extensions;
 using OcentraAI.LLMGames.UI;
-using Sirenix.OdinInspector;
 using UnityEngine;
 
 [ExecuteAlways]
 public class TopCardView : CardView
 {
-    [ShowInInspector,Required] protected Button3D Button3D;
+    [SerializeField] private PlayerDecisionButton playerDecisionButton;
+
+    public PlayerDecisionButton PlayerDecisionButton
+    {
+        get => playerDecisionButton;
+        set => playerDecisionButton = value;
+    }
 
     void OnValidate()
     {
-        transform.FindChildWithComponent(ref Button3D, nameof(Button3D));
+        transform.FindChildWithComponent(ref playerDecisionButton, nameof(Button3D));
     }
-
-    public override void SetActive(bool show = false)
+    public override void SetInteractable(bool show = false)
     {
-#if UNITY_EDITOR
-        if (!IsEditorSafe()) return;
-#endif
-        base.SetActive(show);
-        if (IsValidObject(Button3D))
+        if (MainCard != null)
         {
-            Button3D.SetInteractable(show);
+            MainCard.gameObject.SetActive(Card != null);
         }
+
+        if (BackCard != null)
+        {
+            BackCard.gameObject.SetActive(Card == null);
+        }
+
+        if (HighlightCard != null)
+        {
+            HighlightCard.gameObject.SetActive(IsCardHighlighted);
+            playerDecisionButton.SetInteractable(IsCardHighlighted && show);
+        }
+
+
     }
 
     protected override void Init()
     {
-#if UNITY_EDITOR
-        if (!IsEditorSafe()) return;
-#endif
         base.Init();
-        transform.FindChildWithComponent(ref Button3D, nameof(Button3D));
+        transform.FindChildWithComponent(ref playerDecisionButton, nameof(Button3D));
     }
 
     public override void SetHighlight(bool set, Color? glowColor = null)
     {
-#if UNITY_EDITOR
-        if (!IsEditorSafe()) return;
-#endif
         base.SetHighlight(set, glowColor);
-        if (IsValidObject(Button3D) && IsValidObject(HighlightCard))
-        {
-            Button3D.SetInteractable(HighlightCard.enabled);
-        }
+        playerDecisionButton.SetInteractable(HighlightCard.enabled && set);
     }
 }

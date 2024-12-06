@@ -49,6 +49,8 @@ namespace OcentraAI.LLMGames.UI
         [SerializeField] private int highlightMaterialIndex1 = 1;
         [SerializeField] private int highlightMaterialIndex2 = 2;
 
+        [ShowInInspector] protected bool ApplyHighlight2Material = true;
+
         [ShowInInspector, ReadOnly] private bool Interactable { get; set; } = true;
 
         [Header("Button Settings")]
@@ -406,7 +408,8 @@ namespace OcentraAI.LLMGames.UI
 
             if (highlightMaterialIndex2 < modifiedMaterials.Length)
             {
-                ApplyColorToMaterial(modifiedMaterials[highlightMaterialIndex2], color2);
+                Material modifiedMaterial = modifiedMaterials[highlightMaterialIndex2];
+                ApplyColorToMaterial(modifiedMaterial, ApplyHighlight2Material ? color2 : Color.black);
             }
 
             ApplyMaterials();

@@ -1,42 +1,55 @@
+using Cysharp.Threading.Tasks;
+using OcentraAI.LLMGames.Events;
 using OcentraAI.LLMGames.Extensions;
 using OcentraAI.LLMGames.Scriptable;
-using OcentraAI.LLMGames.UI;
-using OcentraAI.LLMGames.UI.Managers;
 using Sirenix.OdinInspector;
 using System;
-using System.Collections;
 using System.Collections.Generic;
+using System.Threading;
+using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
 
-namespace OcentraAI.LLMGames.ThreeCardBrag.UI.Controllers
+namespace OcentraAI.LLMGames.UI.Controllers
 {
     [ExecuteAlways]
-    public class LeftPanelController : MonoBehaviour
+    public class LeftPanelController : SerializedMonoBehaviour, IEventHandler
     {
-        private const int MaxVisibleCards = 8;
+        [SerializeField, ShowInInspector] protected float ExpandDuration = 15f;
 
-        private readonly List<GameObject> floorCards = new List<GameObject>();
-        [Required] [SerializeField] private Canvas cardHolder;
+        [SerializeField, ShowInInspector] protected int MaxVisibleCards = 12;
+        [Required, ShowInInspector, ReadOnly] private Canvas CardHolder { get; set; }
+        [Required, ShowInInspector, ReadOnly] private GameObject CardHolder3D { get; set; }
+        [Required, ShowInInspector, ReadOnly] public GameObject CardViewPrefab { get; set; }
+        [ShowInInspector, ReadOnly] private Vector4 PanelSize { get; set; }
+        [ShowInInspector, ReadOnly] private bool IsExpanded { get; set; }
 
-        [Required] [SerializeField] private GameObject cardHolder3D;
-        [Required] public GameObject CardViewPrefab;
-        [ShowInInspector] private float height;
-        [SerializeField] [ReadOnly] private bool isExpanded;
-        [SerializeField] private List<PlayerBlendShapeSettings> playerCountBlendShapes;
-        [Required] [SerializeField] private ScrollRect scrollView;
-        [Required] [SerializeField] private RectTransform scrollViewContent;
-        [Required] [SerializeField] private GridLayoutGroup scrollViewGridLayoutGroup;
-        [Required] [SerializeField] private Button3D showAllFloorCards;
+        [DictionaryDrawerSettings(KeyLabel = "Players"), SerializeField, ShowInInspector]
+        protected Dictionary<int, Vector4> PlayerCountBlendShapes;
+        [Required, ShowInInspector, ReadOnly] private ScrollRect ScrollView { get; set; }
+        [Required, ShowInInspector, ReadOnly] private RectTransform ScrollViewContent { get; set; }
+        [Required, ShowInInspector, ReadOnly] private GridLayoutGroup ScrollViewGridLayoutGroup { get; set; }
+        [Required, ShowInInspector, ReadOnly] private Button3D ShowAllFloorCards { get; set; }
+        [Required, ShowInInspector, ReadOnly] private SkinnedMeshRenderer SkinnedMeshRenderer { get; set; }
 
-        [Required] [SerializeField] private SkinnedMeshRenderer skinnedMeshRenderer;
-        [ShowInInspector] private float width;
+        [ShowInInspector, ReadOnly] protected float RemainingTime = 0;
+        [ShowInInspector, ReadOnly] private GameObject Counter { get; set; }
+        [ShowInInspector, ReadOnly] private TextMeshPro CountdownText { get; set; }
+        [ShowInInspector, ReadOnly] private GameObject RingRed { get; set; }
+        [ShowInInspector, ReadOnly] private MeshRenderer RingRedRenderer { get; set; }
+        [ShowInInspector] private Material RingRedMaterial { get; set; }
 
+        [ShowInInspector] public int NumberOfPlayers { get; set; } = 2;
 
-        private void Start()
+        protected CancellationTokenSource ToggleCancellationTokenSource;
+
+        [ShowInInspector, ReadOnly]
+        private Dictionary<Card, GameObject> FloorCardMap { get; } = new Dictionary<Card, GameObject>();
+
+        private void Awake()
         {
+            SubscribeToEvents();
             Init();
-            showAllFloorCards.onClick.AddListener(ToggleExpand);
         }
 
         private void OnValidate()
@@ -44,92 +57,157 @@ namespace OcentraAI.LLMGames.ThreeCardBrag.UI.Controllers
             Init();
         }
 
+        private void OnDisable()
+        {
+            UnsubscribeFromEvents();
+        }
+
+        [Button("Copy Previous Value", ButtonSizes.Small), EnableIf("@NumberOfPlayers > 2 && NumberOfPlayers <= 10")]
+        private void CopyPreviousValue()
+        {
+
+            if (PlayerCountBlendShapes.TryGetValue(NumberOfPlayers - 1, out Vector4 value))
+            {
+
+                PlayerCountBlendShapes[NumberOfPlayers] = value;
+            }
+
+        }
+
+
         private void Init()
         {
-            InitializePlayerCountBlendShapes();
+            if (PlayerCountBlendShapes == null || PlayerCountBlendShapes.Count == 0)
+            {
+                PlayerCountBlendShapes = new Dictionary<int, Vector4>
+                {
+                    { 2, new Vector4(16, 30,105,160) },
+                    { 3, new Vector4(16, 30,105,160) },
+                    { 4, new Vector4(16, 30, 105, 160) },
+                    { 5, new Vector4(16, 30, 105, 160) },
+                    { 6, new Vector4(16, 30, 105, 160) },
+                    { 7, new Vector4(16, 30, 105, 160) },
+                    { 8, new Vector4(16, 30, 105, 160) },
+                    { 9, new Vector4(16, 30, 105, 160) },
+                    { 10, new Vector4(16, 30, 105, 160) }
+                };
+            }
 
             FindComponents();
             SetInitialState();
             LoadCardViewPrefab();
         }
 
-        private void InitializePlayerCountBlendShapes()
+        public void SubscribeToEvents()
         {
-            if (playerCountBlendShapes == null || playerCountBlendShapes.Count == 0)
-            {
-                playerCountBlendShapes = new List<PlayerBlendShapeSettings>
-                {
-                    new PlayerBlendShapeSettings(2, new Vector2(10, 20)),
-                    new PlayerBlendShapeSettings(3, new Vector2(15, 25)),
-                    new PlayerBlendShapeSettings(4, new Vector2(20, 30)),
-                    new PlayerBlendShapeSettings(5, new Vector2(25, 35)),
-                    new PlayerBlendShapeSettings(6, new Vector2(30, 40)),
-                    new PlayerBlendShapeSettings(7, new Vector2(35, 45)),
-                    new PlayerBlendShapeSettings(8, new Vector2(40, 50)),
-                    new PlayerBlendShapeSettings(9, new Vector2(45, 55)),
-                    new PlayerBlendShapeSettings(10, new Vector2(50, 60))
-                };
-            }
+            EventBus.Instance.Subscribe<UpdateFloorCardListEvent<Card>>(OnUpdateFloorCardList);
+            EventBus.Instance.Subscribe<ShowAllFloorCardEvent>(OnShowAllFloorCardEvent);
+            EventBus.Instance.Subscribe<RegisterUIPlayerEvent>(OnRegisterUIPlayerEvent);
         }
 
-
-        private void UpdateBlendShape()
+        public void UnsubscribeFromEvents()
         {
-            if (skinnedMeshRenderer != null && skinnedMeshRenderer.sharedMesh.blendShapeCount > 0)
+            EventBus.Instance.Unsubscribe<UpdateFloorCardListEvent<Card>>(OnUpdateFloorCardList);
+            EventBus.Instance.Unsubscribe<ShowAllFloorCardEvent>(OnShowAllFloorCardEvent);
+            EventBus.Instance.Unsubscribe<RegisterUIPlayerEvent>(OnRegisterUIPlayerEvent);
+
+        }
+
+        public void UpdatePanelSize()
+        {
+            if (SkinnedMeshRenderer != null && SkinnedMeshRenderer.sharedMesh.blendShapeCount > 0)
             {
-                if (isExpanded)
+                if (IsExpanded)
                 {
-                    PlayerBlendShapeSettings settings =
-                        playerCountBlendShapes.Find(x => x.PlayerCount == MainTableUI.Instance.PlayerCount);
-                    if (settings != null)
+                    if (PlayerCountBlendShapes.TryGetValue(NumberOfPlayers, out Vector4 value))
                     {
-                        width = settings.BlendShapeValues.x;
-                        height = settings.BlendShapeValues.y;
+                        PanelSize = value;
                     }
                 }
                 else
                 {
-                    width = 0;
-                    height = 0;
+                    PanelSize = new Vector4(0, 0, 65, 100);
                 }
 
-                skinnedMeshRenderer.SetBlendShapeWeight(0, width);
-                skinnedMeshRenderer.SetBlendShapeWeight(1, height);
+                SkinnedMeshRenderer.SetBlendShapeWeight(0, PanelSize.y);
+                SkinnedMeshRenderer.SetBlendShapeWeight(1, PanelSize.x);
+
+                if (CardHolder != null)
+                {
+                    RectTransform cardHolderRect = CardHolder.GetComponent<RectTransform>();
+                    cardHolderRect.sizeDelta = new Vector2(PanelSize.z, PanelSize.w);
+
+                    if (ScrollView != null)
+                    {
+                        RectTransform scrollViewRect = ScrollView.GetComponent<RectTransform>();
+                        scrollViewRect.anchorMin = Vector2.zero;
+                        scrollViewRect.anchorMax = Vector2.one;
+                        scrollViewRect.offsetMin = Vector2.zero;
+                        scrollViewRect.offsetMax = Vector2.zero;
+                    }
+                }
             }
         }
 
+
         private void FindComponents()
         {
-            cardHolder3D = transform.FindChildRecursively<Transform>(nameof(cardHolder3D), true).gameObject;
-            cardHolder = transform.FindChildRecursively<Canvas>(nameof(cardHolder), true);
+            CountdownText = transform.FindChildRecursively<TextMeshPro>(nameof(CountdownText), true);
 
-            if (cardHolder != null)
+            RingRed = transform.RecursiveFindChildGameObject(nameof(RingRed), true);
+            if (RingRed != null)
             {
-                scrollView = cardHolder.transform.FindChildRecursively<ScrollRect>(nameof(scrollView), true);
-                scrollViewGridLayoutGroup = cardHolder.transform.FindChildRecursively<GridLayoutGroup>();
-                if (scrollViewGridLayoutGroup != null)
+                RingRedRenderer = RingRed.GetComponent<MeshRenderer>();
+                if (RingRedRenderer != null)
                 {
-                    scrollViewContent = scrollViewGridLayoutGroup.GetComponent<RectTransform>();
+                    RingRedMaterial = RingRedRenderer.sharedMaterial;
                 }
             }
 
-            showAllFloorCards = transform.FindChildRecursively<Button3D>(nameof(showAllFloorCards), true);
 
-            if (cardHolder3D != null && skinnedMeshRenderer == null)
+            Counter = transform.RecursiveFindChildGameObject(nameof(Counter), true);
+
+            if (Counter != null)
             {
-                skinnedMeshRenderer = cardHolder3D.GetComponent<SkinnedMeshRenderer>();
+                Counter.SetActive(false);
+
+                if (CountdownText != null)
+                {
+                    CountdownText.text = Mathf.CeilToInt(ExpandDuration).ToString();
+                }
+            }
+
+            CardHolder3D = transform.FindChildRecursively<Transform>(nameof(CardHolder3D), true).gameObject;
+            CardHolder = transform.FindChildRecursively<Canvas>(nameof(CardHolder), true);
+
+            if (CardHolder != null)
+            {
+                ScrollView = CardHolder.transform.FindChildRecursively<ScrollRect>(nameof(ScrollView), true);
+                ScrollViewGridLayoutGroup = CardHolder.transform.FindChildRecursively<GridLayoutGroup>();
+                if (ScrollViewGridLayoutGroup != null)
+                {
+                    ScrollViewContent = ScrollViewGridLayoutGroup.GetComponent<RectTransform>();
+                }
+            }
+
+            ShowAllFloorCards = transform.FindChildRecursively<Button3D>(nameof(ShowAllFloorCards), true);
+
+            if (CardHolder3D != null && SkinnedMeshRenderer == null)
+            {
+                SkinnedMeshRenderer = CardHolder3D.GetComponent<SkinnedMeshRenderer>();
             }
         }
 
         private void SetInitialState()
         {
-            isExpanded = false;
-            if (cardHolder3D != null)
+            IsExpanded = false;
+            if (CardHolder3D != null)
             {
-                cardHolder3D.SetActive(true);
+                CardHolder3D.SetActive(true);
             }
 
-            floorCards.Clear();
+            FloorCardMap.Clear();
+            UpdateCardVisibility();
         }
 
         private void LoadCardViewPrefab()
@@ -141,106 +219,190 @@ namespace OcentraAI.LLMGames.ThreeCardBrag.UI.Controllers
             }
         }
 
-        public void AddCard(Card card, bool reset)
+
+        private void UpdateCardVisibility()
         {
-            if (reset)
+            LeftPanelCardView[] objects = ScrollViewContent.GetComponentsInChildren<LeftPanelCardView>(true);
+            for (int i = 0; i < objects.Length; i++)
+            {
+                LeftPanelCardView cardObject = objects[i];
+                cardObject.gameObject.SetActive(IsExpanded || i < MaxVisibleCards);
+            }
+
+            ScrollView.vertical = IsExpanded;
+        }
+
+
+
+        private void OnRegisterUIPlayerEvent(RegisterUIPlayerEvent obj)
+        {
+            NumberOfPlayers = obj.Players.Count;
+        }
+
+
+        [Button("Toggle OnShowAllFloorCardEvent")]
+        private void OnShowAllFloorCardEvent(ShowAllFloorCardEvent obj)
+        {
+            ToggleExpand();
+        }
+
+        [Button("Toggle Expand")]
+        private async void ToggleExpand(bool expand = true)
+        {
+            IsExpanded = expand;
+
+            ToggleCancellationTokenSource?.Cancel();
+            ToggleCancellationTokenSource = new CancellationTokenSource();
+
+            if (CardHolder3D != null)
+            {
+                UpdatePanelSize();
+            }
+
+            if (Counter != null)
+            {
+                Counter.SetActive(IsExpanded);
+
+                if (CountdownText != null)
+                {
+                    string countdownTextText = Mathf.CeilToInt(ExpandDuration).ToString();
+                    CountdownText.text = countdownTextText;
+                }
+
+                if (RingRed != null)
+                {
+                    RingRed.SetActive(IsExpanded);
+                }
+            }
+
+            ShowAllFloorCards.gameObject.SetActive(!IsExpanded);
+            UpdateCardVisibility();
+
+            LayoutRebuilder.ForceRebuildLayoutImmediate(CardHolder.GetComponent<RectTransform>());
+
+            if (IsExpanded)
+            {
+
+                try
+                {
+                    await CollapseAfterDelay(ToggleCancellationTokenSource.Token);
+                }
+                catch (OperationCanceledException)
+                {
+                    RemainingTime = ExpandDuration;
+                }
+                catch (Exception ex)
+                {
+                    Debug.LogError($"An error occurred during CollapseAfterDelay: {ex}");
+                }
+            }
+        }
+
+
+        private async UniTask CollapseAfterDelay(CancellationToken cancellationToken)
+        {
+            float startTime = Time.realtimeSinceStartup;
+            RemainingTime = ExpandDuration;
+
+            while (Time.realtimeSinceStartup - startTime < ExpandDuration)
+            {
+
+                RemainingTime = Mathf.Max(0, ExpandDuration - (Time.realtimeSinceStartup - startTime));
+                string countdownTextText = Mathf.CeilToInt(RemainingTime).ToString();
+
+                if (CountdownText != null)
+                {
+                    CountdownText.text = countdownTextText;
+                }
+
+                if (RingRedMaterial != null && RingRedRenderer != null)
+                {
+                    float fillAmount = 1 - (RemainingTime / ExpandDuration);
+                    MaterialPropertyBlock propBlock = new MaterialPropertyBlock();
+                    RingRedRenderer.GetPropertyBlock(propBlock);
+                    propBlock.SetFloat("_FillAmount", fillAmount);
+                    RingRedRenderer.SetPropertyBlock(propBlock);
+                }
+
+                await UniTask.Delay(100, cancellationToken: cancellationToken);
+            }
+
+
+
+            ToggleExpand(false);
+        }
+
+
+
+        private void OnUpdateFloorCardList(UpdateFloorCardListEvent<Card> updateFloorCardListEvent)
+        {
+            if (updateFloorCardListEvent.Reset)
             {
                 ResetView();
                 return;
             }
 
-            if (CardViewPrefab != null && scrollViewContent != null && card != null)
+            List<Card> cards = updateFloorCardListEvent.FloorCards;
+
+            if (cards == null || CardViewPrefab == null || ScrollViewContent == null)
             {
-                GameObject newCardViewObject = Instantiate(CardViewPrefab, scrollViewContent);
-                CardView newCardView = newCardViewObject.GetComponentInChildren<CardView>();
+                Debug.LogError($"Error adding cards. Cards list, prefab, or scroll view is null.");
+                return;
+            }
 
-                if (newCardView != null)
+            foreach (var card in cards)
+            {
+                if (card == null)
                 {
-                    newCardView.SetCard(card);
-                    newCardView.SetActive(true);
-                    newCardView.UpdateCardView();
+                    Debug.LogWarning("Null card detected in FloorCards list, skipping.");
+                    continue;
+                }
 
-                    floorCards.Insert(0, newCardViewObject);
-                    newCardViewObject.transform.SetSiblingIndex(0);
-
-                    UpdateCardVisibility();
+                if (FloorCardMap.TryGetValue(card, out GameObject existingCardObject))
+                {
+                    existingCardObject.transform.SetSiblingIndex(0);
                 }
                 else
                 {
-                    Destroy(newCardViewObject);
-                    Debug.LogError("Failed to find CardView component in the instantiated prefab.");
+                    GameObject newCardViewObject = Instantiate(CardViewPrefab, ScrollViewContent);
+                    newCardViewObject.name = $"{card.name}";
+                    LeftPanelCardView newCardView = newCardViewObject.GetComponentInChildren<LeftPanelCardView>();
+
+                    if (newCardView != null)
+                    {
+                        newCardView.SetCard(card);
+                        FloorCardMap[card] = newCardViewObject;
+
+                        newCardViewObject.transform.SetSiblingIndex(0);
+                    }
+                    else
+                    {
+                        Destroy(newCardViewObject);
+                        Debug.LogError("Failed to find CardView component in the instantiated prefab.");
+                    }
                 }
             }
-            else
-            {
-                Debug.LogError(
-                    $"Error adding cards. CardViewPrefab null? {CardViewPrefab == null} ScrollViewContent null? {scrollViewContent == null}");
-            }
-        }
-
-        private void UpdateCardVisibility()
-        {
-            for (int i = 0; i < floorCards.Count; i++)
-            {
-                floorCards[i].SetActive(isExpanded || i < MaxVisibleCards);
-            }
-        }
-
-        [Button("Toggle Expand")]
-        private void ToggleExpand()
-        {
-            isExpanded = !isExpanded;
-            if (cardHolder3D != null)
-            {
-                UpdateBlendShape();
-            }
-
-            showAllFloorCards.gameObject.SetActive(!isExpanded);
-            RectTransform canvasRect = cardHolder.GetComponent<RectTransform>();
 
             UpdateCardVisibility();
-
-            if (isExpanded)
-            {
-                StartCoroutine(CollapseAfterDelay(15f));
-            }
         }
 
-
-        private IEnumerator CollapseAfterDelay(float delay)
-        {
-            yield return new WaitForSeconds(delay);
-            if (isExpanded)
-            {
-                ToggleExpand();
-            }
-        }
 
         public void ResetView()
         {
-            foreach (Transform child in scrollViewContent)
+
+            LeftPanelCardView[] objects = ScrollViewContent.GetComponentsInChildren<LeftPanelCardView>(true);
+            for (int i = 0; i < objects.Length; i++)
             {
-                Destroy(child.gameObject);
+                LeftPanelCardView cardObject = objects[i];
+                Destroy(cardObject);
             }
 
-            floorCards.Clear();
+            FloorCardMap.Clear();
             UpdateCardVisibility();
         }
 
-        [Serializable]
-        public class PlayerBlendShapeSettings
-        {
-            [HorizontalGroup("BlendShapeSettings", LabelWidth = 80)] [HideLabel]
-            public Vector2 BlendShapeValues;
 
-            [HorizontalGroup("BlendShapeSettings", LabelWidth = 80)] [ReadOnly]
-            public int PlayerCount;
 
-            public PlayerBlendShapeSettings(int playerCount, Vector2 blendShapeValues)
-            {
-                PlayerCount = playerCount;
-                BlendShapeValues = blendShapeValues;
-            }
-        }
+
     }
 }

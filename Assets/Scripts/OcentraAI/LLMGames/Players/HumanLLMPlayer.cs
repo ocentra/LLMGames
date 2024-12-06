@@ -16,12 +16,9 @@ namespace OcentraAI.LLMGames.Players
         public override void SeeHand()
         {
             base.SeeHand();
-            EventBus.Instance.Publish(new UpdatePlayerHandDisplayEvent<LLMPlayer>(this));
+           // EventBus.Instance.Publish(new UpdatePlayerHandDisplayEvent<LLMPlayer>(this));
 
-            if (WildCardInHand != null)
-            {
-                EventBus.Instance.Publish(new UpdateWildCardsHighlightEvent<Card>(WildCardInHand, true));
-            }
+
 
             ShowHand();
         }
@@ -31,7 +28,7 @@ namespace OcentraAI.LLMGames.Players
             base.ShowHand(showHands);
             if (showHands )
             {
-                EventBus.Instance.Publish(new UpdatePlayerHandDisplayEvent<LLMPlayer>(this, showHands));
+              //  EventBus.Instance.Publish(new UpdatePlayerHandDisplayEvent<LLMPlayer>(this, showHands));
 
             }
         }
@@ -42,10 +39,10 @@ namespace OcentraAI.LLMGames.Players
 
             if (WildCardInHand != null)
             {
-                EventBus.Instance.Publish(new UpdateWildCardsHighlightEvent<Card>(WildCardInHand, true));
+               
             }
 
-            EventBus.Instance.Publish(new UpdatePlayerHandDisplayEvent<LLMPlayer>(this));
+          //  EventBus.Instance.Publish(new UpdatePlayerHandDisplayEvent<LLMPlayer>(this));
         }
     }
 }

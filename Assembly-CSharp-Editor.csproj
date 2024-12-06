@@ -689,10 +689,6 @@
       <HintPath>Library\PackageCache\com.unity.services.wire\Plugins\websocket-sharp.dll</HintPath>
       <Private>False</Private>
     </Reference>
-    <Reference Include="Zenject-usage">
-      <HintPath>Assets\Plugins\Zenject\Source\Usage\Zenject-usage.dll</HintPath>
-      <Private>False</Private>
-    </Reference>
     <Reference Include="Unity.VisualScripting.YamlDotNet">
       <HintPath>Library\PackageCache\com.unity.visualscripting\Editor\VisualScripting.Core\Dependencies\YamlDotNet\Unity.VisualScripting.YamlDotNet.dll</HintPath>
       <Private>False</Private>
@@ -733,10 +729,6 @@
       <HintPath>Library\PackageCache\com.unity.collab-proxy\Lib\Editor\PlasticSCM\Unity.Plastic.Newtonsoft.Json.dll</HintPath>
       <Private>False</Private>
     </Reference>
-    <Reference Include="Zenject.ReflectionBaking.Mono.Cecil.Pdb">
-      <HintPath>Assets\Plugins\Zenject\OptionalExtras\ReflectionBaking\Lib\Zenject.ReflectionBaking.Mono.Cecil.Pdb.dll</HintPath>
-      <Private>False</Private>
-    </Reference>
     <Reference Include="log4netPlastic">
       <HintPath>Library\PackageCache\com.unity.collab-proxy\Lib\Editor\PlasticSCM\log4netPlastic.dll</HintPath>
       <Private>False</Private>
@@ -757,16 +749,8 @@
       <HintPath>Assets\Plugins\Sirenix\Assemblies\Sirenix.Utilities.dll</HintPath>
       <Private>False</Private>
     </Reference>
-    <Reference Include="Zenject.ReflectionBaking.Mono.Cecil.Rocks">
-      <HintPath>Assets\Plugins\Zenject\OptionalExtras\ReflectionBaking\Lib\Zenject.ReflectionBaking.Mono.Cecil.Rocks.dll</HintPath>
-      <Private>False</Private>
-    </Reference>
     <Reference Include="Unity.VisualScripting.Antlr3.Runtime">
       <HintPath>Library\PackageCache\com.unity.visualscripting\Runtime\VisualScripting.Flow\Dependencies\NCalc\Unity.VisualScripting.Antlr3.Runtime.dll</HintPath>
-      <Private>False</Private>
-    </Reference>
-    <Reference Include="Zenject.ReflectionBaking.Mono.Cecil.Mdb">
-      <HintPath>Assets\Plugins\Zenject\OptionalExtras\ReflectionBaking\Lib\Zenject.ReflectionBaking.Mono.Cecil.Mdb.dll</HintPath>
       <Private>False</Private>
     </Reference>
     <Reference Include="System.Collections.Immutable">
@@ -793,8 +777,12 @@
       <HintPath>Assets\Plugins\Roslyn\Microsoft.CodeAnalysis.dll</HintPath>
       <Private>False</Private>
     </Reference>
-    <Reference Include="Zenject.ReflectionBaking.Mono.Cecil">
-      <HintPath>Assets\Plugins\Zenject\OptionalExtras\ReflectionBaking\Lib\Zenject.ReflectionBaking.Mono.Cecil.dll</HintPath>
+    <Reference Include="System.Runtime.CompilerServices.Unsafe">
+      <HintPath>Assets\Plugins\Roslyn\System.Runtime.CompilerServices.Unsafe.dll</HintPath>
+      <Private>False</Private>
+    </Reference>
+    <Reference Include="Sirenix.Serialization.AOTGenerated">
+      <HintPath>Assets\Plugins\Sirenix\Assemblies\AOT\Sirenix.Serialization.AOTGenerated.dll</HintPath>
       <Private>False</Private>
     </Reference>
     <Reference Include="Sirenix.OdinValidator.Editor">
@@ -1515,6 +1503,10 @@
       <Project>{0528C1E9-484C-4C4B-495B-198086F6DADF}</Project>
       <Name>Unity.Services.RemoteConfig</Name>
     </ProjectReference>
+    <ProjectReference Include="Unity.Multiplayer.Playmode.csproj">
+      <Project>{9C6E149F-2931-80FA-2EE8-F419CC5E58C6}</Project>
+      <Name>Unity.Multiplayer.Playmode</Name>
+    </ProjectReference>
     <ProjectReference Include="Unity.VisualScripting.Core.csproj">
       <Project>{A6264EA2-4B58-C489-067A-59FD0CB3CB87}</Project>
       <Name>Unity.VisualScripting.Core</Name>
@@ -1547,17 +1539,9 @@
       <Project>{B7DB3A9E-B82B-E30E-84AE-54F582263E7C}</Project>
       <Name>Unity.RenderPipelines.Universal.Editor</Name>
     </ProjectReference>
-    <ProjectReference Include="Zenject-Editor.csproj">
-      <Project>{6DF0ECE6-5054-9864-F6D7-57F51EEA4384}</Project>
-      <Name>Zenject-Editor</Name>
-    </ProjectReference>
     <ProjectReference Include="Unity.2D.Animation.Runtime.csproj">
       <Project>{6E90FDEA-B968-6366-1CB8-FD16E8E707AD}</Project>
       <Name>Unity.2D.Animation.Runtime</Name>
-    </ProjectReference>
-    <ProjectReference Include="Roslyn.csproj">
-      <Project>{4F78001F-8609-A1F2-B445-CE287BF81457}</Project>
-      <Name>Roslyn</Name>
     </ProjectReference>
     <ProjectReference Include="Unity.Multiplayer.PlayMode.Configurations.Editor.csproj">
       <Project>{0224D355-3A94-6965-7AAA-C4E46CB7860D}</Project>
@@ -1598,10 +1582,6 @@
     <ProjectReference Include="Unity.Multiplayer.Tools.NetworkSimulator.Editor.csproj">
       <Project>{389A89B0-1AA0-94A1-CC7C-622367704EED}</Project>
       <Name>Unity.Multiplayer.Tools.NetworkSimulator.Editor</Name>
-    </ProjectReference>
-    <ProjectReference Include="Unity.Multiplayer.Playmode.csproj">
-      <Project>{9C6E149F-2931-80FA-2EE8-F419CC5E58C6}</Project>
-      <Name>Unity.Multiplayer.Playmode</Name>
     </ProjectReference>
     <ProjectReference Include="LLMGames.Commons.csproj">
       <Project>{37F137BD-D95B-3BC2-E479-D144ABE710B2}</Project>
@@ -1871,10 +1851,6 @@
       <Project>{FAC488D4-95C9-6A2A-A922-C979297263B5}</Project>
       <Name>Unity.Multiplayer.Tools.NetVis.Editor.UI</Name>
     </ProjectReference>
-    <ProjectReference Include="Zenject-ReflectionBaking-Editor.csproj">
-      <Project>{58485168-8D5F-C016-CC94-5ED5B5B79E71}</Project>
-      <Name>Zenject-ReflectionBaking-Editor</Name>
-    </ProjectReference>
     <ProjectReference Include="Unity.Multiplayer.Tools.NetworkSimulator.Runtime.csproj">
       <Project>{CD95D6B7-E370-1393-FA9C-9883458B2E09}</Project>
       <Name>Unity.Multiplayer.Tools.NetworkSimulator.Runtime</Name>
@@ -1971,10 +1947,6 @@
       <Project>{0AAB72FC-B78D-EA4E-F4EE-8F319A36B7A5}</Project>
       <Name>LLMGames.DTO</Name>
     </ProjectReference>
-    <ProjectReference Include="Zenject-PoolMonitor-Editor.csproj">
-      <Project>{6E8EF652-8568-762B-8A06-009648C1CC05}</Project>
-      <Name>Zenject-PoolMonitor-Editor</Name>
-    </ProjectReference>
     <ProjectReference Include="Unity.Toolchain.Win-x86_64-Linux-x86_64.csproj">
       <Project>{55CEBA90-4A90-75E6-7CB3-B229F27701F5}</Project>
       <Name>Unity.Toolchain.Win-x86_64-Linux-x86_64</Name>
@@ -2054,10 +2026,6 @@
     <ProjectReference Include="Unity.Tutorials.Core.csproj">
       <Project>{DF71394C-93FD-A4DE-91D6-7ECF88388A11}</Project>
       <Name>Unity.Tutorials.Core</Name>
-    </ProjectReference>
-    <ProjectReference Include="Zenject.csproj">
-      <Project>{D7BD3BE9-BFEA-9030-1136-1928EB29AB34}</Project>
-      <Name>Zenject</Name>
     </ProjectReference>
     <ProjectReference Include="Unity.Rendering.LightTransport.Runtime.csproj">
       <Project>{4C72F67B-8521-5D69-75DC-9C83941A4560}</Project>

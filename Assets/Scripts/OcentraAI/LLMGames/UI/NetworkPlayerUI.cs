@@ -171,6 +171,7 @@ namespace OcentraAI.LLMGames.Players.UI
             EventBus.Instance.SubscribeAsync<TimerStartEvent>(OnTimerStartEvent);
             EventBus.Instance.Subscribe<TimerStopEvent>(OnTimerStopEvent);
             EventBus.Instance.SubscribeAsync<RegisterUIPlayerEvent>(OnRegisterUIPlayerEvent);
+            EventBus.Instance.Subscribe<UpdateNetworkPlayerUIEvent>(OnUpdateNetworkPlayerUIEvent);
         }
 
         public void UnsubscribeFromEvents()
@@ -178,7 +179,9 @@ namespace OcentraAI.LLMGames.Players.UI
             EventBus.Instance.UnsubscribeAsync<TimerStartEvent>(OnTimerStartEvent);
             EventBus.Instance.Unsubscribe<TimerStopEvent>(OnTimerStopEvent);
             EventBus.Instance.UnsubscribeAsync<RegisterUIPlayerEvent>(OnRegisterUIPlayerEvent);
+            EventBus.Instance.Unsubscribe<UpdateNetworkPlayerUIEvent>(OnUpdateNetworkPlayerUIEvent);
         }
+
 
 
 
@@ -312,6 +315,12 @@ namespace OcentraAI.LLMGames.Players.UI
 
         }
 
+        private void OnUpdateNetworkPlayerUIEvent(UpdateNetworkPlayerUIEvent updateNetworkPlayerUI)
+        {
+            int coins = updateNetworkPlayerUI.Coins;
+            CoinsText.text = $"{coins}";
+
+        }
 
         private async UniTask OnRegisterUIPlayerEvent(RegisterUIPlayerEvent arg)
         {

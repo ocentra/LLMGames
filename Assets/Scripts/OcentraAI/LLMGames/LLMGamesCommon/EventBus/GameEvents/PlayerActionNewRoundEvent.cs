@@ -1,8 +1,8 @@
 namespace OcentraAI.LLMGames.Events
 {
-    public class PlayerActionNewRound : EventArgsBase
+    public class PlayerActionNewRoundEvent : EventArgsBase
     {
-        public PlayerActionNewRound()
+        public PlayerActionNewRoundEvent()
         {
             
         }

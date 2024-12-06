@@ -4,6 +4,7 @@ using OcentraAI.LLMGames.Extensions;
 using OcentraAI.LLMGames.Manager;
 using OcentraAI.LLMGames.ThreeCardBrag.UI;
 using OcentraAI.LLMGames.ThreeCardBrag.UI.Controllers;
+using OcentraAI.LLMGames.UI.Controllers;
 using OcentraAI.LLMGames.Utilities;
 using Sirenix.OdinInspector;
 using System.Collections.Generic;
@@ -37,6 +38,9 @@ namespace OcentraAI.LLMGames.UI.Managers
 
         [ShowInInspector, SerializeField, ReadOnly]
         private AnimationController tableController;
+
+        [ShowInInspector, SerializeField, ReadOnly]
+        protected LeftPanelController LeftPanelController { get; set; }
 
         public int PlayerCount
         {
@@ -75,13 +79,37 @@ namespace OcentraAI.LLMGames.UI.Managers
         {
             base.SubscribeToEvents();
             EventBus.Instance.SubscribeAsync<RegisterUIPlayerEvent>(OnRegisterUIPlayerEvent);
+            EventBus.Instance.SubscribeAsync<ProcessDecisionEvent>(OnProcessDecisionEvent);
         }
 
         public override void UnsubscribeFromEvents()
         {
             base.UnsubscribeFromEvents();
             EventBus.Instance.UnsubscribeAsync<RegisterUIPlayerEvent>(OnRegisterUIPlayerEvent);
+            EventBus.Instance.UnsubscribeAsync<ProcessDecisionEvent>(OnProcessDecisionEvent);
         }
+
+        protected async UniTask OnProcessDecisionEvent(ProcessDecisionEvent processDecisionEvent)
+        {
+            PlayerDecisionEvent playerDecisionEvent = processDecisionEvent.DecisionEvent;
+            PlayerDecision decision = PlayerDecision.FromId(playerDecisionEvent.Decision.DecisionId);
+
+            if (decision.Name == nameof(PlayerDecision.DrawFromDeck))
+            {
+                DeckHolder.SetPercentageAnimated(100);
+               // GameLoggerScriptable.Instance.Log($"Player drew a card from the deck.", this, ToEditor, ToFile, false);
+            }
+
+            if (decision.Name == nameof(PlayerDecision.PickAndSwap))
+            {
+                DeckHolder.SetPercentageAnimated(0);
+               // GameLoggerScriptable.Instance.Log($"Player swapped a card from the deck.", this, ToEditor, ToFile, false);
+            }
+
+            await UniTask.Yield();
+        }
+
+
 
         private async UniTask OnRegisterUIPlayerEvent(RegisterUIPlayerEvent arg)
         {
@@ -89,12 +117,7 @@ namespace OcentraAI.LLMGames.UI.Managers
 
             await UniTask.Yield();
         }
-
-        public void ShowDrawnCard(bool show = true)
-        {
-            DeckHolder.SetPercentageAnimated(show ? 100 : 0);
-        }
-
+        
 
         private void Init()
         {
@@ -118,6 +141,11 @@ namespace OcentraAI.LLMGames.UI.Managers
             if (DeckHolder == null)
             {
                 DeckHolder = transform.FindChildRecursively<AnimationController>(nameof(DeckHolder));
+            }
+
+            if (LeftPanelController == null)
+            {
+                LeftPanelController = transform.FindChildRecursively<LeftPanelController>(nameof(LeftPanelController));
             }
 
             AllPlayerUI = transform.GetComponentsInChildren<IPlayerUI>(true);
@@ -219,6 +247,11 @@ namespace OcentraAI.LLMGames.UI.Managers
 
             UpdatePlayerPositions();
             AdjustTableSize();
+            if (LeftPanelController != null)
+            {
+                LeftPanelController.NumberOfPlayers = PlayerCount;
+                LeftPanelController.UpdatePanelSize();
+            }
         }
 
 

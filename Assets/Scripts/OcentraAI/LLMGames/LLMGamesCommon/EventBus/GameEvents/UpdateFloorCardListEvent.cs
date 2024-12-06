@@ -1,16 +1,17 @@
 using System;
+using System.Collections.Generic;
 
 namespace OcentraAI.LLMGames.Events
 {
     public class UpdateFloorCardListEvent<T> : EventArgsBase
     {
-        public T Card { get; }
+        public List<T> FloorCards { get; }
 
         public bool Reset { get; }
 
-        public UpdateFloorCardListEvent(T card, bool reset = false)
+        public UpdateFloorCardListEvent(List<T> floorCards, bool reset = false)
         {
-            Card = card;
+            FloorCards = floorCards;
             Reset = reset;
         }
 

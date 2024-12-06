@@ -15,24 +15,22 @@ namespace OcentraAI.LLMGames.Manager
 {
     public class DeckManager : ManagerBase<DeckManager>
     {
-        [ShowInInspector] [ReadOnly] public List<Card> DeckCards { get; private set; } = new List<Card>();
-        [ShowInInspector] [ReadOnly] public List<Card> FloorCards { get; private set; } = new List<Card>();
-        [ShowInInspector] [ReadOnly] public Card BackCard => Deck.Instance.BackCard;
-        [ShowInInspector] [ReadOnly] public int TotalCards => Deck.Instance.CardTemplates.Count;
-        [ShowInInspector] [ReadOnly] public int RemainingCards => DeckCards.Count;
-        [ShowInInspector] [ReadOnly] public int FloorCardsCount => FloorCards.Count;
-        [ShowInInspector] [ReadOnly] public Card FloorCard { get; set; }
-        [ShowInInspector] [ReadOnly] public Card SwapCard { get; set; }
+        [ShowInInspector, ReadOnly] public List<Card> DeckCards { get; private set; } = new List<Card>();
+        [ShowInInspector, ReadOnly] public List<Card> FloorCards { get; private set; } = new List<Card>();
+        [ShowInInspector, ReadOnly] public Card BackCard => Deck.Instance.BackCard;
+        [ShowInInspector, ReadOnly] public int TotalCards => Deck.Instance.CardTemplates.Count;
+        [ShowInInspector, ReadOnly] public int RemainingCards => DeckCards.Count;
+        [ShowInInspector, ReadOnly] public int FloorCardsCount => FloorCards.Count;
+        [ShowInInspector, ReadOnly] public Card FloorCard { get; set; }
+        [ShowInInspector, ReadOnly] public Card SwapCard { get; set; }
 
-        [ShowInInspector]
-        [ReadOnly]
+        [ShowInInspector, ReadOnly, DictionaryDrawerSettings]
         public Dictionary<string, Card> WildCards { get; private set; } = new Dictionary<string, Card>();
 
-        [ShowInInspector] [ReadOnly] private Queue<Card> LastDrawnWildCards { get; set; } = new Queue<Card>();
+        [ShowInInspector, ReadOnly] private Queue<Card> LastDrawnWildCards { get; set; } = new Queue<Card>();
 
 
 
-        // Override InitializeAsync to ensure proper initialization and catch errors
         protected override async UniTask InitializeAsync()
         {
             try
@@ -46,32 +44,7 @@ namespace OcentraAI.LLMGames.Manager
             }
         }
 
-        public async UniTask OnSetFloorCard(SetFloorCardEvent<Card> e)
-        {
-            try
-            {
-                if (e.SwapCard != null)
-                {
-                    await OnSetFloorCardList(e.SwapCard);
-                    FloorCard = null;
-                    await EventBus.Instance.PublishAsync(new UpdateFloorCardEvent<Card>(null));
-                }
-                else
-                {
-                    if (FloorCard != null)
-                    {
-                        await OnSetFloorCardList(FloorCard);
-                    }
 
-                    FloorCard = DrawCard();
-                    await EventBus.Instance.PublishAsync(new UpdateFloorCardEvent<Card>(FloorCard));
-                }
-            }
-            catch (Exception ex)
-            {
-                LogError($"Error in OnSetFloorCard: {ex.Message}", this);
-            }
-        }
 
         public void Shuffle()
         {
@@ -119,7 +92,7 @@ namespace OcentraAI.LLMGames.Manager
                 if (!FloorCards.Contains(floorCard))
                 {
                     FloorCards.Add(floorCard);
-                    await EventBus.Instance.PublishAsync(new UpdateFloorCardListEvent<Card>(floorCard));
+                   // await EventBus.Instance.PublishAsync(new UpdateFloorCardListEvent<Card>(floorCard));
                 }
             }
             catch (Exception ex)
@@ -151,19 +124,19 @@ namespace OcentraAI.LLMGames.Manager
                 {
                     //todo Fix this 
 
-//#if UNITY_EDITOR
-//                    Card devTrumpCard = DevTools.DevModeManager.Instance.TrumpDevCard;
-//                    if (devTrumpCard != null)
-//                    {
-//                        trumpCard = cards.FirstOrDefault(
-//                            c => c.Suit == devTrumpCard.Suit && c.Rank == devTrumpCard.Rank);
-//                        if (trumpCard != null)
-//                        {
-//                            WildCards["TrumpCard"] = trumpCard;
-//                        }
-//                    }
+                    //#if UNITY_EDITOR
+                    //                    Card devTrumpCard = DevTools.DevModeManager.Instance.TrumpDevCard;
+                    //                    if (devTrumpCard != null)
+                    //                    {
+                    //                        trumpCard = cards.FirstOrDefault(
+                    //                            c => c.Suit == devTrumpCard.Suit && c.Rank == devTrumpCard.Rank);
+                    //                        if (trumpCard != null)
+                    //                        {
+                    //                            WildCards["TrumpCard"] = trumpCard;
+                    //                        }
+                    //                    }
 
-//#endif
+                    //#endif
 
                 }
 
@@ -219,7 +192,7 @@ namespace OcentraAI.LLMGames.Manager
                 }
 
                 // Publish event with new wild cards
-                await EventBus.Instance.PublishAsync(new UpdateWildCardsEvent<GameMode,Card>(WildCards, gameMode));
+                //await EventBus.Instance.PublishAsync(new UpdateWildCardsEvent<GameMode, Card>(WildCards, gameMode));
             }
             catch (Exception ex)
             {
@@ -258,8 +231,8 @@ namespace OcentraAI.LLMGames.Manager
                 await SetRandomWildCards(gameMode);
 
                 FloorCard = null;
-                await EventBus.Instance.PublishAsync(new UpdateFloorCardEvent<Card>(null));
-                await EventBus.Instance.PublishAsync(new UpdateFloorCardListEvent<Card>(null, true));
+                //await EventBus.Instance.PublishAsync(new UpdateFloorCardEvent<Card>(null));
+               // await EventBus.Instance.PublishAsync(new UpdateFloorCardListEvent<Card>(null, true));
 
                 return true;
             }

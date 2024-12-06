@@ -6,7 +6,7 @@ using UnityEngine;
 
 namespace OcentraAI.LLMGames.Drawers
 {
-    [OdinDrawer]
+   
     public class LobbyPlayerDrawer : OdinValueDrawer<Player>
     {
         protected override void DrawPropertyLayout(GUIContent label)

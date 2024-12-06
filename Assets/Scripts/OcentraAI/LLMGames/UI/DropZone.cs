@@ -1,12 +1,10 @@
+using Cysharp.Threading.Tasks;
 using OcentraAI.LLMGames.Events;
-using OcentraAI.LLMGames.Players;
-using OcentraAI.LLMGames.Scriptable;
-using OcentraAI.LLMGames.ThreeCardBrag.UI.Controllers;
-using OcentraAI.LLMGames.UI.Controllers;
+using OcentraAI.LLMGames.UI;
 using OcentraAI.LLMGames.UI.Managers;
+using OcentraAI.LLMGames.Utilities;
 using Sirenix.OdinInspector;
 using UnityEngine;
-using Object = UnityEngine.Object;
 
 namespace OcentraAI.LLMGames.ThreeCardBrag.UI
 {
@@ -14,33 +12,9 @@ namespace OcentraAI.LLMGames.ThreeCardBrag.UI
     public class DropZone : MonoBehaviour
     {
         [ShowInInspector][Required] private CardView CardView { get; set; }
-        [ShowInInspector][Required] private UIController UIController { get; set; }
-
-#if UNITY_EDITOR
-        private bool IsValidObject(Object obj)
-        {
-            try
-            {
-                return obj != null && !ReferenceEquals(obj, null) && obj;
-            }
-            catch
-            {
-                return false;
-            }
-        }
-
-        private bool IsSafeToExecute()
-        {
-            if (Application.isPlaying) return true;
-            return IsValidObject(this) && IsValidObject(gameObject);
-        }
-#endif
 
         private void OnValidate()
         {
-#if UNITY_EDITOR
-            if (!IsSafeToExecute()) return;
-#endif
             Init();
         }
 
@@ -51,18 +25,9 @@ namespace OcentraAI.LLMGames.ThreeCardBrag.UI
 
         private void Init()
         {
-#if UNITY_EDITOR
-            if (!Application.isPlaying && !IsSafeToExecute()) return;
-#endif
-
             if (CardView == null)
             {
                 CardView = GetComponent<CardView>();
-            }
-
-            if (UIController == null)
-            {
-                UIController = FindAnyObjectByType<UIController>();
             }
 
             // Ensure the BoxCollider is set up correctly
@@ -77,61 +42,33 @@ namespace OcentraAI.LLMGames.ThreeCardBrag.UI
             }
         }
 
-        public void OnDrop(Draggable draggable)
+        public async void OnDrop(Draggable draggable)
         {
-#if UNITY_EDITOR
-            if (!IsSafeToExecute()) return;
-#endif
 
-            bool isValidDraggable = draggable != null &&
-                                  IsValidObject(draggable.CardView) &&
-                                  draggable.CardView != null &&
-                                  draggable.CardView.Card != null;
+            bool isValidDraggable = draggable != null && draggable.CardView != null && draggable.CardView.Card != null;
 
-            if (isValidDraggable && IsValidObject(CardView))
+            if (isValidDraggable && CardView != null)
             {
-                EventBus.Instance.Publish(
-                    new PlayerActionPickAndSwapEvent<Card>(
-                        typeof(HumanLLMPlayer),
-                        draggable.CardView.Card,
-                        CardView.Card
-                    )
-                );
+                CardView.SetHighlight(false, CardView.OriginalHighlightColor);
+
+                string draggedCard = CardUtility.GetRankSymbol(draggable.CardView.Card.Suit, draggable.CardView.Card.Rank, false);
+                string cardInHand = CardUtility.GetRankSymbol(CardView.Card.Suit, CardView.Card.Rank, false);
+                PlayerDecisionEvent eventToPublish = new PlayerDecisionPickAndSwapEvent(PlayerDecision.PickAndSwap, cardInHand, draggedCard);
+                bool success = await EventBus.Instance.PublishAsync(eventToPublish);
+
             }
 
-            if (IsValidObject(CardView))
-            {
-                CardView.SetHighlight(false, CardView.originalHighlightColor);
-            }
-
-            if (IsValidObject(UIController))
-            {
-                UIController.SetButtonState(ButtonState.DrawnFromDeck);
-            }
-
-            var mainTableUI = MainTableUI.Instance;
-            if (IsValidObject(mainTableUI))
-            {
-                mainTableUI.ShowDrawnCard(false);
-            }
+            await UniTask.Yield();
         }
 
         public void OnDraggableOver(Color color)
         {
-#if UNITY_EDITOR
-            if (!IsSafeToExecute()) return;
-#endif
-
-            if (IsValidObject(CardView))
-            {
-                CardView.SetHighlight(true, color);
-            }
+            CardView.SetHighlight(true, color);
         }
 
         private void OnDestroy()
         {
             CardView = null;
-            UIController = null;
         }
     }
 }

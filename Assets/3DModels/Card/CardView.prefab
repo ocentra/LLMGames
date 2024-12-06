@@ -115,29 +115,34 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: d8ea65ae119513c4695f49583e52b94a, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  mainCardState:
+  MainCardState:
     OriginalMaterials:
     - {fileID: 2100000, guid: 8d46eb01edb73444c8d71b7d8e2f0140, type: 2}
     RuntimeMaterials:
     - {fileID: 0}
     OriginalColor: {r: 0.8, g: 0.8, b: 0.8, a: 1}
     Renderer: {fileID: 6126686564411518388}
-  highlightCardState:
+  HighlightCardState:
     OriginalMaterials:
     - {fileID: 2100000, guid: 959fd9710b60aaa4091f8f0d28085a38, type: 2}
     RuntimeMaterials:
     - {fileID: 0}
     OriginalColor: {r: 1, g: 1, b: 0, a: 1}
     Renderer: {fileID: 2342957480306516306}
-  backCardState:
+  BackCardState:
     OriginalMaterials:
     - {fileID: 2100000, guid: 5bb5d4cff70d6cd4488869876abc2cfc, type: 2}
     RuntimeMaterials:
     - {fileID: 0}
     OriginalColor: {r: 0.8, g: 0.8, b: 0.8, a: 1}
     Renderer: {fileID: 7507708062922609575}
-  highlightColor: {r: 1, g: 1, b: 1, a: 1}
-  mainCardColor: {r: 1, g: 1, b: 1, a: 1}
+  MainCard: {fileID: 6126686564411518388}
+  BackCard: {fileID: 7507708062922609575}
+  HighlightCard: {fileID: 2342957480306516306}
+  MainCardRuntimeMaterial: {fileID: 0}
+  HighlightCardRuntimeMaterial: {fileID: 0}
+  HighlightColor: {r: 1, g: 1, b: 1, a: 1}
+  MainCardColor: {r: 1, g: 1, b: 1, a: 1}
 --- !u!23 &2342957480306516306 stripped
 MeshRenderer:
   m_CorrespondingSourceObject: {fileID: 3191501918061245568, guid: 8f0254be90b413240b8f9dfb7643fa0f,

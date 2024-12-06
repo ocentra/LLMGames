@@ -125,11 +125,7 @@ namespace OcentraAI.LLMGames.Manager
                 return;
             }
 
-            if (!await ExecuteWithTryCatch(InitializeDeck,
-                    $"{nameof(InitializeDeck)} Failed @ {nameof(InitializeGameAsync)} Method"))
-            {
-                return;
-            }
+
 
             if (!await ExecuteWithTryCatch(() => InitializePlayersUI(PlayerManager.GetAllPlayers()),
                     $"{nameof(InitializePlayersUI)} Failed @ {nameof(InitializeGameAsync)} Method"))
@@ -143,34 +139,7 @@ namespace OcentraAI.LLMGames.Manager
             }
         }
 
-        private async UniTask<bool> InitializeDeck()
-        {
-            if (IsCancellationRequested())
-            {
-                LogError("Deck initialization was canceled.", this);
-                return false;
-            }
 
-            if (DeckManager == null)
-            {
-                LogError("DeckManager is null. Cannot initialize deck.", this);
-                return false;
-            }
-
-            try
-            {
-                EventBus.Instance.SubscribeAsync<SetFloorCardEvent<Card>>(DeckManager.OnSetFloorCard);
-                await UniTask.Yield();
-
-                Log("Deck initialized successfully.", this);
-                return true;
-            }
-            catch (Exception ex)
-            {
-                LogError($"Error during deck initialization: {ex.Message}\n{ex.StackTrace}", this);
-                return false;
-            }
-        }
 
 
 
@@ -282,10 +251,9 @@ namespace OcentraAI.LLMGames.Manager
         {
             EventBus.Instance.SubscribeAsync<StartMainGameEvent>(OnStartMainGame);
             EventBus.Instance.SubscribeAsync<PlayerActionStartNewGameEvent>(OnPlayerActionStartNewGame);
-            EventBus.Instance.SubscribeAsync<PlayerActionNewRound>(OnPlayerActionNewRound);
+            EventBus.Instance.SubscribeAsync<PlayerActionNewRoundEvent>(OnPlayerActionNewRound);
             EventBus.Instance.SubscribeAsync<PlayerActionEvent<PlayerAction>>(OnPlayerAction);
             EventBus.Instance.SubscribeAsync<PlayerActionRaiseBetEvent>(OnPlayerActionRaiseBet);
-            EventBus.Instance.Subscribe<PlayerActionPickAndSwapEvent<Card>>(OnPlayerActionPickAndSwap);
             EventBus.Instance.Subscribe<PurchaseCoinsEvent>(OnPurchaseCoins);
         }
 
@@ -293,12 +261,10 @@ namespace OcentraAI.LLMGames.Manager
         {
             EventBus.Instance.UnsubscribeAsync<StartMainGameEvent>(OnStartMainGame);
             EventBus.Instance.UnsubscribeAsync<PlayerActionStartNewGameEvent>(OnPlayerActionStartNewGame);
-            EventBus.Instance.UnsubscribeAsync<PlayerActionNewRound>(OnPlayerActionNewRound);
+            EventBus.Instance.UnsubscribeAsync<PlayerActionNewRoundEvent>(OnPlayerActionNewRound);
             EventBus.Instance.UnsubscribeAsync<PlayerActionEvent<PlayerAction>>(OnPlayerAction);
             EventBus.Instance.UnsubscribeAsync<PlayerActionRaiseBetEvent>(OnPlayerActionRaiseBet);
-            EventBus.Instance.Unsubscribe<PlayerActionPickAndSwapEvent<Card>>(OnPlayerActionPickAndSwap);
             EventBus.Instance.Unsubscribe<PurchaseCoinsEvent>(OnPurchaseCoins);
-            EventBus.Instance.UnsubscribeAsync<SetFloorCardEvent<Card>>(DeckManager.OnSetFloorCard);
         }
 
 
@@ -326,7 +292,7 @@ namespace OcentraAI.LLMGames.Manager
         }
 
 
-        private async UniTask OnPlayerActionNewRound(PlayerActionNewRound e)
+        private async UniTask OnPlayerActionNewRound(PlayerActionNewRoundEvent e)
         {
             if (IsCancellationRequested())
             {
@@ -440,54 +406,7 @@ namespace OcentraAI.LLMGames.Manager
         }
 
 
-        private void OnPlayerActionPickAndSwap(PlayerActionPickAndSwapEvent<Card> e)
-        {
-            if (IsCancellationRequested())
-            {
-                LogError("Pick and swap action was canceled.", this);
-                return;
-            }
-
-            if (e == null)
-            {
-                LogError("PlayerActionPickAndSwapEvent event is null. Cannot process pick and swap action.", this);
-                return;
-            }
-
-            if (TurnManager == null)
-            {
-                LogError("TurnManager is null. Cannot process pick and swap action.", this);
-                return;
-            }
-
-            if (TurnManager.CurrentLLMPlayer == null)
-            {
-                LogError("CurrentLLMPlayer in TurnManager is null. Cannot process pick and swap action.", this);
-                return;
-            }
-
-            try
-            {
-                if (e.CurrentPlayerType == TurnManager.CurrentLLMPlayer.GetType())
-                {
-                    if (e.FloorCard == null || e.SwapCard == null)
-                    {
-                        LogError("FloorCard or SwapCard is null. Cannot proceed with pick and swap.", this);
-                        return;
-                    }
-
-                    TurnManager.CurrentLLMPlayer.PickAndSwap(e.FloorCard, e.SwapCard);
-                }
-                else
-                {
-                    LogError("Current player type does not match TurnManager's CurrentLLMPlayer. Pick and swap action aborted.", this);
-                }
-            }
-            catch (Exception ex)
-            {
-                LogError($"Error in OnPlayerActionPickAndSwap: {ex.Message}\n{ex.StackTrace}", this);
-            }
-        }
+     
 
 
         private void OnPurchaseCoins(PurchaseCoinsEvent e)
@@ -809,7 +728,7 @@ namespace OcentraAI.LLMGames.Manager
                     return;
                 }
 
-                await EventBus.Instance.PublishAsync(new UpdateGameStateEvent<GameManager>(this));
+                await EventBus.Instance.PublishAsync(new UpdateGameStateEvent());
 
               
                 if (TurnManager.CurrentLLMPlayer is ComputerLLMPlayer computerPlayer)
@@ -980,7 +899,7 @@ namespace OcentraAI.LLMGames.Manager
                         return;
                 }
 
-                EventBus.Instance.Publish(new UpdateGameStateEvent<GameManager>(this));
+                EventBus.Instance.Publish( new UpdateGameStateEvent());
                 ActionCompletionSource.TrySetResult(true);
             }
             catch (Exception ex)
@@ -1416,7 +1335,7 @@ namespace OcentraAI.LLMGames.Manager
             if (ScoreManager.AwardTiedPot(winners, TurnManager, PlayerManager))
             {
                 EventBus.Instance.Publish(new UpdateRoundDisplayEvent<ScoreManager>(ScoreManager));
-                EventBus.Instance.Publish(new UpdateGameStateEvent<GameManager>(this));
+                EventBus.Instance.Publish(new UpdateGameStateEvent());
                 OfferContinuation(showHand);
             }
             else
@@ -1441,7 +1360,7 @@ namespace OcentraAI.LLMGames.Manager
                 if (ScoreManager.AwardPotToWinner(winner, TurnManager, PlayerManager))
                 {
                     EventBus.Instance.Publish(new UpdateRoundDisplayEvent<ScoreManager>(ScoreManager));
-                    EventBus.Instance.Publish(new UpdateGameStateEvent<GameManager>(this));
+                    EventBus.Instance.Publish(new UpdateGameStateEvent());
 
                     bool playerWithZeroCoinsFound = false;
                     List<LLMPlayer> activePlayers = PlayerManager.GetActivePlayers();

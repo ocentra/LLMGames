@@ -279,7 +279,7 @@ namespace OcentraAI.LLMGames.Screens
 
             isButtonClicked = true;
             PlaySelectionSound();
-            EventBus.Instance.Publish(new PlayerActionNewRound());
+            EventBus.Instance.Publish(new PlayerActionNewRoundEvent());
             HideScreen();
         }
 

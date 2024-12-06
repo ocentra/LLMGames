@@ -1,3 +1,4 @@
+using Cysharp.Threading.Tasks;
 using OcentraAI.LLMGames.Events;
 using Sirenix.OdinInspector;
 using System.Collections.Generic;
@@ -35,10 +36,9 @@ namespace OcentraAI.LLMGames.UI
             }
             base.Init();
         }
-
-        public override void OnPointerClick(PointerEventData eventData)
+        public override async void OnPointerClick(PointerEventData eventData)
         {
-           
+
 
             PlayerDecisionEvent eventToPublish = null;
 
@@ -93,7 +93,7 @@ namespace OcentraAI.LLMGames.UI
 
             if (eventToPublish != null)
             {
-                EventBus.Instance.Publish(eventToPublish);
+               UniTask<bool> success = EventBus.Instance.PublishAsync(eventToPublish);
             }
 
             base.OnPointerClick(eventData);

@@ -4,15 +4,14 @@ using System.Collections.Generic;
 
 namespace OcentraAI.LLMGames.Events
 {
-    public class UpdateWildCardsHighlightEvent<T> : EventArgsBase
+    public class UpdateWildCardsHighlightEvent : EventArgsBase
     {
 
-        public Dictionary<string, T> WildCardsInHand { get; }
-        public bool IsHighlighted { get; }
-        public UpdateWildCardsHighlightEvent(Dictionary<string, T> wildCardsInHand, bool isHighlighted = false)
+        public int WildCardsInHandId { get; } = -1;
+        public UpdateWildCardsHighlightEvent( int isHighlighted )
         {
-            WildCardsInHand = wildCardsInHand;
-            IsHighlighted = isHighlighted;
+            WildCardsInHandId = WildCardsInHandId;
+            
         }
 
 

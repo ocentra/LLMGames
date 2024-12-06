@@ -149,12 +149,7 @@ public class NetworkComputerPlayer : NetworkPlayer, IComputerPlayerData
         PickAndSwap(FloorCard, Hand.FindWorstCard());
     }
 
-    public void PickAndSwap(Card floorCard, Card swapCard)
-    {
-
-        // EventBus.Instance.Publish(new UpdatePlayerHandDisplayEvent<LLMPlayer>(this));
-    }
-
+    
 
     private void TakeActionRaise(int currentBet)
     {

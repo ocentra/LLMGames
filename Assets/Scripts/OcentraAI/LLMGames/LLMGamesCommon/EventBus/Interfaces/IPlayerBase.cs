@@ -16,6 +16,10 @@ namespace OcentraAI.LLMGames.Events
 
         GameObject GameObject { get; set; }
 
+        NetworkVariable<int> Coins { get; }
+        void SetCoins(int playerIndex);
+        int GetCoins();
+
         NetworkVariable<bool> IsPlayerRegistered { get; set; }
         void SetPlayerRegistered(bool value = true);
 
@@ -26,7 +30,11 @@ namespace OcentraAI.LLMGames.Events
         void SetIsPlayerTurn(bool value = true);
 
         NetworkVariable<bool> HasSeenHand { get; set; }
-       
+
+        string GetCard(int i);
+
+
+
 
     }
 }

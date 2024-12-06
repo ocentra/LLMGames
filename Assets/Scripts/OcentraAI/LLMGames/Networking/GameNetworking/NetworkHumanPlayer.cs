@@ -2,8 +2,6 @@ using Cysharp.Threading.Tasks;
 using OcentraAI.LLMGames.Events;
 using OcentraAI.LLMGames.Utilities;
 using Sirenix.OdinInspector;
-using System;
-using Unity.Netcode;
 using Unity.Services.Authentication;
 using Unity.Services.Lobbies.Models;
 using static System.String;
@@ -15,26 +13,15 @@ namespace OcentraAI.LLMGames.GamesNetworking
 
         [ShowInInspector] public Player LobbyPlayerData { get; private set; }
         [ShowInInspector] private PlayerViewer PlayerViewer { get; set; } = null;
-
-        // Temporary public field to show the time taken in seconds for syncing
-        [ShowInInspector] public float TimeTakenToSyncAuthId { get; private set; }
         [ShowInInspector] public string AuthenticatedPlayerIdViewer { get; private set; }
-
       
-
-
         public override async void OnNetworkSpawn()
         {
 
             base.OnNetworkSpawn();
             
             GameLoggerScriptable.Log($"Setting AuthenticatedPlayerId.Value For {PlayerId.Value}", this);
-
-            DateTime startTime = DateTime.Now;
-
-           
-
-
+            
             while (AuthenticatedPlayerId.Value.IsEmpty)
             {
                 GameLoggerScriptable.Log($"Stuck in setting AuthenticatedPlayerId.Value For {PlayerId}", this);
@@ -116,8 +103,6 @@ namespace OcentraAI.LLMGames.GamesNetworking
 
             SubscribeToEvents();
 
-            TimeSpan timeTaken = DateTime.Now - startTime;
-            TimeTakenToSyncAuthId = (float)timeTaken.TotalSeconds;
 
         }
 

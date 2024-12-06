@@ -243,7 +243,7 @@ namespace OcentraAI.LLMGames.Players
           
             if (showHands)
             {
-                EventBus.Instance.Publish(new UpdatePlayerHandDisplayEvent<LLMPlayer>(this, true));
+                //EventBus.Instance.Publish(new UpdatePlayerHandDisplayEvent<LLMPlayer>(this, true));
 
             }
 
@@ -252,7 +252,7 @@ namespace OcentraAI.LLMGames.Players
         public override void PickAndSwap(Card floorCard, Card swapCard)
         {
             base.PickAndSwap(floorCard, swapCard);
-            EventBus.Instance.Publish(new UpdatePlayerHandDisplayEvent<LLMPlayer>(this));
+           // EventBus.Instance.Publish(new UpdatePlayerHandDisplayEvent<LLMPlayer>(this));
         }
 
         public void ResetState()

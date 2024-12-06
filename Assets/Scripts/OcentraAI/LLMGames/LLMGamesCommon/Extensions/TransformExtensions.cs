@@ -338,6 +338,32 @@ namespace OcentraAI.LLMGames.Extensions
 
 
         /// <summary>
+        /// Recursively finds all child components of a specified type.
+        /// </summary>
+        /// <typeparam name="T">The type of component to search for.</typeparam>
+        /// <param name="parent">The parent Transform to start the search from.</param>
+        /// <returns>A list of all components of type T found in the hierarchy.</returns>
+        public static List<T> FindAllChildrenOfType<T>(this Transform parent) where T : Component
+        {
+            List<T> results = new List<T>();
+
+            foreach (Transform child in parent)
+            {
+                T component = child.GetComponent<T>();
+                if (component != null)
+                {
+                    results.Add(component);
+                }
+
+                // Recursive call to check this child's children
+                results.AddRange(child.FindAllChildrenOfType<T>());
+            }
+
+            return results;
+        }
+
+
+        /// <summary>
         ///     Retrieves a list of assets at a specified path.
         /// </summary>
         /// <typeparam name="T">The type of assets to retrieve.</typeparam>

@@ -1,9 +1,13 @@
+using Sirenix.OdinInspector;
+using System;
 using System.Collections.Generic;
 using System.Reflection;
 using Unity.Netcode;
+using UnityEngine;
 
 namespace OcentraAI.LLMGames.Events
 {
+    [Serializable]
     public class PlayerDecision : INetworkSerializable
     {
         //default fallback
@@ -13,12 +17,15 @@ namespace OcentraAI.LLMGames.Events
         public static readonly PlayerDecision SeeHand = new PlayerDecision(1, nameof(SeeHand));
         public static readonly PlayerDecision PlayBlind = new PlayerDecision(2, nameof(PlayBlind));
         public static readonly PlayerDecision Bet = new PlayerDecision(3, nameof(Bet));
-        public static readonly PlayerDecision Fold = new PlayerDecision(4,nameof(Fold));
+        public static readonly PlayerDecision Fold = new PlayerDecision(4, nameof(Fold));
         public static readonly PlayerDecision DrawFromDeck = new PlayerDecision(5, nameof(DrawFromDeck));
         public static readonly PlayerDecision ShowCall = new PlayerDecision(6, nameof(ShowCall));
         public static readonly PlayerDecision RaiseBet = new PlayerDecision(7, nameof(RaiseBet));
-
-
+        public static readonly PlayerDecision PickAndSwap = new PlayerDecision(16, nameof(PickAndSwap));
+        public static IEnumerable<PlayerDecision> GetMainBettingDecisions()
+        {
+            return new List<PlayerDecision> { SeeHand, PlayBlind, Bet, Fold, DrawFromDeck, ShowCall, RaiseBet };
+        }
         // extra gameplay
         public static readonly PlayerDecision WildCard0 = new PlayerDecision(10, nameof(WildCard0));
         public static readonly PlayerDecision WildCard1 = new PlayerDecision(11, nameof(WildCard1));
@@ -26,12 +33,20 @@ namespace OcentraAI.LLMGames.Events
         public static readonly PlayerDecision WildCard3 = new PlayerDecision(13, nameof(WildCard3));
         public static readonly PlayerDecision Trump = new PlayerDecision(14, nameof(Trump));
 
+        public static IEnumerable<PlayerDecision> GetExtraGamePlayDecisions()
+        {
+            return new List<PlayerDecision> { WildCard0, WildCard1, WildCard2, WildCard3, Trump };
+        }
+
         // UI oriented
         public static readonly PlayerDecision ShowAllFloorCards = new PlayerDecision(15, nameof(ShowAllFloorCards));
         public static readonly PlayerDecision PurchaseCoins = new PlayerDecision(9, nameof(PurchaseCoins));
+        public static IEnumerable<PlayerDecision> GetUIOrientedDecisions()
+        {
+            return new List<PlayerDecision> { ShowAllFloorCards, PurchaseCoins };
+        }
 
-
-        private int decisionId;
+        [SerializeField] private int decisionId;
 
         public int DecisionId
         {
@@ -39,7 +54,7 @@ namespace OcentraAI.LLMGames.Events
             private set => decisionId = value;
         }
 
-        public string Name { get; private set; }
+        [ShowInInspector] public string Name { get; private set; }
 
         private PlayerDecision(int decisionId, string name)
         {
@@ -73,10 +88,29 @@ namespace OcentraAI.LLMGames.Events
             return false;
         }
 
+        public static bool operator ==(PlayerDecision left, PlayerDecision right)
+        {
+            // Handle null cases
+            if (ReferenceEquals(left, null))
+            {
+                return ReferenceEquals(right, null);
+            }
+            return left.Equals(right);
+        }
+
+        public static bool operator !=(PlayerDecision left, PlayerDecision right)
+        {
+            return !(left == right);
+        }
+
         public override int GetHashCode()
         {
             return DecisionId.GetHashCode();
         }
+
+
+
+
 
         public static IEnumerable<PlayerDecision> GetAllDecisions()
         {
@@ -96,5 +130,11 @@ namespace OcentraAI.LLMGames.Events
 
             return decisions;
         }
+
+        public override string ToString()
+        {
+            return Name;
+        }
+
     }
 }

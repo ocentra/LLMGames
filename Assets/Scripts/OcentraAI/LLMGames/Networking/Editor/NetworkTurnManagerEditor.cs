@@ -2,13 +2,16 @@ using OcentraAI.LLMGames.Networking.Manager;
 using Sirenix.OdinInspector.Editor;
 using UnityEditor;
 
-[CustomEditor(typeof(NetworkTurnManager))]
-public class NetworkTurnManagerEditor : OdinEditor
+namespace OcentraAI.LLMGames.Manager
 {
-    public override void OnInspectorGUI()
+    [CustomEditor(typeof(NetworkTurnManager))]
+    public class NetworkTurnManagerEditor : OdinEditor
     {
-        base.OnInspectorGUI();
-        var manager = (NetworkTurnManager)target;
+        public override void OnInspectorGUI()
+        {
+            base.OnInspectorGUI();
+            var manager = (NetworkTurnManager)target;
 
+        }
     }
 }

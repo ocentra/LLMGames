@@ -62,12 +62,10 @@
     <Analyzer Include="C:\Program Files\Unity\Hub\Editor\6000.0.23f1\Editor\Data\Tools\Unity.SourceGenerators\Unity.UIToolkit.SourceGenerator.dll" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="Assets\Scripts\OcentraAI\LLMGames\Managers\DevCard.cs" />
     <Compile Include="Assets\Scripts\OcentraAI\LLMGames\Players\ComputerLLMPlayer.cs" />
     <Compile Include="Assets\Scripts\OcentraAI\LLMGames\LLMServices\ClaudeResponse.cs" />
     <Compile Include="Assets\Scripts\OcentraAI\LLMGames\Managers\GameManager.cs" />
     <Compile Include="Assets\Scripts\OcentraAI\LLMGames\Managers\UnityServicesManager.cs" />
-    <Compile Include="Assets\Scripts\OcentraAI\LLMGames\Players\PlayerAction.cs" />
     <Compile Include="Assets\Scripts\OcentraAI\LLMGames\LLMServices\LocalLLMService.cs" />
     <Compile Include="Assets\Scripts\OcentraAI\LLMGames\LLMServices\LocalLLMResponse.cs" />
     <Compile Include="Assets\Scripts\OcentraAI\LLMGames\LLMServices\Choice.cs" />
@@ -77,12 +75,11 @@
     <Compile Include="Assets\Scripts\OcentraAI\LLMGames\Managers\AuthenticationManager.cs" />
     <Compile Include="Assets\Scripts\OcentraAI\LLMGames\LLMServices\AIHelper.cs" />
     <Compile Include="Assets\Scripts\OcentraAI\LLMGames\Managers\RoundRecord.cs" />
-    <Compile Include="Assets\Scripts\OcentraAI\LLMGames\Editor\CombineCSFilesEditor.cs" />
     <Compile Include="Assets\Scripts\OcentraAI\LLMGames\LLMServices\Result.cs" />
+    <Compile Include="Assets\Scripts\OcentraAI\LLMGames\Players\PlayerActionEnum.cs" />
     <Compile Include="Assets\Scripts\OcentraAI\LLMGames\LLMServices\AzureOpenAIService.cs" />
     <Compile Include="Assets\Scripts\OcentraAI\LLMGames\Editor\CardEditor.cs" />
     <Compile Include="Assets\Scripts\OcentraAI\LLMGames\Editor\CardAssetPostprocessor.cs" />
-    <Compile Include="Assets\Scripts\OcentraAI\LLMGames\Editor\GameModeEditor.cs" />
     <Compile Include="Assets\Scripts\OcentraAI\LLMGames\Managers\PlayerManager.cs" />
     <Compile Include="Assets\Scripts\OcentraAI\LLMGames\LLMServices\OpenAIResponse.cs" />
     <Compile Include="Assets\Scripts\OcentraAI\LLMGames\Managers\ScoreManager.cs" />
@@ -90,7 +87,6 @@
     <Compile Include="Assets\Scripts\OcentraAI\LLMGames\Managers\DevModeManager.cs" />
     <Compile Include="Assets\Scripts\OcentraAI\LLMGames\LLMServices\LLMServiceFactory.cs" />
     <Compile Include="Assets\Scripts\OcentraAI\LLMGames\LLMServices\ClaudeService.cs" />
-    <Compile Include="Assets\Scripts\OcentraAI\LLMGames\Scores\RoundScore.cs" />
     <Compile Include="Assets\Scripts\OcentraAI\LLMGames\Managers\TurnManager.cs" />
     <Compile Include="Assets\Scripts\OcentraAI\LLMGames\Editor\DevModeManagerEditor.cs" />
     <Compile Include="Assets\Scripts\OcentraAI\LLMGames\LLMServices\LLMManager.cs" />
@@ -609,10 +605,6 @@
       <HintPath>Library\PackageCache\com.unity.services.wire\Plugins\websocket-sharp.dll</HintPath>
       <Private>False</Private>
     </Reference>
-    <Reference Include="Zenject-usage">
-      <HintPath>Assets\Plugins\Zenject\Source\Usage\Zenject-usage.dll</HintPath>
-      <Private>False</Private>
-    </Reference>
     <Reference Include="Unity.VisualScripting.YamlDotNet">
       <HintPath>Library\PackageCache\com.unity.visualscripting\Editor\VisualScripting.Core\Dependencies\YamlDotNet\Unity.VisualScripting.YamlDotNet.dll</HintPath>
       <Private>False</Private>
@@ -653,10 +645,6 @@
       <HintPath>Library\PackageCache\com.unity.collab-proxy\Lib\Editor\PlasticSCM\Unity.Plastic.Newtonsoft.Json.dll</HintPath>
       <Private>False</Private>
     </Reference>
-    <Reference Include="Zenject.ReflectionBaking.Mono.Cecil.Pdb">
-      <HintPath>Assets\Plugins\Zenject\OptionalExtras\ReflectionBaking\Lib\Zenject.ReflectionBaking.Mono.Cecil.Pdb.dll</HintPath>
-      <Private>False</Private>
-    </Reference>
     <Reference Include="log4netPlastic">
       <HintPath>Library\PackageCache\com.unity.collab-proxy\Lib\Editor\PlasticSCM\log4netPlastic.dll</HintPath>
       <Private>False</Private>
@@ -677,16 +665,8 @@
       <HintPath>Assets\Plugins\Sirenix\Assemblies\Sirenix.Utilities.dll</HintPath>
       <Private>False</Private>
     </Reference>
-    <Reference Include="Zenject.ReflectionBaking.Mono.Cecil.Rocks">
-      <HintPath>Assets\Plugins\Zenject\OptionalExtras\ReflectionBaking\Lib\Zenject.ReflectionBaking.Mono.Cecil.Rocks.dll</HintPath>
-      <Private>False</Private>
-    </Reference>
     <Reference Include="Unity.VisualScripting.Antlr3.Runtime">
       <HintPath>Library\PackageCache\com.unity.visualscripting\Runtime\VisualScripting.Flow\Dependencies\NCalc\Unity.VisualScripting.Antlr3.Runtime.dll</HintPath>
-      <Private>False</Private>
-    </Reference>
-    <Reference Include="Zenject.ReflectionBaking.Mono.Cecil.Mdb">
-      <HintPath>Assets\Plugins\Zenject\OptionalExtras\ReflectionBaking\Lib\Zenject.ReflectionBaking.Mono.Cecil.Mdb.dll</HintPath>
       <Private>False</Private>
     </Reference>
     <Reference Include="System.Collections.Immutable">
@@ -713,8 +693,12 @@
       <HintPath>Assets\Plugins\Roslyn\Microsoft.CodeAnalysis.dll</HintPath>
       <Private>False</Private>
     </Reference>
-    <Reference Include="Zenject.ReflectionBaking.Mono.Cecil">
-      <HintPath>Assets\Plugins\Zenject\OptionalExtras\ReflectionBaking\Lib\Zenject.ReflectionBaking.Mono.Cecil.dll</HintPath>
+    <Reference Include="System.Runtime.CompilerServices.Unsafe">
+      <HintPath>Assets\Plugins\Roslyn\System.Runtime.CompilerServices.Unsafe.dll</HintPath>
+      <Private>False</Private>
+    </Reference>
+    <Reference Include="Sirenix.Serialization.AOTGenerated">
+      <HintPath>Assets\Plugins\Sirenix\Assemblies\AOT\Sirenix.Serialization.AOTGenerated.dll</HintPath>
       <Private>False</Private>
     </Reference>
     <Reference Include="Sirenix.OdinValidator.Editor">
@@ -1338,10 +1322,6 @@
     <ProjectReference Include="Unity.Services.Multiplayer.csproj">
       <Project>{3796CC37-C146-FA23-46DB-446F266A4DEF}</Project>
       <Name>Unity.Services.Multiplayer</Name>
-    </ProjectReference>
-    <ProjectReference Include="Zenject.csproj">
-      <Project>{D7BD3BE9-BFEA-9030-1136-1928EB29AB34}</Project>
-      <Name>Zenject</Name>
     </ProjectReference>
     <ProjectReference Include="LLMGames.Commons.csproj">
       <Project>{37F137BD-D95B-3BC2-E479-D144ABE710B2}</Project>

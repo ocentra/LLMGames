@@ -58,50 +58,76 @@ namespace OcentraAI.LLMGames.Events
             }
         }
 
+        private readonly object asyncSubscriberLock = new();
+
         public void Subscribe<T>(Action<T> subscriber) where T : IEventArgs
         {
             Type eventType = typeof(T);
-            if (!Subscribers.TryGetValue(eventType, out List<Delegate> subscriberList))
+
+            lock (asyncSubscriberLock)
             {
-                subscriberList = new List<Delegate>();
-                Subscribers[eventType] = subscriberList;
+                if (!Subscribers.TryGetValue(eventType, out List<Delegate> subscriberList))
+                {
+                    subscriberList = new List<Delegate>();
+                    Subscribers[eventType] = subscriberList;
+                }
+
+                if (!subscriberList.Any(s => s.Target == subscriber.Target && s.Method == subscriber.Method))
+                {
+                    subscriberList.Add(subscriber);
+                }
             }
 
-            subscriberList.Add(subscriber);
-
             ProcessQueuedEventsAsync<T>().Forget();
-
         }
 
         public void SubscribeAsync<T>(Func<T, UniTask> subscriber) where T : IEventArgs
         {
             Type eventType = typeof(T);
-            if (!AsyncSubscribers.TryGetValue(eventType, out List<Delegate> subscriberList))
-            {
-                subscriberList = new List<Delegate>();
-                AsyncSubscribers[eventType] = subscriberList;
-            }
 
-            subscriberList.Add(subscriber);
+            lock (asyncSubscriberLock)
+            {
+                if (!AsyncSubscribers.TryGetValue(eventType, out List<Delegate> subscriberList))
+                {
+                    subscriberList = new List<Delegate>();
+                    AsyncSubscribers[eventType] = subscriberList;
+                }
+
+                if (!subscriberList.Any(s => s.Target == subscriber.Target && s.Method == subscriber.Method))
+                {
+                    subscriberList.Add(subscriber);
+                }
+            }
 
             ProcessQueuedEventsAsync<T>().Forget();
         }
 
         public void Unsubscribe<T>(Action<T> subscriber) where T : IEventArgs
         {
-            if (Subscribers.TryGetValue(typeof(T), out List<Delegate> subscriberList))
+            Type eventType = typeof(T);
+
+            lock (asyncSubscriberLock)
             {
-                subscriberList.Remove(subscriber);
+                if (Subscribers.TryGetValue(eventType, out List<Delegate> subscriberList))
+                {
+                    subscriberList.RemoveAll(s => s.Target == subscriber.Target && s.Method == subscriber.Method);
+                }
             }
         }
 
         public void UnsubscribeAsync<T>(Func<T, UniTask> subscriber) where T : IEventArgs
         {
-            if (AsyncSubscribers.TryGetValue(typeof(T), out List<Delegate> subscriberList))
+            Type eventType = typeof(T);
+
+            lock (asyncSubscriberLock)
             {
-                subscriberList.RemoveAll(s => s.Target == subscriber.Target && s.Method == subscriber.Method);
+                if (AsyncSubscribers.TryGetValue(eventType, out List<Delegate> subscriberList))
+                {
+                    subscriberList.RemoveAll(s => s.Target == subscriber.Target && s.Method == subscriber.Method);
+                }
             }
         }
+
 
         public void Publish<T>(T eventArgs) where T : IEventArgs
         {
@@ -184,7 +210,7 @@ namespace OcentraAI.LLMGames.Events
                     }
                     else
                     {
-                      //  GameLoggerScriptable.LogError($"Failed to Get expected event types for {typeof(T).Name}.", this);
+                        GameLoggerScriptable.LogError($"Failed to Get expected event types for {typeof(T).Name}.", this);
                         return false;
                     }
                 }

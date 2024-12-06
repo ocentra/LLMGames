@@ -27,7 +27,6 @@
         "Unity.Services.Multiplayer",
         "Zenject",
         "LLMGames.Commons",
-        "LLMGames.Events",
         "LLMGames.DTO",
         "LLMGames",
         "Unity.Collections",

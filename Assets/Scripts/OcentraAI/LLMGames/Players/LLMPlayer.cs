@@ -59,13 +59,13 @@ namespace OcentraAI.LLMGames.Players
 
         private void SubscribeToEvents()
         {
-            EventBus.Instance.Subscribe<UpdateWildCardsEvent<GameMode, Card>>(OnUpdateWildCards);
+            //EventBus.Instance.Subscribe<UpdateWildCardsEvent<GameMode, Card>>(OnUpdateWildCards);
         }
 
 
         private void UnsubscribeFromEvents()
         {
-            EventBus.Instance.Unsubscribe<UpdateWildCardsEvent<GameMode, Card>>(OnUpdateWildCards);
+            //EventBus.Instance.Unsubscribe<UpdateWildCardsEvent<GameMode, Card>>(OnUpdateWildCards);
         }
 
 
@@ -82,10 +82,10 @@ namespace OcentraAI.LLMGames.Players
             }
         }
 
-        private void OnUpdateWildCards(UpdateWildCardsEvent<GameMode, Card> obj)
-        {
-            WildCards = obj.WildCards;
-        }
+        //private void OnUpdateWildCards(UpdateWildCardsEvent<GameMode, Card> obj)
+        //{
+        //    WildCards = obj.WildCards;
+        //}
 
         public virtual void SeeHand()
         {
@@ -121,7 +121,7 @@ namespace OcentraAI.LLMGames.Players
 
         public virtual void DrawFromDeck()
         {
-            EventBus.Instance.Publish(new SetFloorCardEvent<Card>());
+            //EventBus.Instance.Publish(new SetFloorCardEvent<Card>());
         }
 
         public virtual void PickAndSwap(Card floorCard, Card swapCard)

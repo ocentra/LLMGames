@@ -12,8 +12,134 @@ MonoBehaviour:
   m_Script: {fileID: 1726182683, guid: a4865f1ab4504ed8a368670db22f409c, type: 3}
   m_Name: AOTGenerationConfig
   m_EditorClassIdentifier: 
-  automateBeforeBuilds: 0
+  automateBeforeBuilds: 1
   deleteDllAfterBuilds: 1
   AutomateForAllAOTPlatforms: 1
   automateForPlatforms: 0900000014000000
-  supportSerializedTypes: []
+  supportSerializedTypes:
+  - TypeName: OcentraAI.LLMGames.GameModes.Rules.BaseBonusRule, LLMGames.GameMode
+    IsCustom: 0
+    Emit: 1
+  - TypeName: System.Boolean, mscorlib
+    IsCustom: 0
+    Emit: 1
+  - TypeName: UnityEngine.UI.Button, UnityEngine.UI
+    IsCustom: 0
+    Emit: 1
+  - TypeName: OcentraAI.LLMGames.UI.Button3D, LLMgames.UI
+    IsCustom: 0
+    Emit: 1
+  - TypeName: OcentraAI.LLMGames.CardRanking, LLMGames.GameMode
+    IsCustom: 0
+    Emit: 1
+  - TypeName: OcentraAI.LLMGames.CardRanking[], LLMGames.GameMode
+    IsCustom: 0
+    Emit: 1
+  - TypeName: OcentraAI.LLMGames.GameModes.CustomRuleState, LLMGames.GameMode
+    IsCustom: 0
+    Emit: 1
+  - TypeName: System.Collections.Generic.Dictionary`2[[OcentraAI.LLMGames.GameModes.Rules.BaseBonusRule,
+      LLMGames.GameMode],[OcentraAI.LLMGames.GameModes.CustomRuleState, LLMGames.GameMode]],
+      mscorlib
+    IsCustom: 0
+    Emit: 1
+  - TypeName: System.Collections.Generic.Dictionary`2[[OcentraAI.LLMGames.DifficultyLevels,
+      LLMGames.Commons],[System.String, mscorlib]], mscorlib
+    IsCustom: 0
+    Emit: 1
+  - TypeName: System.Collections.Generic.Dictionary`2[[OcentraAI.LLMGames.HandType,
+      LLMGames.Commons],[System.String, mscorlib]], mscorlib
+    IsCustom: 0
+    Emit: 1
+  - TypeName: System.Collections.Generic.Dictionary`2[[OcentraAI.LLMGames.PossibleMoves,
+      LLMGames.GameMode],[System.String, mscorlib]], mscorlib
+    IsCustom: 0
+    Emit: 1
+  - TypeName: OcentraAI.LLMGames.DifficultyLevels, LLMGames.Commons
+    IsCustom: 0
+    Emit: 1
+  - TypeName: System.Collections.Generic.EnumEqualityComparer`1[[OcentraAI.LLMGames.DifficultyLevels,
+      LLMGames.Commons]], mscorlib
+    IsCustom: 0
+    Emit: 1
+  - TypeName: System.Collections.Generic.EnumEqualityComparer`1[[OcentraAI.LLMGames.HandType,
+      LLMGames.Commons]], mscorlib
+    IsCustom: 0
+    Emit: 1
+  - TypeName: System.Collections.Generic.EnumEqualityComparer`1[[OcentraAI.LLMGames.PossibleMoves,
+      LLMGames.GameMode]], mscorlib
+    IsCustom: 0
+    Emit: 1
+  - TypeName: System.Single, mscorlib
+    IsCustom: 0
+    Emit: 1
+  - TypeName: OcentraAI.LLMGames.GameModes.GameMode, LLMGames.GameMode
+    IsCustom: 0
+    Emit: 1
+  - TypeName: OcentraAI.LLMGames.GameModes.GameRulesContainer, LLMGames.GameMode
+    IsCustom: 0
+    Emit: 1
+  - TypeName: OcentraAI.LLMGames.HandType, LLMGames.Commons
+    IsCustom: 0
+    Emit: 1
+  - TypeName: System.Collections.Generic.IEqualityComparer`1[[OcentraAI.LLMGames.GameModes.Rules.BaseBonusRule,
+      LLMGames.GameMode]], mscorlib
+    IsCustom: 0
+    Emit: 1
+  - TypeName: System.Collections.Generic.IEqualityComparer`1[[OcentraAI.LLMGames.DifficultyLevels,
+      LLMGames.Commons]], mscorlib
+    IsCustom: 0
+    Emit: 1
+  - TypeName: System.Collections.Generic.IEqualityComparer`1[[OcentraAI.LLMGames.HandType,
+      LLMGames.Commons]], mscorlib
+    IsCustom: 0
+    Emit: 1
+  - TypeName: System.Collections.Generic.IEqualityComparer`1[[OcentraAI.LLMGames.PossibleMoves,
+      LLMGames.GameMode]], mscorlib
+    IsCustom: 0
+    Emit: 1
+  - TypeName: System.Int32, mscorlib
+    IsCustom: 0
+    Emit: 1
+  - TypeName: OcentraAI.LLMGames.Events.IPlayerUI, LLMGames.Commons
+    IsCustom: 0
+    Emit: 1
+  - TypeName: OcentraAI.LLMGames.Events.IPlayerUI[], LLMGames.Commons
+    IsCustom: 0
+    Emit: 1
+  - TypeName: System.Collections.Generic.List`1[[OcentraAI.LLMGames.GameModes.Rules.BaseBonusRule,
+      LLMGames.GameMode]], mscorlib
+    IsCustom: 0
+    Emit: 1
+  - TypeName: System.Collections.Generic.List`1[[OcentraAI.LLMGames.Screens3D.UI3DScreen,
+      LLMgames.UI]], mscorlib
+    IsCustom: 0
+    Emit: 1
+  - TypeName: System.Collections.Generic.ObjectEqualityComparer`1[[OcentraAI.LLMGames.GameModes.Rules.BaseBonusRule,
+      LLMGames.GameMode]], mscorlib
+    IsCustom: 0
+    Emit: 1
+  - TypeName: OcentraAI.LLMGames.PossibleMoves, LLMGames.GameMode
+    IsCustom: 0
+    Emit: 1
+  - TypeName: OcentraAI.LLMGames.GameModes.SortingCriteria, LLMGames.Commons
+    IsCustom: 0
+    Emit: 1
+  - TypeName: System.String, mscorlib
+    IsCustom: 0
+    Emit: 1
+  - TypeName: TMPro.TextMeshPro, Unity.TextMeshPro
+    IsCustom: 0
+    Emit: 1
+  - TypeName: TMPro.TMP_InputField, Unity.TextMeshPro
+    IsCustom: 0
+    Emit: 1
+  - TypeName: UnityEngine.Transform, UnityEngine.CoreModule
+    IsCustom: 0
+    Emit: 1
+  - TypeName: OcentraAI.LLMGames.ThreeCardBrag.Rules.TrumpBonusValues, LLMGames.GameMode
+    IsCustom: 0
+    Emit: 1
+  - TypeName: OcentraAI.LLMGames.Screens3D.UI3DScreen, LLMgames.UI
+    IsCustom: 0
+    Emit: 1

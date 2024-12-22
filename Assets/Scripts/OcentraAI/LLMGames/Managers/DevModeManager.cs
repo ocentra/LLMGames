@@ -1,14 +1,12 @@
 
+using OcentraAI.LLMGames.Events;
 using OcentraAI.LLMGames.GameModes;
-using OcentraAI.LLMGames.Manager;
-using OcentraAI.LLMGames.Players;
 using OcentraAI.LLMGames.Scriptable;
 using OcentraAI.LLMGames.Scriptable.ScriptableSingletons;
 using OcentraAI.LLMGames.Utilities;
 using Sirenix.OdinInspector;
 using Sirenix.Serialization;
 using Sirenix.Utilities;
-using System;
 using System.Collections.Generic;
 using System.Linq;
 using UnityEngine;
@@ -157,54 +155,54 @@ namespace OcentraAI.LLMGames.DevTools
         }
 
 
-        public bool InitializeDevModeHands(PlayerManager playerManager, DeckManager deckManager, HumanLLMPlayer humanLLMPlayer,
-            ComputerLLMPlayer computerLLMPlayer)
-        {
-            try
-            {
-                GameLoggerScriptable.Log("Initializing Dev Mode Hands...", this);
-                bool humanInitialized = false;
-                bool compInitialized = false;
+        //public bool InitializeDevModeHands(PlayerManager playerManager, DeckManager deckManager, HumanLLMPlayer humanLLMPlayer,
+        //    ComputerLLMPlayer computerLLMPlayer)
+        //{
+        //    try
+        //    {
+        //        GameLoggerScriptable.Log("Initializing Dev Mode Hands...", this);
+        //        bool humanInitialized = false;
+        //        bool compInitialized = false;
 
-                if (TryGetDevHands(out Hand humanHand, out Hand computerHand))
-                {
-                    if (humanHand != null)
-                    {
-                        GameLoggerScriptable.Log("Initializing Human Player Hand in Dev Mode...", this);
-                        humanInitialized = playerManager.TryInitializePlayerHand(humanLLMPlayer, humanHand, deckManager);
-                    }
+        //        if (TryGetDevHands(out Hand humanHand, out Hand computerHand))
+        //        {
+        //            if (humanHand != null)
+        //            {
+        //                GameLoggerScriptable.Log("Initializing Human Player Hand in Dev Mode...", this);
+        //                humanInitialized = playerManager.TryInitializePlayerHand(humanLLMPlayer, humanHand, deckManager);
+        //            }
 
-                    if (computerHand != null)
-                    {
-                        GameLoggerScriptable.Log("Initializing Computer Player Hand in Dev Mode...", this);
-                        compInitialized = playerManager.TryInitializePlayerHand(computerLLMPlayer, computerHand, deckManager);
-                    }
+        //            if (computerHand != null)
+        //            {
+        //                GameLoggerScriptable.Log("Initializing Computer Player Hand in Dev Mode...", this);
+        //                compInitialized = playerManager.TryInitializePlayerHand(computerLLMPlayer, computerHand, deckManager);
+        //            }
 
-                    GameLoggerScriptable.Log(
-                        $"Initialization Complete: HumanInitialized={humanInitialized}, CompInitialized={compInitialized}", this);
-                    return humanInitialized || compInitialized;
-                }
+        //            GameLoggerScriptable.Log(
+        //                $"Initialization Complete: HumanInitialized={humanInitialized}, CompInitialized={compInitialized}", this);
+        //            return humanInitialized || compInitialized;
+        //        }
 
-                GameLoggerScriptable.Log("Dev Hands could not be retrieved.", this);
-                return false;
-            }
-            catch (Exception ex)
-            {
-                GameLoggerScriptable.LogError($"Error in InitializeDevModeHands: {ex.Message}\nStackTrace: {ex.StackTrace}", this);
-                return false;
-            }
-        }
+        //        GameLoggerScriptable.Log("Dev Hands could not be retrieved.", this);
+        //        return false;
+        //    }
+        //    catch (Exception ex)
+        //    {
+        //        GameLoggerScriptable.LogError($"Error in InitializeDevModeHands: {ex.Message}\nStackTrace: {ex.StackTrace}", this);
+        //        return false;
+        //    }
+        //}
 
 
-        public bool IsPlayerHandInitialized(LLMPlayer llmPlayer)
+        public bool IsPlayerHandInitialized(IPlayerBase player)
         {
             // Check if the player's hand has been initialized in dev mode
-            if (llmPlayer == null)
+            if (player == null)
             {
                 return false;
             }
 
-            if (llmPlayer is HumanLLMPlayer)
+            if (player is IHumanPlayerData)
             {
                 if (DevHand == null)
                 {
@@ -222,7 +220,7 @@ namespace OcentraAI.LLMGames.DevTools
                 return true;
             }
 
-            if (llmPlayer is ComputerLLMPlayer)
+            if (player is IComputerPlayerData)
             {
                 if (DevHandComputer == null)
                 {

@@ -15,23 +15,7 @@ namespace OcentraAI.LLMGames.Screens
         public TMP_Dropdown SkillLevelDropdown => skillLevelDropdown;
         public TMP_Dropdown TableTypeDropdown => tableTypeDropdown;
         public TMP_Dropdown CurrencyDropdown => currencyDropdown;
-
-
-
-        #region Event Subscriptions
-
-        protected override void SubscribeToEvents()
-        {
-            base.SubscribeToEvents();
-        }
-
-        protected override void UnsubscribeFromEvents()
-        {
-            base.UnsubscribeFromEvents();
-        }
-
-
-        #endregion
+        
 
         protected override void Init(bool startEnabled)
         {

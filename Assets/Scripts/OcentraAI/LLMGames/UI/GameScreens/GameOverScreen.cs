@@ -1,5 +1,6 @@
 using OcentraAI.LLMGames.Events;
 using OcentraAI.LLMGames.Extensions;
+using OcentraAI.LLMGames.Screens3D;
 using Sirenix.OdinInspector;
 using TMPro;
 using UnityEngine.UI;
@@ -7,7 +8,7 @@ using UnityEngine.UI;
 
 namespace OcentraAI.LLMGames.Screens
 {
-    public class GameOverScreen : UIScreen<GameOverScreen>
+    public class GameOverScreen : UI3DScreen<GameOverScreen>
     {
         [ShowInInspector] [Required] public TextMeshProUGUI GameOverText { get; private set; }
 
@@ -37,9 +38,9 @@ namespace OcentraAI.LLMGames.Screens
             MainMenuButton = transform.FindChildRecursively<Button>(nameof(MainMenuButton));
         }
 
-        public override void OnShowScreen(bool first)
+        public override void ShowScreen()
         {
-            base.OnShowScreen(first);
+            base.ShowScreen();
             InitializeGameOverScreen();
         }
 
@@ -66,7 +67,7 @@ namespace OcentraAI.LLMGames.Screens
         private void ReturnToMainMenu()
         {
             PlaySelectionSound();
-            UIScreen<WelcomeScreen>.Instance.ShowScreen();
+            UI3DScreen<WelcomeScreen>.Instance.ShowScreen();
             HideScreen();
         }
     }

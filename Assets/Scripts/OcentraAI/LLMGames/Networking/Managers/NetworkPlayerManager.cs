@@ -6,6 +6,8 @@ using Sirenix.OdinInspector;
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
+using System.Collections.ObjectModel;
+using System.Linq;
 using Unity.Netcode;
 using Unity.Services.Authentication;
 using Unity.Services.Lobbies;
@@ -22,13 +24,20 @@ namespace OcentraAI.LLMGames.Networking.Manager
 
         [ShowInInspector, DictionaryDrawerSettings(DisplayMode = DictionaryDisplayOptions.ExpandedFoldout)]
         private ConcurrentDictionary<int, IPlayerBase> NetworkPlayers { get; } = new ConcurrentDictionary<int, IPlayerBase>();
-        [ShowInInspector] public IPlayerData LocalNetworkPlayer { get; set; }
+        [ShowInInspector] public IHumanPlayerData LocalNetworkHumanPlayer { get; set; }
         [ShowInInspector] private List<Player> LobbyPlayerList { get; set; }
         [ShowInInspector] private List<string> ComputerPlayerList { get; set; }
 
         [ShowInInspector] public bool AreAllPlayersSynced { get; set; } = false;
 
-        [ShowInInspector][ReadOnly] protected readonly HashSet<IPlayerBase> FoldedPlayers = new HashSet<IPlayerBase>();
+        [ShowInInspector, ReadOnly] protected readonly HashSet<IPlayerBase> FoldedPlayers  = new HashSet<IPlayerBase>();
+
+        [ShowInInspector, ReadOnly] bool StartTurnManagerEventPublished { get; set; } = false;
+
+        [ShowInInspector, ReadOnly] private List<IHumanPlayerData> HumanPlayers { get; set; } = new List<IHumanPlayerData>();
+        [ShowInInspector, ReadOnly] private List<IComputerPlayerData> ComputerPlayers { get; set; } = new List<IComputerPlayerData>();
+        [ShowInInspector, ReadOnly] private List<IPlayerBase> AllPlayers { get; set; } = new List<IPlayerBase>();
+
 
         public ScriptableObject GetGameMode()
         {
@@ -52,7 +61,7 @@ namespace OcentraAI.LLMGames.Networking.Manager
             base.Awake();
             LoadComputerPlayerPrefab();
             AreAllPlayersSynced = false;
-
+            StartTurnManagerEventPublished = false;
         }
 
 
@@ -67,24 +76,20 @@ namespace OcentraAI.LLMGames.Networking.Manager
         }
 
 
-
-
-
         public override void SubscribeToEvents()
         {
-            EventBus.Instance.SubscribeAsync<RegisterPlayerEvent>(OnRegisterPlayer);
-            EventBus.Instance.SubscribeAsync<UnRegisterPlayerEvent>(OnUnregisterPlayer);
-            EventBus.Instance.SubscribeAsync<RequestLobbyPlayerDataEvent>(OnRequestLobbyPlayerData);
-            EventBus.Instance.SubscribeAsync<GetLocalPlayerEvent>(OnGetLocalPlayer);
+            EventRegistrar.Subscribe<RegisterHumanPlayerEvent>(OnRegisterPlayer);
+            EventRegistrar.Subscribe<UnRegisterPlayerEvent>(OnUnregisterPlayer);
+            EventRegistrar.Subscribe<RequestLobbyPlayerDataEvent>(OnRequestLobbyPlayerData);
+            EventRegistrar.Subscribe<GetLocalPlayerEvent>(OnGetLocalPlayer);
+            EventRegistrar.Subscribe<RequestAllPlayersDataEvent>(OnRequestAllPlayersDataEvent);
+            EventRegistrar.Subscribe<RequestHumanPlayersDataEvent>(OnRequestHumanPlayersDataEvent);
+            EventRegistrar.Subscribe<RequestComputerPlayersDataEvent>(OnRequestComputerPlayersDataEvent);
+            EventRegistrar.Subscribe<RequestActivePlayersEvent>(OnRequestActivePlayersEvent);
+
+            base.SubscribeToEvents();
         }
 
-        public override void UnsubscribeFromEvents()
-        {
-            EventBus.Instance.UnsubscribeAsync<RegisterPlayerEvent>(OnRegisterPlayer);
-            EventBus.Instance.UnsubscribeAsync<UnRegisterPlayerEvent>(OnUnregisterPlayer);
-            EventBus.Instance.UnsubscribeAsync<RequestLobbyPlayerDataEvent>(OnRequestLobbyPlayerData);
-            EventBus.Instance.UnsubscribeAsync<GetLocalPlayerEvent>(OnGetLocalPlayer);
-        }
 
 
         public async UniTask<bool> ResetForNewRound()
@@ -102,7 +107,7 @@ namespace OcentraAI.LLMGames.Networking.Manager
                     //todo  send Hand instead as Event
                 }
 
-               // NetworkDeckManager.RemoveCardsFromDeck();
+                // NetworkDeckManager.RemoveCardsFromDeck();
 
 #endif
             }
@@ -117,43 +122,43 @@ namespace OcentraAI.LLMGames.Networking.Manager
 
         private UniTask OnGetLocalPlayer(GetLocalPlayerEvent arg)
         {
-            arg.PlayerDataSource.TrySetResult(LocalNetworkPlayer != null
-                ? new OperationResult<IPlayerData>(true, LocalNetworkPlayer)
-                : new OperationResult<IPlayerData>(false, null));
+            arg.PlayerDataSource.TrySetResult(LocalNetworkHumanPlayer != null
+                ? new OperationResult<IHumanPlayerData>(true, LocalNetworkHumanPlayer)
+                : new OperationResult<IHumanPlayerData>(false, null));
             return UniTask.CompletedTask;
         }
 
-        private async UniTask OnRegisterPlayer(RegisterPlayerEvent e)
+        private async UniTask OnRegisterPlayer(RegisterHumanPlayerEvent e)
         {
-            GameLoggerScriptable.Log($"OnRegisterPlayer called for Player ID: {e.PlayerData.PlayerId}", this, ToEditor, ToFile, UseStackTrace);
-            IPlayerData player = e.PlayerData;
-            if (AuthenticationService.Instance.PlayerId == player.AuthenticatedPlayerId.Value.Value)
+            GameLoggerScriptable.Log($"OnRegisterPlayer called for Player ID: {e.HumanPlayerData.PlayerId}", this, ToEditor, ToFile, UseStackTrace);
+            IHumanPlayerData humanPlayer = e.HumanPlayerData;
+            if (AuthenticationService.Instance.PlayerId == humanPlayer.AuthenticatedPlayerId.Value.Value)
             {
-                LocalNetworkPlayer = player;
+                LocalNetworkHumanPlayer = humanPlayer;
             }
 
             if (IsServer)
             {
 
-                if (!TryGetMatchingPlayer(player, out IPlayerBase _))
+                if (!TryGetMatchingPlayer(humanPlayer, out IPlayerBase _))
                 {
                     int playerIndex = GetNextAvailableIndex();
-                    player.SetPlayerIndex(playerIndex);
+                    humanPlayer.SetPlayerIndex(playerIndex);
 
-                    RegisterPlayer(player);
-                    GameLoggerScriptable.Log($"New player registered - PlayerIndex: {playerIndex}, PlayerId: {player.PlayerId}", this, ToEditor, ToFile, UseStackTrace);
+                    RegisterPlayer(humanPlayer);
+                    GameLoggerScriptable.Log($"New player registered - PlayerIndex: {playerIndex}, PlayerId: {humanPlayer.PlayerId}", this, ToEditor, ToFile, UseStackTrace);
 
                 }
                 else
                 {
-                    GameLoggerScriptable.Log($"Player already exists - PlayerId: {player.PlayerId}", this, ToEditor, ToFile, UseStackTrace);
+                    GameLoggerScriptable.Log($"Player already exists - PlayerId: {humanPlayer.PlayerId}", this, ToEditor, ToFile, UseStackTrace);
 
                 }
 
             }
 
             bool allPlayersRegisteredAndSendDataAsync = await EnsureAllPlayersRegisteredAndSendDataAsync();
-            e.PlayerDataSource.TrySetResult((allPlayersRegisteredAndSendDataAsync, player));
+            e.PlayerDataSource.TrySetResult((allPlayersRegisteredAndSendDataAsync, humanPlayer));
 
             await UniTask.Yield();
 
@@ -161,18 +166,18 @@ namespace OcentraAI.LLMGames.Networking.Manager
 
         private async UniTask OnUnregisterPlayer(UnRegisterPlayerEvent e)
         {
-            GameLoggerScriptable.Log($"OnUnregisterPlayer called for Player ID: {e.PlayerData.PlayerId}", this, ToEditor, ToFile, UseStackTrace);
-            IPlayerData player = e.PlayerData;
+            GameLoggerScriptable.Log($"OnUnregisterPlayer called for Player ID: {e.HumanPlayerData.PlayerId}", this, ToEditor, ToFile, UseStackTrace);
+            IHumanPlayerData humanPlayer = e.HumanPlayerData;
 
             if (IsServer)
             {
-                if (TryGetMatchingPlayer(player, out IPlayerBase existingPlayer))
+                if (TryGetMatchingPlayer(humanPlayer, out IPlayerBase existingPlayer))
                 {
-                    if (player.PlayerIndex.Value >= 0 && UnregisterPlayer(existingPlayer))
+                    if (humanPlayer.PlayerIndex.Value >= 0 && UnregisterPlayer(existingPlayer))
                     {
-                        GameLoggerScriptable.Log($"Player unregistered - PlayerIndex: {player.PlayerIndex.Value}, PlayerId: {player.PlayerId}", this, ToEditor, ToFile, UseStackTrace);
+                        GameLoggerScriptable.Log($"Player unregistered - PlayerIndex: {humanPlayer.PlayerIndex.Value}, PlayerId: {humanPlayer.PlayerId}", this, ToEditor, ToFile, UseStackTrace);
                     }
-                    
+
                 }
             }
 
@@ -181,13 +186,6 @@ namespace OcentraAI.LLMGames.Networking.Manager
 
         public void RegisterPlayer(IPlayerBase player)
         {
-            if (player.PlayerManager == null)
-            {
-                player.PlayerManager = this;
-            }
-
-            player.GameObject.name = player.PlayerName.Value.Value;
-
 
             if (!NetworkPlayers.ContainsKey(player.PlayerIndex.Value))
             {
@@ -198,24 +196,64 @@ namespace OcentraAI.LLMGames.Networking.Manager
                 NetworkPlayers[player.PlayerIndex.Value] = player;
             }
 
-            player.SetPlayerRegistered(true);
+            if (player is IHumanPlayerData humanPlayer)
+            {
+                if (!HumanPlayers.Contains(humanPlayer))
+                {
+                    HumanPlayers.Add(humanPlayer);
+                }
+            }
+            else if (player is IComputerPlayerData computerPlayer)
+            {
+                if (!ComputerPlayers.Contains(computerPlayer))
+                {
+                    ComputerPlayers.Add(computerPlayer);
+                }
+            }
+
+            if (!AllPlayers.Contains(player))
+            {
+                AllPlayers.Add(player);
+            }
+
+            player.RegisterPlayer(this, player.PlayerName.Value.Value);
         }
 
         public bool UnregisterPlayer(IPlayerBase player)
         {
-            return NetworkPlayers.TryRemove(player.PlayerIndex.Value, out _);
+            bool removed = NetworkPlayers.TryRemove(player.PlayerIndex.Value, out _);
+
+            if (removed)
+            {
+                if (player is IHumanPlayerData humanPlayer && HumanPlayers.Contains(humanPlayer))
+                {
+                    HumanPlayers.Remove(humanPlayer);
+                }
+
+                if (player is IComputerPlayerData computerPlayer && ComputerPlayers.Contains(computerPlayer))
+                {
+                    ComputerPlayers.Remove(computerPlayer);
+                }
+
+                if (AllPlayers.Contains(player))
+                {
+                    AllPlayers.Remove(player);
+                }
+            }
+
+            return removed;
         }
 
 
-        private bool TryGetMatchingPlayer(IPlayerData player, out IPlayerBase matchingPlayer)
+        private bool TryGetMatchingPlayer(IHumanPlayerData humanPlayer, out IPlayerBase matchingPlayer)
         {
             matchingPlayer = null;
 
             foreach (IPlayerBase existingPlayer in NetworkPlayers.Values)
             {
-                if (existingPlayer is IPlayerData playerData)
+                if (existingPlayer is IHumanPlayerData playerData)
                 {
-                    if (playerData.AuthenticatedPlayerId == player.AuthenticatedPlayerId)
+                    if (playerData.AuthenticatedPlayerId == humanPlayer.AuthenticatedPlayerId)
                     {
                         matchingPlayer = existingPlayer;
                         return true;
@@ -228,6 +266,7 @@ namespace OcentraAI.LLMGames.Networking.Manager
 
         private async UniTask<bool> EnsureAllPlayersRegisteredAndSendDataAsync()
         {
+
             if (IsServer && !AreAllPlayersSynced)
             {
                 GameLoggerScriptable.Log("Waiting for all players to be registered", this, ToEditor, ToFile, UseStackTrace);
@@ -247,15 +286,19 @@ namespace OcentraAI.LLMGames.Networking.Manager
                 GameLoggerScriptable.Log("Preparing to send player data to clients", this, ToEditor, ToFile, UseStackTrace);
 
                 SendPlayerDataToClientsServerRpc();
-              
-                if (AreAllPlayersSynced)
+
+                await UniTask.WaitUntil(() => AreAllPlayersSynced);
+
+
+                if (!StartTurnManagerEventPublished)
                 {
-                    EventBus.Instance.Publish(new StartTurnManagerEvent(this));
+                    StartTurnManagerEventPublished = await EventBus.Instance.PublishAsync(new StartTurnManagerEvent(this));
+                    return true;
                 }
-              
+
             }
 
-            return true;
+            return false;
         }
 
         [ServerRpc]
@@ -265,9 +308,6 @@ namespace OcentraAI.LLMGames.Networking.Manager
             {
                 GameLoggerScriptable.Log("Sending player data to clients via ClientRpc", this, ToEditor, ToFile, UseStackTrace);
                 UpdateClientPlayerDataClientRpc();
-                EventBus.Instance.Publish(new RegisterUIPlayerEvent(NetworkPlayers.Values));
-                AreAllPlayersSynced = true;
-               
             }
         }
 
@@ -275,104 +315,92 @@ namespace OcentraAI.LLMGames.Networking.Manager
         private void UpdateClientPlayerDataClientRpc()
         {
 
-
-            if (IsClient && !IsHost)
+            bool spawned = false;
+            while (!spawned)
             {
-                bool spawned = false;
-                while (!spawned)
+                int playerDataCount = 0;
+
+                foreach (NetworkObject networkObject in NetworkManager.Singleton.SpawnManager.SpawnedObjects.Values)
                 {
-                    int playerDataCount = 0;
-
-                    foreach (NetworkObject networkObject in NetworkManager.Singleton.SpawnManager.SpawnedObjects.Values)
+                    if (networkObject.GetComponent<IPlayerBase>() != null)
                     {
-                        if (networkObject.GetComponent<IPlayerBase>() != null)
-                        {
-                            playerDataCount++;
-                        }
-                    }
-
-                    if (playerDataCount >= LobbyPlayerList.Count)
-                    {
-                        spawned = true;
+                        playerDataCount++;
                     }
                 }
 
-
-                // GameLoggerScriptable.Log($"Received client player data update playerDataList {playerDataList.Length} SpawnedObjects {NetworkManager.Singleton.SpawnManager.SpawnedObjects.Count} ", this);
-
-                foreach (NetworkObject spawnedObject in NetworkManager.Singleton.SpawnManager.SpawnedObjects.Values)
+                if (playerDataCount >= LobbyPlayerList.Count)
                 {
-                    IPlayerBase playerBase = spawnedObject.GetComponent<IPlayerBase>();
-                    if (playerBase != null)
-                    {
-                        RegisterPlayer(playerBase);
-                        if (playerBase is IPlayerData playerData)
-                        {
-                            if (AuthenticationService.Instance.PlayerId == playerData.AuthenticatedPlayerId.Value.Value)
-                            {
-                                LocalNetworkPlayer = playerData;
-                            }
-                        }
-                    }
+                    spawned = true;
                 }
-
-                AreAllPlayersSynced = GetAllPlayers().Count == LobbyPlayerList.Count + ComputerPlayerList.Count;
-
-                EventBus.Instance.Publish(new RegisterUIPlayerEvent(NetworkPlayers.Values));
-
-                GameLoggerScriptable.Log($"All players synced: {AreAllPlayersSynced}", this, ToEditor, ToFile, UseStackTrace);
             }
+
+
+            // GameLoggerScriptable.Log($"Received client player data update playerDataList {playerDataList.Length} SpawnedObjects {NetworkManager.Singleton.SpawnManager.SpawnedObjects.Count} ", this);
+
+            foreach (NetworkObject spawnedObject in NetworkManager.Singleton.SpawnManager.SpawnedObjects.Values)
+            {
+                IPlayerBase playerBase = spawnedObject.GetComponent<IPlayerBase>();
+                if (playerBase != null)
+                {
+                    RegisterPlayer(playerBase);
+                    if (playerBase is IHumanPlayerData playerData)
+                    {
+                        if (AuthenticationService.Instance.PlayerId == playerData.AuthenticatedPlayerId.Value.Value)
+                        {
+                            LocalNetworkHumanPlayer = playerData;
+                        }
+                    }
+                }
+            }
+
+            AreAllPlayersSynced = GetAllPlayers().Count == LobbyPlayerList.Count + ComputerPlayerList.Count;
+
+            EventBus.Instance.Publish(new RegisterPlayerListEvent(NetworkPlayers.Values));
+
+            GameLoggerScriptable.Log($"All players synced: {AreAllPlayersSynced}", this, ToEditor, ToFile, UseStackTrace);
 
 
         }
 
 
-        public IReadOnlyList<IPlayerData> GetAllHumanPlayers()
+        private async UniTask OnRequestActivePlayersEvent(RequestActivePlayersEvent e)
         {
-            GameLoggerScriptable.Log("Fetching all registered Human players", this, ToEditor, ToFile, UseStackTrace);
+            IReadOnlyList<IPlayerBase> activePlayers = GetActivePlayers();
+            e.PlayerDataSource.TrySetResult(activePlayers is { Count: > 0 } ? (true, activePlayers) : (false, null));
+            await UniTask.Yield();
+        }
+        private async UniTask OnRequestComputerPlayersDataEvent(RequestComputerPlayersDataEvent e)
+        {
+            e.PlayerDataSource.TrySetResult(ComputerPlayers is { Count: > 0 } ? (true, ComputerPlayers.AsReadOnly()) : (false, null));
+            await UniTask.Yield();
+        }
 
-            List<IPlayerData> players = new List<IPlayerData>();
+        private async UniTask OnRequestHumanPlayersDataEvent(RequestHumanPlayersDataEvent e)
+        {
+            e.PlayerDataSource.TrySetResult(HumanPlayers is { Count: > 0 } ? (true, HumanPlayers.AsReadOnly()) : (false, null));
+            await UniTask.Yield();
+        }
 
-            foreach (IPlayerBase player in NetworkPlayers.Values)
-            {
-                if (player is IPlayerData playerData)
-                {
-                    players.Add(playerData);
-                }
-            }
+        private async UniTask OnRequestAllPlayersDataEvent(RequestAllPlayersDataEvent e)
+        {
+            e.PlayerDataSource.TrySetResult(AllPlayers is { Count: > 0 } ? (true, AllPlayers.AsReadOnly()) : (false, null));
+            await UniTask.Yield();
+        }
 
-            return players.AsReadOnly();
+
+        public IReadOnlyList<IHumanPlayerData> GetAllHumanPlayers()
+        {
+            return HumanPlayers.AsReadOnly();
         }
 
         public IReadOnlyList<IComputerPlayerData> GetAllComputerPlayers()
         {
-            GameLoggerScriptable.Log("Fetching all registered computer players", this, ToEditor, ToFile, UseStackTrace);
-
-            List<IComputerPlayerData> players = new List<IComputerPlayerData>();
-
-            foreach (IPlayerBase player in NetworkPlayers.Values)
-            {
-                if (player is IComputerPlayerData playerData)
-                {
-                    players.Add(playerData);
-                }
-            }
-
-            return players.AsReadOnly();
+            return ComputerPlayers.AsReadOnly();
         }
 
         public IReadOnlyList<IPlayerBase> GetAllPlayers()
         {
-            GameLoggerScriptable.Log("Fetching all registered players", this, ToEditor, ToFile, UseStackTrace);
-
-            List<IPlayerBase> players = new List<IPlayerBase>();
-
-            foreach (IPlayerBase player in NetworkPlayers.Values)
-            {
-                players.Add(player);
-            }
-
-            return players.AsReadOnly();
+            return AllPlayers.AsReadOnly();
         }
 
         public bool TryGetPlayer(ulong playerId, out IPlayerBase playerBase)
@@ -393,6 +421,24 @@ namespace OcentraAI.LLMGames.Networking.Manager
             return false; // Player not found
         }
 
+        public bool TryGetPlayerHand(ulong playerId, out IPlayerBase playerBase)
+        {
+
+            playerBase = default;
+
+            foreach (IPlayerBase player in NetworkPlayers.Values)
+            {
+                if (player.PlayerId.Value == playerId)
+                {
+                    playerBase = player;
+                  break;
+                }
+            }
+            
+
+            return false; // Player not found
+        }
+
         public IReadOnlyList<IPlayerBase> GetActivePlayers()
         {
             List<IPlayerBase> activePlayers = new List<IPlayerBase>();
@@ -408,7 +454,7 @@ namespace OcentraAI.LLMGames.Networking.Manager
                 }
 
             }
-           
+
 
             return activePlayers;
         }
@@ -418,18 +464,29 @@ namespace OcentraAI.LLMGames.Networking.Manager
         {
             if (IsServer)
             {
+                player.HasFolded.Value = true;
                 FoldedPlayers.Add(player);
             }
-           
+
         }
 
-        public void ResetFoldedPlayer()
+        public void ResetFoldedPlayer(bool forNewRound = true)
         {
             if (IsServer)
             {
                 FoldedPlayers.Clear();
+                if (forNewRound)
+                {
+                    foreach (IPlayerBase player in NetworkPlayers.Values)
+                    {
+                        if (player.IsBankrupt.Value)
+                        {
+                            FoldedPlayers.Add(player);
+                        }
+                    }
+                }
+
             }
-           
         }
 
         private async UniTask OnRequestLobbyPlayerData(RequestLobbyPlayerDataEvent request)
@@ -438,7 +495,7 @@ namespace OcentraAI.LLMGames.Networking.Manager
             {
                 GameLoggerScriptable.Log($"Processing lobby player data request for Player ID: {request.PlayerId}", this, ToEditor, ToFile, UseStackTrace);
 
-                if (LobbyPlayerList != null && LobbyPlayerList.Count > 0)
+                if (LobbyPlayerList is { Count: > 0 })
                 {
                     Player foundPlayer = null;
 
@@ -525,11 +582,22 @@ namespace OcentraAI.LLMGames.Networking.Manager
                 int playerIndex = GetNextAvailableIndex();
                 computerPlayer.SetPlayerIndex(playerIndex);
                 computerPlayer.PlayerName.Value = computerPlayerName;
+                computerPlayer.PlayerId.Value = GenerateUniquePlayerId();
                 computerPlayer.DifficultyLevel = 0;
                 computerPlayer.AIModelName = computerPlayerName;
+
                 RegisterPlayer(computerPlayer);
                 GameLoggerScriptable.Log($"AI Player registered: {computerPlayer.PlayerName.Value.Value} (Index: {playerIndex})", this);
             }
+        }
+        private ulong GenerateUniquePlayerId()
+        {
+            ulong baseId = (ulong)DateTime.UtcNow.Ticks;
+            while (NetworkPlayers.Values.Any(player => player.PlayerId.Value == baseId))
+            {
+                baseId++; // Ensure no collisions
+            }
+            return baseId;
         }
 
         private int GetNextAvailableIndex()

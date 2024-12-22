@@ -1,6 +1,7 @@
 using Cysharp.Threading.Tasks;
 using OcentraAI.LLMGames.Authentication;
 using OcentraAI.LLMGames.Events;
+using OcentraAI.LLMGames.Utilities;
 using Sirenix.OdinInspector;
 using System;
 using System.Collections.Generic;
@@ -16,31 +17,16 @@ namespace OcentraAI.LLMGames.Manager.Authentication
     [RequireComponent(typeof(UnityServicesManager))]
     public class AuthenticationManager : ManagerBase<AuthenticationManager>
     {
-        public bool UseAnonymousSignInFromScene = false; // only used in scene for quick test
+
+
+        public bool UseAnonymousSignInFromScene = false;
         private bool IsGuest { get; set; } = false;
         public bool SignInWithUnityComplete { get; set; } = false;
-        [ShowInInspector] private AuthPlayerData authPlayerData { get;  set; } = null;
+        [ShowInInspector] private AuthPlayerData authPlayerData { get; set; } = null;
         public bool IsSigningIn { get; private set; }
         public bool IsLoggedIn { get; set; }
 
-        public AuthPlayerData GetAuthPlayerData() => authPlayerData;
 
-        protected override async UniTask InitializeAsync()
-        {
-            if (Application.isPlaying)
-            {
-                try
-                {
-                    await UnityServicesManager.Instance.WaitForInitializationAsync();
-                }
-                catch (Exception e)
-                {
-                    LogError($"Error during Unity Services initialization: {e.Message}", this);
-                }
-            }
-
-            await base.InitializeAsync();
-        }
 
         protected override async void Start()
         {
@@ -52,7 +38,7 @@ namespace OcentraAI.LLMGames.Manager.Authentication
                 }
                 catch (Exception e)
                 {
-                    LogError($"Anonymous sign-in failed: {e.Message}", this);
+                    GameLoggerScriptable.Instance.LogError($"Anonymous sign-in failed: {e.Message}", this);
                 }
             }
         }
@@ -62,7 +48,6 @@ namespace OcentraAI.LLMGames.Manager.Authentication
         {
             await UniTask.WaitUntil(() => UnityServices.State == ServicesInitializationState.Initialized);
 
-            base.SubscribeToEvents();
 
             PlayerAccountService.Instance.SignedIn += OnPlayerAccountServiceSignedIn;
             PlayerAccountService.Instance.SignInFailed += OnPlayerAccountServiceSignInFailed;
@@ -74,20 +59,18 @@ namespace OcentraAI.LLMGames.Manager.Authentication
             AuthenticationService.Instance.SignedOut += OnAuthenticationServiceSignedOut;
             AuthenticationService.Instance.Expired += OnAuthenticationServiceExpired;
 
-            EventBus.Instance.Subscribe<SignInWithUserPasswordEvent>(OnSignInWithUserPassword);
-            EventBus.Instance.Subscribe<SignInCachedUserEvent>(OnSignInCachedUserEvent);
-            EventBus.Instance.Subscribe<SignInWithUnityEvent>(OnSignInWithUnity);
-            EventBus.Instance.Subscribe<SignInWithGoogleEvent>(OnSignInWithGoogle);
-            EventBus.Instance.Subscribe<SignInWithFacebookEvent>(OnSignInWithFacebook);
-            EventBus.Instance.Subscribe<SignInWithSteamEvent>(OnSignInWithSteam);
-            EventBus.Instance.Subscribe<SignInAsGuestEvent>(OnSignInAsGuest);
-
-            EventBus.Instance.Subscribe<CreateAccountEvent>(OnCreateAccount);
+            EventRegistrar.Subscribe<SignInWithUserPasswordEvent>(OnSignInWithUserPassword);
+            EventRegistrar.Subscribe<SignInCachedUserEvent>(OnSignInCachedUserEvent);
+            EventRegistrar.Subscribe<SignInWithUnityEvent>(OnSignInWithUnity);
+            EventRegistrar.Subscribe<SignInWithGoogleEvent>(OnSignInWithGoogle);
+            EventRegistrar.Subscribe<SignInWithFacebookEvent>(OnSignInWithFacebook);
+            EventRegistrar.Subscribe<SignInWithSteamEvent>(OnSignInWithSteam);
+            EventRegistrar.Subscribe<SignInAsGuestEvent>(OnSignInAsGuest);
+            EventRegistrar.Subscribe<CreateAccountEvent>(OnCreateAccount);
         }
 
         public override void UnsubscribeFromEvents()
         {
-            base.UnsubscribeFromEvents();
 
             PlayerAccountService.Instance.SignedIn -= OnPlayerAccountServiceSignedIn;
             PlayerAccountService.Instance.SignInFailed -= OnPlayerAccountServiceSignInFailed;
@@ -98,15 +81,7 @@ namespace OcentraAI.LLMGames.Manager.Authentication
             AuthenticationService.Instance.SignedOut -= OnAuthenticationServiceSignedOut;
             AuthenticationService.Instance.Expired -= OnAuthenticationServiceExpired;
 
-            EventBus.Instance.Unsubscribe<SignInWithUserPasswordEvent>(OnSignInWithUserPassword);
-            EventBus.Instance.Unsubscribe<SignInWithUnityEvent>(OnSignInWithUnity);
-            EventBus.Instance.Unsubscribe<SignInWithGoogleEvent>(OnSignInWithGoogle);
-            EventBus.Instance.Unsubscribe<SignInWithFacebookEvent>(OnSignInWithFacebook);
-            EventBus.Instance.Unsubscribe<SignInWithSteamEvent>(OnSignInWithSteam);
-            EventBus.Instance.Unsubscribe<SignInAsGuestEvent>(OnSignInAsGuest);
-            EventBus.Instance.Unsubscribe<SignInCachedUserEvent>(OnSignInCachedUserEvent);
-
-            EventBus.Instance.Unsubscribe<CreateAccountEvent>(OnCreateAccount);
+            EventRegistrar.UnsubscribeAll();
         }
 
         private void OnPlayerAccountServiceSignedIn()
@@ -127,21 +102,21 @@ namespace OcentraAI.LLMGames.Manager.Authentication
 
         private async void OnAuthenticationServiceSignedIn()
         {
-  
+
             Log($"PlayerID: {AuthenticationService.Instance.PlayerId}", null);
             Log($"Access Token: {AuthenticationService.Instance.AccessToken}", null);
 
 
 
-            (bool success, AuthPlayerData playerData) = await GetOrCreatePlayerDataAndUpdate(IsGuest, AuthenticationService.Instance.PlayerId);
-           
+            (bool success, IAuthPlayerData playerData) = await GetOrCreatePlayerDataAndUpdate(IsGuest, AuthenticationService.Instance.PlayerId);
+
             if (success)
             {
-                authPlayerData = playerData;
+                authPlayerData = playerData as AuthPlayerData;
 
                 if (!IsGuest && !UseAnonymousSignInFromScene)
                 {
-                    await UnityServicesManager.Instance.SavePlayerDataToCloud(playerData);
+                    await EventBus.Instance.PublishAsync(new SavePlayerDataToCloudEvent(playerData));
                 }
 
 
@@ -151,14 +126,14 @@ namespace OcentraAI.LLMGames.Manager.Authentication
 
                     if (!UseAnonymousSignInFromScene)
                     {
-                        await PublishAuthResult(AuthResult.Authenticated(playerData));
+                        await PublishAuthResult(AuthResult.Authenticated(authPlayerData));
                     }
                     else
                     {
-                       await EventBus.Instance.PublishAsync(new StartMainGameEvent(playerData));
+                        await EventBus.Instance.PublishAsync(new StartMainGameEvent(authPlayerData));
                     }
-                  
-                   
+
+
                 }
                 else
                 {
@@ -167,10 +142,10 @@ namespace OcentraAI.LLMGames.Manager.Authentication
                     {
                         await PublishAuthResult(AuthResult.Failure("PlayerName is Null or empty"));
                     }
-                  
+
                 }
 
-               
+
             }
             else
             {
@@ -179,22 +154,25 @@ namespace OcentraAI.LLMGames.Manager.Authentication
                     await PublishAuthResult(AuthResult.Failure("AuthPlayerData could not be retrieved @ OnAuthenticationServiceSignedIn Method "));
                 }
 
-               
+
             }
 
 
         }
 
-        private async UniTask<(bool success, AuthPlayerData playerData)> GetOrCreatePlayerDataAndUpdate(bool isGuest, string playerId)
+        private async UniTask<(bool success, IAuthPlayerData playerData)> GetOrCreatePlayerDataAndUpdate(bool isGuest, string playerId)
         {
             try
             {
 
 
-                AuthPlayerData data;
+                IAuthPlayerData data;
                 if (!isGuest)
                 {
-                    (bool success, AuthPlayerData playerData) = await UnityServicesManager.Instance.TryGetPlayerDataFromCloud(playerId);
+                    UniTaskCompletionSource<(bool success, IAuthPlayerData playerData)> uniTaskCompletionSource = new UniTaskCompletionSource<(bool success, IAuthPlayerData playerData)>();
+                    await EventBus.Instance.PublishAsync(new RequestPlayerDataFromCloudEvent(uniTaskCompletionSource, playerId));
+
+                    (bool success, IAuthPlayerData playerData) = await uniTaskCompletionSource.Task;
 
                     string userName = playerData?.PlayerName ?? Empty;
                     string email = playerData?.Email ?? Empty;
@@ -210,15 +188,14 @@ namespace OcentraAI.LLMGames.Manager.Authentication
                     if (success && playerData != null)
                     {
                         data = playerData;
-                        data.PlayerName = userName;
-                        data.Email = email;
+                        data.Update(userName, email);
                     }
                     else
                     {
-                        data = new AuthPlayerData { PlayerID = playerId, PlayerName = userName, Email = email };
+                        data = new AuthPlayerData(playerId, userName, email);
                     }
 
-                   
+
 
                     return (true, data);
                 }
@@ -226,7 +203,7 @@ namespace OcentraAI.LLMGames.Manager.Authentication
                 {
                     if (UseAnonymousSignInFromScene)
                     {
-                        data = new AuthPlayerData { PlayerID = playerId, PlayerName = "userName" };
+                        data = new AuthPlayerData(playerId, "userName");
                         return (true, data);
                     }
                     else
@@ -234,18 +211,18 @@ namespace OcentraAI.LLMGames.Manager.Authentication
                         RequestAdditionalUserInfoEvent additionalUserInfoEvent = new RequestAdditionalUserInfoEvent(true);
                         await EventBus.Instance.PublishAsync(additionalUserInfoEvent);
                         (string userName, string _) = await additionalUserInfoEvent.CompletionSource.Task;
-                        data = new AuthPlayerData { PlayerID = playerId, PlayerName = userName };
+                        data = new AuthPlayerData(playerId, userName);
 
                         return (true, data);
                     }
 
                 }
 
-               
+
             }
             catch (Exception e)
             {
-                LogError($"GetOrCreatePlayerDataAndUpdate: {e}", this);
+                GameLoggerScriptable.Instance.LogError($"GetOrCreatePlayerDataAndUpdate: {e}", this);
                 await PublishAuthResult(AuthResult.Failure($"Failed to get or create player data: {e.Message}"));
                 return (false, null);
             }
@@ -315,7 +292,7 @@ namespace OcentraAI.LLMGames.Manager.Authentication
             AuthResult authResult = AuthResult.Success("guest Sign In");
             e.CompletionSource.TrySetResult(authResult);
         }
-        
+
 
         public async UniTask<AuthResult> PerformAuthenticationAsync(Func<string, string, Task> authOperation, string username,
             string password, int maxRetries = 2)
@@ -369,7 +346,7 @@ namespace OcentraAI.LLMGames.Manager.Authentication
             await EventBus.Instance.PublishAsync(new AuthenticationStatusEvent(result));
 
         }
-        
+
 
         public async UniTask<AuthResult> StartSignInUsingUnityAsync()
         {
@@ -464,8 +441,8 @@ namespace OcentraAI.LLMGames.Manager.Authentication
                 SignInOptions signInOptions = new SignInOptions { CreateAccount = true };
 
                 await AuthenticationService.Instance.SignInAnonymouslyAsync(signInOptions).AsUniTask();
-                Log("Sign in anonymously succeeded!", null);
-                Log($"PlayerID: {AuthenticationService.Instance.PlayerId}", null);
+                GameLoggerScriptable.Instance.Log("Sign in anonymously succeeded!", null);
+                GameLoggerScriptable.Instance.Log($"PlayerID: {AuthenticationService.Instance.PlayerId}", null);
             }
             catch (AuthenticationException ex)
             {
@@ -611,17 +588,17 @@ namespace OcentraAI.LLMGames.Manager.Authentication
 
         protected override async UniTask<bool> ApplicationWantsToQuit()
         {
-            if (!IsLoggedIn || authPlayerData == null) {
-               
+            if (!IsLoggedIn || authPlayerData == null)
+            {
+
                 return true;
             }
-
-            await UnityServicesManager.Instance.SignOut(authPlayerData);
+            await EventBus.Instance.PublishAsync(new AuthenticationSignOutEvent(authPlayerData));
             authPlayerData = null;
             return false;
         }
 
 
-       
+
     }
 }

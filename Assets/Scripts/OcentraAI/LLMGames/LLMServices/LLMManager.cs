@@ -1,4 +1,6 @@
 using Cysharp.Threading.Tasks;
+using OcentraAI.LLMGames.Events;
+using OcentraAI.LLMGames.GameModes;
 using OcentraAI.LLMGames.LLMServices;
 using OcentraAI.LLMGames.Manager.Authentication;
 using System;
@@ -6,7 +8,7 @@ using UnityEngine;
 
 namespace OcentraAI.LLMGames.Manager.LLMServices
 {
-    public class LLMManager : ManagerBase<LLMManager>
+    public class AIModelManager : SingletonManagerBase<AIModelManager>
     {
         public LLMProvider CurrentProvider = LLMProvider.AzureOpenAI;
         private ILLMService CurrentLLMService { get; set; }
@@ -18,7 +20,9 @@ namespace OcentraAI.LLMGames.Manager.LLMServices
             {
                 try
                 {
-                    await UnityServicesManager.GetInstance().WaitForInitializationAsync();
+                    UniTaskCompletionSource<bool> completionSource = new UniTaskCompletionSource<bool>();
+                    await EventBus.Instance.PublishAsync(new WaitForInitializationEvent<UnityServicesManager>(completionSource));
+                    await completionSource.Task;
 
                     SetLLMProvider(CurrentProvider);
                 }
@@ -35,72 +39,38 @@ namespace OcentraAI.LLMGames.Manager.LLMServices
         public void SetLLMProvider(LLMProvider provider)
         {
             CurrentProvider = provider;
-            SetLLMProvider(provider.ToString());
+            SetLLMProvider(provider.ToString()).Forget();
         }
 
-        public void SetLLMProvider(string provider)
+        public async UniTask SetLLMProvider(string provider)
         {
-            if (UnityServicesManager.Instance.ConfigManager.TryGetConfigForProvider(provider, out LLMConfig config)
-                && ValidateConfig(config))
+
+            UniTaskCompletionSource<IConfigManager> completionSource = new UniTaskCompletionSource<IConfigManager>();
+            await EventBus.Instance.PublishAsync(new RequestConfigManagerEvent<UnityServicesManager>(completionSource));
+            IConfigManager llmConfig = await completionSource.Task;
+
+            if (llmConfig != null)
             {
-                CurrentLLMService = LLMServiceFactory.CreateLLMService(config);
-                // Debug.Log($"LLM Service initialized for provider {provider}");
+                if (llmConfig.TryGetConfigForProvider(provider, out ILLMConfig config))
+                {
+                    CurrentLLMService = LLMServiceFactory.CreateLLMService(config as LLMConfig);
+                    // Debug.Log($"LLM Service initialized for provider {provider}");
+                }
+                else
+                {
+                    Debug.LogError($"Configuration for provider {provider} not found or is invalid!");
+                }
             }
-            else
-            {
-                Debug.LogError($"Configuration for provider {provider} not found or is invalid!");
-            }
+
+
         }
 
-        public void SetLLMProvider(LLMConfig config)
+
+
+
+        public async UniTask<string> GetLLMResponse(GameMode gameMode,ulong playerID)
         {
-            if (ValidateConfig(config))
-            {
-                CurrentLLMService = LLMServiceFactory.CreateLLMService(config);
-                Debug.Log("LLM Service initialized with direct config");
-            }
-        }
-
-        public bool ValidateConfig(LLMConfig config)
-        {
-            bool isValid = true;
-            string errorMessage = "LLMConfig contains null or empty fields: ";
-
-            if (string.IsNullOrEmpty(config.Endpoint))
-            {
-                errorMessage += "Endpoint ";
-                isValid = false;
-            }
-
-            if (string.IsNullOrEmpty(config.ApiKey))
-            {
-                errorMessage += "ApiKey ";
-                isValid = false;
-            }
-
-            if (string.IsNullOrEmpty(config.ApiUrl))
-            {
-                errorMessage += "ApiUrl ";
-                isValid = false;
-            }
-
-            if (string.IsNullOrEmpty(config.Model))
-            {
-                errorMessage += "Model ";
-                isValid = false;
-            }
-
-            if (!isValid)
-            {
-                Debug.LogError(errorMessage);
-            }
-
-            return isValid;
-        }
-
-        public async UniTask<string> GetLLMResponse()
-        {
-            var (systemMessage, userPrompt) = AIHelper.Instance.GetAIInstructions();
+            (string systemMessage, string userPrompt) = AIHelper.Instance.GetAIInstructions(gameMode,playerID);
             if (CurrentLLMService == null)
             {
                 Debug.LogError("LLM Service is not initialized!");

@@ -42,7 +42,7 @@ namespace OcentraAI.LLMGames.Screens
 
         #region Event Subscriptions
 
-        protected override void SubscribeToEvents()
+        public override void SubscribeToEvents()
         {
             base.SubscribeToEvents();
             createLobbyPrivateToggle.onValueChanged.AddListener(OnCreateLobbyPrivateToggle);
@@ -52,7 +52,7 @@ namespace OcentraAI.LLMGames.Screens
             createLobbyNameField.onValueChanged.AddListener(OnLobbyNameFieldChanged);
         }
 
-        protected override void UnsubscribeFromEvents()
+        public override void UnsubscribeFromEvents()
         {
             base.UnsubscribeFromEvents();
             createLobbyPrivateToggle.onValueChanged.RemoveListener(OnCreateLobbyPrivateToggle);

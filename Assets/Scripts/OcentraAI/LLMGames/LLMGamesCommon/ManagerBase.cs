@@ -3,111 +3,74 @@ using OcentraAI.LLMGames.Events;
 using OcentraAI.LLMGames.Utilities;
 using Sirenix.OdinInspector;
 using Sirenix.Utilities;
+using System;
 using UnityEngine;
+using Object = UnityEngine.Object;
 
 namespace OcentraAI.LLMGames.Manager
 {
-    public abstract class ManagerBase<T> : SerializedMonoBehaviour,IEventHandler where T : Component
+    public abstract class ManagerBase<T> : SerializedMonoBehaviour, IEventHandler, IApplicationQuitter,IManager
+        where T : Component
     {
         [Header("File Logging Settings")]
         [ShowInInspector] public bool ToEditor { get; set; } = true;
-        [ShowInInspector] public bool ToFile { get; set; } = false;
+        [ShowInInspector] public bool ToFile { get; set; } 
+        [ShowInInspector] public bool UseStackTrace { get; set; } 
+
+        [ShowInInspector, Required]
+        public IEventRegistrar EventRegistrar { get; set; } = new EventRegistrar();
 
         private readonly UniTaskCompletionSource initializationSource = new UniTaskCompletionSource();
-        protected UniTaskCompletionSource<bool> QuitCompletionSource = new UniTaskCompletionSource<bool>();
-        private static bool isQuitting = false;
-        public static T Instance { get; private set; }
 
-        [RuntimeInitializeOnLoadMethod]
-        private static void SetupApplicationQuitHandler()
+        protected virtual async UniTask Initialize()
         {
-            Application.wantsToQuit += OnApplicationWantsToQuit;
+            initializationSource.TrySetResult();
+            await UniTask.Yield();
         }
 
-        private static bool OnApplicationWantsToQuit()
+
+
+        public async UniTaskVoid HandleApplicationQuitAsync()
         {
-            if (Instance == null)
+            try
             {
-                CreateSingletonInstance();
-            }
+                bool shouldQuit = await ApplicationWantsToQuit();
+                ApplicationQuitHandler.SetQuitting(shouldQuit);
 
-            ManagerBase<T> manager = Instance as ManagerBase<T>;
-            if (manager != null && manager.QuitCompletionSource == null && !isQuitting)
+                if (shouldQuit && !Application.isEditor)
+                {
+                    Application.Quit();
+                }
+            }
+            catch (Exception ex)
             {
-                manager.QuitCompletionSource = new UniTaskCompletionSource<bool>();
-                isQuitting = true;
-                manager.HandleApplicationQuit(manager.QuitCompletionSource).Forget();
-                return false;
+                LogError($"Error during application quit: {ex.Message}", this);
+                ApplicationQuitHandler.HandleQuitError(ex);
             }
-            return true;
         }
 
-        private async UniTaskVoid HandleApplicationQuit(UniTaskCompletionSource<bool> completionSource)
+        protected virtual async UniTask<bool> ApplicationWantsToQuit()
         {
-            bool success = await ApplicationWantsToQuit();
-            completionSource.TrySetResult(success);
-            if (success)
-            {
-                Application.Quit();
-            }
-            else
-            {
-                isQuitting = false;
-            }
-
-            QuitCompletionSource = null;
+            Log("ApplicationWantsToQuit: Base implementation", this);
+            bool fromResult = await UniTask.FromResult(true);
+            return fromResult;
         }
 
-        public static T GetInstance()
-        {
-            CreateSingletonInstance();
-            return Instance;
-        }
-
-        public async UniTask WaitForInitializationAsync()
-        {
-            await initializationSource.Task;
-        }
 
         protected virtual void Awake()
         {
-            CreateSingletonInstance();
-            InitializeAsync().Forget();
+            Initialize().Forget();
         }
+
+        protected virtual void Start() { }
 
         protected virtual void OnValidate()
         {
-            InitializeAsync().Forget();
-        }
-
-        public static void CreateSingletonInstance()
-        {
-            if (Instance == null)
+            if (EventRegistrar == null)
             {
-                Instance = FindFirstObjectByType<T>();
-                if (Instance == null)
-                {
-                    GameObject gameObject = new GameObject(typeof(T).Name);
-                    Instance = gameObject.AddComponent<T>();
-                    DontDestroyOnLoad(gameObject);
-                }
+                Debug.LogError($"EventRegistrar is required for {typeof(T).Name}", this);
             }
         }
-
-        protected virtual async UniTask InitializeAsync()
-        {
-            if (initializationSource.Task.Status == UniTaskStatus.Pending)
-            {
-                await UniTask.SwitchToMainThread();
-
-                initializationSource.TrySetResult();
-            }
-
-            await initializationSource.Task;
-        }
-
-
-        protected virtual void Start() { }
 
         protected virtual void OnEnable()
         {
@@ -119,73 +82,54 @@ namespace OcentraAI.LLMGames.Manager
             UnsubscribeFromEvents();
         }
 
-        public virtual void SubscribeToEvents()
-        {
-          
-
-        }
-
-        public virtual void UnsubscribeFromEvents()
-        {
-           
-
-        }
-
         protected virtual void OnDestroy()
         {
             if (Application.isPlaying)
             {
-                OnApplicationWantsToQuit();
+                HandleApplicationQuitAsync().Forget();
             }
         }
 
-        protected virtual UniTask<bool> ApplicationWantsToQuit()
+        public virtual void SubscribeToEvents()
         {
-            return UniTask.FromResult(true);
+           
         }
+        
 
-
-
-        public virtual void Log(string message, Object context, bool toEditor = default, bool toFile = default)
+        public async UniTask WaitForInitializationAsync()
         {
-            if (toEditor == default)
-            {
-                toEditor = ToEditor;
-            }
-
-            if (toFile == default)
-            {
-                toFile = ToFile;
-            }
-            GlobalConfig<GameLoggerScriptable>.Instance?.Log(message, context, toEditor, toFile);
+            await initializationSource.Task;
         }
 
-        public virtual void LogWarning(string message, Object context, bool toEditor = default, bool toFile = default)
+        public virtual void UnsubscribeFromEvents()
         {
-            if (toEditor == default)
-            {
-                toEditor = ToEditor;
-            }
-
-            if (toFile == default)
-            {
-                toFile = ToFile;
-            }
-            GlobalConfig<GameLoggerScriptable>.Instance?.LogWarning(message, context, toEditor, toFile);
+            EventRegistrar.UnsubscribeAll();
         }
 
-        public virtual void LogError(string message, Object context, bool toEditor = default, bool toFile = default)
+        public virtual void Log(string message, Object context, bool toEditor = default, bool toFile = default, bool useStack = default)
         {
-            if (toEditor == default)
-            {
-                toEditor = ToEditor;
-            }
-
-            if (toFile == default)
-            {
-                toFile = ToFile;
-            }
-            GlobalConfig<GameLoggerScriptable>.Instance?.LogError(message, context, toEditor, toFile);
+            if (toEditor == default) toEditor = ToEditor;
+            if (toFile == default) toFile = ToFile;
+            if (useStack == default) useStack = UseStackTrace;
+            GlobalConfig<GameLoggerScriptable>.Instance?.Log(message, context, toEditor, toFile, useStack);
         }
+
+        public virtual void LogWarning(string message, Object context, bool toEditor = default, bool toFile = default, bool useStack = default)
+        {
+            if (toEditor == default) toEditor = ToEditor;
+            if (toFile == default) toFile = ToFile;
+            if (useStack == default) useStack = UseStackTrace;
+            GlobalConfig<GameLoggerScriptable>.Instance?.LogWarning(message, context, toEditor, toFile, useStack);
+        }
+
+        public virtual void LogError(string message, Object context, bool toEditor = default, bool toFile = default, bool useStack = default)
+        {
+            if (toEditor == default) toEditor = ToEditor;
+            if (toFile == default) toFile = ToFile;
+            if (useStack == default) useStack = UseStackTrace;
+            GlobalConfig<GameLoggerScriptable>.Instance?.LogError(message, context, toEditor, toFile, useStack);
+        }
+
+
     }
 }

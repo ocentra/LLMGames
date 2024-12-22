@@ -1,11 +1,12 @@
 using OcentraAI.LLMGames.Extensions;
+using OcentraAI.LLMGames.Screens3D;
 using Sirenix.OdinInspector;
 using TMPro;
 using UnityEngine.UI;
 
 namespace OcentraAI.LLMGames.Screens
 {
-    public class PurchaseScreen : UIScreen<PurchaseScreen>
+    public class PurchaseScreen : UI3DScreen<PurchaseScreen>
     {
         [ShowInInspector] [Required] public Button AuthenticateButton { get; private set; }
 
@@ -41,9 +42,9 @@ namespace OcentraAI.LLMGames.Screens
             BackButton = transform.FindChildRecursively<Button>(nameof(BackButton));
         }
 
-        public override void OnShowScreen(bool first)
+        public override void ShowScreen()
         {
-            base.OnShowScreen(first);
+            base.ShowScreen();
             InitializePurchaseScreen();
         }
 

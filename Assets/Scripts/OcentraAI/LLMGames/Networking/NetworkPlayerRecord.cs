@@ -9,44 +9,51 @@ using System.Collections.Generic;
 namespace OcentraAI.LLMGames.Networking.Manager
 {
     [Serializable]
-    public class NetworkPlayerRecord: INetworkPlayerRecord
+    public class NetworkPlayerRecord : INetworkPlayerRecord
     {
+        [ShowInInspector, ReadOnly] public string PlayerName { get; set; }
+        [ShowInInspector, ReadOnly] public string PlayerId { get; set; }
+        [ShowInInspector, ReadOnly] public Hand Hand { get; set; }
+        [ShowInInspector, ReadOnly] public string FormattedHand { get; set; }
+        [ShowInInspector, ReadOnly] public int HandValue { get; set; }
+        [ShowInInspector, ReadOnly] public int HandRankSum { get; set; }
+        [ShowInInspector, ReadOnly] public List<IBonusDetail> AppliedBonusDetails { get; set; } = new List<IBonusDetail>();
+
+
+        public NetworkPlayerRecord()  
+        {
+            AppliedBonusDetails = new List<IBonusDetail>();
+        }
         public NetworkPlayerRecord(IPlayerBase playerBase)
         {
-            PlayerBase = playerBase;
-            NetworkPlayer = PlayerBase as NetworkPlayer;
-            
-            if (NetworkPlayer != null)
+
+            NetworkPlayer networkPlayer = playerBase as NetworkPlayer;
+
+            if (networkPlayer != null)
             {
-                PlayerId = NetworkPlayer.PlayerId.Value.ToString();
-                Hand = NetworkPlayer.Hand;
+                networkPlayer.CalculateHandValue();
 
+                PlayerName = networkPlayer.PlayerName.Value.Value;
+                PlayerId = networkPlayer.PlayerId.Value.ToString();
+                Hand = networkPlayer.Hand;
                 FormattedHand = Hand.GetFormattedHand();
-                HandValue = NetworkPlayer.HandValue;
-                HandRankSum = NetworkPlayer.HandRankSum;
+                HandValue = networkPlayer.HandValue;
+                HandRankSum = networkPlayer.HandRankSum;
 
-                foreach (BonusDetail bonusDetail in NetworkPlayer.BonusDetails)
+                if (networkPlayer.BonusDetails != null)
                 {
-                    if (!AppliedBonusDetails.Contains(bonusDetail))
+                    foreach (BonusDetail bonusDetail in networkPlayer.BonusDetails)
                     {
-                        AppliedBonusDetails.Add(bonusDetail);
+                        if (!AppliedBonusDetails.Contains(bonusDetail))
+                        {
+                            AppliedBonusDetails.Add(bonusDetail);
+                        }
                     }
                 }
             }
 
         }
+        
 
-        [ShowInInspector][ReadOnly] public IPlayerBase PlayerBase { get; set; }
-        [ShowInInspector][ReadOnly] public NetworkPlayer NetworkPlayer { get; set; }
-        [ShowInInspector][ReadOnly] public string PlayerName { get; set; }
-        [ShowInInspector][ReadOnly] public string PlayerId { get; set; }
-        [ShowInInspector][ReadOnly] public Hand Hand { get; set; }
-        [ShowInInspector][ReadOnly] public string FormattedHand { get; set; }
-        [ShowInInspector][ReadOnly] public int HandValue { get; set; }
-        [ShowInInspector][ReadOnly] public int HandRankSum { get; set; }
-
-        [ShowInInspector]
-        [ReadOnly]
-        public List<BonusDetail> AppliedBonusDetails { get; set; } = new List<BonusDetail>();
     }
 }

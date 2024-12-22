@@ -14,17 +14,13 @@ namespace OcentraAI.LLMGames.Screens
         [SerializeField] private int delayMs = 100;
 
         #region Event Subscriptions
-        protected override void SubscribeToEvents()
+        public override void SubscribeToEvents()
         {
             base.SubscribeToEvents();
-            EventBus.Instance.Subscribe<ShowScreenEvent>(OnShowScreen);
+           EventRegistrar.Subscribe<ShowScreenEvent>(OnShowScreen);
         }
 
-        protected override void UnsubscribeFromEvents()
-        {
-            base.UnsubscribeFromEvents();
-            EventBus.Instance.Unsubscribe<ShowScreenEvent>(OnShowScreen);
-        }
+
 
         private void OnShowScreen(ShowScreenEvent showScreenEvent)
         {

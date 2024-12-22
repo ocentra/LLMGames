@@ -8,20 +8,20 @@ using static System.String;
 
 namespace OcentraAI.LLMGames.GamesNetworking
 {
-    public class NetworkHumanPlayer : NetworkPlayer, IPlayerData
+    public class NetworkHumanHumanPlayer : NetworkPlayer, IHumanPlayerData
     {
 
         [ShowInInspector] public Player LobbyPlayerData { get; private set; }
         [ShowInInspector] private PlayerViewer PlayerViewer { get; set; } = null;
         [ShowInInspector] public string AuthenticatedPlayerIdViewer { get; private set; }
-      
+
         public override async void OnNetworkSpawn()
         {
 
             base.OnNetworkSpawn();
-            
+
             GameLoggerScriptable.Log($"Setting AuthenticatedPlayerId.Value For {PlayerId.Value}", this);
-            
+
             while (AuthenticatedPlayerId.Value.IsEmpty)
             {
                 GameLoggerScriptable.Log($"Stuck in setting AuthenticatedPlayerId.Value For {PlayerId}", this);
@@ -91,9 +91,9 @@ namespace OcentraAI.LLMGames.GamesNetworking
 
             if (IsServer && !IsPlayerRegistered.Value)
             {
-                UniTaskCompletionSource<(bool success, IPlayerData player)> completionSource = new UniTaskCompletionSource<(bool success, IPlayerData player)>();
-                await EventBus.Instance.PublishAsync(new RegisterPlayerEvent(this, completionSource));
-                (bool success, IPlayerData player) registerPlayerEventResult = await completionSource.Task;
+                UniTaskCompletionSource<(bool success, IHumanPlayerData player)> completionSource = new UniTaskCompletionSource<(bool success, IHumanPlayerData player)>();
+                await EventBus.Instance.PublishAsync(new RegisterHumanPlayerEvent(this, completionSource));
+                (bool success, IHumanPlayerData player) registerPlayerEventResult = await completionSource.Task;
                 IsPlayerRegistered.Value = registerPlayerEventResult.success;
 
             }
@@ -106,7 +106,7 @@ namespace OcentraAI.LLMGames.GamesNetworking
 
         }
 
-        
+
 
         public override async void OnNetworkDespawn()
         {
@@ -120,7 +120,7 @@ namespace OcentraAI.LLMGames.GamesNetworking
             GameLoggerScriptable.Log($"Player {PlayerName.Value} with Client ID {PlayerId.Value} despawned", this);
             UnsubscribeFromEvents();
         }
-        
+
 
     }
 }

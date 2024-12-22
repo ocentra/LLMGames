@@ -1,40 +1,24 @@
-﻿using OcentraAI.LLMGames.Manager;
+﻿using Cysharp.Threading.Tasks;
+using OcentraAI.LLMGames.Events;
 using OcentraAI.LLMGames.Scriptable;
+using OcentraAI.LLMGames.Utilities;
 using Sirenix.OdinInspector;
 using Sirenix.Serialization;
 using System;
 using System.Collections.Generic;
+using UnityEngine;
 
 namespace OcentraAI.LLMGames.GameModes.Rules
 {
     public abstract class BaseBonusRule : SerializedScriptableObject
     {
-        [OdinSerialize]
-        [ShowInInspector]
-        [ReadOnly]
-        public abstract int MinNumberOfCard { get; protected set; }
-
-        [OdinSerialize] [ShowInInspector] public abstract int BonusValue { get; protected set; }
-        [OdinSerialize] [ShowInInspector] public abstract int Priority { get; protected set; }
-
-        [OdinSerialize]
-        [ShowInInspector]
-        [ReadOnly]
-        public abstract string RuleName { get; protected set; }
-
-        [OdinSerialize]
-        [ShowInInspector]
-        [ReadOnly]
-        public string Description { get; protected set; }
-
-        [OdinSerialize]
-        [ShowInInspector]
-        [ReadOnly]
-        public GameMode GameMode { get; protected set; }
-
-        [OdinSerialize]
-        [ShowInInspector]
-        public GameRulesContainer Examples { get; protected set; } = new GameRulesContainer();
+        [OdinSerialize, ShowInInspector, ReadOnly] public abstract int MinNumberOfCard { get; protected set; }
+        [OdinSerialize, ShowInInspector] public abstract int BonusValue { get; protected set; }
+        [OdinSerialize, ShowInInspector] public abstract int Priority { get; protected set; }
+        [OdinSerialize, ShowInInspector, ReadOnly] public abstract string RuleName { get; protected set; }
+        [OdinSerialize, ShowInInspector, ReadOnly] public string Description { get; protected set; }
+        [OdinSerialize, ShowInInspector, ReadOnly] public GameMode GameMode { get; protected set; }
+        [OdinSerialize, ShowInInspector] public GameRulesContainer Examples { get; protected set; } = new GameRulesContainer();
 
         private bool IsGameModeAssigned()
         {
@@ -70,9 +54,32 @@ namespace OcentraAI.LLMGames.GameModes.Rules
 
         protected Card GetTrumpCard()
         {
-            return DeckManager.Instance.WildCards.GetValueOrDefault("TrumpCard");
-            //todo put it in some const class no string literals
+            Card trumpCard = GetTrumpCardAsync().GetAwaiter().GetResult();
+            if (trumpCard == null)
+            {
+                GameLoggerScriptable.Instance.LogError("TrumpCard retrieval failed. Default behavior will apply.", this);
+            }
+            return trumpCard;
         }
+
+
+        public async UniTask<Card> GetTrumpCardAsync()
+        {
+            GetTrumpCardEvent<Card> getTrumpCardEvent = new GetTrumpCardEvent<Card>();
+            EventBus.Instance.Publish(getTrumpCardEvent);
+
+            try
+            {
+                Card waitForCard = await getTrumpCardEvent.WaitForCard().Timeout(TimeSpan.FromSeconds(5));
+                return waitForCard;
+            }
+            catch (TimeoutException)
+            {
+                return null;
+            }
+        }
+
+
 
         protected BonusDetail CreateBonusDetails(string ruleName, int baseBonus, int priority,
             List<string> descriptions, string bonusCalculationDescriptions, int additionalBonus = 0)
@@ -95,7 +102,7 @@ namespace OcentraAI.LLMGames.GameModes.Rules
         {
             bool IsApplicable(List<string> examplesList)
             {
-                return examplesList is {Count: > 0};
+                return examplesList is { Count: > 0 };
             }
 
             string GetExamplesDescription(List<string> examples, List<string> trumpExamples, bool useTrumpExamples)
@@ -133,8 +140,14 @@ namespace OcentraAI.LLMGames.GameModes.Rules
                                     $"Examples:{Environment.NewLine}" +
                                     $"{GetExamplesDescription(llmExamples, llmTrumpExamples, useTrump)}";
 
-            Examples = new GameRulesContainer {Player = playerDescription, LLM = llmDescription};
+            Examples = new GameRulesContainer { Player = playerDescription, LLM = llmDescription };
             return true;
         }
+
+
+
+
+
+
     }
 }

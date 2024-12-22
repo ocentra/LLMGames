@@ -26,8 +26,8 @@ namespace OcentraAI.LLMGames.UI
             return dropdownItems;
         }
 
-        public PlayerDecision PlayerDecision { get => PlayerDecision.FromId(decisionId); set => decisionId = value.DecisionId;}
-        [SerializeField,ShowInInspector] protected UIManager UIManager;
+        public PlayerDecision PlayerDecision { get => PlayerDecision.FromId(decisionId); set => decisionId = value.DecisionId; }
+        [SerializeField, ShowInInspector] protected UIManager UIManager;
         protected override void Init()
         {
             if (UIManager == null)
@@ -36,9 +36,9 @@ namespace OcentraAI.LLMGames.UI
             }
             base.Init();
         }
-        public override async void OnPointerClick(PointerEventData eventData)
+        public override void OnPointerClick(PointerEventData eventData)
         {
-
+            if (!Interactable) return;
 
             PlayerDecisionEvent eventToPublish = null;
 
@@ -46,26 +46,25 @@ namespace OcentraAI.LLMGames.UI
             {
                 // Special case: RaiseBet with a custom event
                 case nameof(PlayerDecision.RaiseBet):
-                   
+
                     if (UIManager.TryGetRaiseAmount(out int raiseAmount))
                     {
                         eventToPublish = new PlayerDecisionRaiseBetEvent(PlayerDecision, raiseAmount);
-                        SetInteractable(false);
+                       
                     }
 
                     break;
 
-                // General betting decisions
                 case nameof(PlayerDecision.SeeHand):
-                    SetInteractable(false, false);
                     eventToPublish = new PlayerDecisionBettingEvent(PlayerDecision);
                     break;
+
+                // General betting decisions
+                case nameof(PlayerDecision.ShowCall):
+                case nameof(PlayerDecision.Fold):
                 case nameof(PlayerDecision.PlayBlind):
                 case nameof(PlayerDecision.Bet):
-                case nameof(PlayerDecision.Fold):
                 case nameof(PlayerDecision.DrawFromDeck):
-                case nameof(PlayerDecision.ShowCall):
-                    SetInteractable(false);
                     eventToPublish = new PlayerDecisionBettingEvent(PlayerDecision);
                     break;
 
@@ -93,12 +92,14 @@ namespace OcentraAI.LLMGames.UI
 
             if (eventToPublish != null)
             {
-               UniTask<bool> success = EventBus.Instance.PublishAsync(eventToPublish);
+                UniTask<bool> success = EventBus.Instance.PublishAsync(eventToPublish);
             }
 
             base.OnPointerClick(eventData);
-        }
 
+
+        }
+        
 
 
         #region temp
@@ -109,7 +110,7 @@ namespace OcentraAI.LLMGames.UI
         [Button]
         public void CopyFromExistingButton3D()
         {
-           Button3D existingButton = GetComponent<Button3D>();
+            Button3D existingButton = GetComponent<Button3D>();
 
             if (existingButton == null || existingButton == this)
             {
@@ -127,6 +128,7 @@ namespace OcentraAI.LLMGames.UI
         }
 
         #endregion
+
 
     }
 }

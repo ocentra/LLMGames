@@ -93,22 +93,8 @@ namespace OcentraAI.LLMGames.Screens
         public static Regex PasswordRegex => new Regex(@"^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[^\da-zA-Z]).{8,30}$");
 
         [SerializeField] private bool IsLogInTabActive { get; set; } = false;
+        
 
-
-
-        protected override void SubscribeToEvents()
-        {
-            base.SubscribeToEvents();
-            SubscribeToUIEvents();
-
-
-        }
-
-        protected override void UnsubscribeFromEvents()
-        {
-            base.UnsubscribeFromEvents();
-            UnSubscribeToUIEvents();
-        }
 
         protected override void Init(bool startEnabled)
         {
@@ -303,9 +289,9 @@ namespace OcentraAI.LLMGames.Screens
         }
 
 
-
-        private void SubscribeToUIEvents()
+        public override void SubscribeToEvents()
         {
+            base.SubscribeToEvents();
             if (UserNameInputField != null)
             {
                 UserNameInputField.onValueChanged.AddListener(_ => UserNameChanged(UserNameInputField));
@@ -417,20 +403,23 @@ namespace OcentraAI.LLMGames.Screens
 
 
 
-            SafeSubscribe<RequestUserCredentialsEvent>(HandleRequestUserCredentials);
+            EventRegistrar.Subscribe<RequestUserCredentialsEvent>(HandleRequestUserCredentials);
 
-            SafeSubscribe<RequestAdditionalUserInfoEvent>(HandleRequestAdditionalUserInfo);
+            EventRegistrar.Subscribe<RequestAdditionalUserInfoEvent>(HandleRequestAdditionalUserInfo);
 
-            SafeSubscribe<AuthenticationStatusEvent>(OnAuthenticationStatus);
+            EventRegistrar.Subscribe<AuthenticationStatusEvent>(OnAuthenticationStatus);
 
-            SafeSubscribe<UpdateUIInteractabilityEvent>(OnUpdateUIInteractability);
+            EventRegistrar.Subscribe<UpdateUIInteractabilityEvent>(OnUpdateUIInteractability);
 
-            SafeSubscribe<ProfileCreatedEvent>(OnProfileCreated);
+            EventRegistrar.Subscribe<ProfileCreatedEvent>(OnProfileCreated);
         }
 
 
-        private void UnSubscribeToUIEvents()
+
+        public override void UnsubscribeFromEvents()
         {
+            base.UnsubscribeFromEvents();
+
             if (UserNameInputField != null)
             {
                 UserNameInputField.onValueChanged.RemoveListener(_ => UserNameChanged(UserNameInputField));
@@ -534,11 +523,7 @@ namespace OcentraAI.LLMGames.Screens
             }
 
 
-            SafeUnsubscribe<RequestUserCredentialsEvent>(HandleRequestUserCredentials);
-            SafeUnsubscribe<RequestAdditionalUserInfoEvent>(HandleRequestAdditionalUserInfo);
-            SafeUnsubscribe<AuthenticationStatusEvent>(OnAuthenticationStatus);
-            SafeUnsubscribe<UpdateUIInteractabilityEvent>(OnUpdateUIInteractability);
-            SafeUnsubscribe<ProfileCreatedEvent>(OnProfileCreated);
+            EventRegistrar.UnsubscribeAll();
         }
 
 
@@ -599,18 +584,18 @@ namespace OcentraAI.LLMGames.Screens
 
         private void OnAuthenticationStatus(AuthenticationStatusEvent e)
         {
-            switch (e.Result.ResultStatus)
+            switch (e.Result.ResultAuthStatus)
             {
-                case AuthResult.Status.Success:
+                case AuthStatus.Success:
                     GameLoggerScriptable.Log($"Authentication Status {e.Result.Message}", this);
                     break;
-                case AuthResult.Status.Authenticated:
+                case AuthStatus.Authenticated:
                     OnAuthenticationCompleted(e.Result.AuthPlayerData);
                     break;
-                case AuthResult.Status.Failure:
+                case AuthStatus.Failure:
                     ShowErrorMessage(e.Result.Message);
                     break;
-                case AuthResult.Status.Pending:
+                case AuthStatus.Pending:
                     GameLoggerScriptable.Log($"Authentication in progress: {e.Result.Message}", this);
                     // todo show a loading indicator or update UI to show pending status
                     break;
@@ -1071,7 +1056,7 @@ namespace OcentraAI.LLMGames.Screens
             HideScreen();
         }
 
-        public void OnAuthenticationCompleted(AuthPlayerData authPlayer)
+        public void OnAuthenticationCompleted(IAuthPlayerData authPlayer)
         {
 
             EventBus.Instance.Publish(new CreateProfileEvent(authPlayer));

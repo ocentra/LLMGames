@@ -1,4 +1,5 @@
 using OcentraAI.LLMGames.Extensions;
+using OcentraAI.LLMGames.Screens3D;
 using Sirenix.OdinInspector;
 using System.Collections.Generic;
 using TMPro;
@@ -7,7 +8,7 @@ using UnityEngine.UI;
 
 namespace OcentraAI.LLMGames.Screens
 {
-    public class HomeScreen : UIScreen<HomeScreen>
+    public class HomeScreen : UI3DScreen<HomeScreen>
     {
         [ShowInInspector] [Required] public TextMeshProUGUI TitleText { get; private set; }
 
@@ -46,9 +47,9 @@ namespace OcentraAI.LLMGames.Screens
             OtherGameButtons = new List<Button> {OtherGameButton};
         }
 
-        public override void OnShowScreen(bool first)
+        public override void ShowScreen()
         {
-            base.OnShowScreen(first);
+            base.ShowScreen();
             InitializeHomeScreen();
         }
 
@@ -77,7 +78,7 @@ namespace OcentraAI.LLMGames.Screens
         private void OpenSettings()
         {
             PlaySelectionSound();
-            UIScreen<SettingsScreen>.Instance.ShowScreen();
+            UI3DScreen<SettingsScreen>.Instance.ShowScreen();
         }
 
         public override void QuitGame()

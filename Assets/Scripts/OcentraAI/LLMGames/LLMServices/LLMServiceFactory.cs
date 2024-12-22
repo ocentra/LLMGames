@@ -7,7 +7,7 @@ namespace OcentraAI.LLMGames.LLMServices
     {
         public static ILLMService CreateLLMService(LLMConfig config)
         {
-            switch (LLMManager.Instance.CurrentProvider)
+            switch (AIModelManager.Instance.CurrentProvider)
             {
                 case LLMProvider.AzureOpenAI:
                     return new AzureOpenAIService(config);

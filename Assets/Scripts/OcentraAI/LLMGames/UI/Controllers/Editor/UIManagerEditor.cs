@@ -25,7 +25,7 @@ namespace OcentraAI.LLMGames.UI
             if (showTopCardViews && manager.TopCardViews != null)
             {
                 EditorGUI.indentLevel++;
-                foreach (KeyValuePair<PlayerDecision, CardView> kvp in manager.TopCardViews)
+                foreach (KeyValuePair<PlayerDecision, TopCardView> kvp in manager.TopCardViews)
                 {
                     EditorGUILayout.BeginVertical(EditorStyles.helpBox);
                     EditorGUILayout.BeginHorizontal();

@@ -1,6 +1,5 @@
 #if UNITY_EDITOR
 
-
 using Cysharp.Threading.Tasks;
 using Newtonsoft.Json;
 using ParrelSync;
@@ -44,18 +43,28 @@ namespace Assets.Plugins.ParrelSync.Editor
 
     public static class ClonesManagerExtensions
     {
+        private static readonly object fileLock = new object();
+
         private static async UniTask<Dictionary<string, string>> LoadArgumentsAsync(string filePath)
         {
-            if (!File.Exists(filePath))
+            lock (fileLock)
             {
-                Debug.LogWarning("Argument file does not exist. Returning an empty dictionary.");
-                return new Dictionary<string, string>();
+                if (!File.Exists(filePath))
+                {
+                    Debug.LogWarning("Argument file does not exist. Returning an empty dictionary.");
+                    return new Dictionary<string, string>();
+                }
             }
 
             try
             {
-                string jsonContent = await File.ReadAllTextAsync(filePath).AsUniTask();
+                string jsonContent;
+                lock (fileLock)
+                {
+                    jsonContent = File.ReadAllText(filePath);
+                }
                 ArgumentData argumentData = JsonUtility.FromJson<ArgumentData>(jsonContent);
+                await UniTask.Yield();
                 return argumentData?.ToDictionary() ?? new Dictionary<string, string>();
             }
             catch (Exception ex)
@@ -63,6 +72,8 @@ namespace Assets.Plugins.ParrelSync.Editor
                 Debug.LogError($"Failed to load arguments: {ex.Message} {ex.StackTrace}");
                 return new Dictionary<string, string>();
             }
+
+           
         }
 
         private static async UniTask<bool> SaveArgumentsAsync(string filePath, Dictionary<string, string> arguments)
@@ -72,12 +83,16 @@ namespace Assets.Plugins.ParrelSync.Editor
                 ArgumentData argumentData = ArgumentData.FromDictionary(arguments);
                 string jsonContent = JsonUtility.ToJson(argumentData, prettyPrint: true);
 
-                await using (StreamWriter writer = new StreamWriter(filePath, false, Encoding.UTF8))
+                lock (fileLock)
                 {
-                    await writer.WriteAsync(jsonContent).AsUniTask();
+                    using (StreamWriter writer = new StreamWriter(filePath, false, Encoding.UTF8))
+                    {
+                        writer.Write(jsonContent);
+                    }
                 }
 
                 AssetDatabase.Refresh();
+                await UniTask.Yield();
                 return true;
             }
             catch (IOException ioEx)
@@ -91,7 +106,7 @@ namespace Assets.Plugins.ParrelSync.Editor
                 return false;
             }
         }
-        
+
         public static async UniTask<bool> TrySetLobbyDataAsync(string filePath, Lobby lobbyData)
         {
             try
@@ -101,18 +116,21 @@ namespace Assets.Plugins.ParrelSync.Editor
                 Dictionary<string, string> arguments = await LoadArgumentsAsync(filePath);
 
                 // Remove the old lobby data entry if it exists
-                if (arguments.ContainsKey(nameof(Lobby)))
+                lock (fileLock)
                 {
-                    arguments.Remove(nameof(Lobby));
-                }
+                    if (arguments.ContainsKey(nameof(Lobby)))
+                    {
+                        arguments.Remove(nameof(Lobby));
+                    }
 
-                arguments[nameof(Lobby)] = lobbyJson;
+                    arguments[nameof(Lobby)] = lobbyJson;
+                }
 
                 bool saveSuccess = await SaveArgumentsAsync(filePath, arguments);
 
-                if (saveSuccess )
+                if (saveSuccess)
                 {
-                   (bool success, Lobby lobbyData) result = await TryGetLobbyDataAsync(filePath);
+                    (bool success, Lobby lobbyData) result = await TryGetLobbyDataAsync(filePath);
                     if (result.success)
                     {
                         if (AreLobbiesEqual(lobbyData, result.lobbyData))
@@ -141,7 +159,7 @@ namespace Assets.Plugins.ParrelSync.Editor
             if (lobby1.Id != lobby2.Id ||
                 lobby1.Name != lobby2.Name ||
                 lobby1.HostId != lobby2.HostId ||
-                lobby1.MaxPlayers != lobby2.MaxPlayers )
+                lobby1.MaxPlayers != lobby2.MaxPlayers)
             {
                 return false;
             }
@@ -151,7 +169,6 @@ namespace Assets.Plugins.ParrelSync.Editor
             {
                 if (lobby1.Data.Count != lobby2.Data.Count) return false;
 
-
                 foreach (string key in lobby1.Data.Keys)
                 {
                     if (!lobby2.Data.ContainsKey(key) || lobby1.Data[key].Value != lobby2.Data[key].Value)
@@ -160,8 +177,6 @@ namespace Assets.Plugins.ParrelSync.Editor
                     }
                 }
             }
-
-
 
             return true;
         }
@@ -188,7 +203,7 @@ namespace Assets.Plugins.ParrelSync.Editor
                     {
                         Debug.Log($"Attempt {attempt}/{maxRetries} failed. Retrying in {initialDelaySeconds} seconds...");
                         await UniTask.Delay(TimeSpan.FromSeconds(initialDelaySeconds));
-                        initialDelaySeconds = Math.Min(initialDelaySeconds, maxDelaySeconds); 
+                        initialDelaySeconds = Math.Min(initialDelaySeconds, maxDelaySeconds);
                     }
                 }
                 catch (Exception ex)
@@ -199,7 +214,7 @@ namespace Assets.Plugins.ParrelSync.Editor
                     if (attempt < maxRetries)
                     {
                         await UniTask.Delay(TimeSpan.FromSeconds(initialDelaySeconds));
-                        initialDelaySeconds = Math.Min(initialDelaySeconds, maxDelaySeconds); 
+                        initialDelaySeconds = Math.Min(initialDelaySeconds, maxDelaySeconds);
                     }
                     else
                     {
@@ -211,11 +226,6 @@ namespace Assets.Plugins.ParrelSync.Editor
             return (false, null);
         }
 
-
-
-
-
-
         public static async UniTask<bool> ClearArgumentFileAsync(string filePath)
         {
             try
@@ -224,8 +234,12 @@ namespace Assets.Plugins.ParrelSync.Editor
                 {
                     ArgumentData emptyData = new ArgumentData();
                     string jsonContent = JsonUtility.ToJson(emptyData, prettyPrint: true);
-                    await File.WriteAllTextAsync(filePath, jsonContent).AsUniTask();
+                    lock (fileLock)
+                    {
+                        File.WriteAllText(filePath, jsonContent);
+                    }
                     AssetDatabase.Refresh();
+                    await UniTask.Yield();
                     return true;
                 }
                 else
@@ -254,14 +268,15 @@ namespace Assets.Plugins.ParrelSync.Editor
                 {
                     Dictionary<string, string> arguments = await LoadArgumentsAsync(filePath);
 
-                    if (arguments.ContainsKey(nameof(Lobby)))
+                    lock (fileLock)
                     {
-                        arguments.Remove(nameof(Lobby));
-
-                        return await SaveArgumentsAsync(filePath, arguments);
+                        if (arguments.ContainsKey(nameof(Lobby)))
+                        {
+                            arguments.Remove(nameof(Lobby));
+                        }
                     }
 
-                    return false;
+                    return await SaveArgumentsAsync(filePath, arguments);
                 }
                 catch (IOException ioEx)
                 {
@@ -276,18 +291,7 @@ namespace Assets.Plugins.ParrelSync.Editor
             }
 
             return false;
-
         }
-
-
-
-      
-
-
     }
-
-
-
 }
 #endif
-

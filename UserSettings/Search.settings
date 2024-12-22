@@ -2,7 +2,7 @@ trackSelection = true
 refreshSearchWindowsInPlayMode = false
 pickerAdvancedUI = false
 fetchPreview = true
-defaultFlags = 0
+defaultFlags = 264
 keepOpen = false
 queryFolder = "Assets"
 onBoardingDoNotAskAgain = true
@@ -11,7 +11,7 @@ showStatusBar = false
 scopes = {
 	"last_search.66F56946" = ""
 	"OpenInspectorPreview.66F56946" = "0"
-	"currentGroup.66F56946" = "all"
+	"currentGroup.66F56946" = "asset"
 }
 providers = {
 	performance = {
@@ -64,21 +64,60 @@ providers = {
 		priority = -10
 		defaultAction = null
 	}
+	menu = {
+		active = true
+		priority = 80
+		defaultAction = null
+	}
+	settings = {
+		active = true
+		priority = 100
+		defaultAction = null
+	}
+	calculator = {
+		active = true
+		priority = 10
+		defaultAction = null
+	}
+	static_methods = {
+		active = false
+		priority = 85
+		defaultAction = null
+	}
 }
 objectSelectors = {
 }
 recentSearches = [
+	"p: t:script"
+	"p: dir=<$object:none,UnityEditor.DefaultAsset$> t:script"
+	"p: dir=\"Assets/Scripts\" t:script"
+	"p: dir=\"Assets/Scripts\""
+	"p: dir=\"Assets\" "
+	""
+	"t:interface "
+	"t:script interface"
+	"interface "
+	"folder:\"Assets/Scripts\" t:Script "
+	"p:"
+	"t:Script interface"
+	"t:script "
+	"t:script t:script"
+	"t:script"
+	"t:script Interface"
+	"t:MonoScript"
+	"t:Image"
+	"t:Script"
+	"Type "
 ]
 searchItemFavorites = [
 ]
 savedSearchesSortOrder = 0
-showSavedSearchPanel = false
+showSavedSearchPanel = true
 hideTabs = false
-expandedQueries = [
-]
+expandedQueries = [-1765347274 961552606]
 queryBuilder = true
 ignoredProperties = "id;name;classname;imagecontentshash"
-helperWidgetCurrentArea = "all"
+helperWidgetCurrentArea = "p:"
 disabledIndexers = ""
 minIndexVariations = 2
 findProviderIndexHelper = true

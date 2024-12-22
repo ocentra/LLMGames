@@ -13,7 +13,7 @@ using Random = UnityEngine.Random;
 
 namespace OcentraAI.LLMGames.Manager
 {
-    public class DeckManager : ManagerBase<DeckManager>
+    public class DeckSingletonManager : SingletonManagerBase<DeckSingletonManager>
     {
         [ShowInInspector, ReadOnly] public List<Card> DeckCards { get; private set; } = new List<Card>();
         [ShowInInspector, ReadOnly] public List<Card> FloorCards { get; private set; } = new List<Card>();

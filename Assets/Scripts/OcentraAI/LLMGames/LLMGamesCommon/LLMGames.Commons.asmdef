@@ -25,11 +25,11 @@
         "Unity.Netcode.Runtime",
         "Unity.Networking.Transport",
         "Unity.Services.Multiplayer",
-        "Zenject",
         "Unity.Collections",
         "ParrelSync",
         "LLMGames.DTO",
-        "Roslyn"
+        "LLMGames.Interface",
+        "LLMGames.Events"
     ],
     "includePlatforms": [],
     "excludePlatforms": [],

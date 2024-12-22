@@ -17,7 +17,7 @@ MonoBehaviour:
   EditorData:
     HumanPlayersCount: 1
     AIPlayersCount: 1
-    ScenePath: Assets/Scenes/ThreeCardBrag.unity
+    ScenePath: Assets/Scenes/MainMenu.unity
     SyncEnabled: 1
     IsNewSceneLoaded: 0
   StartAsServer: 0

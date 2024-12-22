@@ -13,13 +13,13 @@ using UnityEngine;
 namespace OcentraAI.LLMGames.Manager.Authentication
 {
     [Serializable]
-    public class ConfigManager
+    public class ConfigManager: IConfigManager
     {
         [ShowInInspector]
-        public Dictionary<string, LLMConfig> DefaultLLMConfigs { get; set; } = new Dictionary<string, LLMConfig>();
+        public Dictionary<string, ILLMConfig> DefaultLLMConfigs { get; set; } = new Dictionary<string, ILLMConfig>();
 
         [ShowInInspector]
-        private Dictionary<string, LLMConfig> UserLLMConfigs { get; set; } = new Dictionary<string, LLMConfig>();
+        private Dictionary<string, ILLMConfig> UserLLMConfigs { get; set; } = new Dictionary<string, ILLMConfig>();
 
 
         public async UniTask FetchConfig()
@@ -83,18 +83,27 @@ namespace OcentraAI.LLMGames.Manager.Authentication
         }
 
 
-        public bool TryGetConfigForProvider(string provider, out LLMConfig config)
+        public bool TryGetConfigForProvider(string provider, out ILLMConfig config)
         {
-            if (UserLLMConfigs.TryGetValue(provider, out LLMConfig foundUserConfig))
+            if (UserLLMConfigs.TryGetValue(provider, out ILLMConfig foundUserConfig))
             {
-                config = foundUserConfig;
-                return true;
+                
+                if (ValidateConfig(foundUserConfig))
+                {
+                    config = foundUserConfig;
+                    return true;
+                }
+
+
             }
 
-            if (DefaultLLMConfigs.TryGetValue(provider, out LLMConfig foundDefaultConfig))
+            if (DefaultLLMConfigs.TryGetValue(provider, out ILLMConfig foundDefaultConfig))
             {
-                config = foundDefaultConfig;
-                return true;
+                if (ValidateConfig(foundDefaultConfig))
+                {
+                    config = foundDefaultConfig;
+                    return true;
+                }
             }
 
             config = null;
@@ -104,7 +113,7 @@ namespace OcentraAI.LLMGames.Manager.Authentication
 
         public void UpdateApiKey(string provider, string newApiKey)
         {
-            if (UserLLMConfigs.TryGetValue(provider, out LLMConfig userLLMConfig))
+            if (UserLLMConfigs.TryGetValue(provider, out ILLMConfig userLLMConfig))
             {
                 userLLMConfig.ApiKey = newApiKey;
                 UserLLMConfigs[provider] = userLLMConfig;
@@ -112,35 +121,24 @@ namespace OcentraAI.LLMGames.Manager.Authentication
             }
         }
 
-        public async UniTask<(bool, LLMConfig)> TryAddOrUpdateConfig(string provider, string endpoint, string apiKey, string apiUrl, string model,
-            int maxTokens, double temperature, bool stream)
+        public async UniTask<(bool, ILLMConfig)> TryAddOrUpdateConfig(ILLMConfig newConfig)
         {
-            LLMConfig newConfig = new LLMConfig
-            {
-                Endpoint = endpoint,
-                ApiKey = apiKey,
-                ApiUrl = apiUrl,
-                Model = model,
-                MaxTokens = maxTokens,
-                Temperature = temperature,
-                Stream = stream
-            };
 
             try
             {
                 if (ValidateConfig(newConfig))
                 {
                     bool isAddedOrUpdated = false;
-                    UpdateApiKey(provider, apiKey);
+                    UpdateApiKey(newConfig.ProviderName, newConfig.ApiKey);
 
-                    if (UserLLMConfigs.ContainsKey(provider))
+                    if (UserLLMConfigs.ContainsKey(newConfig.ProviderName))
                     {
-                        UserLLMConfigs[provider] = newConfig;
+                        UserLLMConfigs[newConfig.ProviderName] = newConfig;
                         isAddedOrUpdated = true;
                     }
                     else
                     {
-                        if (UserLLMConfigs.TryAdd(provider, newConfig))
+                        if (UserLLMConfigs.TryAdd(newConfig.ProviderName, newConfig))
                         {
                             isAddedOrUpdated = true;
                         }
@@ -155,7 +153,7 @@ namespace OcentraAI.LLMGames.Manager.Authentication
             }
             catch (Exception ex)
             {
-                Debug.LogError($"Error adding or updating config for provider '{provider}': {ex.Message}\nStack Trace: {ex.StackTrace}");
+                Debug.LogError($"Error adding or updating config for provider '{newConfig.ProviderName}': {ex.Message}\nStack Trace: {ex.StackTrace}");
                 return (false, null);
             }
 
@@ -164,7 +162,7 @@ namespace OcentraAI.LLMGames.Manager.Authentication
 
 
 
-        public bool ValidateConfig(LLMConfig config)
+        public bool ValidateConfig(ILLMConfig config)
         {
             bool isValid = true;
             string errorMessage = "LLMConfig contains null or empty fields: ";
@@ -222,7 +220,6 @@ namespace OcentraAI.LLMGames.Manager.Authentication
 
             while (!AuthenticationService.Instance.IsSignedIn)
             {
-                Debug.Log("Waiting for user to log in...");
                 await UniTask.Delay(100);
             }
 
@@ -232,8 +229,8 @@ namespace OcentraAI.LLMGames.Manager.Authentication
                     .LoadAsync(new HashSet<string> {nameof(UserLLMConfigs)}).AsUniTask();
                 if (data.TryGetValue(nameof(UserLLMConfigs), out Item keyValue))
                 {
-                    Dictionary<string, LLMConfig> configs = JsonUtility.FromJson<Dictionary<string, LLMConfig>>(keyValue.Value.GetAsString());
-                    UserLLMConfigs = configs ?? new Dictionary<string, LLMConfig>();
+                    Dictionary<string, ILLMConfig> configs = JsonUtility.FromJson<Dictionary<string, ILLMConfig>>(keyValue.Value.GetAsString());
+                    UserLLMConfigs = configs ?? new Dictionary<string, ILLMConfig>();
                     // Debug.Log("All configurations retrieved from the cloud.");
                     return true;
                 }

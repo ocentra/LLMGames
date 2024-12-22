@@ -1,4 +1,5 @@
 using OcentraAI.LLMGames.Screens;
+using OcentraAI.LLMGames.Screens3D;
 using Sirenix.OdinInspector;
 using UnityEngine;
 using UnityEngine.Events;
@@ -17,7 +18,7 @@ namespace OcentraAI.LLMGames.ThreeCardBrag.UI
         public UnityEvent OnBragSelected;
         public UnityEvent OnBragSubmit;
 
-        [ReadOnly] public UIScreen ParentScreen;
+        [ReadOnly] public UI3DScreen ParentScreen;
 
         public bool SelectOnPointerEnter = false;
         public bool SendButtonClickToSubmit = false;

@@ -1,3 +1,4 @@
+using Cysharp.Threading.Tasks;
 using OcentraAI.LLMGames.Events;
 using OcentraAI.LLMGames.GameModes;
 using OcentraAI.LLMGames.Utilities;
@@ -11,7 +12,7 @@ namespace OcentraAI.LLMGames.Networking.Manager
 {
     [Serializable]
     [RequireComponent(typeof(NetworkPlayerManager), typeof(NetworkTurnManager), typeof(NetworkBettingManager))]
-    [RequireComponent(typeof(NetworkDeckManager), typeof(NetworkScoreManager))]
+    [RequireComponent(typeof(NetworkDeckManager), typeof(NetworkScoreManager), typeof(NetworkGameManager))]
     public class NetworkManagerBase : NetworkBehaviour, IEventHandler
     {
         protected GameLoggerScriptable GameLoggerScriptable => GameLoggerScriptable.Instance;
@@ -27,17 +28,18 @@ namespace OcentraAI.LLMGames.Networking.Manager
         [SerializeField, HideInInspector] private bool toEditor = true;
 
 
-        [ShowInInspector] protected  bool ToFile { get => logToFile; set => logToFile = value; }
+        [ShowInInspector] protected bool ToFile { get => logToFile; set => logToFile = value; }
 
-        [ShowInInspector] public  bool UseStackTrace { get => logStackTrace; set => logStackTrace = value; }
+        [ShowInInspector] public bool UseStackTrace { get => logStackTrace; set => logStackTrace = value; }
 
-        [ShowInInspector] public  bool ToEditor { get => toEditor; set => toEditor = value; }
+        [ShowInInspector] public bool ToEditor { get => toEditor; set => toEditor = value; }
 
 
         [SerializeField] private GameMode gameMode;
 
-        [ShowInInspector, Required]
-        public GameMode GameMode { get => gameMode; set => gameMode = value; }
+        [ShowInInspector, Required] public GameMode GameMode { get => gameMode; set => gameMode = value; }
+
+        [ShowInInspector, Required] public IEventRegistrar EventRegistrar { get; set; } = new EventRegistrar();
 
         public virtual void OnValidate()
         {
@@ -77,6 +79,7 @@ namespace OcentraAI.LLMGames.Networking.Manager
 
         public virtual void UnsubscribeFromEvents()
         {
+            EventRegistrar.UnsubscribeAll();
         }
 
         public virtual void InitComponents()
@@ -125,6 +128,22 @@ namespace OcentraAI.LLMGames.Networking.Manager
                 }
             }
 
+        }
+
+        protected async UniTask ShowMessage(string message, string buttonName, bool delay = true, float delayTime = 5f)
+        {
+            if (!IsServer) return;
+            ShowMessageClientRpc(NetworkTurnManager.CurrentPlayer.PlayerId.Value, message, delayTime, buttonName);
+            await UniTask.Yield();
+        }
+
+        [ClientRpc]
+        private void ShowMessageClientRpc(ulong clientId, string message, float delayTime, string buttonName)
+        {
+            if (NetworkManager.Singleton.LocalClientId == clientId)
+            {
+                EventBus.Instance.Publish(new UIMessageEvent(buttonName, message, delayTime));
+            }
         }
     }
 }

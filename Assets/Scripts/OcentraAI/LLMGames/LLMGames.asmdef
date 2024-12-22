@@ -25,11 +25,12 @@
         "Unity.Netcode.Runtime",
         "Unity.Networking.Transport",
         "Unity.Services.Multiplayer",
-        "Zenject",
         "LLMGames.Commons",
         "LLMGames.DTO",
         "Unity.Collections",
-        "LLMGames.GameMode"
+        "LLMGames.GameMode",
+        "LLMGames.Interface",
+        "LLMGames.Events"
     ],
     "includePlatforms": [],
     "excludePlatforms": [],

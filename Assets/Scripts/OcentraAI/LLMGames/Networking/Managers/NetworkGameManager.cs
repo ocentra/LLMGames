@@ -61,15 +61,11 @@ namespace OcentraAI.LLMGames.Networking.Manager
 
         public override void SubscribeToEvents()
         {
-            EventBus.Instance.SubscribeAsync<StartLobbyAsHostEvent>(OnStartGame);
-
+            base.SubscribeToEvents();
+            EventRegistrar.Subscribe<StartLobbyAsHostEvent>(OnStartGame);
         }
 
-        public override void UnsubscribeFromEvents()
-        {
-            EventBus.Instance.UnsubscribeAsync<StartLobbyAsHostEvent>(OnStartGame);
 
-        }
 
         public async UniTask OnStartGame(StartLobbyAsHostEvent e)
         {
@@ -123,7 +119,10 @@ namespace OcentraAI.LLMGames.Networking.Manager
         }
 
 
-
+        private void OnApplicationQuit()
+        {
+            EventBus.Instance.Clear();
+        }
 
 
     }

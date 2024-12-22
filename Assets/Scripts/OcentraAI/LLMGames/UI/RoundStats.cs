@@ -1,7 +1,6 @@
+using OcentraAI.LLMGames.Events;
 using OcentraAI.LLMGames.Extensions;
-using OcentraAI.LLMGames.GameModes;
 using OcentraAI.LLMGames.GameModes.Rules;
-using OcentraAI.LLMGames.Manager;
 using Sirenix.OdinInspector;
 using TMPro;
 using UnityEngine;
@@ -10,11 +9,16 @@ namespace OcentraAI.LLMGames
 {
     public class RoundStats : MonoBehaviour
     {
-        [Required] [ShowInInspector] public GameObject PlayerPanel;
-        [Required] [ShowInInspector] public TextMeshProUGUI Pot;
-        [Required] [ShowInInspector] public TextMeshProUGUI RoundNumber;
+        [Required][ShowInInspector] public GameObject PlayerPanel;
+        [Required][ShowInInspector] public TextMeshProUGUI Pot;
+        [Required][ShowInInspector] public TextMeshProUGUI RoundNumber;
 
         private void OnValidate()
+        {
+            Init();
+        }
+
+        void Awake()
         {
             Init();
         }
@@ -38,7 +42,7 @@ namespace OcentraAI.LLMGames
         }
 
 
-        public void ShowStat(RoundRecord roundRecord)
+        public void ShowStat(INetworkRoundRecord roundRecord)
         {
             if (Pot != null)
             {
@@ -50,7 +54,7 @@ namespace OcentraAI.LLMGames
                 RoundNumber.text = $"   Round : {roundRecord.RoundNumber}";
             }
 
-            foreach (PlayerRecord player in roundRecord.PlayerRecords)
+            foreach (INetworkPlayerRecord networkPlayerRecord in roundRecord.PlayerRecords)
             {
                 GameObject playerGameObject = Instantiate(PlayerPanel, transform);
 
@@ -61,8 +65,11 @@ namespace OcentraAI.LLMGames
                 {
                     playerPanel.Init();
 
-                    foreach (BonusDetail bonusDetail in player.AppliedBonusDetails)
+
+
+                    foreach (IBonusDetail bonusDetail1 in networkPlayerRecord.AppliedBonusDetails)
                     {
+                        BonusDetail bonusDetail = (BonusDetail)bonusDetail1;
                         if (playerPanel.BonusRule != null && playerPanel.AppliedRules != null)
                         {
                             GameObject rule = Instantiate(playerPanel.BonusRule, playerPanel.AppliedRules);
@@ -75,27 +82,27 @@ namespace OcentraAI.LLMGames
                         }
                     }
 
-                    playerPanel.SetWinner(roundRecord.WinnerId == player.PlayerId);
+                    playerPanel.SetWinner(roundRecord.WinnerId.ToString() == networkPlayerRecord.PlayerId);
 
 
                     if (playerPanel.HandValue != null)
                     {
-                        playerPanel.HandValue.text = player.HandValue.ToString();
+                        playerPanel.HandValue.text = networkPlayerRecord.HandValue.ToString();
                     }
 
                     if (playerPanel.PlayerName != null)
                     {
-                        playerPanel.PlayerName.text = player.PlayerName;
+                        playerPanel.PlayerName.text = networkPlayerRecord.PlayerName;
                     }
 
                     if (playerPanel.HandRankSum != null)
                     {
-                        playerPanel.HandRankSum.text = player.HandRankSum.ToString();
+                        playerPanel.HandRankSum.text = networkPlayerRecord.HandRankSum.ToString();
                     }
 
                     if (playerPanel.HandView != null)
                     {
-                        playerPanel.HandView.text = player.Hand.GetFormattedHand();
+                        playerPanel.HandView.text = networkPlayerRecord.FormattedHand;
                     }
                 }
             }

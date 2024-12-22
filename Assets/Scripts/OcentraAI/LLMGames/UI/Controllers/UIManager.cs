@@ -1,12 +1,11 @@
+using Cysharp.Threading.Tasks;
 using OcentraAI.LLMGames.Events;
 using OcentraAI.LLMGames.Extensions;
 using OcentraAI.LLMGames.Scriptable;
 using OcentraAI.LLMGames.ThreeCardBrag.UI;
-using OcentraAI.LLMGames.ThreeCardBrag.UI.Controllers;
 using OcentraAI.LLMGames.UI.Controllers;
 using OcentraAI.LLMGames.Utilities;
 using Sirenix.OdinInspector;
-using System;
 using System.Collections;
 using System.Collections.Generic;
 using TMPro;
@@ -18,11 +17,11 @@ namespace OcentraAI.LLMGames.UI
     {
         #region UI Elements
 
-        [ShowInInspector] protected IPlayerData Player { get; set; }
-        bool IsPlayerTurn => Player is { IsPlayerTurn: { Value: true } };
+        [ShowInInspector] protected IHumanPlayerData HumanPlayer { get; set; }
+        [ShowInInspector] protected bool IsPlayerTurn => HumanPlayer is { IsPlayerTurn: { Value: true } };
+        [ShowInInspector] protected PlayerDecision LastDecision => HumanPlayer is { LastDecision: not null } ? PlayerDecision.FromId(HumanPlayer.LastDecision.Value) : PlayerDecision.None;
         private Button3D ShowPlayerHand { get; set; }
 
-        [Required, ShowInInspector] private Transform MessageHolder { get; set; }
         [Required, ShowInInspector] private TMP_InputField RaiseAmount { get; set; }
         [Required, ShowInInspector] private TextMeshProUGUI Message { get; set; }
         [Required, ShowInInspector] public GameObject MainTable { get; set; }
@@ -42,9 +41,12 @@ namespace OcentraAI.LLMGames.UI
 
         [HideInInspector] public Dictionary<PlayerDecision, PlayerDecisionButton> BettingButtons { get; set; } = new Dictionary<PlayerDecision, PlayerDecisionButton>();
 
-        [HideInInspector] public Dictionary<PlayerDecision, CardView> TopCardViews { get; set; } = new Dictionary<PlayerDecision, CardView>();
+        [HideInInspector] public Dictionary<PlayerDecision, TopCardView> TopCardViews { get; set; } = new Dictionary<PlayerDecision, TopCardView>();
 
         [HideInInspector] public Dictionary<PlayerDecision, PlayerDecisionButton> UIOrientedDecisions { get; set; } = new Dictionary<PlayerDecision, PlayerDecisionButton>();
+
+        [ShowInInspector, Required] public IEventRegistrar EventRegistrar { get; set; } = new EventRegistrar();
+
 
         #endregion
 
@@ -77,35 +79,59 @@ namespace OcentraAI.LLMGames.UI
 
         public void SubscribeToEvents()
         {
-            EventBus.Instance.Subscribe<UIMessageEvent>(OnMessage);
-            EventBus.Instance.Subscribe<RegisterLocalPlayerEvent>(OnRegisterLocalPlayerEvent);
-            EventBus.Instance.Subscribe<TimerStartEvent>(OnTimerStartEvent);
-            EventBus.Instance.Subscribe<TimerStopEvent>(OnTimerStopEvent);
-            EventBus.Instance.Subscribe<UpdateWildCardsEvent<Card>>(OnUpdateWildCards);
-            EventBus.Instance.Subscribe<UpdateFloorCardEvent<Card>>(OnUpdateFloorCard);
-            EventBus.Instance.Subscribe<UpdatePlayerHandDisplayEvent>(OnUpdatePlayerHandDisplay);
-            EventBus.Instance.Subscribe<UpdateScoreDataEvent<INetworkRoundRecord>>(OnUpdateScoreDataEvent);
-            EventBus.Instance.Subscribe<UpdateWildCardsHighlightEvent>(OnUpdateWildCardsHighlight);
+
+            EventRegistrar.Subscribe<RegisterLocalPlayerEvent>(OnRegisterLocalPlayerEvent);
+            EventRegistrar.Subscribe<TimerStartEvent>(OnTimerStartEvent);
+            EventRegistrar.Subscribe<TimerStopEvent>(OnTimerStopEvent);
+            EventRegistrar.Subscribe<UpdateWildCardsEvent<Card>>(OnUpdateWildCards);
+            EventRegistrar.Subscribe<UpdateFloorCardEvent<Card>>(OnUpdateFloorCard);
+            EventRegistrar.Subscribe<UpdatePlayerHandDisplayEvent>(OnUpdatePlayerHandDisplay);
+            EventRegistrar.Subscribe<UpdateScoreDataEvent<INetworkRoundRecord>>(OnUpdateScoreDataEvent);
+            EventRegistrar.Subscribe<UpdateWildCardsHighlightEvent>(OnUpdateWildCardsHighlight);
+            EventRegistrar.Subscribe<NewRoundStartedEvent>(OnNewRoundStartedEvent);
 
 
+            foreach (PlayerDecisionButton playerDecisionButton in BettingButtons.Values)
+            {
+                playerDecisionButton.onClick.AddListener(UpdateMainBettingButtons);
+            }
+
+            foreach (PlayerDecisionButton uiDecisionButton in UIOrientedDecisions.Values)
+            {
+                uiDecisionButton.onClick.AddListener(UpdateUIOrientedButtons);
+            }
+
+            foreach (TopCardView topCardView in TopCardViews.Values)
+            {
+                topCardView.PlayerDecisionButton.onClick.AddListener(UpdateTopCardView);
+            }
         }
 
 
 
         public void UnsubscribeFromEvents()
         {
-            EventBus.Instance.Unsubscribe<UIMessageEvent>(OnMessage);
-            EventBus.Instance.Unsubscribe<RegisterLocalPlayerEvent>(OnRegisterLocalPlayerEvent);
-            EventBus.Instance.Unsubscribe<TimerStartEvent>(OnTimerStartEvent);
-            EventBus.Instance.Unsubscribe<TimerStopEvent>(OnTimerStopEvent);
-            EventBus.Instance.Unsubscribe<UpdateWildCardsEvent<Card>>(OnUpdateWildCards);
-            EventBus.Instance.Unsubscribe<UpdateFloorCardEvent<Card>>(OnUpdateFloorCard);
-            EventBus.Instance.Unsubscribe<UpdatePlayerHandDisplayEvent>(OnUpdatePlayerHandDisplay);
-            EventBus.Instance.Unsubscribe<UpdateScoreDataEvent<INetworkRoundRecord>>(OnUpdateScoreDataEvent);
-            EventBus.Instance.Unsubscribe<UpdateWildCardsHighlightEvent>(OnUpdateWildCardsHighlight);
+            EventRegistrar.UnsubscribeAll();
 
+            foreach (PlayerDecisionButton playerDecisionButton in BettingButtons.Values)
+            {
+                playerDecisionButton.onClick.RemoveListener(UpdateMainBettingButtons);
+            }
 
+            foreach (PlayerDecisionButton uiDecisionButton in UIOrientedDecisions.Values)
+            {
+                uiDecisionButton.onClick.RemoveListener(UpdateUIOrientedButtons);
+            }
 
+            foreach (TopCardView topCardView in TopCardViews.Values)
+            {
+                topCardView.PlayerDecisionButton.onClick.RemoveListener(UpdateTopCardView);
+            }
+        }
+
+        private void OnNewRoundStartedEvent(NewRoundStartedEvent obj)
+        {
+            ResetAllCardViews();
         }
 
 
@@ -129,8 +155,7 @@ namespace OcentraAI.LLMGames.UI
             UpdateFloorCardDraggable();
             UpdateUIOrientedButtons();
             UpdateTopCardView();
-            SetMainBettingButtons();
-
+            UpdateMainBettingButtons();
         }
 
 
@@ -140,44 +165,85 @@ namespace OcentraAI.LLMGames.UI
             UpdateFloorCardDraggable();
             UpdateUIOrientedButtons();
             UpdateTopCardView();
-            SetMainBettingButtons();
+            UpdateMainBettingButtons();
         }
 
-        private void SetMainBettingButtons()
+        private void UpdateMainBettingButtons()
         {
-            
-
             foreach (PlayerDecisionButton playerDecisionButton in BettingButtons.Values)
             {
+
                 if (playerDecisionButton.PlayerDecision == PlayerDecision.PlayBlind)
                 {
-                    playerDecisionButton.gameObject.SetActive(!Player.HasSeenHand.Value);
-                    playerDecisionButton.SetInteractable(!Player.HasSeenHand.Value && IsPlayerTurn);
-                }
-                else if (playerDecisionButton.PlayerDecision == PlayerDecision.SeeHand)
-                {
-                    if (Player.HasSeenHand.Value)
+                    if (LastDecision == PlayerDecision.PlayBlind)
                     {
-                        playerDecisionButton.SetInteractable(false, false);
+                        playerDecisionButton.SetInteractable(false);
                     }
                     else
                     {
-                        playerDecisionButton.SetInteractable(IsPlayerTurn);
+                        playerDecisionButton.gameObject.SetActive(!HumanPlayer.HasSeenHand.Value);
+                        playerDecisionButton.SetInteractable(!HumanPlayer.HasSeenHand.Value && IsPlayerTurn);
+                    }
+
+
+                }
+                else if (playerDecisionButton.PlayerDecision == PlayerDecision.SeeHand)
+                {
+                    if (LastDecision == PlayerDecision.SeeHand)
+                    {
+                        playerDecisionButton.SetInteractable(false);
+                    }
+                    else
+                    {
+                        if (HumanPlayer.HasSeenHand.Value)
+                        {
+                            playerDecisionButton.SetInteractable(false, false);
+                        }
+                        else
+                        {
+                            playerDecisionButton.SetInteractable(IsPlayerTurn);
+                        }
+                    }
+
+
+                }
+                else if (playerDecisionButton.PlayerDecision == PlayerDecision.DrawFromDeck)
+                {
+                    if (LastDecision == PlayerDecision.DrawFromDeck)
+                    {
+                        playerDecisionButton.SetInteractable(false);
+                    }
+                    else
+                    {
+                        playerDecisionButton.SetInteractable(HumanPlayer.HasSeenHand.Value && IsPlayerTurn);
                     }
                 }
                 else
                 {
-                    playerDecisionButton.gameObject.SetActive(Player.HasSeenHand.Value);
-                    playerDecisionButton.SetInteractable(Player.HasSeenHand.Value && IsPlayerTurn);
+                    playerDecisionButton.gameObject.SetActive(HumanPlayer.HasSeenHand.Value);
+                    playerDecisionButton.SetInteractable(HumanPlayer.HasSeenHand.Value && IsPlayerTurn);
                 }
             }
         }
 
         private void UpdateTopCardView()
         {
-            foreach (CardView cardView in TopCardViews.Values)
+            foreach (TopCardView cardView in TopCardViews.Values)
             {
-                cardView.SetInteractable(IsPlayerTurn);
+                PlayerDecisionButton cardViewPlayerDecisionButton = cardView.PlayerDecisionButton;
+
+                if (cardViewPlayerDecisionButton != null && cardViewPlayerDecisionButton.PlayerDecision != null)
+                {
+                    PlayerDecision playerDecision = cardViewPlayerDecisionButton.PlayerDecision;
+
+                    if (LastDecision == playerDecision)
+                    {
+                        cardViewPlayerDecisionButton.SetInteractable(false);
+                    }
+
+                    cardView.SetInteractable(IsPlayerTurn);
+                    cardViewPlayerDecisionButton.SetInteractable(IsPlayerTurn);
+                }
             }
         }
 
@@ -187,29 +253,33 @@ namespace OcentraAI.LLMGames.UI
             {
                 if (button.PlayerDecision == PlayerDecision.PurchaseCoins)
                 {
-                    button.gameObject.SetActive(Player.Coins.Value <= 0);
+                    button.gameObject.SetActive(HumanPlayer.Coins.Value <= 0);
                 }
-
-                button.SetInteractable(IsPlayerTurn);
+                else
+                {
+                    button.SetInteractable(IsPlayerTurn);
+                }
             }
         }
 
 
         private void OnUpdateWildCards(UpdateWildCardsEvent<Card> e)
         {
-            foreach ((PlayerDecision playerDecision, CardView cardView) in TopCardViews)
+            foreach ((PlayerDecision playerDecision, TopCardView topCardView) in TopCardViews)
             {
                 if (e.WildCards.TryGetValue(playerDecision, out Card card))
                 {
-                    cardView.SetCard(card);
-                    cardView.UpdateCardView();
-                    cardView.gameObject.SetActive(true);
+                    topCardView.SetCard(card);
+                    topCardView.UpdateCardView();
+                    topCardView.gameObject.SetActive(true);
+
                 }
                 else
                 {
-                    cardView.SetCard(null);
-                    cardView.UpdateCardView();
-                    cardView.gameObject.SetActive(false);
+                    topCardView.SetCard(null);
+                    topCardView.UpdateCardView();
+                    topCardView.gameObject.SetActive(false);
+
                 }
             }
         }
@@ -222,7 +292,7 @@ namespace OcentraAI.LLMGames.UI
                 FloorCardView.SetCard(e.Card);
                 FloorCardView.UpdateCardView();
                 FloorCardView.SetInteractable(FloorCardView.Card != null);
-                FloorCardDraggable.IsPlayerTurn = IsPlayerTurn;
+                UpdateFloorCardDraggable();
 
             }
         }
@@ -232,27 +302,26 @@ namespace OcentraAI.LLMGames.UI
             if (FloorCardDraggable != null)
             {
                 FloorCardDraggable.IsPlayerTurn = IsPlayerTurn;
-               
+
             }
         }
 
         private void OnUpdatePlayerHandDisplay(UpdatePlayerHandDisplayEvent e)
         {
-            if (e.Player == Player)
+            if (e.Player == HumanPlayer)
             {
-                if (e.Player.HasSeenHand.Value)
+                for (int i = 0; i < LocalPlayerCardViews.Length; i++)
                 {
-                    for (int i = 0; i < LocalPlayerCardViews.Length; i++)
+                    string handCard = e.Player.GetCard(i);
+                    Card card = CardUtility.GetCardFromSymbol(handCard);
+                    LocalPlayerCardViews[i].SetCard(card);
+                    if (!e.Player.HasSeenHand.Value)
                     {
-                        string handCard = e.Player.GetCard(i);
-                        Card card = CardUtility.GetCardFromSymbol(handCard);
-                        LocalPlayerCardViews[i].SetCard(card);
-                        LocalPlayerCardViews[i].UpdateCardView();
+                        LocalPlayerCardViews[i].ShowBackside();
                     }
                 }
-            }
 
-            SetMainBettingButtons();
+            }
         }
 
         private void OnUpdateScoreDataEvent(UpdateScoreDataEvent<INetworkRoundRecord> scoreDataEvent)
@@ -286,8 +355,8 @@ namespace OcentraAI.LLMGames.UI
             }
 
 
-            Pot.text = $"Total Pot : {pot}";
-            CurrentBet.text = $"CurrentBet : {currentBet}";
+            Pot.text = $"Pot: {pot}";
+            CurrentBet.text = $"Bet: {currentBet}";
             RoundNumber.text = $"{currentRound}";
             RoundNumberOf.text = $"{totalRounds}";
         }
@@ -297,16 +366,9 @@ namespace OcentraAI.LLMGames.UI
 
         private void OnRegisterLocalPlayerEvent(RegisterLocalPlayerEvent arg)
         {
-            Player = arg.LocalPlayer;
-            if (MessageHolder != null)
-            {
-                MessageHolder.gameObject.SetActive(false);
-            }
-
+            HumanPlayer = arg.LocalHumanPlayer;
             SetLocalPlayerHand();
             UpdateUIOrientedButtons();
-            UpdateTopCardView();
-            SetMainBettingButtons();
         }
 
         #endregion
@@ -347,7 +409,7 @@ namespace OcentraAI.LLMGames.UI
             }
         }
 
-        private void FindAndAssignTopCardView<T>(PlayerDecision playerDecision, Dictionary<PlayerDecision, CardView> topCardViews) where T : TopCardView
+        private void FindAndAssignTopCardView<T>(PlayerDecision playerDecision, Dictionary<PlayerDecision, TopCardView> topCardViews) where T : TopCardView
         {
 
 
@@ -377,7 +439,6 @@ namespace OcentraAI.LLMGames.UI
 
         private void FindUIComponents()
         {
-            MessageHolder = transform.FindChildRecursively<Transform>(nameof(MessageHolder));
 
             foreach (PlayerDecision playerDecision in PlayerDecision.GetUIOrientedDecisions())
             {
@@ -399,7 +460,7 @@ namespace OcentraAI.LLMGames.UI
             FloorCardView = GameObject.Find(nameof(FloorCardView)).GetComponent<CardView>();
 
 
-            if (FloorCardView !=null)
+            if (FloorCardView != null)
             {
                 FloorCardDraggable = FloorCardView.GetComponent<Draggable>();
                 FloorCardDraggable.LocalPlayerCardViews = LocalPlayerCardViews;
@@ -440,35 +501,17 @@ namespace OcentraAI.LLMGames.UI
             }
             else
             {
-                ShowMessage("Please enter a valid raise amount.", 3f);
+                ShowMessage("Please enter a valid raise amount.", "OK", 3f).Forget();
                 raiseAmount = 0;
                 return false;
             }
         }
-
-
-        #region Event Handlers
-
-
-
-        private void OnMessage(UIMessageEvent e)
-        {
-            ShowMessage(e.Message, e.Delay);
-        }
-
-        #endregion
-
-        private void SetupInitialUIState()
-        {
-
-        }
+        
 
         private void ResetAllCardViews()
         {
             SetLocalPlayerHand();
             UpdateUIOrientedButtons();
-            UpdateTopCardView();
-            SetMainBettingButtons();
             LeftPanelController.ResetView();
             ShowPlayerHand.SetInteractable(true);
         }
@@ -481,40 +524,22 @@ namespace OcentraAI.LLMGames.UI
                 {
                     cardView.SetCard(card);
                     cardView.UpdateCardView();
+                    if (!HumanPlayer.HasSeenHand.Value)
+                    {
+                        cardView.ShowBackside();
+                    }
                 }
             }
         }
 
-        private void ShowMessage(string message, float delay = 5f)
+        private async UniTask ShowMessage(string message, string buttonName, float delay = 5f)
         {
-            if (MessageHolder != null)
-            {
-                MessageHolder.gameObject.SetActive(true);
-                if (Message != null)
-                {
-                    Message.text = message;
-                }
-
-                // StartCoroutine(HideMessageAfterDelay(delay));
-            }
+            await EventBus.Instance.PublishAsync(new UIMessageEvent(buttonName, message, delay));
+            await UniTask.Yield();
         }
 
-        private IEnumerator HideMessageAfterDelay(float delay)
-        {
-            yield return new WaitForSeconds(delay);
-            HideMessage();
-        }
 
-        private void HideMessage()
-        {
-            if (MessageHolder != null)
-            {
-                MessageHolder.gameObject.SetActive(false);
-                if (Message != null)
-                {
-                    Message.text = "";
-                }
-            }
-        }
+
+
     }
 }

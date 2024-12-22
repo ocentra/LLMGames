@@ -1,8 +1,6 @@
-using OcentraAI.LLMGames.Extensions;
-using OcentraAI.LLMGames.Manager;
 using OcentraAI.LLMGames.Events;
-using OcentraAI.LLMGames.Players;
-using OcentraAI.LLMGames.Utilities;
+using OcentraAI.LLMGames.Extensions;
+using OcentraAI.LLMGames.Screens3D;
 using Sirenix.OdinInspector;
 using Sirenix.Serialization;
 using System;
@@ -16,29 +14,21 @@ using static OcentraAI.LLMGames.Utilities.Utility;
 
 namespace OcentraAI.LLMGames.Screens
 {
-    public class RoundLeaderboardScreen : UIScreen<RoundLeaderboardScreen>
+    public class RoundLeaderboardScreen : UI3DScreen<RoundLeaderboardScreen>
     {
-        [Required] protected TurnManager TurnManager => TurnManager.Instance;
-        [Required] protected ScoreManager ScoreManager => ScoreManager.Instance;
-        [Required] protected PlayerManager PlayerManager => PlayerManager.Instance;
-        private bool isButtonClicked;
-        [ShowInInspector] [Required] private Button NewGame { get; set; }
 
-        [ShowInInspector] [Required] private Button ContinueRound { get; set; }
 
-        [Required] [ShowInInspector] private GameObject RoundStats { get; set; }
-        [Required] [ShowInInspector] private GameObject Headers { get; set; }
-        [Required] [ShowInInspector] private GameObject Empty { get; set; }
-
-        [Required] [ShowInInspector] private Transform ScoreHolderContent { get; set; }
-
-        [Required] [ShowInInspector] private TextMeshProUGUI HeadingText { get; set; }
-
-        [Required] [ShowInInspector] private TextMeshProUGUI EndingText { get; set; }
-
-        [OdinSerialize] [ShowInInspector] private float SpacerHeight { get; set; } = 25f;
-
-        [OdinSerialize] [ShowInInspector] private float RoundStatHeight { get; set; } = 150f;
+        [Required, ShowInInspector] private bool IsButtonClicked { get; set; }
+        [Required, ShowInInspector] private Button NewGame { get; set; }
+        [Required, ShowInInspector] private Button ContinueRound { get; set; }
+        [Required, ShowInInspector] private GameObject RoundStats { get; set; }
+        [Required, ShowInInspector] private GameObject Headers { get; set; }
+        [Required, ShowInInspector] private GameObject Empty { get; set; }
+        [Required, ShowInInspector] private Transform ScoreHolderContent { get; set; }
+        [Required, ShowInInspector] private TextMeshProUGUI HeadingText { get; set; }
+        [Required, ShowInInspector] private TextMeshProUGUI EndingText { get; set; }
+        [OdinSerialize, ShowInInspector] private float SpacerHeight { get; set; } = 25f;
+        [OdinSerialize, ShowInInspector] private float RoundStatHeight { get; set; } = 150f;
 
         protected override void Awake()
         {
@@ -49,22 +39,16 @@ namespace OcentraAI.LLMGames.Screens
         protected override void OnValidate()
         {
             base.OnValidate();
-            Init();
             InitReferences();
         }
+        
 
-        protected override void OnEnable()
+        public override void SubscribeToEvents()
         {
-            EventBus.Instance.Subscribe<OfferContinuationEvent>(OnOfferContinuation);
-            EventBus.Instance.Subscribe<OfferNewGameEvent>(OnOfferNewGame);
+            base.SubscribeToEvents();
+            EventRegistrar.Subscribe<OfferContinuationEvent>(OnOfferContinuation);
+            EventRegistrar.Subscribe<OfferNewGameEvent>(OnOfferNewGame);
         }
-
-        protected override void OnDisable()
-        {
-            EventBus.Instance.Unsubscribe<OfferContinuationEvent>(OnOfferContinuation);
-            EventBus.Instance.Unsubscribe<OfferNewGameEvent>(OnOfferNewGame);
-        }
-
 
         private void InitReferences()
         {
@@ -101,17 +85,6 @@ namespace OcentraAI.LLMGames.Screens
             }
         }
 
-        public override void OnShowScreen(bool first)
-        {
-            base.OnShowScreen(first);
-            // Debug.Log("RoundLeaderboardScreen is shown");
-        }
-
-        public override void OnHideScreen(bool first)
-        {
-            base.OnHideScreen(first);
-            // Debug.Log("RoundLeaderboardScreen is hidden");
-        }
 
 
         private void OnOfferContinuation(OfferContinuationEvent e)
@@ -123,15 +96,14 @@ namespace OcentraAI.LLMGames.Screens
                 HeadingText.text = "Round Over";
             }
 
-            RoundRecord roundRecord = ScoreManager.GetLastRound();
+            INetworkRoundRecord roundRecord = e.RoundRecord;
 
-            LLMPlayer winner = PlayerManager.GetPlayerById(roundRecord.WinnerId);
 
-            string message = ColouredMessage($"{winner.AuthPlayerData.PlayerName} ", Color.green) +
+            string message = ColouredMessage($"{roundRecord.Winner} ", Color.green) +
                              ColouredMessage("Won the Round Pot: ", Color.white) +
                              ColouredMessage($" {roundRecord.PotAmount} Coins ", Color.yellow) +
                              $"{Environment.NewLine}" + ColouredMessage("Remaining Rounds : ", Color.white) +
-                             ColouredMessage($"{TurnManager.MaxRounds - TurnManager.CurrentRound} ", Color.cyan) +
+                             ColouredMessage($"[{roundRecord.MaxRounds} - {roundRecord.RoundNumber}] = {roundRecord.MaxRounds - roundRecord.RoundNumber} ", Color.cyan) +
                              ColouredMessage(" Continue Next rounds ?", Color.white);
 
             ShowStats(roundRecord);
@@ -152,7 +124,7 @@ namespace OcentraAI.LLMGames.Screens
                 NewGame.gameObject.SetActive(false);
             }
 
-            isButtonClicked = false;
+            IsButtonClicked = false;
         }
 
 
@@ -160,18 +132,20 @@ namespace OcentraAI.LLMGames.Screens
         {
             ShowScreen();
 
+
             if (HeadingText != null)
             {
                 HeadingText.text = "Game Over";
             }
+            List<INetworkRoundRecord> roundRecord = e.RoundRecord;
 
-            ShowStats(ScoreManager.GetRoundRecords());
+            ShowStats(roundRecord);
 
-            (string winnerId, int winCount) = ScoreManager.GetOverallWinner();
-            LLMPlayer winner = PlayerManager.Instance.GetPlayerById(winnerId);
 
-            string message = ColouredMessage($"{winner.AuthPlayerData.PlayerID}", Color.white, true) +
-                             ColouredMessage($"wins the game with {winCount} rounds!", Color.cyan) +
+            (IPlayerBase OverallWinner, int WinCount) roundRecordOverallWinner = e.OverallWinner;
+
+            string message = ColouredMessage($"{roundRecordOverallWinner.OverallWinner.PlayerName}", Color.white, true) +
+                             ColouredMessage($"wins the game with {roundRecordOverallWinner.WinCount} rounds!", Color.cyan) +
                              $"{Environment.NewLine}" +
                              ColouredMessage("Play New Game of 10 rounds ?", Color.red, true);
 
@@ -190,20 +164,23 @@ namespace OcentraAI.LLMGames.Screens
                 NewGame.gameObject.SetActive(true);
             }
 
-            isButtonClicked = false;
+            IsButtonClicked = false;
         }
 
-        private void ShowStats(List<RoundRecord> roundRecords)
+
+        private void ShowStats(List<INetworkRoundRecord> roundRecords)
         {
             ScoreHolderContent.DestroyChildren();
+
+            // Create headers once
             GameObject headers = Instantiate(Headers, ScoreHolderContent);
             headers.transform.SetAsFirstSibling();
 
-
-            foreach (RoundRecord roundRecord in roundRecords)
+            foreach (INetworkRoundRecord record in roundRecords)
             {
                 GameObject roundStatGameObject = Instantiate(RoundStats, ScoreHolderContent);
                 RoundStats roundStats = roundStatGameObject.GetComponent<RoundStats>();
+
                 if (roundStats != null)
                 {
                     GameObject spacer = new GameObject("Spacer");
@@ -211,8 +188,7 @@ namespace OcentraAI.LLMGames.Screens
                     spacerRect.SetParent(ScoreHolderContent, false);
                     spacerRect.sizeDelta = new Vector2(0, SpacerHeight);
 
-                    roundStats.Init();
-                    roundStats.ShowStat(roundRecord);
+                    roundStats.ShowStat(record);
 
                     RectTransform rectTransform = roundStatGameObject.GetComponent<RectTransform>();
                     if (rectTransform != null)
@@ -222,14 +198,14 @@ namespace OcentraAI.LLMGames.Screens
                 }
             }
 
-
             GameObject empty = Instantiate(Empty, ScoreHolderContent);
             empty.transform.SetAsLastSibling();
-
-            //  StartCoroutine(HideMessageAfterDelay(e.Delay));
         }
 
-        private void ShowStats(RoundRecord roundRecord)
+
+
+
+        private void ShowStats(INetworkRoundRecord roundRecord)
         {
             ScoreHolderContent.DestroyChildren();
 
@@ -246,7 +222,6 @@ namespace OcentraAI.LLMGames.Screens
                 spacerRect.SetParent(ScoreHolderContent, false);
                 spacerRect.sizeDelta = new Vector2(0, SpacerHeight);
 
-                roundStats.Init();
                 roundStats.ShowStat(roundRecord);
 
                 RectTransform rectTransform = roundStatGameObject.GetComponent<RectTransform>();
@@ -272,12 +247,12 @@ namespace OcentraAI.LLMGames.Screens
 
         private void OnContinueRound()
         {
-            if (isButtonClicked)
+            if (IsButtonClicked)
             {
                 return;
             }
 
-            isButtonClicked = true;
+            IsButtonClicked = true;
             PlaySelectionSound();
             EventBus.Instance.Publish(new PlayerActionNewRoundEvent());
             HideScreen();
@@ -285,12 +260,12 @@ namespace OcentraAI.LLMGames.Screens
 
         private void OnNewGame()
         {
-            if (isButtonClicked)
+            if (IsButtonClicked)
             {
                 return;
             }
 
-            isButtonClicked = true;
+            IsButtonClicked = true;
             PlaySelectionSound();
             EventBus.Instance.Publish(new PlayerActionStartNewGameEvent());
             HideScreen();

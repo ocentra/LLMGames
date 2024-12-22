@@ -1306,6 +1306,10 @@
       <Project>{7805F870-D0C0-DFE4-517E-3FC5B135EAE6}</Project>
       <Name>Unity.Multiplayer.Center.Editor</Name>
     </ProjectReference>
+    <ProjectReference Include="LLMGames.Interface.csproj">
+      <Project>{DECF8424-8368-7E77-E622-71B2FC5A110E}</Project>
+      <Name>LLMGames.Interface</Name>
+    </ProjectReference>
     <ProjectReference Include="Unity.AdaptivePerformance.Simulator.Extension.csproj">
       <Project>{A9FF5EB8-627A-E230-001E-A35CB51B955A}</Project>
       <Name>Unity.AdaptivePerformance.Simulator.Extension</Name>
@@ -1882,13 +1886,17 @@
       <Project>{E79BD6DE-D850-DFBC-5D3C-B0E6347D26E0}</Project>
       <Name>Unity.VisualStudio.Editor</Name>
     </ProjectReference>
-    <ProjectReference Include="Unity.Multiplayer.Tools.MetricTypes.csproj">
-      <Project>{94B83A02-4502-48CE-00BE-1F9156B33EED}</Project>
-      <Name>Unity.Multiplayer.Tools.MetricTypes</Name>
+    <ProjectReference Include="LLMGames.Events.csproj">
+      <Project>{D2BA1FD7-A3DF-BFF7-4212-DC8F28360D06}</Project>
+      <Name>LLMGames.Events</Name>
     </ProjectReference>
     <ProjectReference Include="Unity.Tutorials.Core.csproj">
       <Project>{DF71394C-93FD-A4DE-91D6-7ECF88388A11}</Project>
       <Name>Unity.Tutorials.Core</Name>
+    </ProjectReference>
+    <ProjectReference Include="Unity.Multiplayer.Tools.MetricTypes.csproj">
+      <Project>{94B83A02-4502-48CE-00BE-1F9156B33EED}</Project>
+      <Name>Unity.Multiplayer.Tools.MetricTypes</Name>
     </ProjectReference>
     <ProjectReference Include="Unity.Rendering.LightTransport.Runtime.csproj">
       <Project>{4C72F67B-8521-5D69-75DC-9C83941A4560}</Project>

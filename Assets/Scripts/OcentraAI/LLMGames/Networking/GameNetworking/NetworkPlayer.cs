@@ -23,9 +23,10 @@ namespace OcentraAI.LLMGames.GamesNetworking
         [ShowInInspector, ReadOnly] public NetworkVariable<bool> HasSeenHand { get; set; } = new NetworkVariable<bool>();
         [ShowInInspector, ReadOnly] public NetworkVariable<bool> HasBetOnBlind { get; set; } = new NetworkVariable<bool>();
         [ShowInInspector, ReadOnly] public NetworkVariable<bool> HasFolded { get; set; } = new NetworkVariable<bool>();
-        [ShowInInspector][ReadOnly] public NetworkVariable<int> Coins { get; private set; } = new NetworkVariable<int>();
-
-        public GameObject GameObject { get; set; }
+        [ShowInInspector, ReadOnly] public NetworkVariable<int> Coins { get; private set; } = new NetworkVariable<int>();
+        [ShowInInspector, ReadOnly] public NetworkVariable<int> LastDecision { get; set; } = new NetworkVariable<int>();
+        [ShowInInspector, ReadOnly] public NetworkVariable<bool> HasTakenBettingDecision { get; set; } = new NetworkVariable<bool>();
+        [ShowInInspector, ReadOnly] public NetworkVariable<bool> IsBankrupt { get; set; } = new NetworkVariable<bool>();
 
         [ShowInInspector, ReadOnly]
         public NetworkVariable<FixedString64Bytes> AuthenticatedPlayerId { get; private set; } = new NetworkVariable<FixedString64Bytes>(
@@ -55,11 +56,13 @@ namespace OcentraAI.LLMGames.GamesNetworking
 
         protected Card FloorCard { get; set; }
 
-        [ShowInInspector, ReadOnly,DictionaryDrawerSettings]
+        [ShowInInspector, ReadOnly, DictionaryDrawerSettings]
         public Dictionary<PlayerDecision, Card> WildCards { get; private set; }
-        
+
 
         public PlayerDecision PlayerDecision;
+
+        [ShowInInspector, Required] public IEventRegistrar EventRegistrar { get; set; } = new EventRegistrar();
 
         public override async void OnNetworkSpawn()
         {
@@ -112,6 +115,8 @@ namespace OcentraAI.LLMGames.GamesNetworking
         }
 
 
+
+
         public override void OnNetworkDespawn()
         {
             base.OnNetworkDespawn();
@@ -121,27 +126,15 @@ namespace OcentraAI.LLMGames.GamesNetworking
 
         public virtual void SubscribeToEvents()
         {
-            EventBus.Instance.SubscribeAsync<PlayerDecisionEvent>(OnPlayerDecision);
-            EventBus.Instance.Subscribe<UpdateWildCardsEvent<Card>>(OnUpdateWildCards);
+            EventRegistrar.Subscribe<PlayerDecisionEvent>(OnPlayerDecision);
+            EventRegistrar.Subscribe<UpdateWildCardsEvent<Card>>(OnUpdateWildCards);
         }
 
         public virtual void UnsubscribeFromEvents()
         {
-            EventBus.Instance.UnsubscribeAsync<PlayerDecisionEvent>(OnPlayerDecision);
-            EventBus.Instance.Unsubscribe<UpdateWildCardsEvent<Card>>(OnUpdateWildCards);
+            EventRegistrar.UnsubscribeAll();
         }
-
-
-        void Awake()
-        {
-            GameObject = gameObject;
-        }
-
-        void OnValidate()
-        {
-            GameObject = gameObject;
-
-        }
+        
 
 
         public virtual void SetCoins(int coins)
@@ -149,9 +142,14 @@ namespace OcentraAI.LLMGames.GamesNetworking
             if (IsServer)
             {
                 Coins.Value += coins;
-
-                EventBus.Instance.Publish(new UpdateNetworkPlayerUIEvent(coins));
+                UpdateNetworkPlayerClientRpc();
             }
+        }
+
+        [ClientRpc]
+        private void UpdateNetworkPlayerClientRpc()
+        {
+            EventBus.Instance.Publish(new UpdateNetworkPlayerUIEvent());
         }
 
         public int GetCoins()
@@ -159,6 +157,39 @@ namespace OcentraAI.LLMGames.GamesNetworking
             return Coins.Value;
         }
 
+        public void SetHasTakenBettingDecision(bool value)
+        {
+            if (IsServer)
+            {
+                HasTakenBettingDecision.Value = value;
+            }
+        }
+
+
+        public void SetBankrupt(bool value = true)
+        {
+            if (IsServer)
+            {
+                IsBankrupt.Value = value;
+
+                UpdateNetworkPlayerClientRpc();
+            }
+        }
+
+        public void AutoBet()
+        {
+            PlayerDecisionEvent bettingEvent = new PlayerDecisionBettingEvent(PlayerDecision.Bet);
+            EventBus.Instance.Publish(bettingEvent);
+        }
+
+
+        public void SetLastDecision(int value)
+        {
+            if (IsServer)
+            {
+                LastDecision.Value = value;
+            }
+        }
         public virtual void SetPlayerIndex(int index)
         {
 
@@ -167,12 +198,15 @@ namespace OcentraAI.LLMGames.GamesNetworking
                 PlayerIndex.Value = index;
             }
         }
-        public virtual void SetPlayerRegistered(bool value = true)
+        public virtual void RegisterPlayer(IPlayerManager playerManager, string displayName)
         {
             if (IsServer)
             {
-                IsPlayerRegistered.Value = value;
+                IsPlayerRegistered.Value = true;
             }
+
+            PlayerManager = playerManager;
+            gameObject.name = displayName;
         }
 
         public virtual void SetReadyForGame(bool value = true)
@@ -210,47 +244,73 @@ namespace OcentraAI.LLMGames.GamesNetworking
                     List<Card> cards = new List<Card>();
                     for (int i = 0; i < GameMode.NumberOfCards; i++)
                     {
-                        cards.Add(networkDeckManager.DrawCard());
+                        Card drawnCard = networkDeckManager.DrawCard();
+                        if (drawnCard != null)  
+                        {
+                            cards.Add(drawnCard);
+                        }
+                    }
+
+                  
+                    if (cards.Count != GameMode.NumberOfCards)
+                    {
+                        GameLoggerScriptable.LogError($"Failed to draw correct number of cards. Expected: {GameMode.NumberOfCards}, Got: {cards.Count}", this);
+                        return;
                     }
 
                     Hand = new Hand(cards);
                 }
 
-                Hand.OrderByDescending();
-                CheckForWildCardsInHand();
+                if (Hand != null && Hand.GetCards()?.Any() == true && Hand.GetCards().All(c => c != null))
+                {
+                    Hand.OrderByDescending();
+                    CheckForWildCardsInHand();
+                }
+                else
+                {
+                    GameLoggerScriptable.LogError($"Invalid hand state before ordering. Hand is {(Hand == null ? "null" : "contains null cards")}", this);
+                }
+
                 HasBetOnBlind.Value = false;
                 HasFolded.Value = false;
                 HasSeenHand.Value = false;
-            }
+                IsPlayerTurn.Value = false;
+                HasTakenBettingDecision.Value = false;
 
+            }
         }
 
         private void CheckForWildCardsInHand()
         {
-            if (IsServer)
+            if (!IsServer) return;
+
+            if (WildCards == null || Hand == null) return;
+
+            foreach ((PlayerDecision playerDecision, Card wildCard) in WildCards)
             {
-
-                if (WildCards != null)
+                if (Hand.Any(handCard => handCard.Id == wildCard.Id))
                 {
-                    foreach ((PlayerDecision playerDecision, Card card) in WildCards)
-                    {
-                        if (Hand != null && Hand.Any(card.Id))
-                        {
-                            EventBus.Instance.Publish(new UpdateWildCardsHighlightEvent(playerDecision.DecisionId));
-                        }
-                    }
+                    UpdateWildCardsHighlightClientRpc(playerDecision.DecisionId);
                 }
-
-               
             }
-
-
         }
+
+        [ClientRpc]
+        private void UpdateWildCardsHighlightClientRpc(int decisionId)
+        {
+            EventBus.Instance.Publish(new UpdateWildCardsHighlightEvent(decisionId));
+        }
+
 
 
         public bool CanAffordBet(int betAmount)
         {
-            return GetCoins() >= betAmount;
+            bool canAffordBet = GetCoins() >= betAmount;
+            if (!canAffordBet)
+            {
+                SetBankrupt(true);
+            }
+            return canAffordBet;
         }
 
         public void AdjustCoins(int amount)
@@ -258,7 +318,7 @@ namespace OcentraAI.LLMGames.GamesNetworking
             SetCoins(amount);
         }
 
-        public virtual void PickAndSwap(Card draggedCard, Card handCard)
+        public virtual async UniTask<bool> PickAndSwap(Card draggedCard, Card handCard)
         {
             if (draggedCard != null && handCard != null)
             {
@@ -273,12 +333,20 @@ namespace OcentraAI.LLMGames.GamesNetworking
                 }
 
                 CheckForWildCardsInHand();
-                EventBus.Instance.Publish(new UpdatePlayerHandDisplayEvent(this));
-                EventBus.Instance.Publish(new SetFloorCardEvent<Card>(handCard));
+                await EventBus.Instance.PublishAsync(new UpdatePlayerHandDisplayEvent(this));
+                SetFloorCardClientRpc(CardUtility.GetRankSymbol(handCard.Suit, handCard.Rank, false));
+                return true;
             }
+
+            return false;
         }
 
-
+        [ClientRpc]
+        private void SetFloorCardClientRpc(string handCard)
+        {
+            Card card = CardUtility.GetCardFromSymbol(handCard);
+            EventBus.Instance.Publish(new SetFloorCardEvent<Card>(card));
+        }
 
         public int CalculateHandValue()
         {
@@ -320,16 +388,15 @@ namespace OcentraAI.LLMGames.GamesNetworking
 
         public virtual async UniTask OnPlayerDecision(PlayerDecisionEvent decisionEvent)
         {
-            if (!IsLocalPlayer) return;
 
             if (!IsPlayerTurn.Value)
             {
-                Debug.Log($" {PlayerName.Value.Value} Is not PlayerTurn!!! ");
                 return;
             }
 
             if (!IsServer)
             {
+
                 ProcessDecisionServerRpc(decisionEvent, PlayerId.Value);
             }
             else
@@ -344,6 +411,7 @@ namespace OcentraAI.LLMGames.GamesNetworking
         [ServerRpc(RequireOwnership = false)]
         protected virtual void ProcessDecisionServerRpc(PlayerDecisionEvent decisionEvent, ulong playerId)
         {
+
             EventBus.Instance.Publish(new ProcessDecisionEvent(decisionEvent, playerId));
         }
 
@@ -353,7 +421,6 @@ namespace OcentraAI.LLMGames.GamesNetworking
             if (card == null) return "";
             return CardUtility.GetRankSymbol(card.Suit, card.Rank, coloured: false);
         }
-
 
 
     }

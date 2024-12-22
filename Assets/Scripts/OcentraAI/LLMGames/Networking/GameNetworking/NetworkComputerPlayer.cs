@@ -2,15 +2,14 @@ using Cysharp.Threading.Tasks;
 using OcentraAI.LLMGames.Events;
 using OcentraAI.LLMGames.GameModes;
 using OcentraAI.LLMGames.GamesNetworking;
-using OcentraAI.LLMGames.Scriptable;
 using Sirenix.OdinInspector;
 using System;
-using System.Threading;
 using UnityEngine;
 using Random = UnityEngine.Random;
 
 public class NetworkComputerPlayer : NetworkPlayer, IComputerPlayerData
 {
+    [ShowInInspector] private int RaiseAmount { get; set; }
 
 
     // AI-specific properties
@@ -20,44 +19,104 @@ public class NetworkComputerPlayer : NetworkPlayer, IComputerPlayerData
     [ShowInInspector]
     public string AIModelName { get; set; } = "DefaultAI";
 
-    
-    
-    //todo have a auto dession
-
-
-
-
-
-    public async UniTask MakeDecision(int currentBet, CancellationTokenSource globalCancellationTokenSource)
+    public async UniTask<bool> SimulateComputerPlayerTurn(ulong currentPlayerID, int currentBet)
     {
-        try
+        if (!IsServer)
         {
+            return false;
+        }
 
 
-            await SimulateThinkingTime();
-
-            if (!HasSeenHand.Value)
+        if (currentPlayerID == PlayerId.Value)
+        {
+            try
             {
-                await DecideInitialAction(currentBet);
+                await MakeDecision(currentBet);
+
+                PlayerDecisionEvent eventToPublish = null;
+
+                switch (PlayerDecision.Name)
+                {
+                    // Special case: RaiseBet with a custom event
+                    case nameof(PlayerDecision.RaiseBet):
+
+                        eventToPublish = new PlayerDecisionRaiseBetEvent(PlayerDecision, RaiseAmount);
+
+                        break;
+
+                    case nameof(PlayerDecision.SeeHand):
+                        eventToPublish = new PlayerDecisionBettingEvent(PlayerDecision);
+                        break;
+
+                    // General betting decisions
+                    case nameof(PlayerDecision.ShowCall):
+                    case nameof(PlayerDecision.Fold):
+                    case nameof(PlayerDecision.PlayBlind):
+                    case nameof(PlayerDecision.Bet):
+                    case nameof(PlayerDecision.DrawFromDeck):
+                        eventToPublish = new PlayerDecisionBettingEvent(PlayerDecision);
+                        break;
+
+                    // Wildcard-related decisions
+                    case nameof(PlayerDecision.WildCard0):
+                    case nameof(PlayerDecision.WildCard1):
+                    case nameof(PlayerDecision.WildCard2):
+                    case nameof(PlayerDecision.WildCard3):
+                    case nameof(PlayerDecision.Trump):
+                        eventToPublish = new PlayerDecisionWildcardEvent(PlayerDecision);
+                        break;
+
+                    // UI-related decisions
+                    case nameof(PlayerDecision.ShowAllFloorCards):
+                    case nameof(PlayerDecision.PurchaseCoins):
+                        eventToPublish = new PlayerDecisionUIEvent(PlayerDecision);
+                        break;
+
+                    // Default fallback
+                    default:
+                        eventToPublish = new PlayerDecisionEvent(PlayerDecision);
+                        break;
+                }
+                
+
+                await EventBus.Instance.PublishAsync(new ProcessDecisionEvent(eventToPublish, PlayerId.Value));
+
+                await UniTask.Yield();
+
+                return true;
+
             }
-            else
+            catch (Exception ex)
             {
-                await DecideMainAction(currentBet);
+                Debug.LogError($"Error in OnComputerPlayerTurn: {ex.Message}");
             }
         }
-        catch (OperationCanceledException)
+
+        return false;
+    }
+
+
+
+
+
+
+
+    public async UniTask MakeDecision(int currentBet)
+    {
+        await SimulateThinkingTime();
+
+        if (!HasSeenHand.Value)
         {
-            Debug.Log("ComputerPlayer decision making was canceled.");
+            await DecideInitialAction(currentBet);
         }
-        catch (Exception ex)
+        else
         {
-            Debug.LogError($"Error in ComputerPlayer MakeDecision: {ex.Message}");
+            await DecideMainAction(currentBet);
         }
     }
 
     private async UniTask DecideInitialAction(int currentBet)
     {
-
 
         if (Random.value > 0.3f)
         {
@@ -139,23 +198,21 @@ public class NetworkComputerPlayer : NetworkPlayer, IComputerPlayerData
         await DecideMainAction(currentBet);
     }
 
-    private void SwapWithFloorCard()
+    private async void SwapWithFloorCard()
     {
         if (FloorCard == null)
         {
             return;
         }
 
-        PickAndSwap(FloorCard, Hand.FindWorstCard());
+        await PickAndSwap(FloorCard, Hand.FindWorstCard());
     }
 
-    
+
 
     private void TakeActionRaise(int currentBet)
     {
-        int raiseAmount = (int)(currentBet * Random.Range(1.5f, 3f));
-        // EventBus.Instance.Publish(new PlayerActionRaiseBetEvent(GetType(), raiseAmount.ToString()));
-
+        RaiseAmount = (int)(currentBet * Random.Range(1.5f, 3f));
     }
 
     private async UniTask TakeActionDrawFromDeck(int currentBet)

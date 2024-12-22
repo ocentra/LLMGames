@@ -1,4 +1,5 @@
 using Cysharp.Threading.Tasks;
+using Newtonsoft.Json;
 using OcentraAI.LLMGames.Events;
 using OcentraAI.LLMGames.GamesNetworking;
 using Sirenix.OdinInspector;
@@ -6,6 +7,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using Unity.Netcode;
+using Leaderboard = OcentraAI.LLMGames.GamesNetworking.Leaderboard;
 
 namespace OcentraAI.LLMGames.Networking.Manager
 {
@@ -23,18 +25,10 @@ namespace OcentraAI.LLMGames.Networking.Manager
 
         [ShowInInspector, ReadOnly] private List<NetworkRoundRecord> RoundRecords { get; set; } = new List<NetworkRoundRecord>();
 
-        [ShowInInspector, ReadOnly] private NetworkPlayer CurrentPlayer => NetworkTurnManager.CurrentPlayer as NetworkPlayer;
 
         #endregion
 
-        public override void SubscribeToEvents()
-        {
-        }
-
-        public override void UnsubscribeFromEvents()
-        {
-        }
-
+        
 
         #region Initialization
 
@@ -48,8 +42,15 @@ namespace OcentraAI.LLMGames.Networking.Manager
                     {
                         await SetTotalCoinsInPlay(GameMode.InitialPlayerCoins * NetworkPlayerManager.GetActivePlayers().Count, false);
 
+                        foreach (IPlayerBase playerBase in NetworkPlayerManager.GetActivePlayers())
+                        {
+                            playerBase.SetCoins(GameMode.InitialPlayerCoins);
+                        }
+
                     }
-                    await SetRoundRecords(new List<NetworkRoundRecord>(), false);
+
+                    RoundRecords = new List<NetworkRoundRecord>();
+                    NetworkPlayerManager.ResetFoldedPlayer(false);
                     await UniTask.Yield();
                     return true;
                 }
@@ -72,17 +73,12 @@ namespace OcentraAI.LLMGames.Networking.Manager
                 try
                 {
                     NetworkPlayerManager.ResetFoldedPlayer();
-
-                    foreach (IPlayerBase playerBase in NetworkPlayerManager.GetAllPlayers())
-                    {
-                        playerBase.SetCoins(GameMode.InitialPlayerCoins);
-                    }
-
-                    await SetPot(0, false);
+                    
+                    await ResetPot(false);
 
                     if (GameMode != null)
                     {
-                        await SetCurrentBet(GameMode.BaseBet, false);
+                        await SetCurrentBet(GameMode.BaseBet,true, false);
                         BlindMultiplier = GameMode.BaseBlindMultiplier;
                     }
                     await SendUIUpdateEvent();
@@ -103,19 +99,51 @@ namespace OcentraAI.LLMGames.Networking.Manager
 
         public async UniTask SendUIUpdateEvent()
         {
-            int pot = GetPot();
-            int currentBet = GetCurrentBet();
-            int totalRounds = GameMode.MaxRounds;
-            int currentRound = NetworkTurnManager.CurrentRound;
+            if (IsServer)
+            {
+                int pot = GetPot();
+                int currentBet = GetCurrentBet();
+                int totalRounds = GameMode.MaxRounds;
+                int currentRound = NetworkTurnManager.CurrentRound;
+                List<NetworkRoundRecord> roundRecords = GetRoundRecord();
 
-            List<INetworkRoundRecord> roundRecords = GetRoundRecord().Cast<INetworkRoundRecord>().ToList();
+                JsonSerializerSettings settings = new JsonSerializerSettings
+                {
+                    TypeNameHandling = TypeNameHandling.Auto,
+                    NullValueHandling = NullValueHandling.Ignore,
+                    ReferenceLoopHandling = ReferenceLoopHandling.Ignore
+                };
 
-            bool success = await EventBus.Instance.PublishAsync(
-                new UpdateScoreDataEvent<INetworkRoundRecord>(pot, currentBet, totalRounds, currentRound, roundRecords)
-            );
+                string serializedRoundRecords = JsonConvert.SerializeObject(roundRecords, settings);
+                SendUIUpdateEventClientRpc(serializedRoundRecords, pot, currentBet, totalRounds, currentRound);
+            }
+
             await UniTask.Yield();
         }
 
+        [ClientRpc]
+        private void SendUIUpdateEventClientRpc(string serializedRoundRecords, int pot, int currentBet, int totalRounds, int currentRound)
+        {
+            JsonSerializerSettings settings = new JsonSerializerSettings
+            {
+                TypeNameHandling = TypeNameHandling.Auto,
+                NullValueHandling = NullValueHandling.Ignore,
+                ReferenceLoopHandling = ReferenceLoopHandling.Ignore
+            };
+
+            List<NetworkRoundRecord> deserializeObject = JsonConvert.DeserializeObject<List<NetworkRoundRecord>>(serializedRoundRecords, settings);
+
+            List<INetworkRoundRecord> networkRoundRecords = deserializeObject.Cast<INetworkRoundRecord>().ToList();
+
+            UpdateScoreDataEvent<INetworkRoundRecord> interfaceEvent = new UpdateScoreDataEvent<INetworkRoundRecord>(
+                pot,
+                currentBet,
+                totalRounds,
+                currentRound,
+                networkRoundRecords);
+
+            EventBus.Instance.Publish(interfaceEvent);
+        }
 
 
 
@@ -150,8 +178,20 @@ namespace OcentraAI.LLMGames.Networking.Manager
                 {
                     await SendUIUpdateEvent();
                 }
+            }
 
+            await UniTask.Yield();
+        }
 
+        public async UniTask ResetPot(bool sendEvent = true)
+        {
+            if (IsServer)
+            {
+                Pot.Value = 0;
+                if (sendEvent)
+                {
+                    await SendUIUpdateEvent();
+                }
             }
 
             await UniTask.Yield();
@@ -167,11 +207,19 @@ namespace OcentraAI.LLMGames.Networking.Manager
             return RoundRecords;
         }
 
-        public async UniTask SetCurrentBet(int value, bool sendEvent = true)
+        public async UniTask SetCurrentBet(int value, bool resetBet = false ,bool sendEvent = true)
         {
             if (IsServer)
             {
-                CurrentBet.Value += value;
+                if (resetBet)
+                {
+                    CurrentBet.Value = value;
+                }
+                else
+                {
+                    CurrentBet.Value += value;
+                }
+               
 
                 if (sendEvent)
                 {
@@ -198,92 +246,126 @@ namespace OcentraAI.LLMGames.Networking.Manager
             await UniTask.Yield();
         }
 
-
         #region Betting Operations
 
-        public async UniTask<(bool Success, string ErrorMessage)> ProcessBlindBet()
+
+        public async UniTask<(bool Success, string ErrorMessage)> HandlePlayBlind(NetworkPlayer currentPlayer)
         {
+            if (!IsServer) return (false, "Unauthorized!");
+
             int newBet = GetCurrentBet() * BlindMultiplier;
-            if (!await ValidateBet(newBet))
-            {
-                return (false, $"Not enough coins ({CurrentPlayer.GetCoins()}). Current bet is {newBet}.");
-            }
+            string failureMessage = $"Not enough coins ({currentPlayer.GetCoins()}). Current bet is {newBet}.";
 
-            if (await ProcessBetOnBlind(newBet))
+            (bool success, string errorMessage) = await ProcessBetWithValidation(newBet, failureMessage, currentPlayer);
+            if (success)
             {
+                currentPlayer.HasBetOnBlind.Value = true;
                 BlindMultiplier *= 2;
-                return (true, string.Empty);
             }
 
-            return (false, "Error processing blind bet");
+            return (success, errorMessage);
         }
 
-        public async UniTask<(bool Success, string ErrorMessage)> ProcessRegularBet()
+        public async UniTask<(bool Success, string ErrorMessage)> HandleBet(NetworkPlayer currentPlayer)
         {
-            int betAmount = CurrentPlayer.HasSeenHand.Value ? GetCurrentBet() * 2 : GetCurrentBet();
+            if (!IsServer) return (false, "Unauthorized!");
 
-            if (!await ValidateBet(betAmount))
-            {
-                return (false, $"Not enough coins ({CurrentPlayer.GetCoins()}). Current bet is {betAmount}.");
-            }
-
-            return await ProcessBet(betAmount) ? (true, string.Empty) : (false, "Error processing bet");
+            int betAmount = currentPlayer.HasSeenHand.Value ? GetCurrentBet() * 2 : GetCurrentBet();
+            return await ProcessBetWithValidation(betAmount, $"Not enough coins ({currentPlayer.GetCoins()}). Current bet is {betAmount}.", currentPlayer);
         }
 
-        public async UniTask<(bool Success, string ErrorMessage)> ProcessShowBet()
+        public async UniTask<(bool Success, string ErrorMessage)> HandleShowCall(NetworkPlayer currentPlayer)
         {
+            if (!IsServer) return (false, "Unauthorized!");
+
             int showBetAmount = GetCurrentBet() * 2;
-
-            if (!await ValidateBet(showBetAmount))
-            {
-                return (false,
-                    $"Not enough coins ({CurrentPlayer.GetCoins()}) to show. Required bet is {showBetAmount}.");
-            }
-
-            if (await ProcessBet(showBetAmount))
-            {
-                return (true, string.Empty);
-            }
-
-            return (false, "Error processing show bet");
+            return await ProcessBetWithValidation(showBetAmount, $"Not enough coins ({currentPlayer.GetCoins()}) to show. Required bet is {showBetAmount}.", currentPlayer);
         }
 
-        public async UniTask<(bool Success, string ErrorMessage)> ProcessRaise(int raiseAmount)
+        public async UniTask<(bool Success, string ErrorMessage)> HandleRaiseBet(int raiseAmount, NetworkPlayer currentPlayer)
         {
-            if (!await ValidateBet(raiseAmount))
-            {
-                return (false, $"Not enough coins ({CurrentPlayer.GetCoins()}). Current bet is {GetCurrentBet()}.");
-            }
+            if (!IsServer) return (false, "Unauthorized!");
 
-            return await ProcessBet(raiseAmount) ? (true, string.Empty) : (false, "Error processing raise");
+            return await ProcessBetWithValidation(raiseAmount, $"Not enough coins ({currentPlayer.GetCoins()}). Current bet is {GetCurrentBet()}.", currentPlayer);
         }
 
-        public async UniTask<bool> ProcessFold()
+
+
+        public async UniTask<(bool Success, string ErrorMessage)> HandleShowAllFloorCards(NetworkPlayer currentPlayer)
         {
-            if (IsServer)
+            if (!IsServer) return (false, "Unauthorized!");
+
+            int newBet = 10;
+            string failureMessage = $"Not enough coins ({currentPlayer.GetCoins()}). Cost To ShowAllFloorCards is {newBet}.";
+            return await ProcessBetWithValidation(newBet, failureMessage, currentPlayer, false);
+        }
+        private async UniTask<(bool Success, string ErrorMessage)> ProcessBetWithValidation(int betAmount, string failureMessage, NetworkPlayer currentPlayer, bool showFoldMessage = true)
+        {
+            if (!IsServer) return (false, "Unauthorized!");
+
+            if (!await ValidateBet(currentPlayer,betAmount))
             {
-                if (!VerifyTotalCoins())
+                if (showFoldMessage)
                 {
-                    HandleVerificationFailure("ProcessFold - Before");
-                    return false;
+                    await HandleFold(failureMessage, currentPlayer);
                 }
 
-                CurrentPlayer.HasFolded.Value = true;
-                NetworkPlayerManager.AddFoldedPlayer(CurrentPlayer);
-
-                if (NetworkPlayerManager.GetActivePlayers().Count == 1)
-                {
-                    IPlayerBase winner = NetworkPlayerManager.GetActivePlayers().First();
-                    return await AwardPotToWinner(winner as NetworkPlayer);
-                }
-
-                return VerifyTotalCoins();
+                return (false, failureMessage);
             }
 
-            return false;
+            return await ProcessBet(currentPlayer,betAmount, failureMessage) ? (true, string.Empty) : (false, "Error processing bet");
+        }
+
+        private async UniTask<bool> ProcessBet(NetworkPlayer currentPlayer,int betAmount, string failureMessage)
+        {
+            if (!IsServer) return false;
+
+            if (currentPlayer == null || !currentPlayer.CanAffordBet(betAmount))
+            {
+                await HandleFold(failureMessage, currentPlayer);
+                return false;
+            }
+
+            currentPlayer.AdjustCoins(-betAmount);
+            await SetPot(betAmount);
+            await SetCurrentBet(betAmount);
+            return VerifyTotalCoins();
+        }
+
+        public async UniTask<bool> HandleFold(string failureMessage, NetworkPlayer currentPlayer, bool fromUI = false)
+        {
+            if (!IsServer) return false;
+
+            if (!VerifyTotalCoins())
+            {
+                HandleVerificationFailure("ProcessFold - Before");
+                return false;
+            }
+
+            if (currentPlayer is IHumanPlayerData && !fromUI)
+            {
+                await ShowMessage(failureMessage, PlayerDecision.Fold.Name);
+
+                return false;
+            }
+
+            currentPlayer.HasFolded.Value = true;
+            NetworkPlayerManager.AddFoldedPlayer(currentPlayer);
+
+            IReadOnlyList<IPlayerBase> activePlayers = NetworkPlayerManager.GetActivePlayers();
+
+            if (activePlayers.Count == 1)
+            {
+                IPlayerBase winner = activePlayers.First();
+                return await AwardPotToWinner(winner as NetworkPlayer);
+            }
+
+            return VerifyTotalCoins();
         }
 
         #endregion
+
+
 
         #region Player Scoring
 
@@ -299,7 +381,9 @@ namespace OcentraAI.LLMGames.Networking.Manager
             if (winner != null)
             {
                 winner.AdjustCoins(potAmount);
-                await SetPot(0);
+                await RecordRound(winner, potAmount);
+
+                await ResetPot();
 
                 if (!VerifyTotalCoins())
                 {
@@ -307,7 +391,6 @@ namespace OcentraAI.LLMGames.Networking.Manager
                     return false;
                 }
 
-                await RecordRound(winner, potAmount);
             }
 
             return true;
@@ -336,15 +419,16 @@ namespace OcentraAI.LLMGames.Networking.Manager
                 tiedPlayers[0].AdjustCoins(remainder);
             }
 
-            await SetPot(0);
+            await RecordRound(null, GetPot());
 
+            await ResetPot();
             if (!VerifyTotalCoins())
             {
                 HandleVerificationFailure("AwardTiedPot - After");
                 return false;
             }
 
-            await RecordRound(null, GetPot());
+
             return true;
         }
 
@@ -360,31 +444,52 @@ namespace OcentraAI.LLMGames.Networking.Manager
                 .Sum(r => r.PotAmount);
         }
 
-        public (ulong WinnerId, int WinCount) GetOverallWinner()
+        public (IPlayerBase OverallWinner, int WinCount) GetOverallWinner()
         {
-            var grouped = GetRoundRecord()
-                .GroupBy(r => r.WinnerId)
-                .Select(g => new { WinnerId = g.Key, WinCount = g.Count() })
-                .OrderByDescending(g => g.WinCount)
-                .FirstOrDefault();
+            Dictionary<ulong, int> winCounts = new Dictionary<ulong, int>();
 
-            if (grouped != null)
+            foreach (NetworkRoundRecord record in RoundRecords)
             {
-                return (grouped.WinnerId, grouped?.WinCount ?? 0);
+                if (winCounts.ContainsKey(record.WinnerId))
+                {
+                    winCounts[record.WinnerId]++;
+                }
+                else
+                {
+                    winCounts[record.WinnerId] = 1;
+                }
             }
 
-            return (default, 0);
+            ulong overallWinnerId = 0;
+            int maxWinCount = 0;
+
+            foreach (KeyValuePair<ulong, int> entry in winCounts)
+            {
+                if (entry.Value > maxWinCount)
+                {
+                    overallWinnerId = entry.Key;
+                    maxWinCount = entry.Value;
+                }
+            }
+
+            IPlayerBase overallWinner = null;
+            if (overallWinnerId != 0)
+            {
+                NetworkPlayerManager.TryGetPlayer(overallWinnerId, out overallWinner);
+            }
+
+            return (overallWinner, maxWinCount);
         }
 
-        public List<(ulong PlayerId, int Wins, int TotalWinnings)> GetLeaderboard()
+
+        public ILeaderboard GetLeaderBoard()
         {
-            return GetRoundRecord()
-                .GroupBy(r => r.WinnerId)
-                .Select(g => (PlayerId: g.Key, Wins: g.Count(), TotalWinnings: g.Sum(r => r.PotAmount)))
-                .OrderByDescending(p => p.Wins)
-                .ThenByDescending(p => p.TotalWinnings)
-                .ToList();
+            List<INetworkRoundRecord> roundRecords = new List<INetworkRoundRecord>(GetRoundRecord());
+            ILeaderboard leaderboard = new Leaderboard(roundRecords);
+            return leaderboard;
         }
+
+
 
         #endregion
 
@@ -393,44 +498,72 @@ namespace OcentraAI.LLMGames.Networking.Manager
 
         private async UniTask RecordRound(IPlayerBase winner, int potAmount)
         {
-            IReadOnlyList<IPlayerBase> readOnlyList = NetworkPlayerManager.GetAllPlayers();
+            IReadOnlyList<IPlayerBase> allPlayers = NetworkPlayerManager.GetAllPlayers();
+
+            List<INetworkPlayerRecord> playerRecords = new List<INetworkPlayerRecord>();
+           
+            foreach (IPlayerBase player in allPlayers)
+            {
+                if (player != null)
+                {
+                    try
+                    {
+                        NetworkPlayerRecord playerRecord = new NetworkPlayerRecord(player);
+                        if (!playerRecords.Contains(playerRecord))
+                        {
+                            playerRecords.Add(playerRecord);
+                        }
+                    }
+                    catch (Exception ex)
+                    {
+                        GameLoggerScriptable.LogError($"Failed to create NetworkPlayerRecord for player: {ex.Message}", this);
+                    }
+                }
+                else
+                {
+                    GameLoggerScriptable.LogError("Encountered null player while recording round.", this);
+                }
+            }
+
+            ulong winnerId = winner?.PlayerId?.Value ?? default;
+            string winnerName = winner?.PlayerName?.Value.Value ?? "Tie";
+
             NetworkRoundRecord networkRoundRecord = new NetworkRoundRecord
             {
                 RoundNumber = NetworkTurnManager.CurrentRound,
-                WinnerId = winner.PlayerId.Value,
+                MaxRounds = NetworkTurnManager.MaxRounds,
+                WinnerId = winnerId,
+                Winner = winnerName,
                 PotAmount = potAmount,
-                PlayerRecords = readOnlyList.Select(player =>
-                {
-
-                    INetworkPlayerRecord networkPlayerRecord = new NetworkPlayerRecord(player);
-
-                    return networkPlayerRecord;
-                }).ToList()
+                PlayerRecords = playerRecords
             };
 
-            List<NetworkRoundRecord> roundRecords = new List<NetworkRoundRecord>();
+            RoundRecords ??= new List<NetworkRoundRecord>();
 
-            if (!roundRecords.Contains(networkRoundRecord))
+            if (!RoundRecords.Contains(networkRoundRecord))
             {
-                roundRecords.Add(networkRoundRecord);
+                RoundRecords.Add(networkRoundRecord);
             }
 
-
-            await SetRoundRecords(roundRecords);
+            await SetRoundRecords(RoundRecords);
             await UniTask.Yield();
         }
 
 
 
-        // will come from UI so should be Event Todo
+
+
         public NetworkRoundRecord GetLastRound()
         {
-            return GetRoundRecord().Last();
+            List<NetworkRoundRecord> networkRoundRecords = GetRoundRecord();
+            NetworkRoundRecord networkRoundRecord = networkRoundRecords.Last();
+            return networkRoundRecord;
         }
 
         public IPlayerBase GetLastRoundWinner()
         {
-            NetworkRoundRecord networkRoundRecord = GetRoundRecord().Last();
+            List<NetworkRoundRecord> networkRoundRecords = GetRoundRecord();
+            NetworkRoundRecord networkRoundRecord = networkRoundRecords.Last();
 
             if (networkRoundRecord != null && NetworkPlayerManager.TryGetPlayer(networkRoundRecord.WinnerId, out IPlayerBase playerBase))
             {
@@ -440,76 +573,33 @@ namespace OcentraAI.LLMGames.Networking.Manager
             return null;
         }
 
-        private async UniTask<bool> ValidateBet(int betAmount)
+        private async UniTask<bool> ValidateBet(NetworkPlayer currentPlayer,int betAmount)
         {
-            bool canAffordBet = CurrentPlayer != null && CurrentPlayer.CanAffordBet(betAmount);
-            bool validateBet = canAffordBet && GetPot() + betAmount <= GetTotalCoinsInPlay();
+            bool canAffordBet = currentPlayer != null && currentPlayer.CanAffordBet(betAmount);
+            int currentTotal = GetPot();
+            int totalCoinsInPlay = GetTotalCoinsInPlay();
+
+            bool validateBet = canAffordBet && currentTotal + betAmount <= totalCoinsInPlay;
             await UniTask.Yield();
             return validateBet;
-        }
-
-        private async UniTask<bool> ProcessBet(int betAmount)
-        {
-            if (CurrentPlayer != null)
-            {
-                if (!await ValidateBet(betAmount))
-                {
-
-                    GameLoggerScriptable.LogError($"Invalid bet: Player {CurrentPlayer.PlayerId.Value}, Amount: {betAmount}, Player Coins: {CurrentPlayer.GetCoins()}", this);
-
-
-                    return false;
-                }
-
-                if (CurrentPlayer.CanAffordBet(betAmount))
-                {
-                    CurrentPlayer.AdjustCoins(-betAmount);
-                }
-
-
-                await SetPot(betAmount);
-                await SetCurrentBet(betAmount);
-                bool verificationResult = VerifyTotalCoins();
-                return verificationResult;
-
-            }
-
-            return false;
-        }
-
-        private async UniTask<bool> ProcessBetOnBlind(int betAmount)
-        {
-            if (!await ValidateBet(betAmount))
-            {
-                return false;
-            }
-
-            if (CurrentPlayer.CanAffordBet(betAmount))
-            {
-                CurrentPlayer.AdjustCoins(-betAmount);
-                CurrentPlayer.HasBetOnBlind.Value = true;
-            }
-
-            await SetPot(betAmount);
-            await SetCurrentBet(betAmount);
-
-            return VerifyTotalCoins();
         }
 
         private bool VerifyTotalCoins()
         {
             int currentTotal = GetPot();
 
-            foreach (IPlayerBase player in NetworkPlayerManager.GetAllPlayers())
+            IEnumerable<IPlayerBase> allPlayers = NetworkPlayerManager.GetAllPlayers();
+
+            foreach (IPlayerBase player in allPlayers)
             {
 
-                if (CurrentPlayer != null)
+                if (player != null)
                 {
-                    currentTotal += CurrentPlayer.GetCoins();
+                    currentTotal += player.GetCoins();
                 }
             }
-
-            bool isValid = currentTotal == GetTotalCoinsInPlay();
+            int totalCoinsInPlay = GetTotalCoinsInPlay();
+            bool isValid = currentTotal == totalCoinsInPlay;
             if (!isValid)
             {
                 GameLoggerScriptable.LogError($"Total coins mismatch. Current: {currentTotal}, Expected: {GetTotalCoinsInPlay()}", this);
@@ -520,7 +610,8 @@ namespace OcentraAI.LLMGames.Networking.Manager
 
         private void HandleVerificationFailure(string methodName)
         {
-            GameLoggerScriptable.LogError($"Total coins verification failed in {methodName}. Game state might be corrupted.", this);
+            GameLoggerScriptable.LogError($"Total coins verification failed in {methodName}. Game state might be corrupted.", this, true, true);
+
         }
 
         #endregion

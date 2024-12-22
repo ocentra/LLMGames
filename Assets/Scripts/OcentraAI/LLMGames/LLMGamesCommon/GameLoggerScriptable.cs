@@ -224,12 +224,12 @@ namespace OcentraAI.LLMGames.Utilities
         {
             if (IsNullOrEmpty(PlayerName) && Application.isPlaying)
             {
-                UniTaskCompletionSource<OperationResult<IPlayerData>> uniTaskCompletionSource = new UniTaskCompletionSource<OperationResult<IPlayerData>>();
+                UniTaskCompletionSource<OperationResult<IHumanPlayerData>> uniTaskCompletionSource = new UniTaskCompletionSource<OperationResult<IHumanPlayerData>>();
                 bool resultOperation = await EventBus.Instance.PublishAsync(new GetLocalPlayerEvent(uniTaskCompletionSource));
 
                 if (resultOperation)
                 {
-                    OperationResult<IPlayerData> result = null;
+                    OperationResult<IHumanPlayerData> result = null;
                     try
                     {
                         result = await uniTaskCompletionSource.Task;

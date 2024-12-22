@@ -18,7 +18,7 @@ namespace OcentraAI.LLMGames.Players.UI
     public class NetworkPlayerUI : MonoBehaviour, IPlayerUI, IEventHandler
     {
         [ShowInInspector] protected IPlayerBase PlayerBase { get; set; }
-        [ShowInInspector] protected IPlayerData PlayerData { get; set; }
+        [ShowInInspector] protected IHumanPlayerData HumanPlayerData { get; set; }
         [ShowInInspector] protected bool IsLocalPlayer { get; set; }
         [ShowInInspector] private MeshRenderer greenRingRenderer;
 
@@ -45,6 +45,9 @@ namespace OcentraAI.LLMGames.Players.UI
         [ShowInInspector] private float Duration { get; set; }
         [ShowInInspector] private float RemainingTime { get; set; }
         [ShowInInspector] private float FillAmount { get; set; }
+
+        [ShowInInspector, Required] public IEventRegistrar EventRegistrar { get; set; } = new EventRegistrar();
+
 
         private void OnValidate()
         {
@@ -168,22 +171,17 @@ namespace OcentraAI.LLMGames.Players.UI
         }
         public void SubscribeToEvents()
         {
-            EventBus.Instance.SubscribeAsync<TimerStartEvent>(OnTimerStartEvent);
-            EventBus.Instance.Subscribe<TimerStopEvent>(OnTimerStopEvent);
-            EventBus.Instance.SubscribeAsync<RegisterUIPlayerEvent>(OnRegisterUIPlayerEvent);
-            EventBus.Instance.Subscribe<UpdateNetworkPlayerUIEvent>(OnUpdateNetworkPlayerUIEvent);
+            EventRegistrar.Subscribe<TimerStartEvent>(OnTimerStartEvent);
+            EventRegistrar.Subscribe<TimerStopEvent>(OnTimerStopEvent);
+            EventRegistrar.Subscribe<RegisterPlayerListEvent>(OnRegisterPlayerListEvent);
+            EventRegistrar.Subscribe<UpdateNetworkPlayerUIEvent>(OnUpdateNetworkPlayerUIEvent);
         }
 
         public void UnsubscribeFromEvents()
         {
-            EventBus.Instance.UnsubscribeAsync<TimerStartEvent>(OnTimerStartEvent);
-            EventBus.Instance.Unsubscribe<TimerStopEvent>(OnTimerStopEvent);
-            EventBus.Instance.UnsubscribeAsync<RegisterUIPlayerEvent>(OnRegisterUIPlayerEvent);
-            EventBus.Instance.Unsubscribe<UpdateNetworkPlayerUIEvent>(OnUpdateNetworkPlayerUIEvent);
+            EventRegistrar.UnsubscribeAll();
         }
-
-
-
+        
 
         [Button]
         private void Reset()
@@ -219,20 +217,23 @@ namespace OcentraAI.LLMGames.Players.UI
 
         private async UniTask OnTimerStartEvent(TimerStartEvent timerStartEvent)
         {
-            IsPlayerTurn = timerStartEvent.PlayerIndex == playerIndex;
+            if (PlayerBase == null)
+            {
+                return;
+            }
+            IsPlayerTurn = timerStartEvent.PlayerIndex == playerIndex && PlayerBase.PlayerId.Value == timerStartEvent.PlayerId;
 
             if (IsPlayerTurn)
             {
                 ShowTimer(true);
-                
 
                 Duration = timerStartEvent.Duration;
-                RemainingTime = timerStartEvent.Duration;
+                RemainingTime = Duration;
 
-                CancellationToken cancellationToken = timerStartEvent.CancellationTokenSource.Token;
                 float startTime = Time.realtimeSinceStartup;
+                CancellationToken cancellationToken = timerStartEvent.CancellationTokenSource.Token;
 
-                while (RemainingTime > 0 && !cancellationToken.IsCancellationRequested)
+                while (RemainingTime > 0  && !cancellationToken.IsCancellationRequested)
                 {
 
                     float elapsedTime = Time.realtimeSinceStartup - startTime;
@@ -259,10 +260,15 @@ namespace OcentraAI.LLMGames.Players.UI
                     await UniTask.Delay(1, cancellationToken: cancellationToken);
                 }
 
-                if (RemainingTime <= 0 && !timerStartEvent.TimCompletionSource.Task.GetAwaiter().IsCompleted)
+
+                if (RemainingTime <= 0)
                 {
-                    EventBus.Instance.Publish(new TimerCompletedEvent());
-                    timerStartEvent.TimCompletionSource.TrySetResult(true);
+                    if (!PlayerBase.HasTakenBettingDecision.Value)
+                    {
+                        EventBus.Instance.Publish(new TurnCompletedEvent());
+                    }
+
+                    ShowTimer(false);
                 }
 
             }
@@ -277,54 +283,61 @@ namespace OcentraAI.LLMGames.Players.UI
         {
             ShowTimer(false);
         }
-
-
-
+        
 
         public void ShowTimer(bool show)
         {
-            if (TurnCountdownText != null)
+            if (RingGreenMaterial == null ||
+                RingRedMaterial == null ||
+                TurnCountdownText == null ||
+                RingRed == null)
+
             {
-                TurnCountdownText.enabled = show;
+
+                return;
             }
 
-            if (RingRed != null)
+            if (show)
             {
-                RingRed.SetActive(show);
-            }
+                RingGreenMaterial.EnableKeyword("_EMISSION");
+                RingRedMaterial.EnableKeyword("_EMISSION");
+                TurnCountdownText.enabled = true;
+                RingRed.SetActive(true);
 
-            if (RingGreenMaterial != null)
-            {
-                if (show)
-                {
-                    RingGreenMaterial.EnableKeyword("_EMISSION");
-                    RingRedMaterial.EnableKeyword("_EMISSION");
-                }
-                else
-                {
-                    RingGreenMaterial.DisableKeyword("_EMISSION");
-                    RingRedMaterial.EnableKeyword("_EMISSION");
-                }
             }
-
-            if (RingRedMaterial != null)
+            else
             {
+                RingGreenMaterial.DisableKeyword("_EMISSION");
+                RingRedMaterial.DisableKeyword("_EMISSION");
                 RingRedMaterial.SetFloat("_FillAmount", 0);
+                TurnCountdownText.text = string.Empty;
+                TurnCountdownText.enabled = false;
+                RingRed.SetActive(false);
+                
             }
-
 
         }
 
         private void OnUpdateNetworkPlayerUIEvent(UpdateNetworkPlayerUIEvent updateNetworkPlayerUI)
         {
-            int coins = updateNetworkPlayerUI.Coins;
-            CoinsText.text = $"{coins}";
-
+           
+            if (PlayerBase.IsBankrupt.Value)
+            {
+                CoinsText.text = "Bankrupt";
+                CoinsText.color = Color.red;
+            }
+            else
+            {
+                int coins = PlayerBase.GetCoins();
+                CoinsText.text = $"{coins}";
+                CoinsText.color = Color.white;
+            }
         }
 
-        private async UniTask OnRegisterUIPlayerEvent(RegisterUIPlayerEvent arg)
+
+        private async UniTask OnRegisterPlayerListEvent(RegisterPlayerListEvent registerPlayerListEvent)
         {
-            foreach (IPlayerBase playerBase in arg.Players)
+            foreach (IPlayerBase playerBase in registerPlayerListEvent.Players)
             {
 
                 if (playerBase.PlayerIndex.Value == playerIndex)
@@ -336,9 +349,9 @@ namespace OcentraAI.LLMGames.Players.UI
 
                     PlayerName.SetPlayerName(formattedName);
 
-                    if (playerBase is IPlayerData playerData)
+                    if (playerBase is IHumanPlayerData playerData)
                     {
-                        PlayerData = playerData;
+                        HumanPlayerData = playerData;
                         IsLocalPlayer = playerData.IsLocalPlayer;
                         if (IsLocalPlayer)
                         {

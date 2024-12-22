@@ -12,7 +12,7 @@ using static System.String;
 
 namespace OcentraAI.LLMGames.Networking.Manager
 {
-    public class LobbyManager : ManagerBase<LobbyManager>
+    public class LobbySingletonManager : SingletonManagerBase<LobbySingletonManager>
     {
         [ShowInInspector, ReadOnly] private string JoinCode { get; set; } = Empty;
         [ShowInInspector, ReadOnly] private string JoinedLobbyId { get; set; } = Empty;
@@ -22,20 +22,13 @@ namespace OcentraAI.LLMGames.Networking.Manager
 
         public override void SubscribeToEvents()
         {
-            EventBus.Instance.SubscribeAsync<CreateProfileEvent>(OnCreateProfile);
-            EventBus.Instance.SubscribeAsync<CreateLobbyEvent>(OnCreateLobby);
-            EventBus.Instance.SubscribeAsync<JoinLobbyEvent>(OnJoinLobby);
-            EventBus.Instance.SubscribeAsync<UpdateLobbyEvent>(OnUpdateLobby);
-            EventBus.Instance.SubscribeAsync<PlayerLeftLobbyEvent>(OnPlayerLeave);
+            EventRegistrar.Subscribe<CreateProfileEvent>(OnCreateProfile);
+            EventRegistrar.Subscribe<CreateLobbyEvent>(OnCreateLobby);
+            EventRegistrar.Subscribe<JoinLobbyEvent>(OnJoinLobby);
+            EventRegistrar.Subscribe<UpdateLobbyEvent>(OnUpdateLobby);
+            EventRegistrar.Subscribe<PlayerLeftLobbyEvent>(OnPlayerLeave);
         }
-        public override void UnsubscribeFromEvents()
-        {
-            EventBus.Instance.UnsubscribeAsync<CreateProfileEvent>(OnCreateProfile);
-            EventBus.Instance.UnsubscribeAsync<CreateLobbyEvent>(OnCreateLobby);
-            EventBus.Instance.UnsubscribeAsync<JoinLobbyEvent>(OnJoinLobby);
-            EventBus.Instance.UnsubscribeAsync<UpdateLobbyEvent>(OnUpdateLobby);
-            EventBus.Instance.UnsubscribeAsync<PlayerLeftLobbyEvent>(OnPlayerLeave);
-        }
+
 
 
 

@@ -1,4 +1,5 @@
 using OcentraAI.LLMGames.Extensions;
+using OcentraAI.LLMGames.Screens3D;
 using Sirenix.OdinInspector;
 using System.Collections.Generic;
 using TMPro;
@@ -7,7 +8,7 @@ using UnityEngine.UI;
 
 namespace OcentraAI.LLMGames.Screens
 {
-    public class SettingsScreen : UIScreen<SettingsScreen>
+    public class SettingsScreen : UI3DScreen<SettingsScreen>
     {
         private string MusicVolume => "MusicVolume";
         private string SFXVolume => "SFXVolume";
@@ -84,9 +85,9 @@ namespace OcentraAI.LLMGames.Screens
             TabButtons = new List<Button> {GeneralTabButton, LLMTabButton, SkinTabButton, CardTabButton};
         }
 
-        public override void OnShowScreen(bool first)
+        public override void ShowScreen()
         {
-            base.OnShowScreen(first);
+            base.ShowScreen();
             InitializeSettingsScreen();
         }
 

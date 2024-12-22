@@ -501,7 +501,7 @@ MonoBehaviour:
       Data: true
     - Name: MaxRounds
       Entry: 3
-      Data: 10
+      Data: 3
     - Name: TurnDuration
       Entry: 4
       Data: 60

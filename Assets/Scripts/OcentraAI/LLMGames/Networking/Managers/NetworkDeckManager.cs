@@ -44,15 +44,10 @@ namespace OcentraAI.LLMGames.Networking.Manager
         public override void SubscribeToEvents()
         {
             base.SubscribeToEvents();
-            EventBus.Instance.SubscribeAsync<SetFloorCardEvent<Card>>(SetFloorCardEvent);
+            EventRegistrar.Subscribe<SetFloorCardEvent<Card>>(OnSetFloorCardEvent);
+            EventRegistrar.Subscribe<GetTrumpCardEvent<Card>>(OnGetTrumpCardEvent);
         }
-
-        public override void UnsubscribeFromEvents()
-        {
-            base.UnsubscribeFromEvents();
-
-            EventBus.Instance.UnsubscribeAsync<SetFloorCardEvent<Card>>(SetFloorCardEvent);
-        }
+        
 
         public void Shuffle()
         {
@@ -173,6 +168,8 @@ namespace OcentraAI.LLMGames.Networking.Manager
                 }
 
                 await EventBus.Instance.PublishAsync(new UpdateWildCardsEvent<Card>(WildCards));
+
+
             }
             catch (Exception ex)
             {
@@ -181,7 +178,19 @@ namespace OcentraAI.LLMGames.Networking.Manager
         }
 
 
+        private async UniTask OnGetTrumpCardEvent(GetTrumpCardEvent<Card> arg)
+        {
+            if (WildCards.TryGetValue(PlayerDecision.Trump, out Card card))
+            {
+                arg.CompletionSource.TrySetResult(card);
+            }
+            else
+            {
+                arg.CompletionSource.TrySetException(new Exception(" Trump Card Not Found!"));
+            }
 
+            await UniTask.Yield();
+        }
 
         public async UniTask<bool> ResetForNewGame()
         {
@@ -203,9 +212,9 @@ namespace OcentraAI.LLMGames.Networking.Manager
         {
             try
             {
+                DeckCards = new List<Card>(Deck.Instance.CardTemplates);
                 FloorCardList.Clear();
                 Shuffle();
-
                 await SetRandomWildCards();
 
                 FloorCard = null;
@@ -221,7 +230,7 @@ namespace OcentraAI.LLMGames.Networking.Manager
             }
         }
 
-        public async UniTask SetFloorCardEvent(SetFloorCardEvent<Card> setFloorCardEvent)
+        public async UniTask OnSetFloorCardEvent(SetFloorCardEvent<Card> setFloorCardEvent)
         {
             try
             {

@@ -1,91 +1,1149 @@
-// File: PlayerDecisionBettingEvent.cs
+// File: NetworkBettingManager.cs
 // File Usage:
 //   No direct file usage found
 
 // Class Information:
-//   Class: PlayerDecisionBettingEvent
+//   Class: NetworkBettingManager
 //   Inherits/Implements:
-//     - PlayerDecisionEvent
+//     - NetworkManagerBase
 
 // Event Bus Usage:
 //   No event bus usage found
 
 // Methods:
-// Method: public override void NetworkSerialize(BufferSerializer<T> serializer)
-//   Overrides: PlayerDecisionEvent.NetworkSerialize
-//   Generic Method with parameters: T
+// Method: public override void SubscribeToEvents()
+//   Overrides: NetworkManagerBase.SubscribeToEvents
+//   No usages found
+//
+// Method: public override void UnsubscribeFromEvents()
+//   Overrides: NetworkManagerBase.UnsubscribeFromEvents
+//   No usages found
+//
+// Method: protected async UniTask OnProcessDecisionEvent(ProcessDecisionEvent processDecisionEvent)
 //   No usages found
 //
 
 // Source Code:
-using Unity.Netcode;
+using Cysharp.Threading.Tasks;
+using OcentraAI.LLMGames.Events;
+using OcentraAI.LLMGames.GamesNetworking;
+using UnityEngine;
 
-namespace OcentraAI.LLMGames.Events
+
+namespace OcentraAI.LLMGames.Networking.Manager
 {
-    public class PlayerDecisionBettingEvent : PlayerDecisionEvent
+    public partial class NetworkBettingManager : NetworkManagerBase
     {
-        public PlayerDecisionBettingEvent(PlayerDecision decision)
-            : base(decision)
+
+        public override void SubscribeToEvents()
         {
+            EventBus.Instance.SubscribeAsync<ProcessDecisionEvent>(OnProcessDecisionEvent);
         }
 
-        public PlayerDecisionBettingEvent() { }
-
-        public override void NetworkSerialize<T>(BufferSerializer<T> serializer)
+        public override void UnsubscribeFromEvents()
         {
-            base.NetworkSerialize(serializer);
+            EventBus.Instance.UnsubscribeAsync<ProcessDecisionEvent>(OnProcessDecisionEvent);
+        }
+
+        protected async UniTask OnProcessDecisionEvent(ProcessDecisionEvent processDecisionEvent)
+        {
+            if (!IsServer) return;
+
+            if (NetworkPlayerManager.TryGetPlayer(processDecisionEvent.PlayerId, out IPlayerBase playerBase))
+            {
+                PlayerDecisionEvent playerDecisionEvent = processDecisionEvent.DecisionEvent;
+                PlayerDecision decision = PlayerDecision.FromId(playerDecisionEvent.Decision.DecisionId);
+
+                GameLoggerScriptable.Log($" {playerBase.PlayerName.Value.Value} PlayerDecision {decision.Name} Processed ", this, ToEditor, ToFile, UseStackTrace);
+
+                NetworkPlayer networkPlayer = playerBase as NetworkPlayer;
+                if (networkPlayer == null)
+                {
+                    GameLoggerScriptable.LogError("The playerBase is not of type NetworkPlayer.", this, ToEditor, ToFile, UseStackTrace);
+                    return;
+
+                }
+
+                networkPlayer.SetLastDecision(decision.DecisionId);
+
+                switch (decision.Name)
+                {
+                    case nameof(PlayerDecision.RaiseBet):
+                        await HandleRaiseBet(playerDecisionEvent as PlayerDecisionRaiseBetEvent, networkPlayer);
+                        break;
+
+                    case nameof(PlayerDecision.SeeHand):
+                        await HandleSeeHand(playerDecisionEvent as PlayerDecisionBettingEvent, networkPlayer);
+                        break;
+
+                    case nameof(PlayerDecision.DrawFromDeck):
+                        await HandleDrawFromDeck(playerDecisionEvent as PlayerDecisionBettingEvent, networkPlayer);
+                        break;
+
+                    case nameof(PlayerDecision.PickAndSwap):
+                        await HandlePickAndSwap(playerDecisionEvent as PlayerDecisionPickAndSwapEvent, networkPlayer);
+                        break;
+
+
+                    case nameof(PlayerDecision.PlayBlind):
+                        await HandlePlayBlind(playerDecisionEvent as PlayerDecisionBettingEvent, networkPlayer);
+                        break;
+
+                    case nameof(PlayerDecision.Bet):
+                        await HandleBet(playerDecisionEvent as PlayerDecisionBettingEvent, networkPlayer);
+                        break;
+
+                    case nameof(PlayerDecision.Fold):
+                        await HandleFold(playerDecisionEvent as PlayerDecisionBettingEvent, networkPlayer);
+                        break;
+
+                    case nameof(PlayerDecision.ShowCall):
+                        await HandleShowCall(playerDecisionEvent as PlayerDecisionBettingEvent, networkPlayer);
+                        break;
+
+                    case nameof(PlayerDecision.WildCard0):
+                        await HandleWildCard0(playerDecisionEvent as PlayerDecisionWildcardEvent, networkPlayer);
+                        break;
+
+                    case nameof(PlayerDecision.WildCard1):
+                        await HandleWildCard1(playerDecisionEvent as PlayerDecisionWildcardEvent, networkPlayer);
+                        break;
+
+                    case nameof(PlayerDecision.WildCard2):
+                        await HandleWildCard2(playerDecisionEvent as PlayerDecisionWildcardEvent, networkPlayer);
+                        break;
+
+                    case nameof(PlayerDecision.WildCard3):
+                        await HandleWildCard3(playerDecisionEvent as PlayerDecisionWildcardEvent, networkPlayer);
+                        break;
+
+                    case nameof(PlayerDecision.Trump):
+                        await HandleTrump(playerDecisionEvent as PlayerDecisionWildcardEvent, networkPlayer);
+                        break;
+
+                    case nameof(PlayerDecision.ShowAllFloorCards):
+                        await HandleShowAllFloorCards(playerDecisionEvent as PlayerDecisionUIEvent, networkPlayer);
+                        break;
+
+                    case nameof(PlayerDecision.PurchaseCoins):
+                        await HandlePurchaseCoins(playerDecisionEvent as PlayerDecisionUIEvent, networkPlayer);
+                        break;
+
+                    default:
+                        Debug.LogWarning($"Unhandled decision: {decision.Name}");
+                        break;
+                }
+            }
+
+            await UniTask.Yield();
+        }
+
+
+
+    }
+}
+
+// --------------------------------
+
+// File: NetworkBettingManagerHandleMethods.cs
+// File Usage:
+//   No direct file usage found
+
+// Class Information:
+//   Class: NetworkBettingManager
+//   Inherits/Implements:
+//     - NetworkManagerBase
+
+// Event Bus Usage:
+//   No event bus usage found
+
+// Methods:
+// Method: public async UniTask HandleRaiseBet(PlayerDecisionRaiseBetEvent raiseBetEvent, NetworkPlayer networkPlayer)
+//   No usages found
+//
+// Method: public async UniTask HandleSeeHand(PlayerDecisionBettingEvent bettingEvent, NetworkPlayer networkPlayer)
+//   No usages found
+//
+// Method: public async UniTask HandlePlayBlind(PlayerDecisionBettingEvent bettingEvent, NetworkPlayer networkPlayer)
+//   No usages found
+//
+// Method: public async UniTask HandleBet(PlayerDecisionBettingEvent bettingEvent, NetworkPlayer networkPlayer)
+//   No usages found
+//
+// Method: public async UniTask HandleFold(PlayerDecisionBettingEvent bettingEvent, NetworkPlayer networkPlayer)
+//   No usages found
+//
+// Method: public async UniTask HandleShowCall(PlayerDecisionBettingEvent bettingEvent, NetworkPlayer networkPlayer)
+//   No usages found
+//
+// Method: public async UniTask HandleWildCard0(PlayerDecisionWildcardEvent wildcardEvent, NetworkPlayer networkPlayer)
+//   No usages found
+//
+// Method: public async UniTask HandleWildCard1(PlayerDecisionWildcardEvent wildcardEvent, NetworkPlayer networkPlayer)
+//   No usages found
+//
+// Method: public async UniTask HandleWildCard2(PlayerDecisionWildcardEvent wildcardEvent, NetworkPlayer networkPlayer)
+//   No usages found
+//
+// Method: public async UniTask HandleWildCard3(PlayerDecisionWildcardEvent wildcardEvent, NetworkPlayer networkPlayer)
+//   No usages found
+//
+// Method: public async UniTask HandleTrump(PlayerDecisionWildcardEvent wildcardEvent, NetworkPlayer networkPlayer)
+//   No usages found
+//
+// Method: public async UniTask HandleShowAllFloorCards(PlayerDecisionUIEvent uiEvent, NetworkPlayer playerBase)
+//   No usages found
+//
+// Method: public async UniTask HandlePurchaseCoins(PlayerDecisionUIEvent uiEvent, NetworkPlayer networkPlayer)
+//   No usages found
+//
+// Method: private async UniTask HandlePickAndSwap(PlayerDecisionPickAndSwapEvent playerDecisionEvent, NetworkPlayer networkPlayer)
+//   No usages found
+//
+// Method: private async UniTask HandleDrawFromDeck(PlayerDecisionBettingEvent playerDecisionEvent, NetworkPlayer networkPlayer)
+//   No usages found
+//
+
+// Source Code:
+using Codice.CM.Common;
+using Cysharp.Threading.Tasks;
+using OcentraAI.LLMGames.Events;
+using OcentraAI.LLMGames.GamesNetworking;
+using OcentraAI.LLMGames.Scriptable;
+using OcentraAI.LLMGames.Utilities;
+using System.Threading.Tasks;
+using static System.String;
+
+namespace OcentraAI.LLMGames.Networking.Manager
+{
+    public partial class NetworkBettingManager : NetworkManagerBase
+    {
+
+        public async UniTask HandleRaiseBet(PlayerDecisionRaiseBetEvent raiseBetEvent, NetworkPlayer networkPlayer)
+        {
+            if (raiseBetEvent == null)
+            {
+                GameLoggerScriptable.LogWarning("Invalid event type for RaiseBet.", this, ToEditor, ToFile, UseStackTrace);
+                return;
+            }
+
+            int raiseAmount = (int)raiseBetEvent.Amount;
+
+            (bool Success, string ErrorMessage) result = await NetworkScoreManager.HandleRaiseBet(raiseAmount);
+
+            await EventBus.Instance.PublishAsync(new DecisionTakenEvent(networkPlayer, true));
+
+            GameLoggerScriptable.Log($"Player {networkPlayer.PlayerName.Value.Value} raised the bet by {raiseAmount}", this, ToEditor, ToFile, UseStackTrace);
+            await UniTask.Yield();
+        }
+
+        public async UniTask HandleSeeHand(PlayerDecisionBettingEvent bettingEvent, NetworkPlayer networkPlayer)
+        {
+            if (bettingEvent == null)
+            {
+                GameLoggerScriptable.LogWarning("Invalid event type for SeeHand.", this, ToEditor, ToFile, UseStackTrace);
+                return;
+            }
+
+            networkPlayer.HasSeenHand.Value = true;
+            bool success = await EventBus.Instance.PublishAsync(new UpdatePlayerHandDisplayEvent(networkPlayer));
+
+            GameLoggerScriptable.Log($"Player {networkPlayer.PlayerName.Value.Value} chose to see their hand.", this, ToEditor, ToFile, UseStackTrace);
+            await UniTask.Yield();
+        }
+
+        public async UniTask HandlePlayBlind(PlayerDecisionBettingEvent bettingEvent, NetworkPlayer networkPlayer)
+        {
+            if (bettingEvent == null)
+            {
+                GameLoggerScriptable.LogWarning("Invalid event type for PlayBlind.", this, ToEditor, ToFile, UseStackTrace);
+                return;
+            }
+
+            (bool Success, string ErrorMessage) result = await NetworkScoreManager.HandlePlayBlind();
+
+            await EventBus.Instance.PublishAsync(new DecisionTakenEvent(networkPlayer, true));
+
+            networkPlayer.HasSeenHand.Value = false;
+            GameLoggerScriptable.Log($"Player {networkPlayer.PlayerName.Value.Value} chose to play blind.", this, ToEditor, ToFile, UseStackTrace);
+            await UniTask.Yield();
+        }
+
+        public async UniTask HandleBet(PlayerDecisionBettingEvent bettingEvent, NetworkPlayer networkPlayer)
+        {
+            if (bettingEvent == null)
+            {
+                GameLoggerScriptable.LogWarning("Invalid event type for Bet.", this, ToEditor, ToFile, UseStackTrace);
+                return;
+            }
+
+            (bool Success, string ErrorMessage) result = await NetworkScoreManager.HandleBet();
+
+
+            GameLoggerScriptable.Log($"Player {networkPlayer.PlayerName.Value.Value} placed a bet.", this, ToEditor, ToFile, UseStackTrace);
+            await UniTask.Yield();
+        }
+
+        public async UniTask HandleFold(PlayerDecisionBettingEvent bettingEvent, NetworkPlayer networkPlayer)
+        {
+            if (bettingEvent == null)
+            {
+                GameLoggerScriptable.LogWarning("Invalid event type for Fold.", this, ToEditor, ToFile, UseStackTrace);
+                return;
+            }
+
+
+            bool result = await NetworkScoreManager.HandleFold(Empty,true);
+
+            await EventBus.Instance.PublishAsync(new DecisionTakenEvent(networkPlayer, true));
+
+            GameLoggerScriptable.Log($"Player {networkPlayer.PlayerName.Value.Value} folded.", this, ToEditor, ToFile, UseStackTrace);
+            await UniTask.Yield();
+        }
+
+
+
+        public async UniTask HandleShowCall(PlayerDecisionBettingEvent bettingEvent, NetworkPlayer networkPlayer)
+        {
+            if (bettingEvent == null)
+            {
+                GameLoggerScriptable.LogWarning("Invalid event type for ShowCall.", this, ToEditor, ToFile, UseStackTrace);
+                return;
+            }
+
+            (bool Success, string ErrorMessage) result = await NetworkScoreManager.HandleShowCall();
+
+           
+
+            GameLoggerScriptable.Log($"Player {networkPlayer.PlayerName.Value.Value} called.", this, ToEditor, ToFile, UseStackTrace);
+            await UniTask.Yield();
+        }
+
+        public async UniTask HandleWildCard0(PlayerDecisionWildcardEvent wildcardEvent, NetworkPlayer networkPlayer)
+        {
+            if (wildcardEvent == null)
+            {
+                GameLoggerScriptable.LogWarning("Invalid event type for WildCard0.", this, ToEditor, ToFile, UseStackTrace);
+                return;
+            }
+            //todo Further
+            await EventBus.Instance.PublishAsync(new DecisionTakenEvent(networkPlayer, false));
+
+            GameLoggerScriptable.Log($"Player {networkPlayer.PlayerName.Value.Value} played WildCard0.", this, ToEditor, ToFile, UseStackTrace);
+            await UniTask.Yield();
+        }
+
+        public async UniTask HandleWildCard1(PlayerDecisionWildcardEvent wildcardEvent, NetworkPlayer networkPlayer)
+        {
+            if (wildcardEvent == null)
+            {
+                GameLoggerScriptable.LogWarning("Invalid event type for WildCard1.", this, ToEditor, ToFile, UseStackTrace);
+                return;
+            }
+            //todo Further
+            await EventBus.Instance.PublishAsync(new DecisionTakenEvent(networkPlayer, false));
+
+            GameLoggerScriptable.Log($"Player {networkPlayer.PlayerName.Value.Value} played WildCard1.", this, ToEditor, ToFile, UseStackTrace);
+            await UniTask.Yield();
+        }
+
+        public async UniTask HandleWildCard2(PlayerDecisionWildcardEvent wildcardEvent, NetworkPlayer networkPlayer)
+        {
+            if (wildcardEvent == null)
+            {
+                GameLoggerScriptable.LogWarning("Invalid event type for WildCard2.", this, ToEditor, ToFile, UseStackTrace);
+                return;
+            }
+            //todo Further
+            await EventBus.Instance.PublishAsync(new DecisionTakenEvent(networkPlayer, false));
+
+            GameLoggerScriptable.Log($"Player {networkPlayer.PlayerName.Value.Value} played WildCard2.", this, ToEditor, ToFile, UseStackTrace);
+            await UniTask.Yield();
+        }
+
+        public async UniTask HandleWildCard3(PlayerDecisionWildcardEvent wildcardEvent, NetworkPlayer networkPlayer)
+        {
+            if (wildcardEvent == null)
+            {
+                GameLoggerScriptable.LogWarning("Invalid event type for WildCard3.", this, ToEditor, ToFile, UseStackTrace);
+                return;
+            }
+            //todo Further
+            await EventBus.Instance.PublishAsync(new DecisionTakenEvent(networkPlayer, false));
+
+            GameLoggerScriptable.Log($"Player {networkPlayer.PlayerName.Value.Value} played WildCard3.", this, ToEditor, ToFile, UseStackTrace);
+            await UniTask.Yield();
+        }
+
+        public async UniTask HandleTrump(PlayerDecisionWildcardEvent wildcardEvent, NetworkPlayer networkPlayer)
+        {
+            if (wildcardEvent == null)
+            {
+                GameLoggerScriptable.LogWarning("Invalid event type for Trump.", this, ToEditor, ToFile, UseStackTrace);
+                return;
+            }
+
+            //todo Further
+            await EventBus.Instance.PublishAsync(new DecisionTakenEvent(networkPlayer, false));
+
+            GameLoggerScriptable.Log($"Player {networkPlayer.PlayerName.Value.Value} played Trump.", this, ToEditor, ToFile, UseStackTrace);
+            await UniTask.Yield();
+        }
+
+        public async UniTask HandleShowAllFloorCards(PlayerDecisionUIEvent uiEvent, NetworkPlayer playerBase)
+        {
+            if (uiEvent == null)
+            {
+                GameLoggerScriptable.LogWarning("Invalid event type for ShowAllFloorCards.", this, ToEditor, ToFile, UseStackTrace);
+                return;
+            }
+
+            (bool Success, string ErrorMessage) result = await NetworkScoreManager.HandleShowAllFloorCards();
+
+            if (result.Success)
+            {
+                bool success = await EventBus.Instance.PublishAsync(new ShowAllFloorCardEvent());
+            }
+            else
+            {
+                await ShowMessage(result.ErrorMessage);
+            }
+
+
+            await UniTask.Yield();
+        }
+
+        public async UniTask HandlePurchaseCoins(PlayerDecisionUIEvent uiEvent, NetworkPlayer networkPlayer)
+        {
+            if (uiEvent == null)
+            {
+                GameLoggerScriptable.LogWarning("Invalid event type for PurchaseCoins.", this, ToEditor, ToFile, UseStackTrace);
+                return;
+            }
+            await EventBus.Instance.PublishAsync(new DecisionTakenEvent(networkPlayer, false));
+
+            GameLoggerScriptable.Log($"Player {networkPlayer.PlayerName.Value.Value} purchased coins.", this, ToEditor, ToFile, UseStackTrace);
+            await UniTask.Yield();
+        }
+
+        private async UniTask HandlePickAndSwap(PlayerDecisionPickAndSwapEvent playerDecisionEvent, NetworkPlayer networkPlayer)
+        {
+            string draggedCardString = playerDecisionEvent.DraggedCard;
+            string cardInHandString = playerDecisionEvent.CardInHand;
+
+            Card draggedCard = CardUtility.GetCardFromSymbol(draggedCardString);
+            Card handCard = CardUtility.GetCardFromSymbol(cardInHandString);
+
+            bool success = await networkPlayer.PickAndSwap(draggedCard, handCard);
+
+            if (success)
+            {
+                await EventBus.Instance.PublishAsync(new DecisionTakenEvent(networkPlayer, false));
+            }
+
+            await UniTask.Yield();
+        }
+
+        private async UniTask HandleDrawFromDeck(PlayerDecisionBettingEvent playerDecisionEvent, NetworkPlayer networkPlayer)
+        {
+            bool success = await EventBus.Instance.PublishAsync(new SetFloorCardEvent<Card>());
+            if (success)
+            {
+                await EventBus.Instance.PublishAsync(new DecisionTakenEvent(networkPlayer, false));
+            }
+            await UniTask.Yield();
         }
     }
 }
 
 // --------------------------------
 
-// File: PlayerDecisionEvent.cs
+// File: NetworkDeckManager.cs
 // File Usage:
 //   No direct file usage found
 
 // Class Information:
-//   Class: PlayerDecisionEvent
+//   Class: NetworkDeckManager
 //   Inherits/Implements:
-//     - EventArgsBase
-//     - INetworkSerializable
+//     - NetworkManagerBase
 
 // Event Bus Usage:
 //   No event bus usage found
 
 // Methods:
-// Method: public virtual void NetworkSerialize(BufferSerializer<T> serializer)
-//   Generic Method with parameters: T
+// Method: public override void InitComponents()
+//   Overrides: NetworkManagerBase.InitComponents
+//   No usages found
+//
+// Method: public override void SubscribeToEvents()
+//   Overrides: NetworkManagerBase.SubscribeToEvents
+//   No usages found
+//
+// Method: public override void UnsubscribeFromEvents()
+//   Overrides: NetworkManagerBase.UnsubscribeFromEvents
+//   No usages found
+//
+// Method: public void Shuffle()
+//   No usages found
+//
+// Method: public Card DrawCard()
+//   No usages found
+//
+// Method: public async UniTask SetFloorCardList(Card floorCard)
+//   No usages found
+//
+// Method: public async UniTask SetRandomWildCards()
+//   No usages found
+//
+// Method: public async UniTask<bool> ResetForNewGame()
+//   No usages found
+//
+// Method: public async UniTask<bool> ResetForNewRound()
+//   No usages found
+//
+// Method: public async UniTask SetFloorCardEvent(SetFloorCardEvent<Card> setFloorCardEvent)
+//   No usages found
+//
+// Method: public void RemoveCardsFromDeck(List<Card> cards)
 //   No usages found
 //
 
 // Source Code:
-using Unity.Netcode;
-using Unity.Collections;
+using Cysharp.Threading.Tasks;
+using OcentraAI.LLMGames.Events;
+using OcentraAI.LLMGames.GameModes;
+using OcentraAI.LLMGames.Scriptable;
+using OcentraAI.LLMGames.Scriptable.ScriptableSingletons;
+using Sirenix.OdinInspector;
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using UnityEngine;
+using Random = UnityEngine.Random;
 
-namespace OcentraAI.LLMGames.Events
+
+namespace OcentraAI.LLMGames.Networking.Manager
 {
-    public class PlayerDecisionEvent : EventArgsBase, INetworkSerializable
+    public class NetworkDeckManager : NetworkManagerBase
     {
-        public PlayerDecision Decision;
-       
 
-        public PlayerDecisionEvent(PlayerDecision decision)
+        [ShowInInspector, ReadOnly] public List<Card> DeckCards { get; private set; } = new List<Card>();
+        [ShowInInspector, ReadOnly] public List<Card> FloorCardList { get; private set; } = new List<Card>();
+        [ShowInInspector, ReadOnly] public Card BackCard => Deck.Instance.BackCard;
+        [ShowInInspector, ReadOnly] public int TotalCards => Deck.Instance.CardTemplates.Count;
+        [ShowInInspector, ReadOnly] public int RemainingCards => DeckCards.Count;
+        [ShowInInspector, ReadOnly] public int FloorCardsCount => FloorCardList.Count;
+        [ShowInInspector, ReadOnly] public Card FloorCard { get; set; }
+        [ShowInInspector, ReadOnly] public Card SwapCard { get; set; }
+
+        [ShowInInspector, ReadOnly, DictionaryDrawerSettings]
+        public Dictionary<PlayerDecision, Card> WildCards { get; private set; } = new Dictionary<PlayerDecision, Card>();
+
+        [ShowInInspector, ReadOnly] private Queue<Card> LastDrawnWildCards { get; set; } = new Queue<Card>();
+
+
+
+        public override void InitComponents()
         {
-            Decision = decision;
-           
+            base.InitComponents();
+
+            DeckCards = new List<Card>(Deck.Instance.CardTemplates);
         }
 
-        public PlayerDecisionEvent() { }
 
-        public virtual void NetworkSerialize<T>(BufferSerializer<T> serializer) where T : IReaderWriter
+
+        public override void SubscribeToEvents()
         {
-            int decisionId = Decision?.DecisionId ?? 0;
-            serializer.SerializeValue(ref decisionId);
+            base.SubscribeToEvents();
+            EventBus.Instance.SubscribeAsync<SetFloorCardEvent<Card>>(SetFloorCardEvent);
+        }
 
-            if (serializer.IsReader)
+        public override void UnsubscribeFromEvents()
+        {
+            base.UnsubscribeFromEvents();
+
+            EventBus.Instance.UnsubscribeAsync<SetFloorCardEvent<Card>>(SetFloorCardEvent);
+        }
+
+        public void Shuffle()
+        {
+            try
             {
-                Decision = PlayerDecision.FromId(decisionId);
+                for (int i = 0; i < DeckCards.Count; i++)
+                {
+                    Card temp = DeckCards[i];
+                    int randomIndex = Random.Range(i, DeckCards.Count);
+                    DeckCards[i] = DeckCards[randomIndex];
+                    DeckCards[randomIndex] = temp;
+                }
+            }
+            catch (Exception ex)
+            {
+                GameLoggerScriptable.LogError($"Error during Shuffle: {ex.Message}", this, ToEditor, ToFile, UseStackTrace);
+            }
+        }
+
+        public Card DrawCard()
+        {
+            try
+            {
+                if (DeckCards.Count == 0)
+                {
+                    return null;
+                }
+
+                Shuffle();
+                Card card = DeckCards[0];
+                DeckCards.RemoveAt(0);
+                return card;
+            }
+            catch (Exception ex)
+            {
+                GameLoggerScriptable.LogError($"Error during DrawCard: {ex.Message}", this);
+                return null;
+            }
+        }
+
+
+        public async UniTask SetFloorCardList(Card floorCard)
+        {
+            try
+            {
+                if (floorCard != null)
+                {
+                    if (!FloorCardList.Contains(floorCard))
+                    {
+                        FloorCardList.Add(floorCard);
+                    }
+                }
+
+                bool success = await EventBus.Instance.PublishAsync(new UpdateFloorCardListEvent<Card>(FloorCardList));
+
+                FloorCard = null;
+
+            }
+            catch (Exception ex)
+            {
+                GameLoggerScriptable.LogError($"Error in OnSetFloorCardList: {ex.Message}", this);
+            }
+        }
+
+        public async UniTask SetRandomWildCards()
+        {
+            try
+            {
+                List<Card> cards = new List<Card>(Deck.Instance.CardTemplates);
+
+                if (cards.Count == 0)
+                {
+                    return;
+                }
+
+                WildCards.Clear();
+                HashSet<Card> selectedCards = new HashSet<Card>();
+
+                IEnumerable<PlayerDecision> extraGameplayDecisions = PlayerDecision.GetExtraGamePlayDecisions();
+
+                foreach (PlayerDecision decision in extraGameplayDecisions)
+                {
+                    if (decision.Equals(PlayerDecision.Trump) && !GameMode.UseTrump)
+                    {
+                        continue;
+                    }
+
+                    if (!GameMode.UseMagicCards &&
+                        (decision.Equals(PlayerDecision.WildCard0) ||
+                         decision.Equals(PlayerDecision.WildCard1) ||
+                         decision.Equals(PlayerDecision.WildCard2) ||
+                         decision.Equals(PlayerDecision.WildCard3)))
+                    {
+                        continue;
+                    }
+
+                    bool validCardFound = false;
+
+                    while (!validCardFound)
+                    {
+                        int randomIndex = Random.Range(0, cards.Count);
+                        Card selectedCard = cards[randomIndex];
+
+                        if (!selectedCards.Contains(selectedCard) && !LastDrawnWildCards.Contains(selectedCard))
+                        {
+                            validCardFound = true;
+                            selectedCards.Add(selectedCard);
+                            WildCards[decision] = selectedCard;
+                        }
+                    }
+
+                    LastDrawnWildCards.Enqueue(WildCards[decision]);
+                }
+
+                while (LastDrawnWildCards.Count > 10)
+                {
+                    LastDrawnWildCards.Dequeue();
+                }
+
+                await EventBus.Instance.PublishAsync(new UpdateWildCardsEvent<Card>(WildCards));
+            }
+            catch (Exception ex)
+            {
+                GameLoggerScriptable.LogError($"Error in SetRandomWildCards: {ex.Message}", this);
+            }
+        }
+
+
+
+
+        public async UniTask<bool> ResetForNewGame()
+        {
+            try
+            {
+                LastDrawnWildCards = new Queue<Card>();
+                await UniTask.Yield();
+                return true;
+
+            }
+            catch (Exception ex)
+            {
+                GameLoggerScriptable.LogError($"Error in ResetForNewGame: {ex.Message}", this);
+                return false;
+            }
+        }
+
+        public async UniTask<bool> ResetForNewRound()
+        {
+            try
+            {
+                FloorCardList.Clear();
+                Shuffle();
+
+                await SetRandomWildCards();
+
+                FloorCard = null;
+                await EventBus.Instance.PublishAsync(new UI_UpdateFloorCardEvent<Card>(FloorCard));
+                await EventBus.Instance.PublishAsync(new UpdateFloorCardListEvent<Card>(FloorCardList, true));
+
+                return true;
+            }
+            catch (Exception ex)
+            {
+                GameLoggerScriptable.LogError($"Error in ResetForNewRound: {ex.Message}", this);
+                return false;
+            }
+        }
+
+        public async UniTask SetFloorCardEvent(SetFloorCardEvent<Card> setFloorCardEvent)
+        {
+            try
+            {
+                if (setFloorCardEvent.SwapCard != null)
+                {
+                    FloorCard = setFloorCardEvent.SwapCard;
+                    await EventBus.Instance.PublishAsync(new UI_UpdateFloorCardEvent<Card>(FloorCard));
+                }
+                else
+                {
+                    if (FloorCard != null)
+                    {
+                        await SetFloorCardList(FloorCard);
+                    }
+
+                    FloorCard = DrawCard();
+                    await EventBus.Instance.PublishAsync(new UI_UpdateFloorCardEvent<Card>(FloorCard));
+                }
+            }
+            catch (Exception ex)
+            {
+                GameLoggerScriptable.LogError($"Error in OnSetFloorCard: {ex.Message}", this);
+            }
+        }
+
+
+
+        public void RemoveCardsFromDeck(List<Card> cards)
+        {
+            try
+            {
+                foreach (Card card in cards)
+                {
+                    DeckCards.RemoveAll(c => c.Id == card.Id);
+                }
+            }
+            catch (Exception ex)
+            {
+                GameLoggerScriptable.LogError($"Error in RemoveCardsFromDeck: {ex.Message}", this);
+            }
+        }
+
+    }
+}
+
+// --------------------------------
+
+// File: NetworkGameManager.cs
+// File Usage:
+//   No direct file usage found
+
+// Class Information:
+//   Class: NetworkGameManager
+//   Inherits/Implements:
+//     - NetworkManagerBase
+
+// Event Bus Usage:
+//   No event bus usage found
+
+// Methods:
+// Method: private IEnumerable GetScenesFromBuild()
+//   No usages found
+//
+// Method: public override void OnNetworkSpawn()
+//   Overrides: NetworkManagerBase.OnNetworkSpawn
+//   No usages found
+//
+// Method: public override void SubscribeToEvents()
+//   Overrides: NetworkManagerBase.SubscribeToEvents
+//   No usages found
+//
+// Method: public override void UnsubscribeFromEvents()
+//   Overrides: NetworkManagerBase.UnsubscribeFromEvents
+//   No usages found
+//
+// Method: public async UniTask OnStartGame(StartLobbyAsHostEvent e)
+//   No usages found
+//
+// Method: public void StartGameServerRpc(string lobbyId)
+//   No usages found
+//
+// Method: public void Init(List<Player> playerList, List<string> computerPlayerList, float? turnDuration, int? maxRounds)
+//   No usages found
+//
+
+// Source Code:
+using Cysharp.Threading.Tasks;
+using OcentraAI.LLMGames.Events;
+using OcentraAI.LLMGames.GameModes;
+using OcentraAI.LLMGames.GamesNetworking;
+using System.Collections;
+using System.Collections.Generic;
+using Unity.Netcode;
+using Sirenix.OdinInspector;
+using UnityEngine;
+using Unity.Services.Lobbies.Models;
+using Unity.Collections;
+using System;
+
+#if true
+using UnityEditor;
+#endif
+
+using UnityEngine.SceneManagement;
+
+namespace OcentraAI.LLMGames.Networking.Manager
+{
+
+    public class NetworkGameManager : NetworkManagerBase
+    {
+
+        [SerializeField] private NetworkVariable<FixedString64Bytes> LobbyId { get; set; } = new NetworkVariable<FixedString64Bytes>("");
+
+        [ValueDropdown(nameof(GetScenesFromBuild), DropdownTitle = "Select Scene"), InfoBox("Make sure scene is in Build Settings!")]
+        public string SceneToLoad;
+
+
+        private IEnumerable GetScenesFromBuild()
+        {
+            List<ValueDropdownItem> sceneList = new List<ValueDropdownItem>();
+
+#if UNITY_EDITOR
+            EditorBuildSettingsScene[] scenes = EditorBuildSettings.scenes;
+            foreach (EditorBuildSettingsScene settingsScene in scenes)
+            {
+                if (settingsScene.enabled)
+                {
+                    string sceneName = System.IO.Path.GetFileNameWithoutExtension(settingsScene.path);
+                    string scenePath = settingsScene.path;
+                    sceneList.Add(new ValueDropdownItem(sceneName, scenePath));
+                }
+            }
+#endif
+            return sceneList;
+        }
+
+
+
+        public override void OnNetworkSpawn()
+        {
+            base.OnNetworkSpawn();
+            InitComponents();
+            gameObject.name = $"{nameof(NetworkGameManager)}";
+        }
+
+
+
+        public override void SubscribeToEvents()
+        {
+            EventBus.Instance.SubscribeAsync<StartLobbyAsHostEvent>(OnStartGame);
+
+        }
+
+        public override void UnsubscribeFromEvents()
+        {
+            EventBus.Instance.UnsubscribeAsync<StartLobbyAsHostEvent>(OnStartGame);
+
+        }
+
+        public async UniTask OnStartGame(StartLobbyAsHostEvent e)
+        {
+            StartGameServerRpc(e.LobbyId);
+            await UniTask.Yield();
+        }
+
+
+
+
+        [ServerRpc(RequireOwnership = false)]
+        public void StartGameServerRpc(string lobbyId)
+        {
+            if (IsServer)
+            {
+                LobbyId.Value = lobbyId;
+
+                if (string.IsNullOrEmpty(SceneToLoad))
+                {
+                    GameLoggerScriptable.LogError("SceneToLoad is not set. Ensure a scene is assigned in the inspector.", this, ToEditor, ToFile, UseStackTrace);
+                    return;
+                }
+
+                NetworkManager.Singleton.SceneManager.LoadScene(SceneToLoad, LoadSceneMode.Single);
+            }
+        }
+
+
+        public void Init(List<Player> playerList, List<string> computerPlayerList, float? turnDuration = null, int? maxRounds = null)
+        {
+
+
+            if (GameMode != null)
+            {
+                turnDuration ??= GameMode.TurnDuration;
+                maxRounds ??= GameMode.MaxRounds;
+            }
+
+            if (NetworkPlayerManager != null)
+            {
+                NetworkPlayerManager.Init(playerList, computerPlayerList);
+            }
+
+            turnDuration ??= 60f;
+            maxRounds ??= 10;
+
+            if (NetworkTurnManager != null)
+            {
+                NetworkTurnManager.Initialize(turnDuration.Value, maxRounds.Value);
+            }
+        }
+
+
+
+
+
+    }
+}
+
+// --------------------------------
+
+// File: NetworkManagerBase.cs
+// File Usage:
+//   No direct file usage found
+
+// Class Information:
+//   Class: NetworkManagerBase
+//   Inherits/Implements:
+//     - NetworkBehaviour
+//     - IEventHandler
+
+// Event Bus Usage:
+//   No event bus usage found
+
+// Methods:
+// Method: public virtual void OnValidate()
+//   No usages found
+//
+// Method: public virtual void Awake()
+//   No usages found
+//
+// Method: public override void OnNetworkSpawn()
+//   Overrides: NetworkBehaviour.OnNetworkSpawn
+//   No usages found
+//
+// Method: public override void OnNetworkDespawn()
+//   Overrides: NetworkBehaviour.OnNetworkDespawn
+//   No usages found
+//
+// Method: public override void OnDestroy()
+//   Overrides: NetworkBehaviour.OnDestroy
+//   No usages found
+//
+// Method: public virtual void SubscribeToEvents()
+//   No usages found
+//
+// Method: public virtual void UnsubscribeFromEvents()
+//   No usages found
+//
+// Method: public virtual void InitComponents()
+//   No usages found
+//
+// Method: protected async UniTask ShowMessage(string message, bool delay, float delayTime)
+//   No usages found
+//
+// Method: private void ShowMessageClientRpc(ulong clientId, string message, float delayTime)
+//   No usages found
+//
+
+// Source Code:
+using Cysharp.Threading.Tasks;
+using OcentraAI.LLMGames.Events;
+using OcentraAI.LLMGames.GameModes;
+using OcentraAI.LLMGames.Utilities;
+using Sirenix.OdinInspector;
+using System;
+using System.Linq;
+using Unity.Netcode;
+using UnityEngine;
+
+namespace OcentraAI.LLMGames.Networking.Manager
+{
+    [Serializable]
+    [RequireComponent(typeof(NetworkPlayerManager), typeof(NetworkTurnManager), typeof(NetworkBettingManager))]
+    [RequireComponent(typeof(NetworkDeckManager), typeof(NetworkScoreManager))]
+    public class NetworkManagerBase : NetworkBehaviour, IEventHandler
+    {
+        protected GameLoggerScriptable GameLoggerScriptable => GameLoggerScriptable.Instance;
+        [ShowInInspector] protected NetworkPlayerManager NetworkPlayerManager { get; set; }
+        [ShowInInspector] protected NetworkTurnManager NetworkTurnManager { get; set; }
+        [ShowInInspector] protected NetworkBettingManager NetworkBettingManager { get; set; }
+        [ShowInInspector] protected NetworkGameManager NetworkGameManager { get; set; }
+        [ShowInInspector] protected NetworkDeckManager NetworkDeckManager { get; set; }
+        [ShowInInspector] protected NetworkScoreManager NetworkScoreManager { get; set; }
+
+        [SerializeField, HideInInspector] private bool logToFile = false;
+        [SerializeField, HideInInspector] private bool logStackTrace = true;
+        [SerializeField, HideInInspector] private bool toEditor = true;
+
+
+        [ShowInInspector] protected bool ToFile { get => logToFile; set => logToFile = value; }
+
+        [ShowInInspector] public bool UseStackTrace { get => logStackTrace; set => logStackTrace = value; }
+
+        [ShowInInspector] public bool ToEditor { get => toEditor; set => toEditor = value; }
+
+
+        [SerializeField] private GameMode gameMode;
+
+        [ShowInInspector, Required]
+        public GameMode GameMode { get => gameMode; set => gameMode = value; }
+
+        public virtual void OnValidate()
+        {
+            InitComponents();
+        }
+
+        public virtual void Awake()
+        {
+            DontDestroyOnLoad(this);
+        }
+
+
+        public override void OnNetworkSpawn()
+        {
+            base.OnNetworkSpawn();
+            InitComponents();
+            SubscribeToEvents();
+
+        }
+
+        public override void OnNetworkDespawn()
+        {
+            base.OnNetworkDespawn();
+            UnsubscribeFromEvents();
+        }
+
+        public override void OnDestroy()
+        {
+            base.OnDestroy();
+            UnsubscribeFromEvents();
+
+        }
+
+        public virtual void SubscribeToEvents()
+        {
+        }
+
+        public virtual void UnsubscribeFromEvents()
+        {
+        }
+
+        public virtual void InitComponents()
+        {
+            if (NetworkPlayerManager == null)
+            {
+                NetworkPlayerManager = GetComponent<NetworkPlayerManager>();
+            }
+
+            if (NetworkTurnManager == null)
+            {
+                NetworkTurnManager = GetComponent<NetworkTurnManager>();
+            }
+
+            if (NetworkBettingManager == null)
+            {
+                NetworkBettingManager = GetComponent<NetworkBettingManager>();
+            }
+
+            if (NetworkGameManager == null)
+            {
+                NetworkGameManager = GetComponent<NetworkGameManager>();
+            }
+
+            if (NetworkDeckManager == null)
+            {
+                NetworkDeckManager = GetComponent<NetworkDeckManager>();
+            }
+
+            if (NetworkScoreManager == null)
+            {
+                NetworkScoreManager = GetComponent<NetworkScoreManager>();
+            }
+
+            if (GameMode == null)
+            {
+                gameMode = Resources.FindObjectsOfTypeAll<GameMode>().FirstOrDefault();
+
+                if (gameMode == null)
+                {
+                    GameLoggerScriptable.LogError("No GameMode ScriptableObject found. Please assign or create a GameMode.", this, true);
+                }
+                else
+                {
+                    GameLoggerScriptable.Log($"GameMode '{gameMode.name}' assigned automatically.", this);
+                }
+            }
+
+        }
+
+        protected async UniTask ShowMessage(string message, bool delay = true, float delayTime = 5f)
+        {
+            if (!IsServer) return;
+            ShowMessageClientRpc(NetworkTurnManager.CurrentPlayer.PlayerId.Value, message, delayTime);
+            await UniTask.Yield();
+        }
+
+        [ClientRpc]
+        private void ShowMessageClientRpc(ulong clientId, string message, float delayTime)
+        {
+            if (NetworkManager.Singleton.LocalClientId == clientId)
+            {
+                EventBus.Instance.Publish(new UIMessageEvent(message, delayTime));
             }
         }
     }
@@ -93,212 +1151,2209 @@ namespace OcentraAI.LLMGames.Events
 
 // --------------------------------
 
-// File: PlayerDecisionPickAndSwapEvent.cs
+// File: NetworkPlayerManager.cs
 // File Usage:
 //   No direct file usage found
 
 // Class Information:
-//   Class: PlayerDecisionPickAndSwapEvent
+//   Class: NetworkPlayerManager
 //   Inherits/Implements:
-//     - PlayerDecisionEvent
+//     - NetworkManagerBase
+//     - IPlayerManager
 
 // Event Bus Usage:
 //   No event bus usage found
 
 // Methods:
-// Method: public override void NetworkSerialize(BufferSerializer<T> serializer)
-//   Overrides: PlayerDecisionEvent.NetworkSerialize
-//   Generic Method with parameters: T
+// Method: public ScriptableObject GetGameMode()
+//   No usages found
+//
+// Method: public override void OnValidate()
+//   Overrides: NetworkManagerBase.OnValidate
+//   No usages found
+//
+// Method: public override void OnNetworkSpawn()
+//   Overrides: NetworkManagerBase.OnNetworkSpawn
+//   No usages found
+//
+// Method: public override void Awake()
+//   Overrides: NetworkManagerBase.Awake
+//   No usages found
+//
+// Method: private GameObject LoadComputerPlayerPrefab()
+//   No usages found
+//
+// Method: public override void SubscribeToEvents()
+//   Overrides: NetworkManagerBase.SubscribeToEvents
+//   No usages found
+//
+// Method: public override void UnsubscribeFromEvents()
+//   Overrides: NetworkManagerBase.UnsubscribeFromEvents
+//   No usages found
+//
+// Method: public async UniTask<bool> ResetForNewRound()
+//   No usages found
+//
+// Method: private UniTask OnGetLocalPlayer(GetLocalPlayerEvent arg)
+//   No usages found
+//
+// Method: private async UniTask OnRegisterPlayer(RegisterPlayerEvent e)
+//   No usages found
+//
+// Method: private async UniTask OnUnregisterPlayer(UnRegisterPlayerEvent e)
+//   No usages found
+//
+// Method: public void RegisterPlayer(IPlayerBase player)
+//   No usages found
+//
+// Method: public bool UnregisterPlayer(IPlayerBase player)
+//   No usages found
+//
+// Method: private bool TryGetMatchingPlayer(IPlayerData player, IPlayerBase matchingPlayer)
+//   No usages found
+//
+// Method: private async UniTask<bool> EnsureAllPlayersRegisteredAndSendDataAsync()
+//   No usages found
+//
+// Method: private void SendPlayerDataToClientsServerRpc()
+//   No usages found
+//
+// Method: private void UpdateClientPlayerDataClientRpc()
+//   No usages found
+//
+// Method: public IReadOnlyList<IPlayerData> GetAllHumanPlayers()
+//   No usages found
+//
+// Method: public IReadOnlyList<IComputerPlayerData> GetAllComputerPlayers()
+//   No usages found
+//
+// Method: public IReadOnlyList<IPlayerBase> GetAllPlayers()
+//   No usages found
+//
+// Method: public bool TryGetPlayer(ulong playerId, IPlayerBase playerBase)
+//   No usages found
+//
+// Method: public IReadOnlyList<IPlayerBase> GetActivePlayers()
+//   No usages found
+//
+// Method: public void AddFoldedPlayer(IPlayerBase player)
+//   No usages found
+//
+// Method: public void ResetFoldedPlayer()
+//   No usages found
+//
+// Method: private async UniTask OnRequestLobbyPlayerData(RequestLobbyPlayerDataEvent request)
+//   No usages found
+//
+// Method: public void Init(List<Player> playerList, List<string> computerPlayerList)
+//   No usages found
+//
+// Method: private void SpawnAndRegisterAIPlayer(string computerPlayerName)
+//   No usages found
+//
+// Method: private int GetNextAvailableIndex()
+//   No usages found
+//
+// Method: public void ShowHand(bool showHand, bool isRoundEnd)
 //   No usages found
 //
 
 // Source Code:
+using Cysharp.Threading.Tasks;
+using OcentraAI.LLMGames.Events;
+using OcentraAI.LLMGames.Scriptable.ScriptableSingletons;
+using OcentraAI.LLMGames.Utilities;
+using Sirenix.OdinInspector;
+using System;
+using System.Collections.Concurrent;
+using System.Collections.Generic;
 using Unity.Netcode;
+using Unity.Services.Authentication;
+using Unity.Services.Lobbies;
+using Unity.Services.Lobbies.Models;
+using UnityEngine;
 
-namespace OcentraAI.LLMGames.Events
+
+namespace OcentraAI.LLMGames.Networking.Manager
 {
-    public class PlayerDecisionPickAndSwapEvent : PlayerDecisionEvent
+    [Serializable]
+    public class NetworkPlayerManager : NetworkManagerBase, IPlayerManager
     {
-        public string CardInHand;
-        public string DraggedCard;
+        [ShowInInspector, Required] GameObject ComputerPlayerPrefab { get; set; }
 
-        public PlayerDecisionPickAndSwapEvent(PlayerDecision decision, string cardInHand, string draggedCard) : base(decision)
+        [ShowInInspector, DictionaryDrawerSettings(DisplayMode = DictionaryDisplayOptions.ExpandedFoldout)]
+        private ConcurrentDictionary<int, IPlayerBase> NetworkPlayers { get; } = new ConcurrentDictionary<int, IPlayerBase>();
+        [ShowInInspector] public IPlayerData LocalNetworkPlayer { get; set; }
+        [ShowInInspector] private List<Player> LobbyPlayerList { get; set; }
+        [ShowInInspector] private List<string> ComputerPlayerList { get; set; }
+
+        [ShowInInspector] public bool AreAllPlayersSynced { get; set; } = false;
+
+        [ShowInInspector][ReadOnly] protected readonly HashSet<IPlayerBase> FoldedPlayers = new HashSet<IPlayerBase>();
+
+        public ScriptableObject GetGameMode()
         {
-            CardInHand = cardInHand;
-            DraggedCard = draggedCard;
+            return NetworkGameManager.GameMode;
+        }
+
+
+        public override void OnValidate()
+        {
+            base.OnValidate();
+            LoadComputerPlayerPrefab();
+        }
+        public override void OnNetworkSpawn()
+        {
+            base.OnNetworkSpawn();
+            LoadComputerPlayerPrefab();
+        }
+
+        public override void Awake()
+        {
+            base.Awake();
+            LoadComputerPlayerPrefab();
+            AreAllPlayersSynced = false;
+
+        }
+
+
+
+        private GameObject LoadComputerPlayerPrefab()
+        {
+            if (ComputerPlayerPrefab == null)
+            {
+                ComputerPlayerPrefab = Resources.Load<GameObject>($"Prefabs/{nameof(ComputerPlayerPrefab)}");
+            }
+            return ComputerPlayerPrefab;
+        }
+
+
+
+
+
+        public override void SubscribeToEvents()
+        {
+            EventBus.Instance.SubscribeAsync<RegisterPlayerEvent>(OnRegisterPlayer);
+            EventBus.Instance.SubscribeAsync<UnRegisterPlayerEvent>(OnUnregisterPlayer);
+            EventBus.Instance.SubscribeAsync<RequestLobbyPlayerDataEvent>(OnRequestLobbyPlayerData);
+            EventBus.Instance.SubscribeAsync<GetLocalPlayerEvent>(OnGetLocalPlayer);
+        }
+
+        public override void UnsubscribeFromEvents()
+        {
+            EventBus.Instance.UnsubscribeAsync<RegisterPlayerEvent>(OnRegisterPlayer);
+            EventBus.Instance.UnsubscribeAsync<UnRegisterPlayerEvent>(OnUnregisterPlayer);
+            EventBus.Instance.UnsubscribeAsync<RequestLobbyPlayerDataEvent>(OnRequestLobbyPlayerData);
+            EventBus.Instance.UnsubscribeAsync<GetLocalPlayerEvent>(OnGetLocalPlayer);
+        }
+
+
+        public async UniTask<bool> ResetForNewRound()
+        {
+
+
+
+            if (Application.isEditor && GameSettings.Instance.DevModeEnabled)
+            {
+#if UNITY_EDITOR
+
+                // todo implement way to store player and dev mode card via event susbcription, 
+                foreach (IPlayerBase playerBase in NetworkPlayers.Values)
+                {
+                    //todo  send Hand instead as Event
+                }
+
+               // NetworkDeckManager.RemoveCardsFromDeck();
+
+#endif
+            }
+
+
+
+            await UniTask.Yield();
+            return true;
+        }
+
+
+
+        private UniTask OnGetLocalPlayer(GetLocalPlayerEvent arg)
+        {
+            arg.PlayerDataSource.TrySetResult(LocalNetworkPlayer != null
+                ? new OperationResult<IPlayerData>(true, LocalNetworkPlayer)
+                : new OperationResult<IPlayerData>(false, null));
+            return UniTask.CompletedTask;
+        }
+
+        private async UniTask OnRegisterPlayer(RegisterPlayerEvent e)
+        {
+            GameLoggerScriptable.Log($"OnRegisterPlayer called for Player ID: {e.PlayerData.PlayerId}", this, ToEditor, ToFile, UseStackTrace);
+            IPlayerData player = e.PlayerData;
+            if (AuthenticationService.Instance.PlayerId == player.AuthenticatedPlayerId.Value.Value)
+            {
+                LocalNetworkPlayer = player;
+            }
+
+            if (IsServer)
+            {
+
+                if (!TryGetMatchingPlayer(player, out IPlayerBase _))
+                {
+                    int playerIndex = GetNextAvailableIndex();
+                    player.SetPlayerIndex(playerIndex);
+
+                    RegisterPlayer(player);
+                    GameLoggerScriptable.Log($"New player registered - PlayerIndex: {playerIndex}, PlayerId: {player.PlayerId}", this, ToEditor, ToFile, UseStackTrace);
+
+                }
+                else
+                {
+                    GameLoggerScriptable.Log($"Player already exists - PlayerId: {player.PlayerId}", this, ToEditor, ToFile, UseStackTrace);
+
+                }
+
+            }
+
+            bool allPlayersRegisteredAndSendDataAsync = await EnsureAllPlayersRegisteredAndSendDataAsync();
+            e.PlayerDataSource.TrySetResult((allPlayersRegisteredAndSendDataAsync, player));
+
+            await UniTask.Yield();
+
+        }
+
+        private async UniTask OnUnregisterPlayer(UnRegisterPlayerEvent e)
+        {
+            GameLoggerScriptable.Log($"OnUnregisterPlayer called for Player ID: {e.PlayerData.PlayerId}", this, ToEditor, ToFile, UseStackTrace);
+            IPlayerData player = e.PlayerData;
+
+            if (IsServer)
+            {
+                if (TryGetMatchingPlayer(player, out IPlayerBase existingPlayer))
+                {
+                    if (player.PlayerIndex.Value >= 0 && UnregisterPlayer(existingPlayer))
+                    {
+                        GameLoggerScriptable.Log($"Player unregistered - PlayerIndex: {player.PlayerIndex.Value}, PlayerId: {player.PlayerId}", this, ToEditor, ToFile, UseStackTrace);
+                    }
+
+                }
+            }
+
+            await UniTask.Yield();
+        }
+
+        public void RegisterPlayer(IPlayerBase player)
+        {
+            if (player.PlayerManager == null)
+            {
+                player.PlayerManager = this;
+            }
+
+            player.GameObject.name = player.PlayerName.Value.Value;
+
+
+            if (!NetworkPlayers.ContainsKey(player.PlayerIndex.Value))
+            {
+                NetworkPlayers.TryAdd(player.PlayerIndex.Value, player);
+            }
+            else
+            {
+                NetworkPlayers[player.PlayerIndex.Value] = player;
+            }
+
+            player.SetPlayerRegistered(true);
+        }
+
+        public bool UnregisterPlayer(IPlayerBase player)
+        {
+            return NetworkPlayers.TryRemove(player.PlayerIndex.Value, out _);
+        }
+
+
+        private bool TryGetMatchingPlayer(IPlayerData player, out IPlayerBase matchingPlayer)
+        {
+            matchingPlayer = null;
+
+            foreach (IPlayerBase existingPlayer in NetworkPlayers.Values)
+            {
+                if (existingPlayer is IPlayerData playerData)
+                {
+                    if (playerData.AuthenticatedPlayerId == player.AuthenticatedPlayerId)
+                    {
+                        matchingPlayer = existingPlayer;
+                        return true;
+                    }
+                }
+            }
+
+            return false;
+        }
+
+        private async UniTask<bool> EnsureAllPlayersRegisteredAndSendDataAsync()
+        {
+            if (IsServer && !AreAllPlayersSynced)
+            {
+                GameLoggerScriptable.Log("Waiting for all players to be registered", this, ToEditor, ToFile, UseStackTrace);
+                await UniTask.WaitUntil(() => GetAllHumanPlayers().Count == LobbyPlayerList.Count);
+
+                GameLoggerScriptable.Log("All players are registered. Sending data to clients", this, ToEditor, ToFile, UseStackTrace);
+
+                foreach (string aiName in ComputerPlayerList)
+                {
+
+                    SpawnAndRegisterAIPlayer(aiName);
+                }
+
+                await UniTask.WaitUntil(() => GetAllPlayers().Count == LobbyPlayerList.Count + ComputerPlayerList.Count);
+
+
+                GameLoggerScriptable.Log("Preparing to send player data to clients", this, ToEditor, ToFile, UseStackTrace);
+
+                SendPlayerDataToClientsServerRpc();
+
+                if (AreAllPlayersSynced)
+                {
+                    EventBus.Instance.Publish(new StartTurnManagerEvent(this));
+                }
+
+            }
+
+            return true;
+        }
+
+        [ServerRpc]
+        private void SendPlayerDataToClientsServerRpc()
+        {
+            if (IsServer)
+            {
+                GameLoggerScriptable.Log("Sending player data to clients via ClientRpc", this, ToEditor, ToFile, UseStackTrace);
+                UpdateClientPlayerDataClientRpc();
+                EventBus.Instance.Publish(new RegisterPlayerListEvent(NetworkPlayers.Values));
+                AreAllPlayersSynced = true;
+
+            }
+        }
+
+        [ClientRpc]
+        private void UpdateClientPlayerDataClientRpc()
+        {
+
+
+            if (IsClient && !IsHost)
+            {
+                bool spawned = false;
+                while (!spawned)
+                {
+                    int playerDataCount = 0;
+
+                    foreach (NetworkObject networkObject in NetworkManager.Singleton.SpawnManager.SpawnedObjects.Values)
+                    {
+                        if (networkObject.GetComponent<IPlayerBase>() != null)
+                        {
+                            playerDataCount++;
+                        }
+                    }
+
+                    if (playerDataCount >= LobbyPlayerList.Count)
+                    {
+                        spawned = true;
+                    }
+                }
+
+
+                // GameLoggerScriptable.Log($"Received client player data update playerDataList {playerDataList.Length} SpawnedObjects {NetworkManager.Singleton.SpawnManager.SpawnedObjects.Count} ", this);
+
+                foreach (NetworkObject spawnedObject in NetworkManager.Singleton.SpawnManager.SpawnedObjects.Values)
+                {
+                    IPlayerBase playerBase = spawnedObject.GetComponent<IPlayerBase>();
+                    if (playerBase != null)
+                    {
+                        RegisterPlayer(playerBase);
+                        if (playerBase is IPlayerData playerData)
+                        {
+                            if (AuthenticationService.Instance.PlayerId == playerData.AuthenticatedPlayerId.Value.Value)
+                            {
+                                LocalNetworkPlayer = playerData;
+                            }
+                        }
+                    }
+                }
+
+                AreAllPlayersSynced = GetAllPlayers().Count == LobbyPlayerList.Count + ComputerPlayerList.Count;
+
+                EventBus.Instance.Publish(new RegisterPlayerListEvent(NetworkPlayers.Values));
+
+                GameLoggerScriptable.Log($"All players synced: {AreAllPlayersSynced}", this, ToEditor, ToFile, UseStackTrace);
+            }
+
+
+        }
+
+
+        public IReadOnlyList<IPlayerData> GetAllHumanPlayers()
+        {
+            GameLoggerScriptable.Log("Fetching all registered Human players", this, ToEditor, ToFile, UseStackTrace);
+
+            List<IPlayerData> players = new List<IPlayerData>();
+
+            foreach (IPlayerBase player in NetworkPlayers.Values)
+            {
+                if (player is IPlayerData playerData)
+                {
+                    players.Add(playerData);
+                }
+            }
+
+            return players.AsReadOnly();
+        }
+
+        public IReadOnlyList<IComputerPlayerData> GetAllComputerPlayers()
+        {
+            GameLoggerScriptable.Log("Fetching all registered computer players", this, ToEditor, ToFile, UseStackTrace);
+
+            List<IComputerPlayerData> players = new List<IComputerPlayerData>();
+
+            foreach (IPlayerBase player in NetworkPlayers.Values)
+            {
+                if (player is IComputerPlayerData playerData)
+                {
+                    players.Add(playerData);
+                }
+            }
+
+            return players.AsReadOnly();
+        }
+
+        public IReadOnlyList<IPlayerBase> GetAllPlayers()
+        {
+            GameLoggerScriptable.Log("Fetching all registered players", this, ToEditor, ToFile, UseStackTrace);
+
+            List<IPlayerBase> players = new List<IPlayerBase>();
+
+            foreach (IPlayerBase player in NetworkPlayers.Values)
+            {
+                players.Add(player);
+            }
+
+            return players.AsReadOnly();
+        }
+
+        public bool TryGetPlayer(ulong playerId, out IPlayerBase playerBase)
+        {
+            GameLoggerScriptable.Log($"Fetching player at index {playerId}", this, ToEditor, ToFile, UseStackTrace);
+
+            playerBase = default;
+
+            foreach (IPlayerBase player in NetworkPlayers.Values)
+            {
+                if (player.PlayerId.Value == playerId)
+                {
+                    playerBase = player;
+                    return true;
+                }
+            }
+
+            return false; // Player not found
+        }
+
+        public IReadOnlyList<IPlayerBase> GetActivePlayers()
+        {
+            List<IPlayerBase> activePlayers = new List<IPlayerBase>();
+
+            if (IsServer)
+            {
+                foreach (KeyValuePair<int, IPlayerBase> player in NetworkPlayers)
+                {
+                    if (!FoldedPlayers.Contains(player.Value))
+                    {
+                        activePlayers.Add(player.Value);
+                    }
+                }
+
+            }
+
+
+            return activePlayers;
+        }
+
+
+        public void AddFoldedPlayer(IPlayerBase player)
+        {
+            if (IsServer)
+            {
+                FoldedPlayers.Add(player);
+            }
+
+        }
+
+        public void ResetFoldedPlayer()
+        {
+            if (IsServer)
+            {
+                FoldedPlayers.Clear();
+            }
+
+        }
+
+        private async UniTask OnRequestLobbyPlayerData(RequestLobbyPlayerDataEvent request)
+        {
+            try
+            {
+                GameLoggerScriptable.Log($"Processing lobby player data request for Player ID: {request.PlayerId}", this, ToEditor, ToFile, UseStackTrace);
+
+                if (LobbyPlayerList != null && LobbyPlayerList.Count > 0)
+                {
+                    Player foundPlayer = null;
+
+                    foreach (Player player in LobbyPlayerList)
+                    {
+                        if (player.Data != null &&
+                            player.Data.TryGetValue("PlayerId", out PlayerDataObject playerData) &&
+                            playerData.Value == request.PlayerId)
+                        {
+                            foundPlayer = player;
+                            break;
+                        }
+                    }
+
+                    if (foundPlayer != null)
+                    {
+                        request.PlayerDataSource.TrySetResult((true, foundPlayer));
+                    }
+                    else
+                    {
+                        request.PlayerDataSource.TrySetResult((false, null));
+                    }
+                }
+                else
+                {
+                    request.PlayerDataSource.TrySetResult((false, null));
+                }
+
+                await UniTask.Yield();
+            }
+            catch (LobbyServiceException ex)
+            {
+                GameLoggerScriptable.LogError($"Failed to fetch lobby data: {ex.Message} {ex.StackTrace}", this, ToEditor, ToFile, UseStackTrace);
+                request.PlayerDataSource.TrySetException(ex);
+            }
+            catch (Exception ex)
+            {
+                GameLoggerScriptable.LogError($"Unexpected error while fetching lobby data: {ex.Message} {ex.StackTrace}", this, ToEditor, ToFile, UseStackTrace);
+                request.PlayerDataSource.TrySetException(ex);
+            }
+        }
+
+        public void Init(List<Player> playerList, List<string> computerPlayerList)
+        {
+
+            LobbyPlayerList = playerList;
+            ComputerPlayerList = computerPlayerList;
+
+        }
+
+        private void SpawnAndRegisterAIPlayer(string computerPlayerName)
+        {
+            if (!IsServer)
+            {
+                return;
+            }
+
+            foreach (IPlayerBase playerBase in NetworkPlayers.Values)
+            {
+                if (playerBase is IComputerPlayerData computerPlayerData)
+                {
+                    if (computerPlayerData.PlayerName.Value.Value == computerPlayerName)
+                    {
+                        return;
+                    }
+                }
+            }
+
+            GameObject computerPlayerObject = Instantiate(ComputerPlayerPrefab);
+            NetworkObject networkObject = computerPlayerObject.GetComponent<NetworkObject>();
+
+            if (networkObject == null)
+            {
+                GameLoggerScriptable.LogError("AI Player prefab is missing a NetworkObject component.", this);
+                return;
+            }
+
+            networkObject.SpawnWithOwnership(NetworkManager.Singleton.LocalClientId);
+
+            IComputerPlayerData computerPlayer = computerPlayerObject.GetComponent<IComputerPlayerData>();
+
+            if (computerPlayer != null)
+            {
+                int playerIndex = GetNextAvailableIndex();
+                computerPlayer.SetPlayerIndex(playerIndex);
+                computerPlayer.PlayerName.Value = computerPlayerName;
+                computerPlayer.DifficultyLevel = 0;
+                computerPlayer.AIModelName = computerPlayerName;
+                RegisterPlayer(computerPlayer);
+                GameLoggerScriptable.Log($"AI Player registered: {computerPlayer.PlayerName.Value.Value} (Index: {playerIndex})", this);
+            }
+        }
+
+        private int GetNextAvailableIndex()
+        {
+            int index = 0;
+            while (NetworkPlayers.ContainsKey(index))
+            {
+                index++;
+            }
+            return index;
+        }
+
+
+        public void ShowHand(bool showHand, bool isRoundEnd = false)
+        {
+            foreach (IPlayerBase player in NetworkPlayers.Values)
+            {
+                EventBus.Instance.Publish(new UpdatePlayerHandDisplayEvent(player, isRoundEnd));
+            }
+        }
+    }
+}
+
+
+// --------------------------------
+
+// File: NetworkScoreManager.cs
+// File Usage:
+//   No direct file usage found
+
+// Class Information:
+//   Class: NetworkScoreManager
+//   Inherits/Implements:
+//     - NetworkManagerBase
+
+// Event Bus Usage:
+//   No event bus usage found
+
+// Methods:
+// Method: public override void SubscribeToEvents()
+//   Overrides: NetworkManagerBase.SubscribeToEvents
+//   No usages found
+//
+// Method: public override void UnsubscribeFromEvents()
+//   Overrides: NetworkManagerBase.UnsubscribeFromEvents
+//   No usages found
+//
+// Method: public async UniTask<bool> ResetForNewGame()
+//   No usages found
+//
+// Method: public async UniTask<bool> ResetForNewRound()
+//   No usages found
+//
+// Method: public async UniTask SendUIUpdateEvent()
+//   No usages found
+//
+// Method: private void SendUIUpdateEventClientRpc(string serializedEvent)
+//   No usages found
+//
+// Method: public async UniTask SetTotalCoinsInPlay(int totalCoinsInPlay, bool sendEvent)
+//   No usages found
+//
+// Method:  int GetTotalCoinsInPlay()
+//   No usages found
+//
+// Method: public async UniTask SetPot(int value, bool sendEvent)
+//   No usages found
+//
+// Method:  int GetPot()
+//   No usages found
+//
+// Method: public List<NetworkRoundRecord> GetRoundRecord()
+//   No usages found
+//
+// Method: public async UniTask SetCurrentBet(int value, bool sendEvent)
+//   No usages found
+//
+// Method:  int GetCurrentBet()
+//   No usages found
+//
+// Method: public async UniTask SetRoundRecords(List<NetworkRoundRecord> roundRecords, bool sendEvent)
+//   No usages found
+//
+// Method: public async UniTask<(bool Success, string ErrorMessage)> HandlePlayBlind()
+//   No usages found
+//
+// Method: public async UniTask<(bool Success, string ErrorMessage)> HandleBet()
+//   No usages found
+//
+// Method: public async UniTask<(bool Success, string ErrorMessage)> HandleShowCall()
+//   No usages found
+//
+// Method: public async UniTask<(bool Success, string ErrorMessage)> HandleRaiseBet(int raiseAmount)
+//   No usages found
+//
+// Method: public async UniTask<(bool Success, string ErrorMessage)> HandleShowAllFloorCards()
+//   No usages found
+//
+// Method: private async UniTask<(bool Success, string ErrorMessage)> ProcessBetWithValidation(int betAmount, string failureMessage, bool showFoldMessage, bool publish)
+//   No usages found
+//
+// Method: private async UniTask<bool> ProcessBet(int betAmount, string failureMessage, bool publish)
+//   No usages found
+//
+// Method: public async UniTask<bool> HandleFold(string failureMessage, bool fromUI)
+//   No usages found
+//
+// Method: public async UniTask<bool> AwardPotToWinner(NetworkPlayer winner)
+//   No usages found
+//
+// Method: public async UniTask<bool> AwardTiedPot(List<NetworkPlayer> tiedPlayers)
+//   No usages found
+//
+// Method: public int GetPlayerWins(ulong playerId)
+//   No usages found
+//
+// Method: public int GetPlayerTotalWinnings(ulong playerId)
+//   No usages found
+//
+// Method: public (ulong WinnerId, int WinCount) GetOverallWinner()
+//   No usages found
+//
+// Method: public List<(ulong PlayerId, int Wins, int TotalWinnings)> GetLeaderboard()
+//   No usages found
+//
+// Method: private async UniTask RecordRound(IPlayerBase winner, int potAmount)
+//   No usages found
+//
+// Method: public NetworkRoundRecord GetLastRound()
+//   No usages found
+//
+// Method: public IPlayerBase GetLastRoundWinner()
+//   No usages found
+//
+// Method: private async UniTask<bool> ValidateBet(int betAmount)
+//   No usages found
+//
+// Method: private bool VerifyTotalCoins()
+//   No usages found
+//
+// Method: private void HandleVerificationFailure(string methodName)
+//   No usages found
+//
+
+// Source Code:
+using Cysharp.Threading.Tasks;
+using OcentraAI.LLMGames.Events;
+using OcentraAI.LLMGames.GamesNetworking;
+using Sirenix.OdinInspector;
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using Unity.Netcode;
+using UnityEngine;
+
+namespace OcentraAI.LLMGames.Networking.Manager
+{
+    public class NetworkScoreManager : NetworkManagerBase
+    {
+        #region Properties
+
+        [ShowInInspector, ReadOnly] public NetworkVariable<int> Pot { get; private set; } = new NetworkVariable<int>();
+
+        [ShowInInspector, ReadOnly] public NetworkVariable<int> CurrentBet { get; private set; } = new NetworkVariable<int>();
+
+        [ShowInInspector, ReadOnly] private int BlindMultiplier { get; set; }
+
+        [ShowInInspector, ReadOnly] public NetworkVariable<int> TotalCoinsInPlay { get; private set; } = new NetworkVariable<int>();
+
+        [ShowInInspector, ReadOnly] private List<NetworkRoundRecord> RoundRecords { get; set; } = new List<NetworkRoundRecord>();
+
+        [ShowInInspector, ReadOnly] private NetworkPlayer CurrentPlayer => NetworkTurnManager.CurrentPlayer as NetworkPlayer;
+
+        #endregion
+
+        public override void SubscribeToEvents()
+        {
+
+
+        }
+
+        public override void UnsubscribeFromEvents()
+        {
+        }
+
+
+        #region Initialization
+
+        public async UniTask<bool> ResetForNewGame()
+        {
+            if (IsServer)
+            {
+                try
+                {
+                    if (GameMode != null)
+                    {
+                        await SetTotalCoinsInPlay(GameMode.InitialPlayerCoins * NetworkPlayerManager.GetActivePlayers().Count, false);
+
+                    }
+                    await SetRoundRecords(new List<NetworkRoundRecord>(), false);
+                    await UniTask.Yield();
+                    return true;
+                }
+                catch (Exception ex)
+                {
+                    GameLoggerScriptable.LogError($"Error in ResetForNewGame: {ex.Message}\n{ex.StackTrace}", this);
+                    return false;
+                }
+            }
+
+            return false;
+        }
+
+
+
+        public async UniTask<bool> ResetForNewRound()
+        {
+            if (IsServer)
+            {
+                try
+                {
+                    NetworkPlayerManager.ResetFoldedPlayer();
+
+                    foreach (IPlayerBase playerBase in NetworkPlayerManager.GetAllPlayers())
+                    {
+                        playerBase.SetCoins(GameMode.InitialPlayerCoins);
+                    }
+
+                    await SetPot(0, false);
+
+                    if (GameMode != null)
+                    {
+                        await SetCurrentBet(GameMode.BaseBet, false);
+                        BlindMultiplier = GameMode.BaseBlindMultiplier;
+                    }
+                    await SendUIUpdateEvent();
+                    await UniTask.Yield();
+                    return true;
+                }
+                catch (Exception ex)
+                {
+                    GameLoggerScriptable.LogError($"Error in ResetForNewRound: {ex.Message}\n{ex.StackTrace}", this);
+                    return false;
+                }
+            }
+
+            return false;
+
+
+        }
+
+        public async UniTask SendUIUpdateEvent()
+        {
+            if (IsServer)
+            {
+                int pot = GetPot();
+                int currentBet = GetCurrentBet();
+                int totalRounds = GameMode.MaxRounds;
+                int currentRound = NetworkTurnManager.CurrentRound;
+                List<INetworkRoundRecord> roundRecords = GetRoundRecord().Cast<INetworkRoundRecord>().ToList();
+                string serializedEvent = JsonUtility.ToJson(new UpdateScoreDataEvent<INetworkRoundRecord>(pot, currentBet, totalRounds, currentRound, roundRecords));
+                SendUIUpdateEventClientRpc(serializedEvent);
+            }
+
+            await UniTask.Yield();
+        }
+
+        [ClientRpc]
+        private void SendUIUpdateEventClientRpc(string serializedEvent)
+        {
+            UpdateScoreDataEvent<INetworkRoundRecord> updateEvent = JsonUtility.FromJson<UpdateScoreDataEvent<INetworkRoundRecord>>(serializedEvent);
+            EventBus.Instance.Publish(updateEvent);
         }
         
 
-        public override void NetworkSerialize<T>(BufferSerializer<T> serializer)
+
+        #endregion
+
+        public async UniTask SetTotalCoinsInPlay(int totalCoinsInPlay, bool sendEvent = true)
         {
-            base.NetworkSerialize(serializer);
-            serializer.SerializeValue(ref CardInHand);
-            serializer.SerializeValue(ref DraggedCard);
+            if (IsServer)
+            {
+                TotalCoinsInPlay.Value += totalCoinsInPlay;
+                if (sendEvent)
+                {
+                    await SendUIUpdateEvent();
+                }
+            }
+
+            await UniTask.Yield();
         }
+
+        int GetTotalCoinsInPlay()
+        {
+            return TotalCoinsInPlay.Value;
+        }
+
+        public async UniTask SetPot(int value, bool sendEvent = true)
+        {
+            if (IsServer)
+            {
+                Pot.Value += value;
+                if (sendEvent)
+                {
+                    await SendUIUpdateEvent();
+                }
+            }
+
+            await UniTask.Yield();
+        }
+
+        int GetPot()
+        {
+            return Pot.Value;
+        }
+
+        public List<NetworkRoundRecord> GetRoundRecord()
+        {
+            return RoundRecords;
+        }
+
+        public async UniTask SetCurrentBet(int value, bool sendEvent = true)
+        {
+            if (IsServer)
+            {
+                CurrentBet.Value += value;
+
+                if (sendEvent)
+                {
+                    await SendUIUpdateEvent();
+                }
+
+            }
+
+            await UniTask.Yield();
+        }
+
+        int GetCurrentBet()
+        {
+            return CurrentBet.Value;
+        }
+
+        public async UniTask SetRoundRecords(List<NetworkRoundRecord> roundRecords, bool sendEvent = true)
+        {
+            RoundRecords = roundRecords;
+            if (sendEvent)
+            {
+                await SendUIUpdateEvent();
+            }
+            await UniTask.Yield();
+        }
+
+        #region Betting Operations
+
+
+        public async UniTask<(bool Success, string ErrorMessage)> HandlePlayBlind()
+        {
+            if (!IsServer) return (false, "Unauthorized!");
+
+            int newBet = GetCurrentBet() * BlindMultiplier;
+            string failureMessage = $"Not enough coins ({CurrentPlayer.GetCoins()}). Current bet is {newBet}.";
+
+            (bool success, string errorMessage) = await ProcessBetWithValidation(newBet, failureMessage);
+            if (success)
+            {
+                CurrentPlayer.HasBetOnBlind.Value = true;
+                BlindMultiplier *= 2;
+            }
+
+            return (success, errorMessage);
+        }
+
+        public async UniTask<(bool Success, string ErrorMessage)> HandleBet()
+        {
+            if (!IsServer) return (false, "Unauthorized!");
+
+            int betAmount = CurrentPlayer.HasSeenHand.Value ? GetCurrentBet() * 2 : GetCurrentBet();
+            return await ProcessBetWithValidation(betAmount, $"Not enough coins ({CurrentPlayer.GetCoins()}). Current bet is {betAmount}.");
+        }
+
+        public async UniTask<(bool Success, string ErrorMessage)> HandleShowCall()
+        {
+            if (!IsServer) return (false, "Unauthorized!");
+
+            int showBetAmount = GetCurrentBet() * 2;
+            return await ProcessBetWithValidation(showBetAmount, $"Not enough coins ({CurrentPlayer.GetCoins()}) to show. Required bet is {showBetAmount}.");
+        }
+
+        public async UniTask<(bool Success, string ErrorMessage)> HandleRaiseBet(int raiseAmount)
+        {
+            if (!IsServer) return (false, "Unauthorized!");
+
+            return await ProcessBetWithValidation(raiseAmount, $"Not enough coins ({CurrentPlayer.GetCoins()}). Current bet is {GetCurrentBet()}.");
+        }
+
+
+
+        public async UniTask<(bool Success, string ErrorMessage)> HandleShowAllFloorCards()
+        {
+            if (!IsServer) return (false, "Unauthorized!");
+
+            int newBet = 10;
+            string failureMessage = $"Not enough coins ({CurrentPlayer.GetCoins()}). Cost To ShowAllFloorCards is {newBet}.";
+            return await ProcessBetWithValidation(newBet, failureMessage, false, false);
+        }
+        private async UniTask<(bool Success, string ErrorMessage)> ProcessBetWithValidation(int betAmount, string failureMessage, bool showFoldMessage = true, bool publish = true)
+        {
+            if (!await ValidateBet(betAmount))
+            {
+                if (showFoldMessage)
+                {
+                    await HandleFold(failureMessage);
+                }
+
+                return (false, failureMessage);
+            }
+
+            return await ProcessBet(betAmount, failureMessage, publish) ? (true, string.Empty) : (false, "Error processing bet");
+        }
+
+        private async UniTask<bool> ProcessBet(int betAmount, string failureMessage, bool publish = true)
+        {
+            if (!IsServer) return false;
+
+            if (CurrentPlayer == null || !CurrentPlayer.CanAffordBet(betAmount))
+            {
+                await HandleFold(failureMessage);
+                return false;
+            }
+
+            CurrentPlayer.AdjustCoins(-betAmount);
+            await SetPot(betAmount);
+            await SetCurrentBet(betAmount);
+            if (publish)
+            {
+                await EventBus.Instance.PublishAsync(new DecisionTakenEvent(CurrentPlayer, true));
+            }
+
+            return VerifyTotalCoins();
+        }
+
+        public async UniTask<bool> HandleFold(string failureMessage, bool fromUI = false)
+        {
+            if (!IsServer) return false;
+
+            if (!VerifyTotalCoins())
+            {
+                HandleVerificationFailure("ProcessFold - Before");
+                return false;
+            }
+
+            if (!fromUI)
+            {
+                await ShowMessage(failureMessage);
+
+                return false;
+            }
+
+            CurrentPlayer.HasFolded.Value = true;
+            NetworkPlayerManager.AddFoldedPlayer(CurrentPlayer);
+
+            if (NetworkPlayerManager.GetActivePlayers().Count == 1)
+            {
+                IPlayerBase winner = NetworkPlayerManager.GetActivePlayers().First();
+                return await AwardPotToWinner(winner as NetworkPlayer);
+            }
+
+            await EventBus.Instance.PublishAsync(new DecisionTakenEvent(CurrentPlayer, true));
+            return VerifyTotalCoins();
+        }
+
+        #endregion
+
+
+
+        #region Player Scoring
+
+        public async UniTask<bool> AwardPotToWinner(NetworkPlayer winner)
+        {
+            if (!VerifyTotalCoins())
+            {
+                HandleVerificationFailure("AwardPotToWinner - Before");
+                return false;
+            }
+
+            int potAmount = GetPot();
+            if (winner != null)
+            {
+                winner.AdjustCoins(potAmount);
+                await SetPot(0);
+
+                if (!VerifyTotalCoins())
+                {
+                    HandleVerificationFailure("AwardPotToWinner - After");
+                    return false;
+                }
+
+                await RecordRound(winner, potAmount);
+            }
+
+            return true;
+        }
+
+        public async UniTask<bool> AwardTiedPot(List<NetworkPlayer> tiedPlayers)
+        {
+            if (!VerifyTotalCoins())
+            {
+                HandleVerificationFailure("AwardTiedPot - Before");
+                return false;
+            }
+
+            int splitAmount = GetPot() / tiedPlayers.Count;
+            foreach (NetworkPlayer player in tiedPlayers)
+            {
+                if (player != null)
+                {
+                    player.AdjustCoins(splitAmount);
+                }
+            }
+
+            int remainder = GetPot() % tiedPlayers.Count;
+            if (remainder > 0)
+            {
+                tiedPlayers[0].AdjustCoins(remainder);
+            }
+
+            await SetPot(0);
+
+            if (!VerifyTotalCoins())
+            {
+                HandleVerificationFailure("AwardTiedPot - After");
+                return false;
+            }
+
+            await RecordRound(null, GetPot());
+            return true;
+        }
+
+        public int GetPlayerWins(ulong playerId)
+        {
+            return GetRoundRecord().Count(r => r.WinnerId == playerId);
+        }
+
+        public int GetPlayerTotalWinnings(ulong playerId)
+        {
+            return GetRoundRecord()
+                .Where(r => r.WinnerId == playerId)
+                .Sum(r => r.PotAmount);
+        }
+
+        public (ulong WinnerId, int WinCount) GetOverallWinner()
+        {
+            var grouped = GetRoundRecord()
+                .GroupBy(r => r.WinnerId)
+                .Select(g => new { WinnerId = g.Key, WinCount = g.Count() })
+                .OrderByDescending(g => g.WinCount)
+                .FirstOrDefault();
+
+            if (grouped != null)
+            {
+                return (grouped.WinnerId, grouped?.WinCount ?? 0);
+            }
+
+            return (default, 0);
+        }
+
+        public List<(ulong PlayerId, int Wins, int TotalWinnings)> GetLeaderboard()
+        {
+            return GetRoundRecord()
+                .GroupBy(r => r.WinnerId)
+                .Select(g => (PlayerId: g.Key, Wins: g.Count(), TotalWinnings: g.Sum(r => r.PotAmount)))
+                .OrderByDescending(p => p.Wins)
+                .ThenByDescending(p => p.TotalWinnings)
+                .ToList();
+        }
+
+        #endregion
+
+
+        #region Private Helper Methods
+
+        private async UniTask RecordRound(IPlayerBase winner, int potAmount)
+        {
+            IReadOnlyList<IPlayerBase> readOnlyList = NetworkPlayerManager.GetAllPlayers();
+            NetworkRoundRecord networkRoundRecord = new NetworkRoundRecord
+            {
+                RoundNumber = NetworkTurnManager.CurrentRound,
+                WinnerId = winner.PlayerId.Value,
+                PotAmount = potAmount,
+                PlayerRecords = readOnlyList.Select(player =>
+                {
+
+                    INetworkPlayerRecord networkPlayerRecord = new NetworkPlayerRecord(player);
+
+                    return networkPlayerRecord;
+                }).ToList()
+            };
+
+            List<NetworkRoundRecord> roundRecords = new List<NetworkRoundRecord>();
+
+            if (!roundRecords.Contains(networkRoundRecord))
+            {
+                roundRecords.Add(networkRoundRecord);
+            }
+
+
+            await SetRoundRecords(roundRecords);
+            await UniTask.Yield();
+        }
+
+
+
+        // will come from UI so should be Event Todo
+        public NetworkRoundRecord GetLastRound()
+        {
+            return GetRoundRecord().Last();
+        }
+
+        public IPlayerBase GetLastRoundWinner()
+        {
+            NetworkRoundRecord networkRoundRecord = GetRoundRecord().Last();
+
+            if (networkRoundRecord != null && NetworkPlayerManager.TryGetPlayer(networkRoundRecord.WinnerId, out IPlayerBase playerBase))
+            {
+                return playerBase;
+            }
+
+            return null;
+        }
+
+        private async UniTask<bool> ValidateBet(int betAmount)
+        {
+            bool canAffordBet = CurrentPlayer != null && CurrentPlayer.CanAffordBet(betAmount);
+            bool validateBet = canAffordBet && GetPot() + betAmount <= GetTotalCoinsInPlay();
+            await UniTask.Yield();
+            return validateBet;
+        }
+
+        private bool VerifyTotalCoins()
+        {
+            int currentTotal = GetPot();
+
+            foreach (IPlayerBase player in NetworkPlayerManager.GetAllPlayers())
+            {
+
+                if (player != null)
+                {
+                    currentTotal += player.GetCoins();
+                }
+            }
+
+            bool isValid = currentTotal == GetTotalCoinsInPlay();
+            if (!isValid)
+            {
+                GameLoggerScriptable.LogError($"Total coins mismatch. Current: {currentTotal}, Expected: {GetTotalCoinsInPlay()}", this);
+            }
+
+            return isValid;
+        }
+
+        private void HandleVerificationFailure(string methodName)
+        {
+            GameLoggerScriptable.LogError($"Total coins verification failed in {methodName}. Game state might be corrupted.", this, true, true, true);
+
+        }
+
+        #endregion
+
+
     }
 }
 
 // --------------------------------
 
-// File: PlayerDecisionRaiseBetEvent.cs
+// File: NetworkTurnManager.cs
 // File Usage:
 //   No direct file usage found
 
 // Class Information:
-//   Class: PlayerDecisionRaiseBetEvent
+//   Class: NetworkTurnManager
 //   Inherits/Implements:
-//     - PlayerDecisionEvent
+//     - NetworkManagerBase
 
 // Event Bus Usage:
 //   No event bus usage found
 
 // Methods:
-// Method: public override void NetworkSerialize(BufferSerializer<T> serializer)
-//   Overrides: PlayerDecisionEvent.NetworkSerialize
-//   Generic Method with parameters: T
+// Method: public void Initialize(float turnDuration, int maxRounds)
+//   No usages found
+//
+// Method: public override void SubscribeToEvents()
+//   Overrides: NetworkManagerBase.SubscribeToEvents
+//   No usages found
+//
+// Method: public override void UnsubscribeFromEvents()
+//   Overrides: NetworkManagerBase.UnsubscribeFromEvents
+//   No usages found
+//
+// Method: private async UniTask OnStartTurnManagerEvent(StartTurnManagerEvent e)
+//   No usages found
+//
+// Method: private async UniTask OnDecisionTakenEvent(DecisionTakenEvent decisionTakenEvent)
+//   No usages found
+//
+// Method: private async UniTask OnPlayerActionStartNewGameEvent(PlayerActionStartNewGameEvent arg)
+//   No usages found
+//
+// Method: private async UniTask OnPlayerActionNewRound(PlayerActionNewRoundEvent arg)
+//   No usages found
+//
+// Method: public async UniTask<bool> ResetForNewGame()
+//   No usages found
+//
+// Method: public async UniTask<bool> ResetForNewRound()
+//   No usages found
+//
+// Method: private async UniTask StartTimer(IPlayerBase currentPlayer)
+//   No usages found
+//
+// Method: public async UniTask StopTimer()
+//   No usages found
+//
+// Method: private void NotifyTimerStartedClientRpc(int playerIndex)
+//   No usages found
+//
+// Method: private void NotifyTimerStopClientRpc()
+//   No usages found
+//
+// Method: private async UniTask OnTimerCompletedEvent(TimerCompletedEvent arg)
+//   No usages found
+//
+// Method: private bool TryGetNextPlayerInOrder(IPlayerBase currentLLMPlayer, IPlayerBase nextPlayer)
+//   No usages found
+//
+// Method: public void CallShow()
+//   No usages found
+//
+// Method: public void SetLastBettor()
+//   No usages found
+//
+// Method: public bool IsRoundComplete()
+//   No usages found
+//
+// Method: public bool IsFixedRoundsOver()
+//   No usages found
+//
+// Method: private async UniTask DetermineWinner()
+//   No usages found
+//
+// Method: private async UniTask EndRound(List<NetworkPlayer> winners, bool showHand)
+//   No usages found
+//
+// Method: public NetworkPlayer BreakTie(List<NetworkPlayer> tiedPlayers)
+//   No usages found
+//
+// Method: private async UniTask HandleTie(List<NetworkPlayer> winners, bool showHand)
+//   No usages found
+//
+// Method: private async UniTask HandleSingleWinner(NetworkPlayer winner, bool showHand)
+//   No usages found
+//
+// Method: private async UniTask CheckForContinuation(bool showHand)
+//   No usages found
+//
+// Method: private void OfferContinuation(bool showHand)
+//   No usages found
+//
+// Method: private UniTask EndGame()
+//   No usages found
+//
+// Method: private void Reset()
 //   No usages found
 //
 
 // Source Code:
+using Cysharp.Threading.Tasks;
+using OcentraAI.LLMGames.Events;
+using OcentraAI.LLMGames.GameModes;
+using OcentraAI.LLMGames.GamesNetworking;
+using Sirenix.OdinInspector;
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Threading;
 using Unity.Netcode;
+using UnityEngine;
 
-namespace OcentraAI.LLMGames.Events
+namespace OcentraAI.LLMGames.Networking.Manager
 {
-    public class PlayerDecisionRaiseBetEvent : PlayerDecisionEvent
+    [Serializable]
+    public class NetworkTurnManager : NetworkManagerBase
     {
-        public float Amount;
 
-        public PlayerDecisionRaiseBetEvent(PlayerDecision decision, float amount)
-            : base(decision)
+        private CancellationTokenSource CancellationTokenSource { get; set; } = new CancellationTokenSource();
+
+        private UniTaskCompletionSource<bool> TimerCompletionSource { get; set; }
+        [ShowInInspector, ReadOnly] private IReadOnlyList<IPlayerBase> Players { get; set; }
+        [ShowInInspector, ReadOnly] private float TurnDuration { get; set; }
+        [ShowInInspector, ReadOnly] private int MaxRounds { get; set; }
+        [ShowInInspector, ReadOnly] public IPlayerBase CurrentPlayer { get; set; }
+        [ShowInInspector, ReadOnly] private IPlayerBase RoundStarter { get; set; }
+        [ShowInInspector, ReadOnly] private IPlayerBase LastBettor { get; set; }
+        [ShowInInspector, ReadOnly] private bool IsShowdown { get; set; }
+        [ShowInInspector, ReadOnly] public int CurrentRound { get; set; } = 1;
+        [ShowInInspector, ReadOnly] public bool StartedTurnManager { get; set; }
+
+
+        public void Initialize(float turnDuration, int maxRounds)
         {
-            Amount = amount;
+            TurnDuration = turnDuration;
+            MaxRounds = maxRounds;
         }
 
-        public PlayerDecisionRaiseBetEvent() { }
-
-        public override void NetworkSerialize<T>(BufferSerializer<T> serializer)
+        public override void SubscribeToEvents()
         {
-            base.NetworkSerialize(serializer);
-            serializer.SerializeValue(ref Amount);
-        }
-    }
-
-
-}
-
-// --------------------------------
-
-// File: PlayerDecisionUIEvent.cs
-// File Usage:
-//   No direct file usage found
-
-// Class Information:
-//   Class: PlayerDecisionUIEvent
-//   Inherits/Implements:
-//     - PlayerDecisionEvent
-
-// Event Bus Usage:
-//   No event bus usage found
-
-// Methods:
-// Method: public override void NetworkSerialize(BufferSerializer<T> serializer)
-//   Overrides: PlayerDecisionEvent.NetworkSerialize
-//   Generic Method with parameters: T
-//   No usages found
-//
-
-// Source Code:
-using Unity.Netcode;
-
-namespace OcentraAI.LLMGames.Events
-{
-    public class PlayerDecisionUIEvent : PlayerDecisionEvent
-    {
-        public PlayerDecisionUIEvent(PlayerDecision decision)
-            : base(decision)
-        {
+            base.SubscribeToEvents();
+            EventBus.Instance.SubscribeAsync<StartTurnManagerEvent>(OnStartTurnManagerEvent);
+            EventBus.Instance.SubscribeAsync<TimerCompletedEvent>(OnTimerCompletedEvent);
+            EventBus.Instance.SubscribeAsync<PlayerActionNewRoundEvent>(OnPlayerActionNewRound);
+            EventBus.Instance.SubscribeAsync<PlayerActionStartNewGameEvent>(OnPlayerActionStartNewGameEvent);
+            EventBus.Instance.SubscribeAsync<DecisionTakenEvent>(OnDecisionTakenEvent);
         }
 
-        public PlayerDecisionUIEvent() { }
-
-        public override void NetworkSerialize<T>(BufferSerializer<T> serializer)
+        public override void UnsubscribeFromEvents()
         {
-            base.NetworkSerialize(serializer);
-        }
-    }
-}
-
-// --------------------------------
-
-// File: PlayerDecisionWildcardEvent.cs
-// File Usage:
-//   No direct file usage found
-
-// Class Information:
-//   Class: PlayerDecisionWildcardEvent
-//   Inherits/Implements:
-//     - PlayerDecisionEvent
-
-// Event Bus Usage:
-//   No event bus usage found
-
-// Methods:
-// Method: public override void NetworkSerialize(BufferSerializer<T> serializer)
-//   Overrides: PlayerDecisionEvent.NetworkSerialize
-//   Generic Method with parameters: T
-//   No usages found
-//
-
-// Source Code:
-using Unity.Netcode;
-
-namespace OcentraAI.LLMGames.Events
-{
-    public class PlayerDecisionWildcardEvent : PlayerDecisionEvent
-    {
-        public PlayerDecisionWildcardEvent(PlayerDecision decision)
-            : base(decision)
-        {
+            base.UnsubscribeFromEvents();
+            EventBus.Instance.UnsubscribeAsync<StartTurnManagerEvent>(OnStartTurnManagerEvent);
+            EventBus.Instance.UnsubscribeAsync<TimerCompletedEvent>(OnTimerCompletedEvent);
+            EventBus.Instance.UnsubscribeAsync<PlayerActionNewRoundEvent>(OnPlayerActionNewRound);
+            EventBus.Instance.UnsubscribeAsync<PlayerActionStartNewGameEvent>(OnPlayerActionStartNewGameEvent);
+            EventBus.Instance.UnsubscribeAsync<DecisionTakenEvent>(OnDecisionTakenEvent);
         }
 
-        public PlayerDecisionWildcardEvent() { }
 
-        public override void NetworkSerialize<T>(BufferSerializer<T> serializer)
+
+
+        private async UniTask OnStartTurnManagerEvent(StartTurnManagerEvent e)
         {
-            base.NetworkSerialize(serializer);
+
+            if (IsServer && !StartedTurnManager)
+            {
+                Players = NetworkPlayerManager.GetAllPlayers();
+
+                bool allPlayerReadyForGame = true;
+                foreach (IPlayerBase playerBase in Players)
+                {
+                    if (!playerBase.ReadyForNewGame.Value)
+                    {
+                        allPlayerReadyForGame = false;
+                    }
+                }
+
+                await UniTask.WaitUntil(() => allPlayerReadyForGame);
+
+                await ResetForNewGame();
+
+                StartedTurnManager = true;
+            }
+
+
         }
-    }
-}
 
-// --------------------------------
-
-// File: ProcessDecisionEvent.cs
-// File Usage:
-//   No direct file usage found
-
-// Class Information:
-//   Class: ProcessDecisionEvent
-//   Inherits/Implements:
-//     - EventArgsBase
-
-// Event Bus Usage:
-//   No event bus usage found
-
-// Methods:
-
-// Source Code:
-
-namespace OcentraAI.LLMGames.Events
-{
-    public class ProcessDecisionEvent : EventArgsBase
-    {
-        public PlayerDecisionEvent DecisionEvent { get; }
-        public ulong PlayerId { get; }
-
-        public ProcessDecisionEvent(PlayerDecisionEvent decisionEvent, ulong playerId)
+        private async UniTask OnDecisionTakenEvent(DecisionTakenEvent decisionTakenEvent)
         {
-            DecisionEvent = decisionEvent;
-            PlayerId = playerId;
+            if (IsServer && CurrentPlayer == decisionTakenEvent.PlayerBase)
+            {
+                if (decisionTakenEvent.EndTurn)
+                {
+                    CurrentPlayer.SetHasTakenBettingDecision(true);
+
+                    if (TryGetNextPlayerInOrder(CurrentPlayer, out IPlayerBase nextPlayer))
+                    {
+                        nextPlayer.SetHasTakenBettingDecision(false);
+                        CurrentPlayer = nextPlayer;
+                        await StartTimer(CurrentPlayer);
+
+                    }
+                }
+
+
+            }
+        }
+        private async UniTask OnPlayerActionStartNewGameEvent(PlayerActionStartNewGameEvent arg)
+        {
+            if (IsServer)
+            {
+                await ResetForNewGame();
+            }
+
+        }
+        private async UniTask OnPlayerActionNewRound(PlayerActionNewRoundEvent arg)
+        {
+            if (IsServer)
+            {
+                await ResetForNewRound();
+            }
+
+        }
+
+        public async UniTask<bool> ResetForNewGame()
+        {
+            if (IsServer)
+            {
+                try
+                {
+                    CurrentRound = 1;
+                    IsShowdown = false;
+                    LastBettor = null;
+                    RoundStarter = null;
+                    CurrentPlayer = null;
+                    TimerCompletionSource = new UniTaskCompletionSource<bool>();
+                    bool resetDeck = await NetworkDeckManager.ResetForNewGame();
+                    bool resetScoreManager = await NetworkScoreManager.ResetForNewGame();
+                    await ResetForNewRound();
+                    GameLoggerScriptable.Log("TurnManager reset for new game", this);
+                    await UniTask.Yield();
+                    return true;
+                }
+                catch (Exception ex)
+                {
+                    GameLoggerScriptable.LogError($"Error in ResetForNewGame: {ex.Message}\n{ex.StackTrace}", this, ToEditor, ToFile, UseStackTrace);
+                    return false;
+                }
+
+            }
+            return false;
+
+        }
+
+        public async UniTask<bool> ResetForNewRound()
+        {
+            if (IsServer)
+            {
+                try
+                {
+                    bool resetDeck = await NetworkDeckManager.ResetForNewRound();
+                    bool resetScoreManager = await NetworkScoreManager.ResetForNewRound();
+                    bool resetPlayerManager = await NetworkPlayerManager.ResetForNewRound();
+
+                    foreach (IPlayerBase playerBase in NetworkPlayerManager.GetAllPlayers())
+                    {
+                        NetworkPlayer networkPlayer = playerBase as NetworkPlayer;
+                        if (networkPlayer != null)
+                        {
+                            networkPlayer.ResetForNewRound(NetworkDeckManager);
+                        }
+                    }
+
+                    IsShowdown = false;
+                    LastBettor = null;
+
+                    if (CurrentRound == 1)
+                    {
+                        RoundStarter = Players[0];
+                    }
+                    else
+                    {
+                        RoundStarter = NetworkScoreManager.GetLastRoundWinner();
+
+                        if (RoundStarter == null)
+                        {
+                            if (!TryGetNextPlayerInOrder(RoundStarter, out IPlayerBase nextPlayer))
+                            {
+                                GameLoggerScriptable.LogError("Failed to determine the next player for round starter. Round reset aborted.", this, ToEditor, ToFile, UseStackTrace);
+                                return false;
+                            }
+
+                            RoundStarter = nextPlayer;
+                        }
+                    }
+
+                    CurrentPlayer = RoundStarter;
+                    await StartTimer(CurrentPlayer);
+                    GameLoggerScriptable.Log($"TurnManager reset for round {CurrentRound}", this, ToEditor, ToFile, UseStackTrace);
+                    CurrentRound++;
+                    await UniTask.Yield();
+                    return true;
+
+
+                }
+                catch (Exception ex)
+                {
+                    GameLoggerScriptable.LogError($"Error in ResetForNewRound: {ex.Message}\n{ex.StackTrace}", this, ToEditor, ToFile, UseStackTrace);
+                    return false;
+                }
+            }
+
+            return false;
+        }
+
+        private async UniTask StartTimer(IPlayerBase currentPlayer)
+        {
+            if (IsServer)
+            {
+
+                await StopTimer();
+
+                foreach (IPlayerBase playerBase in Players)
+                {
+                    playerBase.SetIsPlayerTurn(false);
+                }
+
+                currentPlayer.SetIsPlayerTurn();
+
+                try
+                {
+                    NotifyTimerStartedClientRpc(currentPlayer.PlayerIndex.Value);
+
+                }
+                catch (OperationCanceledException)
+                {
+                    if (TimerCompletionSource != null)
+                    {
+                        TimerCompletionSource.TrySetResult(false);
+                    }
+                }
+
+                await UniTask.Yield();
+            }
+        }
+
+        public async UniTask StopTimer()
+        {
+            if (TimerCompletionSource != null)
+            {
+                NotifyTimerStopClientRpc();
+                TimerCompletionSource.TrySetResult(false);
+            }
+
+            await UniTask.Yield();
+        }
+
+
+        [ClientRpc]
+        private void NotifyTimerStartedClientRpc(int playerIndex)
+        {
+
+            TimerCompletionSource = new UniTaskCompletionSource<bool>();
+            CancellationTokenSource?.Cancel();
+            CancellationTokenSource?.Dispose();
+            CancellationTokenSource = new CancellationTokenSource();
+            EventBus.Instance.Publish(new TimerStartEvent(playerIndex, TurnDuration, TimerCompletionSource, CancellationTokenSource));
+
+        }
+
+        [ClientRpc]
+        private void NotifyTimerStopClientRpc()
+        {
+            EventBus.Instance.Publish(new TimerStopEvent());
+        }
+
+
+
+        private async UniTask OnTimerCompletedEvent(TimerCompletedEvent arg)
+        {
+            if (IsServer)
+            {
+                try
+                {
+                    bool isRoundComplete = IsRoundComplete();
+                    bool isFixedRoundsOver = IsFixedRoundsOver();
+
+                    if (isFixedRoundsOver || isRoundComplete)
+                    {
+                        await DetermineWinner();
+                    }
+
+                    if (!isRoundComplete && !isFixedRoundsOver)
+                    {
+                        if (!CurrentPlayer.HasTakenBettingDecision.Value)
+                        {
+                            PlayerDecisionEvent bettingEvent = new PlayerDecisionBettingEvent(PlayerDecision.Bet);
+                            await EventBus.Instance.PublishAsync(bettingEvent);
+                        }
+
+                        if (TryGetNextPlayerInOrder(CurrentPlayer, out IPlayerBase nextPlayer))
+                        {
+                            CurrentPlayer = nextPlayer;
+                            await TimerCompletionSource.Task;
+                            await StartTimer(CurrentPlayer);
+                        }
+                        else
+                        {
+                            GameLoggerScriptable.LogError("Failed to switch to next player", this, ToEditor, ToFile, UseStackTrace);
+                        }
+                    }
+                }
+                catch (Exception ex)
+                {
+                    GameLoggerScriptable.LogError($"Error in OnTimerCompletedEvent: {ex.Message}\n{ex.StackTrace}", this, ToEditor, ToFile, UseStackTrace);
+                }
+            }
+            await UniTask.Yield();
+        }
+
+
+        private bool TryGetNextPlayerInOrder(IPlayerBase currentLLMPlayer, out IPlayerBase nextPlayer)
+        {
+            nextPlayer = currentLLMPlayer;
+
+            if (IsServer)
+            {
+                try
+                {
+                    if (Players == null || currentLLMPlayer == null)
+                    {
+                        GameLoggerScriptable.LogError("TryGetNextPlayerInOrder called with null Players, PlayerManager, or CurrentLLMPlayer.", this, ToEditor, ToFile, UseStackTrace);
+                        return false;
+                    }
+
+                    int currentIndex = -1;
+                    for (int i = 0; i < Players.Count; i++)
+                    {
+                        if (Players[i].Equals(currentLLMPlayer))
+                        {
+                            currentIndex = i;
+                            break;
+                        }
+                    }
+
+                    if (currentIndex == -1)
+                    {
+                        GameLoggerScriptable.LogError("Current player not found in Players list.", this, ToEditor, ToFile, UseStackTrace);
+                        return false;
+                    }
+
+                    IReadOnlyList<IPlayerBase> activePlayers = NetworkPlayerManager.GetActivePlayers();
+                    if (activePlayers == null || activePlayers.Count == 0)
+                    {
+                        GameLoggerScriptable.LogError("No active players found. Returning current player.", this, ToEditor, ToFile, UseStackTrace);
+                        return false;
+                    }
+
+                    for (int i = 1; i <= Players.Count; i++)
+                    {
+                        int nextIndex = (currentIndex + i) % Players.Count;
+                        IPlayerBase potentialNextPlayer = Players[nextIndex];
+
+                        if (activePlayers.Contains(potentialNextPlayer))
+                        {
+                            nextPlayer = potentialNextPlayer;
+                            GameLoggerScriptable.Log($"Next player: {nextPlayer.PlayerName.Value.Value}", this, ToEditor, ToFile, UseStackTrace);
+                            return true;
+                        }
+                    }
+
+                    GameLoggerScriptable.Log("No next active player found. Returning first active player.", this);
+                    nextPlayer = activePlayers[0];
+                    return true;
+                }
+                catch (Exception ex)
+                {
+                    GameLoggerScriptable.LogError($"Error in TryGetNextPlayerInOrder: {ex.Message}\n{ex.StackTrace}", this, ToEditor, ToFile, UseStackTrace);
+                    return false;
+                }
+            }
+
+            return false;
+        }
+
+        public void CallShow()
+        {
+            SetLastBettor();
+            IsShowdown = true;
+        }
+
+        public void SetLastBettor()
+        {
+            if (IsServer)
+            {
+                try
+                {
+                    LastBettor = CurrentPlayer;
+                    GameLoggerScriptable.Log($"Last bettor set to {CurrentPlayer?.PlayerId}", this);
+                }
+                catch (Exception ex)
+                {
+                    GameLoggerScriptable.LogError($"Error setting last bettor: {ex.Message}\n{ex.StackTrace}", this, ToEditor, ToFile, UseStackTrace);
+                }
+            }
+
+        }
+
+        public bool IsRoundComplete()
+        {
+            if (IsServer)
+            {
+                IReadOnlyList<IPlayerBase> activePlayers = NetworkPlayerManager.GetActivePlayers();
+
+                if (activePlayers.Count <= 1)
+                {
+                    return true;
+                }
+
+                if (IsShowdown)
+                {
+                    return true;
+                }
+
+                if (CurrentPlayer == LastBettor && activePlayers.Count > 1)
+                {
+                    return true;
+                }
+
+                return false;
+            }
+
+
+            return false;
+        }
+
+        public bool IsFixedRoundsOver()
+        {
+            return CurrentRound >= MaxRounds;
+        }
+
+
+        #region Game End and Continuation
+
+        private async UniTask DetermineWinner()
+        {
+            if (!IsServer) return;
+
+
+            IReadOnlyList<IPlayerBase> activePlayers = NetworkPlayerManager.GetActivePlayers();
+            if (activePlayers == null || activePlayers.Count == 0)
+            {
+                ShowMessage("No active players found when determining the winner").Forget();
+                return;
+            }
+
+            // Calculate hand values for each player
+            Dictionary<NetworkPlayer, int> playerHandValues = new Dictionary<NetworkPlayer, int>();
+            foreach (IPlayerBase playerBase in activePlayers)
+            {
+                NetworkPlayer networkPlayer = playerBase as NetworkPlayer;
+                if (networkPlayer != null)
+                {
+                    playerHandValues[networkPlayer] = networkPlayer.CalculateHandValue();
+                }
+            }
+
+            // Find the highest hand value
+            int highestHandValue = int.MinValue;
+            foreach (int handValue in playerHandValues.Values)
+            {
+                if (handValue > highestHandValue)
+                {
+                    highestHandValue = handValue;
+                }
+            }
+
+            // Identify potential winners with the highest hand value
+            List<NetworkPlayer> potentialWinners = new List<NetworkPlayer>();
+            foreach (KeyValuePair<NetworkPlayer, int> player in playerHandValues)
+            {
+                if (player.Value == highestHandValue)
+                {
+                    potentialWinners.Add(player.Key);
+                }
+            }
+
+            if (potentialWinners.Count == 1)
+            {
+                await EndRound(potentialWinners, true);
+                return;
+            }
+
+            Dictionary<NetworkPlayer, int> potentialWinnersCardValues = new Dictionary<NetworkPlayer, int>();
+            foreach (NetworkPlayer networkPlayer in potentialWinners)
+            {
+
+                if (networkPlayer != null)
+                {
+                    potentialWinnersCardValues[networkPlayer] = networkPlayer.Hand.Max();
+                }
+            }
+
+            int highestCardValue = int.MinValue;
+            foreach (int cardValue in potentialWinnersCardValues.Values)
+            {
+                if (cardValue > highestCardValue)
+                {
+                    highestCardValue = cardValue;
+                }
+            }
+
+            List<NetworkPlayer> winners = new List<NetworkPlayer>();
+
+            foreach (KeyValuePair<NetworkPlayer, int> player in potentialWinnersCardValues)
+            {
+                if (player.Value == highestCardValue)
+                {
+                    winners.Add(player.Key);
+                }
+            }
+
+            await EndRound(winners, true);
+        }
+
+        private async UniTask EndRound(List<NetworkPlayer> winners, bool showHand)
+        {
+            if (!IsServer) return;
+
+            await UniTask.SwitchToMainThread();
+
+
+            await StopTimer();
+
+            if (winners == null || winners.Count == 0)
+            {
+                GameLoggerScriptable.LogError("EndRound called with no winners.", this);
+                return;
+            }
+
+            if (winners.Count > 1)
+            {
+                NetworkPlayer winner = await UniTask.RunOnThreadPool(() => BreakTie(winners));
+                if (winner != null)
+                {
+                    await HandleSingleWinner(winner, showHand);
+                }
+                else
+                {
+                    await HandleTie(winners, showHand);
+                }
+            }
+            else
+            {
+                await HandleSingleWinner(winners[0], showHand);
+            }
+        }
+
+        public NetworkPlayer BreakTie(List<NetworkPlayer> tiedPlayers)
+        {
+            if (!IsServer) return null;
+
+            if (tiedPlayers == null || tiedPlayers.Count == 0)
+            {
+                GameLoggerScriptable.LogError("BreakTie called with no tied players.", this);
+                return null;
+            }
+
+            // Find the players with the highest card value
+            int maxHighCard = int.MinValue;
+            List<NetworkPlayer> playersWithMaxHighCard = new List<NetworkPlayer>();
+
+            foreach (NetworkPlayer player in tiedPlayers)
+            {
+
+                if (player == null || player.Hand == null || player.Hand.Count() == 0)
+                {
+                    continue;
+                }
+
+                int highestCard = player.Hand.Max();
+
+                if (highestCard > maxHighCard)
+                {
+                    maxHighCard = highestCard;
+                    playersWithMaxHighCard.Clear();
+                    playersWithMaxHighCard.Add(player);
+                }
+                else if (highestCard == maxHighCard)
+                {
+                    playersWithMaxHighCard.Add(player);
+                }
+            }
+
+            if (playersWithMaxHighCard.Count == 1)
+            {
+                return playersWithMaxHighCard[0];
+            }
+
+            // Find the players with the highest second card value
+            int maxSecondHighCard = int.MinValue;
+            List<NetworkPlayer> playersWithMaxSecondHighCard = new List<NetworkPlayer>();
+
+            foreach (NetworkPlayer player in playersWithMaxHighCard)
+            {
+                if (player.Hand == null || player.Hand.Count() < 2)
+                    continue;
+
+                int secondHighestCard = player.Hand.OrderByDescending(c => c.Rank.Value).Skip(1).FirstOrDefault().Rank.Value;
+
+                if (secondHighestCard > maxSecondHighCard)
+                {
+                    maxSecondHighCard = secondHighestCard;
+                    playersWithMaxSecondHighCard.Clear();
+                    playersWithMaxSecondHighCard.Add(player);
+                }
+                else if (secondHighestCard == maxSecondHighCard)
+                {
+                    playersWithMaxSecondHighCard.Add(player);
+                }
+            }
+
+            if (playersWithMaxSecondHighCard.Count == 1)
+            {
+                return playersWithMaxSecondHighCard[0];
+            }
+
+            // Find the players with the highest lowest card value if still tied
+            int maxLowestCard = int.MinValue;
+            List<NetworkPlayer> winnersWithMaxLowestCard = new List<NetworkPlayer>();
+
+            foreach (NetworkPlayer player in playersWithMaxSecondHighCard)
+            {
+                if (player.Hand == null || player.Hand.Count() == 0)
+                    continue;
+
+                int lowestCard = player.Hand.Min();
+
+                if (lowestCard > maxLowestCard)
+                {
+                    maxLowestCard = lowestCard;
+                    winnersWithMaxLowestCard.Clear();
+                    winnersWithMaxLowestCard.Add(player);
+                }
+                else if (lowestCard == maxLowestCard)
+                {
+                    winnersWithMaxLowestCard.Add(player);
+                }
+            }
+
+            return winnersWithMaxLowestCard.Count == 1 ? winnersWithMaxLowestCard[0] : null;
+        }
+
+        private async UniTask HandleTie(List<NetworkPlayer> winners, bool showHand)
+        {
+            if (!IsServer) return;
+
+            if (NetworkScoreManager == null)
+            {
+                GameLoggerScriptable.LogError("Critical component is null in HandleTie.", this);
+                return;
+            }
+
+            if (await NetworkScoreManager.AwardTiedPot(winners))
+            {
+                EventBus.Instance.Publish(new UpdateRoundDisplayEvent<NetworkScoreManager>(NetworkScoreManager));
+                OfferContinuation(showHand);
+            }
+            else
+            {
+                GameLoggerScriptable.LogError("Failed to award tied pot.", this);
+            }
+
+            await UniTask.CompletedTask;
+        }
+
+        private async UniTask HandleSingleWinner(NetworkPlayer winner, bool showHand)
+        {
+            if (!IsServer) return;
+
+            if (NetworkTurnManager == null || NetworkPlayerManager == null)
+            {
+                GameLoggerScriptable.LogError("Critical component is null in HandleSingleWinner.", this);
+                return;
+            }
+
+            try
+            {
+                if (await NetworkScoreManager.AwardPotToWinner(winner))
+                {
+                    EventBus.Instance.Publish(new UpdateRoundDisplayEvent<NetworkScoreManager>(NetworkScoreManager));
+
+                    bool playerWithZeroCoinsFound = false;
+                    IReadOnlyList<IPlayerBase> activePlayers = NetworkPlayerManager.GetActivePlayers();
+
+                    foreach (IPlayerBase player in activePlayers)
+                    {
+                        if (player.GetCoins() <= 0)
+                        {
+                            playerWithZeroCoinsFound = true;
+                            break;
+                        }
+                    }
+
+                    if (playerWithZeroCoinsFound)
+                    {
+                        await EndGame();
+                    }
+                    else
+                    {
+                        await CheckForContinuation(showHand);
+                    }
+                }
+                else
+                {
+                    GameLoggerScriptable.LogError("Failed to award pot to winner.", this);
+                }
+            }
+            catch (Exception ex)
+            {
+                GameLoggerScriptable.LogError($"Error in HandleSingleWinner: {ex.Message}\n{ex.StackTrace}", this);
+            }
+        }
+
+        private async UniTask CheckForContinuation(bool showHand)
+        {
+            if (!IsServer) return;
+
+            if (IsFixedRoundsOver())
+            {
+                List<(ulong PlayerId, int Wins, int TotalWinnings)> leaderboard = NetworkScoreManager.GetLeaderboard();
+
+                // If there's only one player, or the top player has zero winnings, or the top player has more winnings than the second player
+                if (leaderboard.Count <= 1 ||
+                    (leaderboard.Count > 1 && leaderboard[0].TotalWinnings > leaderboard[1].TotalWinnings && leaderboard[0].TotalWinnings > 0))
+                {
+                    await EndGame();
+                }
+
+                else
+                {
+                    OfferContinuation(showHand);
+                }
+            }
+            else
+            {
+                OfferContinuation(showHand);
+            }
+        }
+        private void OfferContinuation(bool showHand)
+        {
+            if (!IsServer) return;
+
+            CallShow();
+            NetworkPlayerManager.ShowHand(showHand, true);
+            EventBus.Instance.Publish(new OfferContinuationEvent(10));
+        }
+        private UniTask EndGame()
+        {
+            if (!IsServer) return UniTask.CompletedTask;
+
+            CallShow();
+            NetworkPlayerManager.ShowHand(true);
+            EventBus.Instance.Publish(new OfferNewGameEvent(60));
+            return UniTask.CompletedTask;
+        }
+
+
+
+        #endregion
+
+
+        private void Reset()
+        {
+            if (IsServer)
+            {
+                try
+                {
+                    IsShowdown = false;
+                    LastBettor = null;
+
+                }
+                catch (Exception ex)
+                {
+                    GameLoggerScriptable.LogError($"Error during reset: {ex.Message}\n{ex.StackTrace}", this, ToEditor, ToFile, UseStackTrace);
+                }
+            }
+
         }
     }
 }

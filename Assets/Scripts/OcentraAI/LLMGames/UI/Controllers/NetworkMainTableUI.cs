@@ -16,7 +16,7 @@ using UnityEngine;
 namespace OcentraAI.LLMGames.UI.Managers
 {
     [ExecuteAlways]
-    public class NetworkMainTableUI : ManagerBase<NetworkMainTableUI>
+    public class NetworkMainTableUI : SingletonManagerBase<NetworkMainTableUI>
     {
         [ShowInInspector][ReadOnly] public IPlayerUI[] AllPlayerUI;
 
@@ -78,22 +78,17 @@ namespace OcentraAI.LLMGames.UI.Managers
         public override void SubscribeToEvents()
         {
             base.SubscribeToEvents();
-            EventBus.Instance.SubscribeAsync<RegisterUIPlayerEvent>(OnRegisterUIPlayerEvent);
-            EventBus.Instance.SubscribeAsync<ProcessDecisionEvent>(OnProcessDecisionEvent);
+            EventRegistrar.Subscribe<RegisterPlayerListEvent>(OnRegisterUIPlayerEvent);
+            EventRegistrar.Subscribe<ProcessDecisionEvent>(OnProcessDecisionEvent);
         }
 
-        public override void UnsubscribeFromEvents()
-        {
-            base.UnsubscribeFromEvents();
-            EventBus.Instance.UnsubscribeAsync<RegisterUIPlayerEvent>(OnRegisterUIPlayerEvent);
-            EventBus.Instance.UnsubscribeAsync<ProcessDecisionEvent>(OnProcessDecisionEvent);
-        }
+
 
         protected async UniTask OnProcessDecisionEvent(ProcessDecisionEvent processDecisionEvent)
         {
             PlayerDecisionEvent playerDecisionEvent = processDecisionEvent.DecisionEvent;
             PlayerDecision decision = PlayerDecision.FromId(playerDecisionEvent.Decision.DecisionId);
-
+          
             if (decision.Name == nameof(PlayerDecision.DrawFromDeck))
             {
                 DeckHolder.SetPercentageAnimated(100);
@@ -111,9 +106,9 @@ namespace OcentraAI.LLMGames.UI.Managers
 
 
 
-        private async UniTask OnRegisterUIPlayerEvent(RegisterUIPlayerEvent arg)
+        private async UniTask OnRegisterUIPlayerEvent(RegisterPlayerListEvent registerPlayerListEvent)
         {
-            PlayerCount = arg.Players.Count;
+            PlayerCount = registerPlayerListEvent.Players.Count;
 
             await UniTask.Yield();
         }

@@ -113,7 +113,6 @@ namespace OcentraAI.LLMGames.UI
         public virtual void UpdateCardView()
         {
 
-
             if (Card != null && Card.Texture2D != null && MainCardRuntimeMaterial != null)
             {
                 MainCardRuntimeMaterial.mainTexture = Card.Texture2D;

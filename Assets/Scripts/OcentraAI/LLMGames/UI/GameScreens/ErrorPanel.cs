@@ -58,7 +58,7 @@ namespace OcentraAI.LLMGames.Screens
             ClearMessage();
         }
 
-        protected override void SubscribeToEvents()
+        public override void SubscribeToEvents()
         {
             base.SubscribeToEvents();
 
@@ -82,10 +82,10 @@ namespace OcentraAI.LLMGames.Screens
                 collapsedButton.onClick.AddListener(() => SetPanelState(false));
             }
 
-            SafeSubscribe<AuthenticationErrorUIEvent>(OnAuthenticationErrorEvent);
+            EventRegistrar.Subscribe<AuthenticationErrorUIEvent>(OnAuthenticationErrorEvent);
         }
 
-        protected override void UnsubscribeFromEvents()
+        public override void UnsubscribeFromEvents()
         {
             base.UnsubscribeFromEvents();
 
@@ -109,7 +109,6 @@ namespace OcentraAI.LLMGames.Screens
                 collapsedButton.onClick.RemoveListener(() => SetPanelState(false));
             }
 
-            SafeUnsubscribe<AuthenticationErrorUIEvent>(OnAuthenticationErrorEvent);
         }
 
         private void SetPanelState(bool expanded)

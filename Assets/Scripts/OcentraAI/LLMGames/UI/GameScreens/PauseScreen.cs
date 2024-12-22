@@ -1,10 +1,11 @@
 using OcentraAI.LLMGames.Extensions;
+using OcentraAI.LLMGames.Screens3D;
 using Sirenix.OdinInspector;
 using UnityEngine.UI;
 
 namespace OcentraAI.LLMGames.Screens
 {
-    public class PauseScreen : UIScreen<PauseScreen>
+    public class PauseScreen : UI3DScreen<PauseScreen>
     {
         [ShowInInspector][Required] public Button ResumeButton { get; private set; }
 
@@ -31,9 +32,9 @@ namespace OcentraAI.LLMGames.Screens
             QuitToMainMenuButton = transform.FindChildRecursively<Button>(nameof(QuitToMainMenuButton));
         }
 
-        public override void OnShowScreen(bool first)
+        public override void ShowScreen()
         {
-            base.OnShowScreen(first);
+            base.ShowScreen();
             InitializePauseScreen();
         }
 

@@ -155,7 +155,7 @@ namespace OcentraAI.LLMGames.Scriptable.ScriptableSingletons
                 {
                     string customArgument = ClonesManager.GetArgument();
                     PlayerSettings.productName = customArgument;
-                    GameLoggerScriptable.Log($"Product name set to: {PlayerSettings.productName}", this,ToEditor);
+                    GameLoggerScriptable.Log($"Product name set to: {PlayerSettings.productName}", this, ToEditor);
                 }
                 else
                 {
@@ -166,7 +166,7 @@ namespace OcentraAI.LLMGames.Scriptable.ScriptableSingletons
 
 
 
-                GameLoggerScriptable.Log($"{nameof(AutoNetworkBootstrap)}", this,ToEditor);
+                GameLoggerScriptable.Log($"{nameof(AutoNetworkBootstrap)}", this, ToEditor);
 
             }
 
@@ -389,10 +389,13 @@ namespace OcentraAI.LLMGames.Scriptable.ScriptableSingletons
 
         public async void OnPlayModeStateChanged(PlayModeStateChange state)
         {
+            string currentScene = Path.GetFileNameWithoutExtension(EditorData.ScenePath);
+
+            if (!EditorData.SyncEnabled || currentScene == MainLoginScene) { return; }
 
             await UniTask.WaitUntil(() => !EditorApplication.isCompiling && !EditorApplication.isUpdating);
 
-            if (!EditorData.SyncEnabled || EditorData.ScenePath == MainLoginScene) { return; }
+
 
             try
             {
@@ -447,14 +450,31 @@ namespace OcentraAI.LLMGames.Scriptable.ScriptableSingletons
                         break;
 
                     case PlayModeStateChange.ExitingPlayMode:
-
                         try
                         {
-                            await Cleanup();
+                            GameLoggerScriptable.Log("Starting cleanup before play mode exit...", this, ToEditor);
+                            EditorApplication.isPaused = true;
+
+                            UniTaskCompletionSource cleanupComplete = new UniTaskCompletionSource();
+
+                            try
+                            {
+                                using (CancellationTokenSource cts = new CancellationTokenSource(TimeSpan.FromSeconds(30)))
+                                {
+                                    await Cleanup(cts.Token, cleanupComplete);
+                                }
+                                await cleanupComplete.Task;
+                            }
+                            catch (Exception ex)
+                            {
+                                GameLoggerScriptable.LogError($"Error during cleanup: {ex.Message}", this, ToEditor);
+                            }
+
+                            GameLoggerScriptable.Log("Cleanup completed, proceeding with play mode exit", this, ToEditor);
                         }
-                        catch (Exception ex)
+                        finally
                         {
-                            GameLoggerScriptable.LogError($"Error during cleanup in play mode: {ex.Message}\nStack Trace: {ex.StackTrace}", this, ToEditor);
+                            EditorApplication.isPaused = false;
                         }
                         break;
                 }
@@ -470,7 +490,7 @@ namespace OcentraAI.LLMGames.Scriptable.ScriptableSingletons
 
 
 
-        // we Start for join code get joinAllocation and then SetRelayServerData we wont start game yet we need to check if we are ready
+
         private async UniTask<OperationResult<bool>> StartHost()
         {
 
@@ -492,7 +512,7 @@ namespace OcentraAI.LLMGames.Scriptable.ScriptableSingletons
 
                 int maxRetries = 100;
                 GameLoggerScriptable.Log("Checking and waiting until all players are ready", this, ToEditor);
-               
+
                 if (!await CheckAndWaitUntilAllPlayersAreReady(currentLobby.Id, 1, maxRetries))
                 {
                     GameLoggerScriptable.LogError("Players not ready after maximum retries", this, ToEditor);
@@ -1020,62 +1040,162 @@ namespace OcentraAI.LLMGames.Scriptable.ScriptableSingletons
         }
 
 
-        private async UniTask Cleanup()
+        private async UniTask Cleanup(CancellationToken cancellationToken = default, UniTaskCompletionSource completionSource = null)
         {
+            GameLoggerScriptable.Log("Starting cleanup process...", this, ToEditor);
 
             try
             {
-                if (NetworkGameManager != null && IsGameStartManagerCreated)
+                // 1. Clean up NetworkGameManager
+                if (NetworkGameManager != null)
                 {
-                    DestroyImmediate(NetworkGameManager.gameObject);
-                    NetworkGameManager = null;
-                    IsGameStartManagerCreated = false;
-                }
-
-                if (AuthenticationService.Instance != null)
-                {
-                    if (AuthenticationService.Instance.IsSignedIn)
+                    try
                     {
-                        AuthenticationService.Instance.SignOut();
-
+                        if (IsGameStartManagerCreated)
+                        {
+                            DestroyImmediate(NetworkGameManager.gameObject);
+                            NetworkGameManager = null;
+                            IsGameStartManagerCreated = false;
+                            GameLoggerScriptable.Log("NetworkGameManager cleaned up successfully", this, ToEditor);
+                        }
                     }
-                    AuthenticationService.Instance.ClearSessionToken();
+                    catch (Exception e)
+                    {
+                        GameLoggerScriptable.LogError($"Error cleaning up NetworkGameManager: {e.Message}", this, ToEditor);
+                    }
                 }
 
-                if (NetworkManager.Singleton != null)
+                // 2. Clean up Lobby
+                try
                 {
-                    NetworkManager.Singleton.OnClientConnectedCallback -= OnClientConnected;
-                    NetworkManager.Singleton.OnClientDisconnectCallback -= OnClientDisconnected;
-                    NetworkManager.Singleton.Shutdown();
+                    if (LobbyViewer != null && !string.IsNullOrEmpty(LobbyViewer.Id))
+                    {
+                        try
+                        {
+                            await LobbyService.Instance.DeleteLobbyAsync(LobbyViewer.Id).AsUniTask().AttachExternalCancellation(cancellationToken);
+                            GameLoggerScriptable.Log($"Lobby {LobbyViewer.Id} deleted successfully", this, ToEditor);
+                        }
+                        catch (LobbyServiceException e)
+                        {
+                            // Don't throw if lobby doesn't exist or we don't have permission
+                            GameLoggerScriptable.LogError($"Non-critical lobby cleanup error: {e.Message}", this, ToEditor);
+                        }
+                        finally
+                        {
+                            LobbyViewer = null;
+                        }
+                    }
+                }
+                catch (Exception e)
+                {
+                    GameLoggerScriptable.LogError($"Error cleaning up lobby: {e.Message}", this, ToEditor);
                 }
 
+                // 3. Clean up Authentication
+                try
+                {
+                    if (AuthenticationService.Instance != null)
+                    {
+                        if (AuthenticationService.Instance.IsSignedIn)
+                        {
+                            AuthenticationService.Instance.SignOut();
+                            GameLoggerScriptable.Log("User signed out successfully", this, ToEditor);
+                        }
+                        AuthenticationService.Instance.ClearSessionToken();
+                        GameLoggerScriptable.Log("Session token cleared", this, ToEditor);
+                    }
+                }
+                catch (Exception e)
+                {
+                    GameLoggerScriptable.LogError($"Error cleaning up authentication: {e.Message}", this, ToEditor);
+                }
 
+                // 4. Clean up NetworkManager.Singleton
+                try
+                {
+                    if (NetworkManager.Singleton != null)
+                    {
+                        NetworkManager.Singleton.OnClientConnectedCallback -= OnClientConnected;
+                        NetworkManager.Singleton.OnClientDisconnectCallback -= OnClientDisconnected;
+
+                        // Force disconnect all clients before shutdown
+                        if (NetworkManager.Singleton.IsHost || NetworkManager.Singleton.IsServer)
+                        {
+                            foreach (KeyValuePair<ulong, NetworkClient> client in NetworkManager.Singleton.ConnectedClients)
+                            {
+                                if (client.Key != NetworkManager.Singleton.LocalClientId)
+                                {
+                                    NetworkManager.Singleton.DisconnectClient(client.Key);
+                                }
+                            }
+                        }
+
+                        NetworkManager.Singleton.Shutdown();
+                        GameLoggerScriptable.Log("NetworkManager shutdown completed", this, ToEditor);
+                    }
+                }
+                catch (Exception e)
+                {
+                    GameLoggerScriptable.LogError($"Error cleaning up NetworkManager: {e.Message}", this, ToEditor);
+                }
+
+                // 5. Clean up local NetworkManager instance
+                try
+                {
+                    if (NetworkManager != null)
+                    {
+                        NetworkManager.OnClientConnectedCallback -= OnClientConnected;
+                        NetworkManager.OnClientDisconnectCallback -= OnClientDisconnected;
+
+                        if (NetworkManager.gameObject != null && IsNetworkManagerCreated)
+                        {
+                            DestroyImmediate(NetworkManager.gameObject);
+                            NetworkManager = null;
+                            IsNetworkManagerCreated = false;
+                            GameLoggerScriptable.Log("Local NetworkManager instance cleaned up", this, ToEditor);
+                        }
+                    }
+                }
+                catch (Exception e)
+                {
+                    GameLoggerScriptable.LogError($"Error cleaning up local NetworkManager: {e.Message}", this, ToEditor);
+                }
+
+                // 6. Clear lobby data file
+                try
+                {
+                    await ClonesManagerExtensions.ClearLobbyDataFromFile(EditorSyncFilePath)
+                        .AttachExternalCancellation(cancellationToken);
+                    GameLoggerScriptable.Log("Lobby data file cleared", this, ToEditor);
+                }
+                catch (Exception e)
+                {
+                    GameLoggerScriptable.LogError($"Error clearing lobby data file: {e.Message}", this, ToEditor);
+                }
+
+                // 7. Reset all state
+                AreAllPlayersReady = false;
                 ConfigManager = new ConfigManager();
 
-                if (NetworkManager != null)
-                {
-                    NetworkManager.OnClientConnectedCallback -= OnClientConnected;
-                    NetworkManager.OnClientDisconnectCallback -= OnClientDisconnected;
-
-                    if (NetworkManager.gameObject != null && IsNetworkManagerCreated)
-                    {
-                        DestroyImmediate(NetworkManager.gameObject);
-                        NetworkManager = null;
-                        IsNetworkManagerCreated = false;
-                    }
-                }
-
-                await ClonesManagerExtensions.ClearLobbyDataFromFile(EditorSyncFilePath);
-
                 await UniTask.Yield();
+                GameLoggerScriptable.Log("Cleanup process completed", this, ToEditor);
+
+                // Signal completion if completion source was provided
+                completionSource?.TrySetResult();
+            }
+            catch (OperationCanceledException)
+            {
+                GameLoggerScriptable.LogError("Cleanup operation timed out or was cancelled", this, ToEditor);
+                completionSource?.TrySetResult(); // Allow exit even on cancellation
+                throw;
             }
             catch (Exception e)
             {
-                GameLoggerScriptable.LogError($"Error disposing cancellation token: {e.Message} {e.StackTrace}", this, ToEditor);
+                GameLoggerScriptable.LogError($"Critical error during cleanup: {e.Message}\nStack trace: {e.StackTrace}", this, ToEditor);
+                completionSource?.TrySetResult(); // Allow exit even on error
+                throw;
             }
         }
-
-
     }
 
 

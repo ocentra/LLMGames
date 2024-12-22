@@ -1,47 +1,41 @@
+using Cysharp.Threading.Tasks;
+using OcentraAI.LLMGames.Events;
 using OcentraAI.LLMGames.GameModes;
 using OcentraAI.LLMGames.GameModes.Rules;
 using OcentraAI.LLMGames.Manager;
-using OcentraAI.LLMGames.Manager.Authentication;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 
 namespace OcentraAI.LLMGames.LLMServices
 {
-    public class AIHelper : ManagerBase<AIHelper>
+    public class AIHelper : SingletonManagerBase<AIHelper>
     {
-        private GameManager GameManager => GameManager.Instance;
-        private PlayerManager PlayerManager => PlayerManager.Instance;
-        private ScoreManager ScoreManager => ScoreManager.Instance;
-        private DeckManager DeckManager => DeckManager.Instance;
-        private TurnManager TurnManager => TurnManager.Instance;
-        private GameMode GameMode => GameManager.GameMode;
 
 
-        public string GetSystemMessage()
+
+
+        public string GetSystemMessage(GameMode gameMode)
         {
+           
+
             return "You are an expert AI player in a Three Card Brag game. " +
                    "Your goal is to make the best betting decisions based on the strength of your hand, the game rules, and the behavior of the human player. " +
-                   $"Game Rules: {GameMode.GameRules.LLM}. " +
-                   $"Card Rankings: {GameMode.CardRankings}. " +
-                   $"Bonus Rules: {GetBonusRules(GameMode.BonusRules)}. " +
-                   $"Strategy Tips: {GameMode.StrategyTips}. " +
-                   $"Bluffing Strategies: {BluffSetting(GameMode.GetBluffSettingConditions())}. " +
-                   $"Example Hand Descriptions: {GetExampleHandDescriptions(GameMode.GetExampleHandOdds())}. " +
-                   $"Possible Moves: {GetPossibleMoves(GameMode.GetMoveValidityConditions())}. " +
+                   $"Game Rules: {gameMode.GameRules.LLM}. " +
+                   $"Card Rankings: {gameMode.CardRankings}. " +
+                   $"Bonus Rules: {GetBonusRules(gameMode.BonusRules)}. " +
+                   $"Strategy Tips: {gameMode.StrategyTips}. " +
+                   $"Bluffing Strategies: {BluffSetting(gameMode.GetBluffSettingConditions())}. " +
+                   $"Example Hand Descriptions: {GetExampleHandDescriptions(gameMode.GetExampleHandOdds())}. " +
+                   $"Possible Moves: {GetPossibleMoves(gameMode.GetMoveValidityConditions())}. " +
                    $"Difficulty Levels: {GetDifficultyLevel()}";
         }
 
-        public string GetUserPrompt()
+        public string GetUserPrompt(ulong playerID)
         {
-            return ""; // todo
-
-            //return $"Current Hand: {GetHandDetails()}. " +
-            //       $"Current Hand Value: {PlayerManager.GetComputerPlayer().CalculateHandValue()}. " +
-            //       $"Current Bet: {ScoreManager.CurrentBet}, Pot Size: {ScoreManager.Pot}. " +
-            //       $"Your Coins: {PlayerManager.GetComputerPlayer().Coins}, Opponent's Coins: {PlayerManager.GetPlayerById(AuthenticationManager.Instance.GetAuthPlayerData().PlayerID).Coins}. " +
-            //       $"Current Game State: {GetGameStateDetails()}. " +
-            //       $"Move Options: {GetMoveWord()}";
+            return $"Current Hand: {GetHandDetails(playerID)}. " +
+                   $"Current Game State: {GetGameStateDetails()}. " +
+                   $"Move Options: {GetMoveWord()}";
         }
 
         private string GetBonusRules(List<BaseBonusRule> rules)
@@ -82,54 +76,119 @@ namespace OcentraAI.LLMGames.LLMServices
             return string.Join(" or ", Enum.GetNames(typeof(DifficultyLevels)));
         }
 
-        private string GetHandDetails()
+        private async UniTask<string> GetHandDetails(ulong playerID)
         {
-            return string.Join(", ",
-                PlayerManager.GetComputerPlayer().Hand
-                    .Select((card, index) => $"Card {index + 1}: {card.Rank} of {card.Suit}"));
+            UniTaskCompletionSource<(bool success,string hand)> dataSource = new UniTaskCompletionSource<(bool success, string hand)>();
+            await EventBus.Instance.PublishAsync<RequestPlayerHandDetailEvent>(new RequestPlayerHandDetailEvent(playerID,dataSource));
+            (bool success, string hand) dataSourceTask = await dataSource.Task;
+
+            if (dataSourceTask.success)
+            {
+                string hand = dataSourceTask.hand;
+               
+                return $"{hand}";
+            }
+            return "Failed to retrieve Hand details.";
         }
 
-        private string GetGameStateDetails()
+        private async UniTask<string> GetGameStateDetails()
         {
-            return $"Pot: {GetPotDetails()}{Environment.NewLine}" +
-                   $"Deck: {GetDeckDetails()}{Environment.NewLine}" +
-                   $"Floor: {GetFloorDetails()}{Environment.NewLine}" +
-                   $"Players: {GetPlayerDetails()}";
+            string scoreManagerDetails = await GetScoreManagerDetails();
+            string deckDetails = await GetDeckDetails();
+            string floorDetails = await GetFloorDetails();
+            string playerDetails = await GetPlayerDetails();
+
+            return $"ScoreManagerDetails: {scoreManagerDetails}{Environment.NewLine}" +
+                   $"Deck: {deckDetails}{Environment.NewLine}" +
+                   $"FloorCard: {floorDetails}{Environment.NewLine}" +
+                   $"Players: {playerDetails}";
         }
 
-        private string GetPotDetails()
+        private async UniTask<string> GetScoreManagerDetails()
         {
-            return $"Current pot: {ScoreManager.Pot} coins, Current bet: {ScoreManager.CurrentBet} coins";
+            UniTaskCompletionSource<(bool success, int pot, int currentBet) > dataSource = new UniTaskCompletionSource<(bool success, int pot, int currentBet)>();
+            await EventBus.Instance.PublishAsync<RequestScoreManagerDetailsEvent>(new RequestScoreManagerDetailsEvent(dataSource));
+            (bool success, int pot, int currentBet) dataSourceTask = await dataSource.Task;
+
+            if (dataSourceTask.success)
+            {
+                int pot = dataSourceTask.pot;
+                int currentBet = dataSourceTask.currentBet;
+                return $"Current pot: {pot} coins, Current bet: {currentBet} coins";
+            }
+            return "Failed to retrieve deck details.";
+
+
+           
         }
 
-        private string GetDeckDetails()
+        private async UniTask<string> GetDeckDetails()
         {
-            return $"Remaining cards in deck: {DeckManager.RemainingCards}";
-        }
+            UniTaskCompletionSource<(bool success, int cards)> dataSource = new UniTaskCompletionSource<(bool success, int cards)>();
+            await EventBus.Instance.PublishAsync<RequestRemainingCardsCountEvent>(new RequestRemainingCardsCountEvent(dataSource));
+            (bool success, int cards) dataSourceTask = await dataSource.Task;
 
-        private string GetFloorDetails()
-        {
-            string floorCardDetails = DeckManager.FloorCard != null
-                ? $"{DeckManager.FloorCard.Rank} of {DeckManager.FloorCard.Suit}"
-                : "No card";
+            if (dataSourceTask.success)
+            {
+                int remainingCards = dataSourceTask.cards;
+                return $"Remaining cards {remainingCards}";
+            }
 
-            return $"Floor card: {floorCardDetails}, Cards in floor pile: {DeckManager.FloorCardsCount}";
-        }
-
-        private string GetPlayerDetails()
-        {
-            return ""; // todo
-
-            //return
-            //    $"Human: {PlayerManager.GetHumanPlayer().Coins} coins, Computer: {PlayerManager.GetComputerPlayer().Coins} coins, " +
-            //    $"Human playing blind: {!PlayerManager.GetHumanPlayer().HasSeenHand}, Computer playing blind: {!PlayerManager.GetComputerPlayer().HasSeenHand}";
+            return "Failed to retrieve deck details.";
         }
 
 
-        public (string systemMessage, string userPrompt) GetAIInstructions()
+        private async UniTask<string> GetFloorDetails()
         {
-            string systemMessage = GetSystemMessage();
-            string userPrompt = GetUserPrompt();
+            UniTaskCompletionSource<(bool success, string card)> dataSource = new UniTaskCompletionSource<(bool success, string card)>();
+            await EventBus.Instance.PublishAsync<RequestFloorCardsDetailEvent>(new RequestFloorCardsDetailEvent(dataSource));
+            (bool success, string card) dataSourceTask = await dataSource.Task;
+
+            if (dataSourceTask.success)
+            {
+                string card = dataSourceTask.card;
+                
+                return $"{card}";
+            }
+
+            return "Failed to Floor deck details.";
+        }
+
+        private async UniTask<string> GetPlayerDetails()
+        {
+            UniTaskCompletionSource<(bool success, IReadOnlyList<IPlayerBase> players)> dataSource = new UniTaskCompletionSource<(bool success, IReadOnlyList<IPlayerBase> players)>();
+            await EventBus.Instance.PublishAsync<RequestAllPlayersDataEvent>(new RequestAllPlayersDataEvent(dataSource));
+            (bool success, IReadOnlyList<IPlayerBase> players) dataSourceTask = await dataSource.Task;
+
+            if (dataSourceTask.success)
+            {
+                IReadOnlyList<IPlayerBase> playerList = dataSourceTask.players;
+                List<string> playerDetails = new List<string>();
+
+                for (int i = 0; i < playerList.Count; i++)
+                {
+                    IPlayerBase player = playerList[i];
+                    bool isComputer = player is IComputerPlayerData;
+                    bool isHuman = player is IHumanPlayerData;
+
+                    string playerType = isHuman ? "Human" : isComputer ? "Computer" : "Unknown";
+                    int coins = player.GetCoins();
+                    bool hasSeenHand = player.HasSeenHand.Value;
+                    playerDetails.Add($"{playerType} {i + 1}: {coins} coins, HasSeenHand: {hasSeenHand} , IsBankrupt {player.IsBankrupt}, HasFolded {player.HasFolded} ");
+                }
+
+                return string.Join(", ", playerDetails);
+            }
+
+            return "Failed to retrieve player details.";
+        }
+
+
+
+        public (string systemMessage, string userPrompt) GetAIInstructions(GameMode gameMode,ulong playerID)
+        {
+            string systemMessage = GetSystemMessage(gameMode);
+            string userPrompt = GetUserPrompt(playerID);
             return (systemMessage, userPrompt);
         }
     }

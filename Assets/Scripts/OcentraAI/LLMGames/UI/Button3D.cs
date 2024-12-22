@@ -51,7 +51,7 @@ namespace OcentraAI.LLMGames.UI
 
         [ShowInInspector] protected bool ApplyHighlight2Material = true;
 
-        [ShowInInspector, ReadOnly] private bool Interactable { get; set; } = true;
+        [ShowInInspector, ReadOnly] protected bool Interactable { get; set; } = true;
 
         [Header("Button Settings")]
         [SerializeField] private bool isForSelf = false;
@@ -92,8 +92,7 @@ namespace OcentraAI.LLMGames.UI
 
         public virtual void OnPointerClick(PointerEventData eventData)
         {
-            if (!Interactable) return;
-
+           
             if (!isForSelf)
             {
                 SetCardViewColor(pressedColor);
@@ -104,6 +103,7 @@ namespace OcentraAI.LLMGames.UI
                 SetEmission(true);
             }
 
+            if (!Interactable) return;
             onClick?.Invoke();
         }
 
@@ -366,9 +366,9 @@ namespace OcentraAI.LLMGames.UI
             UpdateBlendShape();
         }
 
-        public void SetInteractable(bool buttonInteractable, bool enableCollider = true)
+        public virtual void SetInteractable(bool interactable, bool enableCollider = true)
         {
-            Interactable = buttonInteractable;
+            Interactable = interactable;
             if (boxCollider != null)
             {
                 boxCollider.enabled = enableCollider;

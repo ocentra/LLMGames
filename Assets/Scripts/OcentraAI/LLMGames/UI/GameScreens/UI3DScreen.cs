@@ -18,25 +18,15 @@ using UnityEditor;
 
 namespace OcentraAI.LLMGames.Screens3D
 {
-    public interface IUIScreen
-    {
-        void ShowScreen();
-        void HideScreen();
-        void ToggleScreen();
-        bool IsScreenInstanceVisible();
-        bool IsInitialized { get; }
-        string ScreenId { get; }
-    }
+
 
     [Serializable]
-    public abstract class UI3DScreen : SerializedMonoBehaviour, IUIScreen
+    public abstract class UI3DScreen : SerializedMonoBehaviour, IUIScreen, IEventHandler
     {
         public GameLoggerScriptable GameLoggerScriptable => GameLoggerScriptable.Instance;
-
         public virtual string ScreenName { get; protected set; }
         [ShowInInspector] public static Dictionary<Type, UI3DScreen> RegisteredScreens { get; protected set; } = new Dictionary<Type, UI3DScreen>();
         [ShowInInspector] public static Stack<ScreenHistoryEntry> ScreenHistory { get; protected set; } = new Stack<ScreenHistoryEntry>();
-
         protected bool FirstShow { get; set; } = true;
         protected bool FirstHide { get; set; } = true;
 
@@ -44,18 +34,20 @@ namespace OcentraAI.LLMGames.Screens3D
 
         [SerializeField] private bool isInitialized;
         public bool IsInitialized => isInitialized;
-
         [ShowInInspector] public bool Interactable { get; protected set; }
         [ShowInInspector] public bool IsFocus { get; protected set; }
         public bool StartEnabled;
 
         [ShowInInspector, ReadOnly] private bool isTransitioning;
         [ShowInInspector, ReadOnly] public string ScreenId { get; private set; }
-
-
         private TaskCompletionSource<bool> InitTaskSource { get; set; } = new TaskCompletionSource<bool>();
+        [ShowInInspector, Required] public IEventRegistrar EventRegistrar { get; set; } = new EventRegistrar();
 
-        [ShowInInspector, ReadOnly] private HashSet<Delegate> EventSubscriptions { get; set; } = new HashSet<Delegate>();
+
+        protected virtual void OnValidate()
+        {
+            EnsureMainPanel(StartEnabled);
+        }
 
         protected virtual void Awake()
         {
@@ -65,9 +57,7 @@ namespace OcentraAI.LLMGames.Screens3D
                 Init(StartEnabled);
             }
         }
-
-
-
+        
         protected virtual void OnEnable()
         {
             SubscribeToEvents();
@@ -76,69 +66,43 @@ namespace OcentraAI.LLMGames.Screens3D
 
         protected virtual void OnDisable()
         {
+            UnsubscribeFromEvents();
             isInitialized = false;
         }
 
         protected virtual void OnDestroy()
         {
-            try
-            {
-                UnregisterScreen();
-                UnsubscribeFromAllEvents();
-            }
-            catch (Exception e)
-            {
-                GameLoggerScriptable.LogError($"Error during {GetType().Name} cleanup: {e}", null);
-            }
+            UnregisterScreen();
+            UnsubscribeFromEvents();
         }
 
-        protected virtual void SubscribeToEvents()
+        protected virtual void Reset()
         {
-            SafeSubscribe<ShowScreenEvent>(OnShowScreenEvent);
-            SafeSubscribe<HideScreenEvent>(OnHideScreenEvent);
-        }
+            isInitialized = false;
 
-        protected virtual void UnsubscribeFromEvents()
-        {
-            SafeUnsubscribe<ShowScreenEvent>(OnShowScreenEvent);
-            SafeUnsubscribe<HideScreenEvent>(OnHideScreenEvent);
-        }
-
-        protected void SafeSubscribe<T>(Action<T> handler) where T : IEventArgs
-        {
-            if (handler == null)
-                return;
-
-            if (!EventSubscriptions.Contains(handler))
+#if UNITY_EDITOR
+            EditorApplication.delayCall += () =>
             {
-                EventBus.Instance.Subscribe(handler);
-                EventSubscriptions.Add(handler);
-            }
-        }
-
-        protected void SafeUnsubscribe<T>(Action<T> handler) where T : IEventArgs
-        {
-            if (handler == null)
-                return;
-
-            if (EventSubscriptions.Contains(handler))
-            {
-                EventBus.Instance.Unsubscribe(handler);
-                EventSubscriptions.Remove(handler);
-            }
-        }
-
-        private void UnsubscribeFromAllEvents()
-        {
-            foreach (Delegate subscription in EventSubscriptions)
-            {
-                if (subscription is Action<IEventArgs> handler)
+                if (!Application.isPlaying)
                 {
-                    EventBus.Instance.Unsubscribe(handler);
+                    Init(StartEnabled);
+                    EditorUtility.SetDirty(this);
                 }
-            }
-            EventSubscriptions.Clear();
+            };
+#endif
         }
+
+        public virtual void SubscribeToEvents()
+        {
+            EventRegistrar.Subscribe<ShowScreenEvent>(OnShowScreenEvent);
+            EventRegistrar.Subscribe<HideScreenEvent>(OnHideScreenEvent);
+        }
+
+        public virtual void UnsubscribeFromEvents()
+        {
+            EventRegistrar.UnsubscribeAll();
+        }
+        
 
         private void OnShowScreenEvent(ShowScreenEvent evt)
         {
@@ -374,7 +338,6 @@ namespace OcentraAI.LLMGames.Screens3D
         public virtual void PlaySelectionSound() { }
         public virtual void PlayNavigationSound() { }
         public virtual void PlayBackGroundSound() { }
-
         public virtual void ResetScreenToStartState(bool cascade)
         {
             FirstShow = true;
@@ -402,28 +365,18 @@ namespace OcentraAI.LLMGames.Screens3D
         }
 
 
-
-
-
-        protected virtual void Reset()
+        public virtual void QuitGame()
         {
-            isInitialized = false;
-
+            PlaySelectionSound();
 #if UNITY_EDITOR
-            EditorApplication.delayCall += () =>
-            {
-                if (!Application.isPlaying)
-                {
-                    Init(StartEnabled);
-                    EditorUtility.SetDirty(this);
-                }
-            };
+            EditorApplication.isPlaying = false;
+#else
+            Application.Quit();
 #endif
         }
 
 
 
-       
     }
 
     [Serializable]
@@ -496,7 +449,7 @@ namespace OcentraAI.LLMGames.Screens3D
                         DontDestroyOnLoad(instance.gameObject);
                     }
 
-                   
+
                 }
 
                 return instance;
@@ -544,7 +497,7 @@ namespace OcentraAI.LLMGames.Screens3D
                 if (instance == null)
                 {
                     instance = (T)this;
-                   
+
                 }
                 else if (instance != this)
                 {

@@ -1,33 +1,32 @@
 using OcentraAI.LLMGames.Extensions;
 using OcentraAI.LLMGames.GameModes;
-using OcentraAI.LLMGames.Manager;
+using OcentraAI.LLMGames.Screens3D;
 using Sirenix.OdinInspector;
-using System.Collections;
 using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
 
 namespace OcentraAI.LLMGames.Screens
 {
-    public class WelcomeScreen : UIScreen<WelcomeScreen>
+    public class WelcomeScreen : UI3DScreen<WelcomeScreen>
     {
 
-        [Required] public GameMode GameMode => GameManager.Instance.GameMode;
-        [ShowInInspector] [Required] public GameObject RulesPanel { get; private set; }
+        [Required] public GameMode GameMode ;
+        [ShowInInspector][Required] public GameObject RulesPanel { get; private set; }
 
-        [ShowInInspector] [Required] public Button ShowRulesButton { get; private set; }
+        [ShowInInspector][Required] public Button ShowRulesButton { get; private set; }
 
-        [ShowInInspector] [Required] public Button StartGameButton { get; private set; }
+        [ShowInInspector][Required] public Button StartGameButton { get; private set; }
 
-        [ShowInInspector] [Required] public Button QuitGameButton { get; private set; }
+        [ShowInInspector][Required] public Button QuitGameButton { get; private set; }
 
-        [ShowInInspector] [Required] public TextMeshProUGUI WelcomeText { get; private set; }
+        [ShowInInspector][Required] public TextMeshProUGUI WelcomeText { get; private set; }
 
-        [ShowInInspector] [Required] public TextMeshProUGUI RulesText { get; private set; }
+        [ShowInInspector][Required] public TextMeshProUGUI RulesText { get; private set; }
 
-        [ShowInInspector] [Required] public TextMeshProUGUI DescriptionText { get; private set; }
+        [ShowInInspector][Required] public TextMeshProUGUI DescriptionText { get; private set; }
 
-        [ShowInInspector] [Required] public TextMeshProUGUI TipsText { get; private set; }
+        [ShowInInspector][Required] public TextMeshProUGUI TipsText { get; private set; }
 
 
         protected override void Awake()
@@ -55,9 +54,9 @@ namespace OcentraAI.LLMGames.Screens
             TipsText = transform.FindChildRecursively<TextMeshProUGUI>(nameof(TipsText));
         }
 
-        public override void OnShowScreen(bool first)
+        public void ShowScreen(bool first)
         {
-            base.OnShowScreen(first);
+            base.ShowScreen();
             InitializeWelcomeScreen();
         }
 
@@ -73,7 +72,7 @@ namespace OcentraAI.LLMGames.Screens
 
             ShowRulesButton.onClick.AddListener(ShowRules);
             StartGameButton.onClick.AddListener(StartGame);
-            QuitGameButton.onClick.AddListener(QuitGame);
+            //QuitGameButton.onClick.AddListener(QuitGame);
         }
 
         private void ShowRules()
@@ -85,23 +84,23 @@ namespace OcentraAI.LLMGames.Screens
         private void StartGame()
         {
             PlaySelectionSound();
-            StartCoroutine(StartGameCoroutine());
+            //StartCoroutine(StartGameCoroutine());
         }
 
-        private IEnumerator StartGameCoroutine()
-        {
-            yield return StartCoroutine(HideScreenCoroutine());
-            //await GameManager.Instance.StartNewGameAsync();
-        }
+        //private IEnumerator StartGameCoroutine()
+        //{
+        //    //yield return StartCoroutine(HideScreenCoroutine());
+        //    //await GameManager.Instance.StartNewGameAsync();
+        //}
 
-        public override void QuitGame()
-        {
-            base.QuitGame();
-        }
+        //public override void QuitGame()
+        //{
+        //    base.QuitGame();
+        //}
 
-        public override void OnHideScreen(bool first)
+        public void HideScreen(bool first)
         {
-            base.OnHideScreen(first);
+            base.HideScreen();
             RulesPanel.SetActive(false);
         }
 

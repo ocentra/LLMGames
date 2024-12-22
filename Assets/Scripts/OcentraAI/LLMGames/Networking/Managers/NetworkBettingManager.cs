@@ -8,16 +8,13 @@ namespace OcentraAI.LLMGames.Networking.Manager
 {
     public partial class NetworkBettingManager : NetworkManagerBase
     {
-        
+
         public override void SubscribeToEvents()
         {
-            EventBus.Instance.SubscribeAsync<ProcessDecisionEvent>(OnProcessDecisionEvent);
+            EventRegistrar.Subscribe<ProcessDecisionEvent>(OnProcessDecisionEvent);
         }
 
-        public override void UnsubscribeFromEvents()
-        {
-            EventBus.Instance.UnsubscribeAsync<ProcessDecisionEvent>(OnProcessDecisionEvent);
-        }
+
 
         protected async UniTask OnProcessDecisionEvent(ProcessDecisionEvent processDecisionEvent)
         {
@@ -38,7 +35,7 @@ namespace OcentraAI.LLMGames.Networking.Manager
 
                 }
 
-
+                networkPlayer.SetLastDecision(decision.DecisionId);
 
                 switch (decision.Name)
                 {
@@ -70,7 +67,7 @@ namespace OcentraAI.LLMGames.Networking.Manager
                     case nameof(PlayerDecision.Fold):
                         await HandleFold(playerDecisionEvent as PlayerDecisionBettingEvent, networkPlayer);
                         break;
-                        
+
                     case nameof(PlayerDecision.ShowCall):
                         await HandleShowCall(playerDecisionEvent as PlayerDecisionBettingEvent, networkPlayer);
                         break;
@@ -112,7 +109,7 @@ namespace OcentraAI.LLMGames.Networking.Manager
             await UniTask.Yield();
         }
 
-        
+
 
     }
 }

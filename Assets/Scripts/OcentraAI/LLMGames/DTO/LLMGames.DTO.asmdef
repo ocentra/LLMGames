@@ -25,7 +25,7 @@
         "Unity.Netcode.Runtime",
         "Unity.Networking.Transport",
         "Unity.Services.Multiplayer",
-        "Zenject"
+        "LLMGames.Interface"
     ],
     "includePlatforms": [],
     "excludePlatforms": [],

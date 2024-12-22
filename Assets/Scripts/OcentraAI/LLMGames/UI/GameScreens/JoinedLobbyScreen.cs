@@ -21,19 +21,17 @@ namespace OcentraAI.LLMGames.Screens
         [SerializeField][Required] private TextMeshProUGUI joinedLobbyNameText;
         [SerializeField][Required] private static GameObject PlayerItemPrefab { get; set; }
 
-        protected override void SubscribeToEvents()
+        public override void SubscribeToEvents()
         {
             base.SubscribeToEvents();
-            EventBus.Instance.SubscribeAsync<JoinedLobbyEvent>(OnJoinedLobby);
-            EventBus.Instance.SubscribeAsync<UpdateLobbyPlayerListEvent>(OnUpdateLobbyPlayerList);
+            EventRegistrar.Subscribe<JoinedLobbyEvent>(OnJoinedLobby);
+            EventRegistrar.Subscribe<UpdateLobbyPlayerListEvent>(OnUpdateLobbyPlayerList);
             joinedLobbyStartButton.onClick.AddListener(OnLobbyStart);
         }
 
-        protected override void UnsubscribeFromEvents()
+        public override void UnsubscribeFromEvents()
         {
             base.UnsubscribeFromEvents();
-            EventBus.Instance.UnsubscribeAsync<JoinedLobbyEvent>(OnJoinedLobby);
-            EventBus.Instance.UnsubscribeAsync<UpdateLobbyPlayerListEvent>(OnUpdateLobbyPlayerList);
             joinedLobbyStartButton.onClick.RemoveListener(OnLobbyStart);
         }
 

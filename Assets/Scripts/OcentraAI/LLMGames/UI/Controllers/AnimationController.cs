@@ -31,8 +31,8 @@ namespace OcentraAI.LLMGames.ThreeCardBrag.UI.Controllers
         [Tooltip("Control how much of the animation to play (0 = start, 1 = full).")]
         private float stopPercentage = 1f;
 
-        [SerializeField] [Tooltip("Duration of the smooth transition when using SetPercentageAnimated")]
-        private readonly float transitionDuration = 0.5f;
+        [SerializeField,ShowInInspector] [Tooltip("Duration of the smooth transition when using SetPercentageAnimated")]
+        private float transitionDuration = 1.5f;
 
 
         private void OnValidate()

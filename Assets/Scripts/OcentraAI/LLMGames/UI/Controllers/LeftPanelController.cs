@@ -46,6 +46,9 @@ namespace OcentraAI.LLMGames.UI.Controllers
         [ShowInInspector, ReadOnly]
         private Dictionary<Card, GameObject> FloorCardMap { get; } = new Dictionary<Card, GameObject>();
 
+        [ShowInInspector, Required] public IEventRegistrar EventRegistrar { get; set; } = new EventRegistrar();
+
+
         private void Awake()
         {
             SubscribeToEvents();
@@ -100,16 +103,14 @@ namespace OcentraAI.LLMGames.UI.Controllers
 
         public void SubscribeToEvents()
         {
-            EventBus.Instance.Subscribe<UpdateFloorCardListEvent<Card>>(OnUpdateFloorCardList);
-            EventBus.Instance.Subscribe<ShowAllFloorCardEvent>(OnShowAllFloorCardEvent);
-            EventBus.Instance.Subscribe<RegisterUIPlayerEvent>(OnRegisterUIPlayerEvent);
+            EventRegistrar.Subscribe<UpdateFloorCardListEvent<Card>>(OnUpdateFloorCardList);
+            EventRegistrar.Subscribe<ShowAllFloorCardEvent>(OnShowAllFloorCardEvent);
+            EventRegistrar.Subscribe<RegisterPlayerListEvent>(OnRegisterPlayerListEvent);
         }
 
         public void UnsubscribeFromEvents()
         {
-            EventBus.Instance.Unsubscribe<UpdateFloorCardListEvent<Card>>(OnUpdateFloorCardList);
-            EventBus.Instance.Unsubscribe<ShowAllFloorCardEvent>(OnShowAllFloorCardEvent);
-            EventBus.Instance.Unsubscribe<RegisterUIPlayerEvent>(OnRegisterUIPlayerEvent);
+            EventRegistrar.UnsubscribeAll();
 
         }
 
@@ -234,9 +235,9 @@ namespace OcentraAI.LLMGames.UI.Controllers
 
 
 
-        private void OnRegisterUIPlayerEvent(RegisterUIPlayerEvent obj)
+        private void OnRegisterPlayerListEvent(RegisterPlayerListEvent registerPlayerListEvent)
         {
-            NumberOfPlayers = obj.Players.Count;
+            NumberOfPlayers = registerPlayerListEvent.Players.Count;
         }
 
 

@@ -23,7 +23,7 @@ namespace OcentraAI.LLMGames.Screens
         [ShowInInspector][Required] private GameObject LobbyItemPrefab { get; set; }
         private CancellationTokenSource updateLobbyCancellationTokenSource;
 
-        protected override void SubscribeToEvents()
+        public override void SubscribeToEvents()
         {
             base.SubscribeToEvents();
 
@@ -37,11 +37,11 @@ namespace OcentraAI.LLMGames.Screens
                 createNewLobby.onClick.AddListener(OnCreateNewLobby);
             }
 
-            SafeSubscribe<UpdateLobbyListEvent>(OnUpdateLobby);
-            SafeSubscribe<ProfileCreatedEvent>(OnProfileCreated);
+            EventRegistrar.Subscribe<UpdateLobbyListEvent>(OnUpdateLobby);
+            EventRegistrar.Subscribe<ProfileCreatedEvent>(OnProfileCreated);
         }
 
-        protected override void UnsubscribeFromEvents()
+        public override void UnsubscribeFromEvents()
         {
             base.UnsubscribeFromEvents();
            
@@ -55,9 +55,7 @@ namespace OcentraAI.LLMGames.Screens
             {
                 createNewLobby.onClick.RemoveListener(OnCreateNewLobby);
             }
-
-            SafeUnsubscribe<UpdateLobbyListEvent>(OnUpdateLobby);
-            SafeUnsubscribe<ProfileCreatedEvent>(OnProfileCreated);
+            
         }
 
         private void OnCreateNewLobby()

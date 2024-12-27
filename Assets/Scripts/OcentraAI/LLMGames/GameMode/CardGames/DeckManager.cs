@@ -31,7 +31,7 @@ namespace OcentraAI.LLMGames.Manager
 
 
 
-        protected override async UniTask InitializeAsync()
+        public override async UniTask InitializeAsync()
         {
             try
             {

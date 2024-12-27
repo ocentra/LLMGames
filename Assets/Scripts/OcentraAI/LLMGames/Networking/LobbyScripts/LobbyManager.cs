@@ -289,7 +289,7 @@ namespace OcentraAI.LLMGames.Networking.Manager
 
         }
 
-        protected override async UniTask<bool> ApplicationWantsToQuit()
+        public override async UniTask<bool> ApplicationWantsToQuit()
         {
             UniTaskCompletionSource<bool> completionSource = new UniTaskCompletionSource<bool>();
             await EventBus.Instance.PublishAsync(new PlayerLeftLobbyEvent(Player.Id, completionSource));

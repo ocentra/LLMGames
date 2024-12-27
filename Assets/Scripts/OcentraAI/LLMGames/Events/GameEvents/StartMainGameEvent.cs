@@ -5,8 +5,8 @@ namespace OcentraAI.LLMGames.Events
 {
     public class StartMainGameEvent : EventArgsBase
     {
-        public AuthPlayerData AuthPlayerData { get; }
-        public StartMainGameEvent(AuthPlayerData authPlayerData)
+        public IAuthPlayerData AuthPlayerData { get; }
+        public StartMainGameEvent(IAuthPlayerData authPlayerData)
         {
             AuthPlayerData = authPlayerData;
         }

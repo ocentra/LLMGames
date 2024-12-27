@@ -332,15 +332,14 @@ namespace OcentraAI.LLMGames.Utilities
             }
         }
 
-        protected override async UniTask<bool> ApplicationWantsToQuit()
+        public override async UniTask<bool> ApplicationWantsToQuit()
         {
-            await base.ApplicationWantsToQuit();
-
+           
             if (ToFile)
             {
                 await FlushLogToFile();
             }
-
+            await base.ApplicationWantsToQuit();
             return true;
         }
 

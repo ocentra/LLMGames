@@ -9,8 +9,7 @@ using Object = UnityEngine.Object;
 
 namespace OcentraAI.LLMGames.Manager
 {
-    public abstract class ManagerBase<T> : SerializedMonoBehaviour, IEventHandler, IApplicationQuitter,IManager
-        where T : Component
+    public abstract class MonoBehaviourBase<T> : SerializedMonoBehaviour, IEventHandler, IApplicationQuitter,IMonoBehaviourBase where T : Component
     {
         [Header("File Logging Settings")]
         [ShowInInspector] public bool ToEditor { get; set; } = true;
@@ -20,38 +19,17 @@ namespace OcentraAI.LLMGames.Manager
         [ShowInInspector, Required]
         public IEventRegistrar EventRegistrar { get; set; } = new EventRegistrar();
 
-        private readonly UniTaskCompletionSource initializationSource = new UniTaskCompletionSource();
+       public UniTaskCompletionSource InitializationSource { get; set; } = new UniTaskCompletionSource();
 
-        protected virtual async UniTask Initialize()
+        public virtual async UniTask InitializeAsync()
         {
-            initializationSource.TrySetResult();
+            InitializationSource.TrySetResult();
             await UniTask.Yield();
         }
+        
 
-
-
-        public async UniTaskVoid HandleApplicationQuitAsync()
+        public virtual async UniTask<bool> ApplicationWantsToQuit()
         {
-            try
-            {
-                bool shouldQuit = await ApplicationWantsToQuit();
-                ApplicationQuitHandler.SetQuitting(shouldQuit);
-
-                if (shouldQuit && !Application.isEditor)
-                {
-                    Application.Quit();
-                }
-            }
-            catch (Exception ex)
-            {
-                LogError($"Error during application quit: {ex.Message}", this);
-                ApplicationQuitHandler.HandleQuitError(ex);
-            }
-        }
-
-        protected virtual async UniTask<bool> ApplicationWantsToQuit()
-        {
-            Log("ApplicationWantsToQuit: Base implementation", this);
             bool fromResult = await UniTask.FromResult(true);
             return fromResult;
         }
@@ -59,7 +37,12 @@ namespace OcentraAI.LLMGames.Manager
 
         protected virtual void Awake()
         {
-            Initialize().Forget();
+            if (EventRegistrar == null)
+            {
+                LogError($"EventRegistrar is required for {typeof(T).Name}", this);
+            }
+
+            InitializeAsync().Forget();
         }
 
         protected virtual void Start() { }
@@ -68,7 +51,7 @@ namespace OcentraAI.LLMGames.Manager
         {
             if (EventRegistrar == null)
             {
-                Debug.LogError($"EventRegistrar is required for {typeof(T).Name}", this);
+                LogError($"EventRegistrar is required for {typeof(T).Name}", this);
             }
         }
 
@@ -82,29 +65,19 @@ namespace OcentraAI.LLMGames.Manager
             UnsubscribeFromEvents();
         }
 
-        protected virtual void OnDestroy()
-        {
-            if (Application.isPlaying)
-            {
-                HandleApplicationQuitAsync().Forget();
-            }
-        }
+        protected virtual void OnDestroy() { }
 
-        public virtual void SubscribeToEvents()
-        {
-           
-        }
-        
-
-        public async UniTask WaitForInitializationAsync()
-        {
-            await initializationSource.Task;
-        }
-
+        public virtual void SubscribeToEvents() { }
         public virtual void UnsubscribeFromEvents()
         {
             EventRegistrar.UnsubscribeAll();
         }
+
+        public async UniTask WaitForInitializationAsync()
+        {
+            await InitializationSource.Task;
+        }
+        
 
         public virtual void Log(string message, Object context, bool toEditor = default, bool toFile = default, bool useStack = default)
         {

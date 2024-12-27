@@ -1,17 +1,14 @@
 using Cysharp.Threading.Tasks;
+using System.Collections.Generic;
 using UnityEngine;
-using System;
-using Object = UnityEngine.Object;
 
-namespace OcentraAI.LLMGames.Manager
+namespace OcentraAI.LLMGames
 {
     public static class ApplicationQuitHandler
     {
-        private static readonly UniTaskCompletionSource<bool> QuitCompletionSource = new();
-        private static bool isQuitting = false;
-
-        public static bool IsQuitting => isQuitting;
-        public static UniTask<bool> QuitTask => QuitCompletionSource.Task;
+        private static bool isQuitting;
+        private static bool quitInProgress;
+        public static IReadOnlyList<IApplicationQuitter> Quitters;
 
         [RuntimeInitializeOnLoadMethod]
         private static void Initialize()
@@ -21,32 +18,65 @@ namespace OcentraAI.LLMGames.Manager
 
         private static bool OnApplicationWantsToQuit()
         {
-            MonoBehaviour[] managers = Object.FindObjectsByType<MonoBehaviour>(FindObjectsSortMode.None);
-            foreach (MonoBehaviour manager in managers)
+            Quitters = GetAllQuitters();
+            if (quitInProgress) return isQuitting;
+            quitInProgress = true;
+            RunQuitProcessAsync().Forget();
+            return false;
+        }
+
+        private static async UniTaskVoid RunQuitProcessAsync()
+        {
+            try
             {
-                if (manager is IApplicationQuitter quitter)
+                List<UniTask<bool>> tasks = new List<UniTask<bool>>(Quitters.Count);
+                foreach (var quitter in Quitters)
                 {
-                    quitter.HandleApplicationQuitAsync().Forget();
+                    tasks.Add(quitter.ApplicationWantsToQuit());
+                }
+
+                bool[] results = await UniTask.WhenAll(tasks);
+
+                bool allTrue = true;
+                for (int i = 0; i < results.Length; i++)
+                {
+                    if (!results[i])
+                    {
+                        allTrue = false;
+                        break;
+                    }
+                }
+
+                if (allTrue)
+                {
+                    isQuitting = true;
+#if UNITY_EDITOR
+                    UnityEditor.EditorApplication.isPlaying = false;
+#else
+            Application.Quit();
+#endif
                 }
             }
-            return isQuitting;
-        }
-
-        public static void SetQuitting(bool value)
-        {
-            isQuitting = value;
-            if (isQuitting)
+            finally
             {
-                QuitCompletionSource.TrySetResult(true);
+                quitInProgress = false;
             }
         }
 
-        public static void HandleQuitError(Exception ex)
+
+        private static IReadOnlyList<IApplicationQuitter> GetAllQuitters()
         {
-            QuitCompletionSource.TrySetException(ex);
+            MonoBehaviour[] monoBehaviours = Object.FindObjectsByType<MonoBehaviour>(FindObjectsSortMode.None);
+            List<IApplicationQuitter> list = new List<IApplicationQuitter>();
+            foreach (MonoBehaviour monoBehaviour in monoBehaviours)
+            {
+                if (monoBehaviour is IApplicationQuitter applicationQuitter)
+                {
+                    list.Add(applicationQuitter);
+                }
+            }
+
+            return list;
         }
     }
-
-   
-
 }

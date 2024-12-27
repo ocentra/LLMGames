@@ -1,7 +1,9 @@
 using System.Collections.Concurrent;
 using System;
 using System.Collections.Generic;
+#if true
 using UnityEditor;
+#endif
 using UnityEngine;
 
 namespace OcentraAI.LLMGames.Events
@@ -16,7 +18,6 @@ namespace OcentraAI.LLMGames.Events
             eventUsages = new ConcurrentDictionary<MonoScript, List<MonoScript>>();
 
         }
-
         public bool TryAdd(MonoScript eventScript, MonoScript usageScript)
         {
             if (eventScript == null || usageScript == null)
@@ -35,7 +36,6 @@ namespace OcentraAI.LLMGames.Events
 
             return false;
         }
-
         public bool TryAdd(MonoScript eventScript, List<MonoScript> usageScripts)
         {
             if (eventScript == null || usageScripts == null)
@@ -51,33 +51,17 @@ namespace OcentraAI.LLMGames.Events
 
             return true;
         }
-
         public bool TryGetValue(MonoScript eventScript, out List<MonoScript> usages)
         {
             return eventUsages.TryGetValue(eventScript, out usages);
         }
-
         public Dictionary<MonoScript, List<MonoScript>> GetAll()
         {
             return new Dictionary<MonoScript, List<MonoScript>>(eventUsages);
         }
-
         public string GetUsageType()
         {
             return "type";
-        }
-    }
-
-    [Serializable]
-    public class UsageInfo
-    {
-        public EventInfo Publishers;
-        public EventInfo Subscribers;
-
-        public UsageInfo()
-        {
-            Publishers = new EventInfo();
-            Subscribers = new EventInfo();
         }
     }
 }

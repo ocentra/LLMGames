@@ -139,24 +139,19 @@ namespace OcentraAI.LLMGames.Events
                         }
                     }
                 }
-
                 bool publishInternal = await PublishInternal(eventArgs, true);
-
                 if (publishInternal)
                 {
                     eventArgs.Dispose();
                     processedEvents.TryRemove(eventArgs.UniqueIdentifier, out _);
                 }
-
                 return publishInternal;
-
             }
             catch (Exception ex)
             {
                 GameLoggerScriptable.LogError($"Error in PublishAsync: {ex.Message} {ex.StackTrace}", this);
                 return false;
             }
-
         }
 
         private async UniTask<bool> PublishInternal<T>(T eventArgs, bool awaitAsyncSubscribers) where T : IEventArgs

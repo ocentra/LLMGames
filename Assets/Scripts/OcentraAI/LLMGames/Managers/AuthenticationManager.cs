@@ -15,18 +15,18 @@ using static System.String;
 namespace OcentraAI.LLMGames.Manager.Authentication
 {
     [RequireComponent(typeof(UnityServicesManager))]
-    public class AuthenticationManager : ManagerBase<AuthenticationManager>
+    public class AuthenticationManager : MonoBehaviourBase<AuthenticationManager>
     {
 
 
         public bool UseAnonymousSignInFromScene = false;
         private bool IsGuest { get; set; } = false;
         public bool SignInWithUnityComplete { get; set; } = false;
-        [ShowInInspector] private AuthPlayerData authPlayerData { get; set; } = null;
+        [ShowInInspector] private IAuthPlayerData AuthPlayerData { get; set; } = null;
         public bool IsSigningIn { get; private set; }
         public bool IsLoggedIn { get; set; }
 
-
+        IUnityServicesManager UnityServicesManager { get; set; }
 
         protected override async void Start()
         {
@@ -42,6 +42,38 @@ namespace OcentraAI.LLMGames.Manager.Authentication
                 }
             }
         }
+
+        public override async UniTask InitializeAsync()
+        {
+            if (Application.isPlaying)
+            {
+                try
+                {
+                    UniTaskCompletionSource<IOperationResult<IMonoBehaviourBase>> completionSource = new UniTaskCompletionSource<IOperationResult<IMonoBehaviourBase>>();
+                    await EventBus.Instance.PublishAsync(new WaitForInitializationEvent(completionSource, GetType(), typeof(IUnityServicesManager), 10));
+                    IOperationResult<IMonoBehaviourBase> operationResult = await completionSource.Task;
+                    if (operationResult.IsSuccess && operationResult.Value is IUnityServicesManager manager)
+                    {
+                        UnityServicesManager = manager;
+                    }
+                    else
+                    {
+                        Debug.LogError("Failed to initialize UnityServicesManager. AuthenticationManager cannot proceed.");
+                        return;
+                    }
+
+                }
+                catch (Exception ex)
+                {
+                    Debug.LogError($"Failed to initialize AuthenticationManager: {ex.Message}");
+                    return;
+                }
+            }
+            await base.InitializeAsync();
+        }
+
+
+
 
 
         public override async void SubscribeToEvents()
@@ -103,8 +135,8 @@ namespace OcentraAI.LLMGames.Manager.Authentication
         private async void OnAuthenticationServiceSignedIn()
         {
 
-            Log($"PlayerID: {AuthenticationService.Instance.PlayerId}", null);
-            Log($"Access Token: {AuthenticationService.Instance.AccessToken}", null);
+            Log($"PlayerID: {AuthenticationService.Instance.PlayerId}", this);
+            Log($"Access Token: {AuthenticationService.Instance.AccessToken}", this);
 
 
 
@@ -112,7 +144,7 @@ namespace OcentraAI.LLMGames.Manager.Authentication
 
             if (success)
             {
-                authPlayerData = playerData as AuthPlayerData;
+                AuthPlayerData = playerData as AuthPlayerData;
 
                 if (!IsGuest && !UseAnonymousSignInFromScene)
                 {
@@ -126,11 +158,11 @@ namespace OcentraAI.LLMGames.Manager.Authentication
 
                     if (!UseAnonymousSignInFromScene)
                     {
-                        await PublishAuthResult(AuthResult.Authenticated(authPlayerData));
+                        await PublishAuthResult(AuthResult.Authenticated(AuthPlayerData));
                     }
                     else
                     {
-                        await EventBus.Instance.PublishAsync(new StartMainGameEvent(authPlayerData));
+                        await EventBus.Instance.PublishAsync(new StartMainGameEvent(AuthPlayerData));
                     }
 
 
@@ -231,21 +263,21 @@ namespace OcentraAI.LLMGames.Manager.Authentication
         private void OnAuthenticationServiceSignInFailed(RequestFailedException err)
         {
             IsLoggedIn = false;
-            authPlayerData = null;
+            AuthPlayerData = null;
             PublishAuthResult(AuthResult.Failure($"Sign-in failed: {err.ErrorCode} \n {err.Message}")).Forget();
         }
 
         private void OnAuthenticationServiceSignedOut()
         {
             IsLoggedIn = false;
-            authPlayerData = null;
+            AuthPlayerData = null;
             PublishAuthResult(AuthResult.Success("Player signed out.")).Forget();
         }
 
         private void OnAuthenticationServiceExpired()
         {
             IsLoggedIn = false;
-            authPlayerData = null;
+            AuthPlayerData = null;
             PublishAuthResult(AuthResult.Failure("Player session could not be refreshed and expired.")).Forget();
         }
 
@@ -365,9 +397,6 @@ namespace OcentraAI.LLMGames.Manager.Authentication
             }
         }
 
-
-
-
         private async UniTask<AuthResult> SignInWithUnityAsync()
         {
             if (IsSigningIn)
@@ -441,8 +470,8 @@ namespace OcentraAI.LLMGames.Manager.Authentication
                 SignInOptions signInOptions = new SignInOptions { CreateAccount = true };
 
                 await AuthenticationService.Instance.SignInAnonymouslyAsync(signInOptions).AsUniTask();
-                GameLoggerScriptable.Instance.Log("Sign in anonymously succeeded!", null);
-                GameLoggerScriptable.Instance.Log($"PlayerID: {AuthenticationService.Instance.PlayerId}", null);
+                GameLoggerScriptable.Instance.Log("Sign in anonymously succeeded!", this);
+                GameLoggerScriptable.Instance.Log($"PlayerID: {AuthenticationService.Instance.PlayerId}", this);
             }
             catch (AuthenticationException ex)
             {
@@ -478,9 +507,6 @@ namespace OcentraAI.LLMGames.Manager.Authentication
                 await PublishAuthResult(AuthResult.Failure(message));
             }
         }
-
-
-
 
         private async void OnSignInCachedUserEvent(SignInCachedUserEvent e)
         {
@@ -586,15 +612,15 @@ namespace OcentraAI.LLMGames.Manager.Authentication
             }
         }
 
-        protected override async UniTask<bool> ApplicationWantsToQuit()
+        public override async UniTask<bool> ApplicationWantsToQuit()
         {
-            if (!IsLoggedIn || authPlayerData == null)
+            if (!IsLoggedIn || AuthPlayerData == null)
             {
 
                 return true;
             }
-            await EventBus.Instance.PublishAsync(new AuthenticationSignOutEvent(authPlayerData));
-            authPlayerData = null;
+            await EventBus.Instance.PublishAsync(new AuthenticationSignOutEvent(AuthPlayerData));
+            AuthPlayerData = null;
             return false;
         }
 

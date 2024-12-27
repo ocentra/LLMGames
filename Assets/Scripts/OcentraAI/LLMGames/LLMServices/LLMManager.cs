@@ -14,17 +14,22 @@ namespace OcentraAI.LLMGames.Manager.LLMServices
         private ILLMService CurrentLLMService { get; set; }
 
 
-        protected override async UniTask InitializeAsync()
+        public override async UniTask InitializeAsync()
         {
             if (Application.isPlaying)
             {
                 try
                 {
-                    UniTaskCompletionSource<bool> completionSource = new UniTaskCompletionSource<bool>();
-                    await EventBus.Instance.PublishAsync(new WaitForInitializationEvent<UnityServicesManager>(completionSource));
-                    await completionSource.Task;
+                    UniTaskCompletionSource<IOperationResult<IMonoBehaviourBase>> completionSource = new UniTaskCompletionSource<IOperationResult<IMonoBehaviourBase>>();
 
-                    SetLLMProvider(CurrentProvider);
+                    await EventBus.Instance.PublishAsync(new WaitForInitializationEvent(completionSource, GetType(), typeof(IUnityServicesManager), 10));
+                    IOperationResult<IMonoBehaviourBase> operationResult = await completionSource.Task;
+
+                    if (operationResult.IsSuccess )
+                    {
+                        SetLLMProvider(CurrentProvider);
+                    }
+                   
                 }
                 catch (Exception ex)
                 {

@@ -14,7 +14,6 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   AssemblyFiles:
   - Assets/Scripts/OcentraAI/LLMGames/DTO/LLMGames.DTO.asmdef
-  - Assets/Scripts/OcentraAI/LLMGames/Events/LLMGames.Events.asmdef
   - Assets/Scripts/OcentraAI/LLMGames/GameMode/LLMGames.GameMode.asmdef
   - Assets/Scripts/OcentraAI/LLMGames/Interfaces/LLMGames.Interface.asmdef
   - Assets/Scripts/OcentraAI/LLMGames/LLMGames.asmdef

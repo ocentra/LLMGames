@@ -1,64 +1,49 @@
+#if UNITY_EDITOR
+
 using Cysharp.Threading.Tasks;
-using Sirenix.OdinInspector.Editor;
+using Sirenix.OdinInspector;
 using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Reflection;
+using System.Text.RegularExpressions;
 using UnityEditor;
 using UnityEditorInternal;
+using Sirenix.OdinInspector.Editor;
 using UnityEngine;
 using Debug = UnityEngine.Debug;
 using Object = UnityEngine.Object;
+using Sirenix.Utilities.Editor;
 
 namespace OcentraAI.LLMGames.Events.Editor
 {
     public class EventBusManager : OdinMenuEditorWindow
     {
-
-        private Color backgroundColor;
-
+        private Color BackgroundColor { get; set; }
+        private string ProgressText { get; set; } = string.Empty;
         private const string MainDirectoryPrefKey = "EventBusManager.MainDirectoryName";
-
-
         private string MainDirectoryName
         {
             get => EditorPrefs.GetString(MainDirectoryPrefKey, "Assets/Scripts/OcentraAI/");
             set => EditorPrefs.SetString(MainDirectoryPrefKey, value);
         }
-
         private EventBus EventBus => EventBus.Instance;
+        public UsageInfo UsageInfo { get => EventBus.UsageInfo; set => EventBus.UsageInfo = value; }
+        public List<string> AssemblyFiles { get => EventBus.AssemblyFiles; set => EventBus.AssemblyFiles = value; }
+        public List<ScriptInfo> AllScripts { get => EventBus.AllScripts; set => EventBus.AllScripts = value; }
+        public List<ScriptInfo> EventMonoScript { get => EventBus.EventMonoScript; set => EventBus.EventMonoScript = value; }
 
-        public UsageInfo UsageInfo
-        {
-            get => EventBus.UsageInfo;
-            set => EventBus.UsageInfo = value;
-        }
-
-
-
-        public List<string> AssemblyFiles
-        {
-            get => EventBus.AssemblyFiles;
-            set => EventBus.AssemblyFiles = value;
-        }
-
-        public List<ScriptInfo> AllScripts
-        {
-            get => EventBus.AllScripts;
-            set => EventBus.AllScripts = value;
-        }
-
-        public List<ScriptInfo> EventMonoScript
-        {
-            get => EventBus.EventMonoScript;
-            set => EventBus.EventMonoScript = value;
-        }
+        public string EventAssemblyPath { get; set; }
 
         private Vector2 scrollPosition, scrollPositionCode;
         private float dividerHeight = 300f;
         private const float DividerHandleSize = 5f;
-        private Object lastSelectedWrapper;
+        private float currentProgress = 0f;
+        private bool isRunning = false;
+
+
+        private Object LastSelectedWrapper { get; set; }
 
         [MenuItem("Tools/Event Bus Manager")]
         private static void OpenWindow()
@@ -70,7 +55,7 @@ namespace OcentraAI.LLMGames.Events.Editor
         protected override void OnEnable()
         {
             base.OnEnable();
-            backgroundColor = EditorGUIUtility.isProSkin
+            BackgroundColor = EditorGUIUtility.isProSkin
                 ? new Color(0.22f, 0.22f, 0.22f)
                 : new Color(0.76f, 0.76f, 0.76f);
 
@@ -91,7 +76,6 @@ namespace OcentraAI.LLMGames.Events.Editor
             AssetDatabase.SaveAssets();
         }
 
-
         protected override void Initialize()
         {
             base.Initialize();
@@ -108,88 +92,109 @@ namespace OcentraAI.LLMGames.Events.Editor
             EventMonoScript = new List<ScriptInfo>();
             UsageInfo = new UsageInfo();
 
-            string[] asmdefGuids = AssetDatabase.FindAssets("t:AssemblyDefinitionAsset", new[] { MainDirectoryName });
+            Assembly eventAssembly = typeof(EventArgsBase).Assembly;
+            Assembly[] assemblies = AppDomain.CurrentDomain.GetAssemblies();
+            HashSet<Assembly> processAssemblies = new HashSet<Assembly>();
+            string[] assemblyGuids = AssetDatabase.FindAssets("t:AssemblyDefinitionAsset", new[] { MainDirectoryName });
 
-            foreach (string guid in asmdefGuids)
+            foreach (string guid in assemblyGuids)
             {
                 string path = AssetDatabase.GUIDToAssetPath(guid);
-                if (!AssemblyFiles.Contains(path))
+                string nameWithoutExtension = Path.GetFileNameWithoutExtension(path);
+                Assembly assembly = assemblies.FirstOrDefault(a => a.GetName().Name.Equals(nameWithoutExtension, StringComparison.OrdinalIgnoreCase));
+
+                if (assembly != null)
                 {
-                    AssemblyFiles.Add(path);
+                    if (assembly == eventAssembly)
+                    {
+                        EventAssemblyPath = path;
+                        continue;
+                    }
+
+                    if (!AssemblyFiles.Contains(path))
+                    {
+                        AssemblyFiles.Add(path);
+                    }
+                    processAssemblies.Add(assembly);
                 }
 
             }
 
-            Assembly[] assemblies = AppDomain.CurrentDomain.GetAssemblies();
+            try
+            {
+                Type[] eventAssemblyTypes = eventAssembly.GetTypes();
 
-            foreach (Assembly assembly in assemblies)
+                foreach (Type type in eventAssemblyTypes)
+                {
+                    if (type.IsSubclassOf(typeof(EventArgsBase)) && !type.IsAbstract && type.IsClass)
+                    {
+                        string[] assets = AssetDatabase.FindAssets($"t:MonoScript {type.Name}");
+                        foreach (string asset in assets)
+                        {
+                            string scriptPath = AssetDatabase.GUIDToAssetPath(asset);
+                            MonoScript script = AssetDatabase.LoadAssetAtPath<MonoScript>(scriptPath);
+
+                            if (script != null && script.GetClass() == type)
+                            {
+                                ScriptInfo scriptInfo = new ScriptInfo(type, script, scriptPath);
+                                if (!EventMonoScript.Contains(scriptInfo))
+                                {
+                                    EventMonoScript.Add(scriptInfo);
+                                }
+
+                                break;
+                            }
+                        }
+                    }
+                }
+            }
+            catch (ReflectionTypeLoadException ex)
+            {
+                Debug.LogError($"Error loading types from assembly {eventAssembly.GetName().Name}: {ex.Message}");
+                if (ex.LoaderExceptions != null)
+                {
+                    foreach (Exception loaderException in ex.LoaderExceptions)
+                    {
+                        Debug.LogError($"Loader Exception: {loaderException?.Message}");
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                Debug.LogError($"Unexpected error processing assembly {eventAssembly.GetName().Name}: {ex.Message}");
+            }
+
+
+
+            foreach (Assembly assembly in processAssemblies)
             {
                 try
                 {
-                    if (assembly.GetName().Name.Contains("LLMGames.Events"))
+                    Type[] collection = assembly.GetTypes();
+
+                    foreach (Type type in collection)
                     {
-                        Type[] eventAssemblyTypes = assembly.GetTypes();
+                        if (type.IsAbstract || !type.IsClass || type.Namespace == null)
+                            continue;
 
-                        foreach (Type type in eventAssemblyTypes)
+                        string[] assets = AssetDatabase.FindAssets($"t:MonoScript {type.Name}");
+                        foreach (string asset in assets)
                         {
-                            if (type.IsSubclassOf(typeof(EventArgsBase)) && !type.IsAbstract && type.IsClass)
+                            string scriptPath = AssetDatabase.GUIDToAssetPath(asset);
+                            MonoScript script = AssetDatabase.LoadAssetAtPath<MonoScript>(scriptPath);
+
+                            if (script != null && script.GetClass() == type)
                             {
-                                string[] assets = AssetDatabase.FindAssets($"t:MonoScript {type.Name}");
-                                foreach (string asset in assets)
+                                ScriptInfo scriptInfo = new ScriptInfo(type, script, scriptPath);
+                                if (!AllScripts.Contains(scriptInfo))
                                 {
-                                    string scriptPath = AssetDatabase.GUIDToAssetPath(asset);
-                                    MonoScript script = AssetDatabase.LoadAssetAtPath<MonoScript>(scriptPath);
-
-                                    if (script != null && script.GetClass() == type)
-                                    {
-                                        ScriptInfo scriptInfo = new ScriptInfo(type, script, scriptPath);
-                                        if (!EventMonoScript.Contains(scriptInfo))
-                                        {
-                                            EventMonoScript.Add(scriptInfo);
-                                        }
-
-                                        break;
-                                    }
+                                    AllScripts.Add(scriptInfo);
                                 }
-                            }
-                        }
 
-                    }
-
-                    foreach (string path in AssemblyFiles)
-                    {
-                        string nameWithoutExtension = Path.GetFileNameWithoutExtension(path);
-
-                        if (assembly.GetName().Name.Equals(nameWithoutExtension, StringComparison.OrdinalIgnoreCase))
-                        {
-                            Type[] collection = assembly.GetTypes();
-
-                            foreach (Type type in collection)
-                            {
-                                if (type.IsAbstract || !type.IsClass || type.Namespace == null)
-                                    continue;
-
-                                string[] assets = AssetDatabase.FindAssets($"t:MonoScript {type.Name}");
-                                foreach (string asset in assets)
-                                {
-                                    string scriptPath = AssetDatabase.GUIDToAssetPath(asset);
-                                    MonoScript script = AssetDatabase.LoadAssetAtPath<MonoScript>(scriptPath);
-
-                                    if (script != null && script.GetClass() == type)
-                                    {
-                                        ScriptInfo scriptInfo = new ScriptInfo(type, script, scriptPath);
-                                        if (!AllScripts.Contains(scriptInfo))
-                                        {
-                                            AllScripts.Add(scriptInfo);
-                                        }
-
-                                        break;
-                                    }
-                                }
+                                break;
                             }
                         }
                     }
-
 
                 }
                 catch (ReflectionTypeLoadException ex)
@@ -209,15 +214,13 @@ namespace OcentraAI.LLMGames.Events.Editor
                 }
             }
 
-
-
         }
 
         protected override void DrawEditors()
         {
             Color originalColor = GUI.color;
-            GUI.color = backgroundColor;
-            EditorGUI.DrawRect(position, backgroundColor);
+            GUI.color = BackgroundColor;
+            EditorGUI.DrawRect(position, BackgroundColor);
             GUI.color = originalColor;
 
             base.DrawEditors();
@@ -227,7 +230,11 @@ namespace OcentraAI.LLMGames.Events.Editor
         {
             OdinMenuTree menuTree = new OdinMenuTree(true)
             {
-                Config = { DrawSearchToolbar = true },
+                Config =
+                {
+                    DrawSearchToolbar = true,
+
+                },
                 DefaultMenuStyle = new OdinMenuStyle
                 {
                     Height = 23,
@@ -237,15 +244,16 @@ namespace OcentraAI.LLMGames.Events.Editor
                     BorderPadding = 0,
                     AlignTriangleLeft = true,
                     TriangleSize = 16,
-                    TrianglePadding = 0
+                    TrianglePadding = 0,
+
                 }
             };
+            
+            // Intentionally disabled to draw so if we need to debug we can uncomment it to see
 
             // DisplayAllScript(menuTree);
 
             // DisplayAssemblyFiles(menuTree);
-
-
 
             if (EventMonoScript is { Count: > 0 })
             {
@@ -254,57 +262,112 @@ namespace OcentraAI.LLMGames.Events.Editor
                 foreach (ScriptInfo eventScript in EventMonoScript)
                 {
                     string scriptPath = eventScript.MonoScriptPath;
+
                     if (!string.IsNullOrEmpty(scriptPath))
                     {
-                        string folderPath = Path.GetDirectoryName(scriptPath)?.Replace("\\", "/");
+                        string directoryName = Path.GetDirectoryName(scriptPath);
+                        string folderPath = directoryName?.Replace("\\", "/");
                         if (folderPath != null)
                         {
-                            string relativeFolderPath = folderPath.Replace("Assets/Scripts/OcentraAI/LLMGames/Events", "Events");
+                            string eventBaseFolder = Path.GetDirectoryName(EventAssemblyPath);
+                            eventBaseFolder = eventBaseFolder?.Replace("\\", "/");
 
-                            string[] folderParts = relativeFolderPath.Split('/');
-                            string currentPath = "";
-
-                            for (int i = 0; i < folderParts.Length; i++)
+                            if (eventBaseFolder != null)
                             {
-                                currentPath = string.Join("/", folderParts.Take(i + 1));
+                                string eventBaseFolderName = Path.GetFileName(eventBaseFolder);
+                                string relativeFolderPath = folderPath.Replace(eventBaseFolder, eventBaseFolderName);
+                                string[] folderParts = relativeFolderPath.Split('/');
+                                string currentPath = "";
 
-                                if (!folderItems.ContainsKey(currentPath))
+                                for (int i = 0; i < folderParts.Length; i++)
                                 {
-                                    string parentPath = string.Join("/", folderParts.Take(i));
-                                    OdinMenuItem parentFolder = null;
+                                    currentPath = string.Join("/", folderParts.Take(i + 1));
 
-                                    if (!string.IsNullOrEmpty(parentPath) && folderItems.TryGetValue(parentPath, out OdinMenuItem parentItem))
+                                    if (!folderItems.ContainsKey(currentPath))
                                     {
-                                        parentFolder = parentItem;
+                                        string parentPath = string.Join("/", folderParts.Take(i));
+                                        OdinMenuItem parentFolder = null;
+
+                                        if (!string.IsNullOrEmpty(parentPath) && folderItems.TryGetValue(parentPath, out OdinMenuItem parentItem))
+                                        {
+                                            parentFolder = parentItem;
+                                        }
+                                        Object folderObject = AssetDatabase.LoadAssetAtPath<Object>(folderPath);
+                                        string displayName = $"{folderParts[i]} [Total: {EventMonoScript.Count}]";
+
+                                        OdinMenuItem folderItem = new OdinMenuItem(menuTree, displayName, folderObject);
+                                        DrawFolder(folderItem);
+
+                                        if (parentFolder != null)
+                                        {
+                                            parentFolder.ChildMenuItems.Add(folderItem);
+                                        }
+                                        else
+                                        {
+                                            menuTree.MenuItems.Add(folderItem);
+                                        }
+
+                                        folderItems[currentPath] = folderItem;
+                                        
                                     }
+                                }
 
-                                    OdinMenuItem folderItem = new OdinMenuItem(menuTree, $"{folderParts[i]} [0]", null)
+                                if (folderItems.TryGetValue(relativeFolderPath, out OdinMenuItem targetFolder))
+                                {
+
+                                    OdinMenuItem scriptItem = new OdinMenuItem(menuTree, eventScript.DisplayName, eventScript)
                                     {
-                                        Icon = EditorGUIUtility.IconContent("Folder Icon").image
+
+                                        OnDrawItem = (item) =>
+                                        {
+                                            Rect rect = item.Rect;
+
+                                            float rectX = rect.x;
+
+
+                                            float iconSize = 20;
+                                            Rect iconRect = new Rect(rect.x + rect.width - iconSize - 10, rect.y, iconSize, iconSize);
+
+                                            Texture2D defaultIcon = EditorGUIUtility.IconContent("cs Script Icon").image as Texture2D;
+                                            if (defaultIcon != null)
+                                            {
+                                                GUI.DrawTexture(iconRect, defaultIcon);
+                                            }
+
+
+                                            string displayName = eventScript.DisplayName;
+                                            switch (eventScript.State)
+                                            {
+                                                case ScriptInfo.EventState.Pass:
+                                                    displayName = eventScript.DisplayName;
+                                                    break;
+                                                case ScriptInfo.EventState.Fail:
+                                                    displayName = $"{eventScript.DisplayName} [{ScriptInfo.EventState.NoSubscriber} | {ScriptInfo.EventState.NoPublisher}] ";
+                                                    break;
+                                                case ScriptInfo.EventState.NoSubscriber:
+                                                    displayName = $"{eventScript.DisplayName} [{ScriptInfo.EventState.NoSubscriber}] "; ;
+                                                    break;
+                                                case ScriptInfo.EventState.NoPublisher:
+                                                    displayName = $"{eventScript.DisplayName} [{ScriptInfo.EventState.NoPublisher}] "; ;
+                                                    break;
+
+
+                                            }
+
+                                            item.Name = $"{displayName}";
+                                            (SdfIconType Icon, Color IconColor) sdfIconTypeIcon = eventScript.GetSdfIconTypeIcon();
+                                            item.SdfIcon = sdfIconTypeIcon.Icon;
+                                            item.SdfIconColor = sdfIconTypeIcon.IconColor;
+
+
+                                        }
                                     };
 
-                                    if (parentFolder != null)
-                                    {
-                                        parentFolder.ChildMenuItems.Add(folderItem);
-                                    }
-                                    else
-                                    {
-                                        menuTree.MenuItems.Add(folderItem);
-                                    }
+                                    targetFolder.ChildMenuItems.Add(scriptItem);
+                                    targetFolder.Name = $"{Path.GetFileName(relativeFolderPath)} [{targetFolder.ChildMenuItems.Count}]";
 
-                                    folderItems[currentPath] = folderItem;
+
                                 }
-                            }
-
-                            if (folderItems.TryGetValue(relativeFolderPath, out OdinMenuItem targetFolder))
-                            {
-                                OdinMenuItem scriptItem = new OdinMenuItem(menuTree, eventScript.DisplayName, eventScript)
-                                {
-                                    Icon = EditorGUIUtility.IconContent("cs Script Icon").image
-                                };
-                                targetFolder.ChildMenuItems.Add(scriptItem);
-
-                                targetFolder.Name = $"{Path.GetFileName(relativeFolderPath)} [{targetFolder.ChildMenuItems.Count}]";
                             }
                         }
                     }
@@ -312,17 +375,34 @@ namespace OcentraAI.LLMGames.Events.Editor
             }
 
 
+
             return menuTree;
         }
+
+        private static void DrawFolder(OdinMenuItem folderItem)
+        {
+            folderItem.OnDrawItem = (item) =>
+            {
+                if (item.Toggled)
+                {
+                    item.SdfIcon = SdfIconType.Folder2Open;
+                    item.SdfIconColor = Color.green;
+                }
+                else
+                {
+                    item.SdfIcon = SdfIconType.Folder;
+                    item.SdfIconColor = Color.black;
+                }
+            };
+        }
+
 
         private void DisplayAssemblyFiles(OdinMenuTree menuTree)
         {
             if (AssemblyFiles is { Count: > 0 })
             {
-                OdinMenuItem assembliesFolder = new OdinMenuItem(menuTree, $"Assemblies [{AssemblyFiles.Count}]", null)
-                {
-                    Icon = EditorGUIUtility.IconContent("Folder Icon").image
-                };
+                OdinMenuItem assembliesFolder = new OdinMenuItem(menuTree, $"Assemblies [{AssemblyFiles.Count}]", null);
+                DrawFolder(assembliesFolder);
                 menuTree.MenuItems.Add(assembliesFolder);
 
                 foreach (string assemblyFile in AssemblyFiles)
@@ -345,10 +425,8 @@ namespace OcentraAI.LLMGames.Events.Editor
         {
             if (AllScripts is { Count: > 0 })
             {
-                OdinMenuItem allScript = new OdinMenuItem(menuTree, $"AllScript [{AllScripts.Count}]", null)
-                {
-                    Icon = EditorGUIUtility.IconContent("Folder Icon").image
-                };
+                OdinMenuItem allScript = new OdinMenuItem(menuTree, $"AllScript [{AllScripts.Count}]", null);
+                DrawFolder(allScript);
                 menuTree.MenuItems.Add(allScript);
 
                 foreach (ScriptInfo scriptInfo in AllScripts)
@@ -374,11 +452,13 @@ namespace OcentraAI.LLMGames.Events.Editor
             {
                 MonoScript script = scriptInfo.MonoScript;
 
-                if (lastSelectedWrapper != script)
+
+                if (LastSelectedWrapper != script)
                 {
-                    lastSelectedWrapper = script;
+                    LastSelectedWrapper = script;
                     EditorGUIUtility.PingObject(script);
                 }
+                
 
                 scrollPosition = EditorGUILayout.BeginScrollView(scrollPosition, GUILayout.Height(dividerHeight));
                 {
@@ -386,7 +466,6 @@ namespace OcentraAI.LLMGames.Events.Editor
 
                     EditorGUILayout.BeginHorizontal("box", GUILayout.ExpandHeight(true), GUILayout.ExpandWidth(true));
                     {
-                        // Publishers Column
                         EditorGUILayout.BeginVertical(GUILayout.ExpandWidth(true));
                         {
                             DrawColumnHeader("Publishers");
@@ -407,7 +486,6 @@ namespace OcentraAI.LLMGames.Events.Editor
                         EditorGUILayout.LabelField("", GUI.skin.verticalSlider, GUILayout.Width(1), GUILayout.ExpandHeight(true));
                         GUILayout.Space(5);
 
-                        // Subscribers Column
                         EditorGUILayout.BeginVertical(GUILayout.ExpandWidth(true));
                         {
                             DrawColumnHeader("Subscribers");
@@ -470,13 +548,23 @@ namespace OcentraAI.LLMGames.Events.Editor
             }
             else
             {
-                if (selected?.Value is Object pingableObject)
+                if (selected is {Value: Object pingableObject})
                 {
-
-                    if (lastSelectedWrapper != pingableObject)
+                    if (LastSelectedWrapper != pingableObject)
                     {
-                        lastSelectedWrapper = pingableObject;
-                        EditorGUIUtility.PingObject(pingableObject);
+                        LastSelectedWrapper = pingableObject;
+
+                        // Check if it's a folder and ping it
+                        string path = AssetDatabase.GetAssetPath(pingableObject);
+                        if (AssetDatabase.IsValidFolder(path))
+                        {
+                            Object folder = AssetDatabase.LoadAssetAtPath<Object>(path);
+                            EditorGUIUtility.PingObject(folder);
+                        }
+                        else
+                        {
+                            EditorGUIUtility.PingObject(pingableObject);
+                        }
                     }
 
                     GUILayout.Space(10);
@@ -501,6 +589,13 @@ namespace OcentraAI.LLMGames.Events.Editor
                         GUILayout.Space(5);
                         EditorGUILayout.LabelField("Asset Name:", pingableObject.name);
                         EditorGUILayout.LabelField("Path:", AssetDatabase.GetAssetPath(pingableObject));
+
+                        // If the asset is a folder, add an extra label
+                        string path = AssetDatabase.GetAssetPath(pingableObject);
+                        if (AssetDatabase.IsValidFolder(path))
+                        {
+                            EditorGUILayout.LabelField("Type:", "Folder");
+                        }
                     }
                 }
                 else
@@ -508,6 +603,7 @@ namespace OcentraAI.LLMGames.Events.Editor
                     GUILayout.Space(10);
                     EditorGUILayout.HelpBox("Please select an event or asset to view details.", MessageType.Info);
                 }
+
             }
 
         }
@@ -525,7 +621,7 @@ namespace OcentraAI.LLMGames.Events.Editor
                     EditorGUILayout.LabelField("Main Directory:", GUILayout.Width(100));
                     EditorGUILayout.TextField(MainDirectoryName, GUILayout.ExpandWidth(true));
 
-                    if (GUILayout.Button("...", GUILayout.Width(30)))
+                    if (GUILayout.Button("", GUILayout.Width(30)))
                     {
                         string selectedPath = EditorUtility.OpenFolderPanel("Select Main Directory", MainDirectoryName, "");
                         if (!string.IsNullOrEmpty(selectedPath))
@@ -542,6 +638,8 @@ namespace OcentraAI.LLMGames.Events.Editor
                             Repaint();
                         }
                     }
+                    Rect lastRect = GUILayoutUtility.GetLastRect();
+                    EditorIcons.Folder.Draw(lastRect);
                 }
 
 
@@ -555,11 +653,9 @@ namespace OcentraAI.LLMGames.Events.Editor
 
         private async UniTask FindUsagesAsync()
         {
-
-
             if (EventMonoScript.Count == 0 || AllScripts.Count == 0)
             {
-                progressText = "No scripts found to process.";
+                ProgressText = "No scripts found to process.";
                 currentProgress = 1f;
                 Repaint();
                 return;
@@ -570,87 +666,100 @@ namespace OcentraAI.LLMGames.Events.Editor
 
             List<UniTask> eventTasks = new List<UniTask>();
 
-            foreach (ScriptInfo info in EventMonoScript)
+            foreach (ScriptInfo eventScriptInfo in EventMonoScript)
             {
                 eventTasks.Add(UniTask.RunOnThreadPool(async () =>
                 {
-                    MonoScript eventScript = info.MonoScript;
-                    Type eventType = info.ScriptType;
-
-                    if (eventType == null) return;
-
-                    string eventTypeName = info.DisplayName;
-
-                    List<List<ScriptInfo>> scriptBatches = new List<List<ScriptInfo>>();
-                    List<ScriptInfo> currentBatch = new List<ScriptInfo>();
-                    List<MonoScript> subscribers = new List<MonoScript>();
-                    List<MonoScript> publishers = new List<MonoScript>();
-
-                    foreach (ScriptInfo scriptInfo in AllScripts)
+                    try
                     {
-                        if (scriptInfo == null) continue;
+                        MonoScript eventScript = eventScriptInfo.MonoScript;
+                        Type eventType = eventScriptInfo.ScriptType;
 
-                        currentBatch.Add(scriptInfo);
-                        if (currentBatch.Count >= 20)
+                        if (eventType == null) return;
+
+                        string eventTypeName = eventScriptInfo.DisplayName;
+
+                        List<List<ScriptInfo>> scriptBatches = new List<List<ScriptInfo>>();
+                        List<ScriptInfo> currentBatch = new List<ScriptInfo>();
+                        List<MonoScript> subscribers = new List<MonoScript>();
+                        List<MonoScript> publishers = new List<MonoScript>();
+
+                        foreach (ScriptInfo scriptInfo in AllScripts)
+                        {
+                            if (scriptInfo == null) continue;
+
+                            currentBatch.Add(scriptInfo);
+                            if (currentBatch.Count >= 20)
+                            {
+                                scriptBatches.Add(currentBatch);
+                                currentBatch = new List<ScriptInfo>();
+                            }
+                        }
+
+                        if (currentBatch.Count > 0)
                         {
                             scriptBatches.Add(currentBatch);
-                            currentBatch = new List<ScriptInfo>();
                         }
-                    }
-
-                    if (currentBatch.Count > 0)
-                    {
-                        scriptBatches.Add(currentBatch);
-                    }
-
-                    foreach (List<ScriptInfo> batch in scriptBatches)
-                    {
-                        List<UniTask> batchTasks = new List<UniTask>();
-
-                        foreach (ScriptInfo assemblyScript in batch)
+                        
+                        foreach (List<ScriptInfo> batch in scriptBatches)
                         {
-                            batchTasks.Add(UniTask.RunOnThreadPool(() =>
+                            List<UniTask> batchTasks = new List<UniTask>();
+
+                            foreach (ScriptInfo assemblyScript in batch)
                             {
-                                try
+                                batchTasks.Add(UniTask.RunOnThreadPool(() =>
                                 {
-                                    string sourceCode = assemblyScript.CodeContent;
-                                    if (string.IsNullOrEmpty(sourceCode)) return;
-
-                                    bool isPublisher = sourceCode.Contains($"new {eventTypeName}");
-                                    bool isSubscriber = sourceCode.Contains($"<{eventTypeName}>");
-
-                                    if (isPublisher)
+                                    try
                                     {
-                                        lock (publishers)
+                                        string sourceCode = assemblyScript.CodeContent;
+                                        if (string.IsNullOrEmpty(sourceCode)) return;
+
+                                        bool isPublisher = Regex.IsMatch(sourceCode, $@"new\s+{eventTypeName}(<[^>]+?>)?", RegexOptions.Multiline);
+                                        bool isSubscriber = Regex.IsMatch(sourceCode, $@"Subscribe<{eventTypeName}(<[^>]+?>)?>", RegexOptions.Multiline);
+
+
+                                        if (isPublisher)
                                         {
-                                            publishers.Add(assemblyScript.MonoScript);
+                                            lock (publishers)
+                                            {
+                                                publishers.Add(assemblyScript.MonoScript);
+                                            }
+                                        }
+
+                                        if (isSubscriber)
+                                        {
+                                            lock (subscribers)
+                                            {
+                                                subscribers.Add(assemblyScript.MonoScript);
+                                            }
                                         }
                                     }
-
-                                    if (isSubscriber)
+                                    catch (Exception ex)
                                     {
-                                        lock (subscribers)
-                                        {
-                                            subscribers.Add(assemblyScript.MonoScript);
-                                        }
+                                        Debug.LogError($"Error processing script: {assemblyScript.MonoScript.name}, {ex.Message}");
                                     }
-                                }
-                                catch (Exception)
-                                {
-                                }
-                            }));
+                                }));
+                            }
+
+                            await UniTask.WhenAll(batchTasks);
+                            
+                            Repaint();
                         }
 
-                        await UniTask.WhenAll(batchTasks);
-                    }
+                        UsageInfo.Subscribers.TryAdd(eventScript, subscribers);
+                        UsageInfo.Publishers.TryAdd(eventScript, publishers);
+                        eventScriptInfo.SetEventState(UsageInfo.Subscribers, UsageInfo.Publishers);
 
-                    UsageInfo.Subscribers.TryAdd(eventScript, subscribers);
-                    UsageInfo.Publishers.TryAdd(eventScript, publishers);
+                    }
+                    catch (Exception ex)
+                    {
+                        Debug.LogError($"Error processing event script: {eventScriptInfo.MonoScript.name}, {ex.Message}");
+                    }
                 }));
 
                 currentScriptIndex++;
                 currentProgress = (float)currentScriptIndex / totalScripts;
-                progressText = $"Processing {currentScriptIndex}/{totalScripts} event scripts...";
+                ProgressText = $"Processing {currentScriptIndex}/{totalScripts} event scripts...";
 
                 await UniTask.Yield();
                 Repaint();
@@ -658,12 +767,9 @@ namespace OcentraAI.LLMGames.Events.Editor
 
             await UniTask.WhenAll(eventTasks);
 
-            progressText = "Completed!";
+            ProgressText = "Completed!";
             currentProgress = 1f;
-
-
         }
-
         private void DrawSectionHeader(string headerTitle)
         {
             Color originalColor = GUI.backgroundColor;
@@ -673,42 +779,63 @@ namespace OcentraAI.LLMGames.Events.Editor
             GUILayout.EndHorizontal();
             GUI.backgroundColor = originalColor;
         }
-
-        private float currentProgress = 0f;
-        private string progressText = string.Empty;
-        private bool isRunning = false;
-
         private void DrawSectionHeaderWithRefresh(string headerTitle)
         {
             Color originalColor = GUI.backgroundColor;
-            GUI.backgroundColor = new Color(0, 0, 0.8f, 1f);
-            GUILayout.BeginHorizontal("box");
-            GUILayout.Label(headerTitle, EditorStyles.boldLabel, GUILayout.ExpandWidth(true));
+            GUI.backgroundColor = Color.blue;
+            float iconSize = 20;
 
-            GUILayout.BeginVertical(GUILayout.Width(300));
+            GUILayout.BeginHorizontal("box", GUILayout.ExpandWidth(true));
+
+            // Left Gear Icon
+            GUILayout.BeginHorizontal(GUILayout.Width(200));
+            Rect iconRect = GUILayoutUtility.GetRect(iconSize, iconSize, GUILayout.ExpandWidth(false));
+            EditorIcons.SettingsCog.Draw(iconRect);
+            GUILayout.Label(headerTitle, EditorStyles.boldLabel, GUILayout.ExpandWidth(true));
+            GUILayout.EndHorizontal();
+
+            // Event Title and Progress Area
+
+            GUILayout.BeginHorizontal(GUILayout.ExpandWidth(true));
+            GUILayout.BeginVertical(GUILayout.ExpandWidth(true));
             {
+               
                 if (isRunning)
                 {
-                    GUILayout.Label(progressText, EditorStyles.miniLabel, GUILayout.ExpandWidth(true));
+                    GUILayout.Label(ProgressText, EditorStyles.miniLabel, GUILayout.ExpandWidth(true));
                     Rect progressRect = GUILayoutUtility.GetRect(100, 20, GUILayout.ExpandWidth(true));
-                    EditorGUI.ProgressBar(progressRect, currentProgress, progressText);
+                    GUI.backgroundColor = Color.green;
+                    EditorGUI.ProgressBar(progressRect, currentProgress, ProgressText);
+                    GUI.backgroundColor = originalColor;
                 }
                 else
                 {
+                    GUI.backgroundColor = Color.black;
                     GUILayout.Label("No ongoing process", EditorStyles.centeredGreyMiniLabel);
+                    GUI.backgroundColor = originalColor;
                 }
             }
+
             GUILayout.EndVertical();
+            GUILayout.EndHorizontal();
 
-            GUILayout.BeginHorizontal();
+            
+            // Right "Update Usages" Section
+            GUILayout.BeginHorizontal(GUILayout.Width(100));
             {
+                GUI.backgroundColor = Color.cyan;
                 GUILayout.Label("Update Usages", GUILayout.ExpandWidth(false));
+                GUI.backgroundColor = originalColor;
 
-                if (GUILayout.Button(EditorGUIUtility.IconContent("d_Refresh"), GUILayout.Width(40)))
+                GUI.backgroundColor = Color.green;
+                if (GUILayout.Button("", GUILayout.Width(20)))
                 {
                     Initialize();
                 }
 
+                var lastRect = GUILayoutUtility.GetLastRect();
+                EditorIcons.Refresh.Draw(lastRect);
+                GUI.backgroundColor = originalColor;
             }
             GUILayout.EndHorizontal();
 
@@ -716,11 +843,12 @@ namespace OcentraAI.LLMGames.Events.Editor
             GUI.backgroundColor = originalColor;
         }
 
+
         private async UniTaskVoid HandleProgress(string taskName, Func<UniTask> task)
         {
             isRunning = true;
             currentProgress = 0f;
-            progressText = $"{taskName}...";
+            ProgressText = $"{taskName}...";
 
             try
             {
@@ -732,18 +860,15 @@ namespace OcentraAI.LLMGames.Events.Editor
             }
             finally
             {
-                progressText = "Completed!";
+                ProgressText = "Completed!";
                 currentProgress = 1f;
                 await UniTask.Delay(1000);
-                progressText = string.Empty;
+                ProgressText = string.Empty;
                 currentProgress = 0f;
                 isRunning = false;
             }
         }
-
-
-
-
+        
         private void DrawColumnHeader(string headerTitle)
         {
             Color originalColor = GUI.backgroundColor;
@@ -764,7 +889,8 @@ namespace OcentraAI.LLMGames.Events.Editor
             GUILayout.EndHorizontal();
             GUI.backgroundColor = originalColor;
         }
-
-
+        
     }
 }
+
+#endif

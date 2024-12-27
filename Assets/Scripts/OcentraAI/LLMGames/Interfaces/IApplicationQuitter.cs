@@ -4,6 +4,6 @@ namespace OcentraAI.LLMGames
 {
     public interface IApplicationQuitter
     {
-        UniTaskVoid HandleApplicationQuitAsync();
+        UniTask<bool> ApplicationWantsToQuit();
     }
 }

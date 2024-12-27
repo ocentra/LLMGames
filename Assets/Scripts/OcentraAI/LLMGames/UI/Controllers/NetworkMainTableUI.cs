@@ -61,7 +61,7 @@ namespace OcentraAI.LLMGames.UI.Managers
         [ShowInInspector][ReadOnly] private AnimationController DeckHolder { get; set; }
 
 
-        protected override UniTask InitializeAsync()
+        public override UniTask InitializeAsync()
         {
             Init();
             return base.InitializeAsync();

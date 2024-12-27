@@ -13,14 +13,16 @@ using UnityEngine;
 
 namespace OcentraAI.LLMGames.Manager.Authentication
 {
-    public class UnityServicesManager : ManagerBase<UnityServicesManager>
+    public class UnityServicesManager : MonoBehaviourBase<UnityServicesManager>, IUnityServicesManager
     {
         public IAnalyticsService AnalyticsService => Unity.Services.Analytics.AnalyticsService.Instance;
         public ICloudSaveService CloudSaveService => Unity.Services.CloudSave.CloudSaveService.Instance;
-        [ShowInInspector] public ConfigManager ConfigManager { get; private set; }
+        public IAuthenticationService AuthenticationService => Unity.Services.Authentication.AuthenticationService.Instance;
+
+        [ShowInInspector] public IConfigManager ConfigManager { get; private set; }
 
 
-        protected override async UniTask Initialize()
+        public override async UniTask InitializeAsync()
         {
             if (Application.isPlaying)
             {
@@ -40,26 +42,36 @@ namespace OcentraAI.LLMGames.Manager.Authentication
             }
 
 
-            await base.Initialize();
+            await base.InitializeAsync();
         }
-
-
+        
         public override void SubscribeToEvents()
         {
             base.SubscribeToEvents();
-
             EventRegistrar.Subscribe<AuthenticationSignOutEvent>(OnAuthenticationSignOutEvent);
             EventRegistrar.Subscribe<RequestPlayerDataFromCloudEvent>(OnRequestPlayerDataFromCloudEvent);
             EventRegistrar.Subscribe<SavePlayerDataToCloudEvent>(OnSavePlayerDataToCloudEvent);
-            EventRegistrar.Subscribe<WaitForInitializationEvent<UnityServicesManager>>(OnWaitForInitialization);
+            EventRegistrar.Subscribe<WaitForInitializationEvent>(OnWaitForInitialization);
 
         }
 
-        private async UniTask OnWaitForInitialization(WaitForInitializationEvent<UnityServicesManager> arg)
+        private async UniTask OnWaitForInitialization(WaitForInitializationEvent eventData)
         {
-            await WaitForInitializationAsync();
-            arg.CompletionSource.TrySetResult(true);
+            if (eventData.TargetType == GetType())
+            {
+                try
+                {
+                    await WaitForInitializationAsync();
+
+                    eventData.CompletionSource.TrySetResult(OperationResult<IMonoBehaviourBase>.Success(this));
+                }
+                catch (Exception ex)
+                {
+                    eventData.CompletionSource.TrySetResult(OperationResult<IMonoBehaviourBase>.Failure($"Initialization failed for {GetType().Name}: {ex.Message}"));
+                }
+            }
         }
+
 
 
         private async UniTask OnSavePlayerDataToCloudEvent(SavePlayerDataToCloudEvent arg)
@@ -108,7 +120,7 @@ namespace OcentraAI.LLMGames.Manager.Authentication
         {
             try
             {
-                Dictionary<string, Item> data = await CloudSaveService.Data.Player.LoadAsync(new HashSet<string> { AuthenticationService.Instance.PlayerId }).AsUniTask();
+                Dictionary<string, Item> data = await CloudSaveService.Data.Player.LoadAsync(new HashSet<string> { AuthenticationService.PlayerId }).AsUniTask();
                 if (data.TryGetValue(key, out Item keyValue))
                 {
                     AuthPlayerData authPlayerData = JsonUtility.FromJson<AuthPlayerData>(keyValue.Value.GetAsString());
@@ -191,7 +203,7 @@ namespace OcentraAI.LLMGames.Manager.Authentication
                 LogError($"Error occurred while saving player data: {ex.Message}", this);
             }
 
-            AuthenticationService.Instance.SignOut();
+            AuthenticationService.SignOut();
 
         }
 

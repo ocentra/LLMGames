@@ -15,16 +15,16 @@ namespace OcentraAI.LLMGames.Manager.Authentication
     [Serializable]
     public class ConfigManager: IConfigManager
     {
-        [ShowInInspector]
-        public Dictionary<string, ILLMConfig> DefaultLLMConfigs { get; set; } = new Dictionary<string, ILLMConfig>();
+        [ShowInInspector,DictionaryDrawerSettings]
+        public Dictionary<ILLMProvider, LLMConfig> DefaultLLMConfigs { get; set; } = new Dictionary<ILLMProvider, LLMConfig>();
 
-        [ShowInInspector]
-        private Dictionary<string, ILLMConfig> UserLLMConfigs { get; set; } = new Dictionary<string, ILLMConfig>();
+        [ShowInInspector, DictionaryDrawerSettings]
+        private Dictionary<ILLMProvider, LLMConfig> UserLLMConfigs { get; set; } = new Dictionary<ILLMProvider, LLMConfig>();
 
 
-        public async UniTask FetchConfig()
+        public async UniTask FetchConfig(string playerId)
         {
-            UserAttributes userAttr = new UserAttributes {UserId = AuthenticationService.Instance.PlayerId};
+            UserAttributes userAttr = new UserAttributes {UserId = playerId};
 
             AppAttributes appAttr = new AppAttributes
             {
@@ -58,18 +58,21 @@ namespace OcentraAI.LLMGames.Manager.Authentication
 
                         string providerName = config.ProviderName.ToLower();
 
-                        if (Enum.TryParse(typeof(LLMProvider), providerName, true, out object enumValue))
+                        if (config.TrySetProvider(providerName))
                         {
-                            DefaultLLMConfigs[enumValue.ToString()] = config;
-                            // Debug.Log($"Configuration Loaded for {enumValue}: {providerConfigJson}");
+                            LLMProvider configProvider = config.Provider as LLMProvider;
+
+                            if (configProvider != null)
+                            {
+                                DefaultLLMConfigs[configProvider] = config;
+                               
+
+
+                            }
                         }
-                        else
-                        {
-                            Debug.LogWarning($"Provider {providerName} is not a valid LLMProvider enum value.");
-                        }
+
                     }
 
-                    // Debug.Log("LLM configurations loaded successfully.");
                 }
                 catch (JsonException jsonEx)
                 {
@@ -83,9 +86,9 @@ namespace OcentraAI.LLMGames.Manager.Authentication
         }
 
 
-        public bool TryGetConfigForProvider(string provider, out ILLMConfig config)
+        public bool TryGetConfigForProvider(ILLMProvider provider, out ILLMConfig config)
         {
-            if (UserLLMConfigs.TryGetValue(provider, out ILLMConfig foundUserConfig))
+            if (UserLLMConfigs.TryGetValue(provider, out LLMConfig foundUserConfig))
             {
                 
                 if (ValidateConfig(foundUserConfig))
@@ -97,7 +100,7 @@ namespace OcentraAI.LLMGames.Manager.Authentication
 
             }
 
-            if (DefaultLLMConfigs.TryGetValue(provider, out ILLMConfig foundDefaultConfig))
+            if (DefaultLLMConfigs.TryGetValue(provider, out LLMConfig foundDefaultConfig))
             {
                 if (ValidateConfig(foundDefaultConfig))
                 {
@@ -111,9 +114,9 @@ namespace OcentraAI.LLMGames.Manager.Authentication
             return false;
         }
 
-        public void UpdateApiKey(string provider, string newApiKey)
+        public void UpdateApiKey(ILLMProvider provider, string newApiKey)
         {
-            if (UserLLMConfigs.TryGetValue(provider, out ILLMConfig userLLMConfig))
+            if (UserLLMConfigs.TryGetValue(provider, out LLMConfig userLLMConfig))
             {
                 userLLMConfig.ApiKey = newApiKey;
                 UserLLMConfigs[provider] = userLLMConfig;
@@ -129,16 +132,16 @@ namespace OcentraAI.LLMGames.Manager.Authentication
                 if (ValidateConfig(newConfig))
                 {
                     bool isAddedOrUpdated = false;
-                    UpdateApiKey(newConfig.ProviderName, newConfig.ApiKey);
+                    UpdateApiKey(newConfig.Provider, newConfig.ApiKey);
 
-                    if (UserLLMConfigs.ContainsKey(newConfig.ProviderName))
+                    if (UserLLMConfigs.ContainsKey(newConfig.Provider))
                     {
-                        UserLLMConfigs[newConfig.ProviderName] = newConfig;
+                        UserLLMConfigs[newConfig.Provider] = newConfig as LLMConfig;
                         isAddedOrUpdated = true;
                     }
                     else
                     {
-                        if (UserLLMConfigs.TryAdd(newConfig.ProviderName, newConfig))
+                        if (UserLLMConfigs.TryAdd(newConfig.Provider, newConfig as LLMConfig))
                         {
                             isAddedOrUpdated = true;
                         }
@@ -153,7 +156,7 @@ namespace OcentraAI.LLMGames.Manager.Authentication
             }
             catch (Exception ex)
             {
-                Debug.LogError($"Error adding or updating config for provider '{newConfig.ProviderName}': {ex.Message}\nStack Trace: {ex.StackTrace}");
+                Debug.LogError($"Error adding or updating config for provider '{newConfig.Provider.Name}': {ex.Message}\nStack Trace: {ex.StackTrace}");
                 return (false, null);
             }
 
@@ -225,13 +228,22 @@ namespace OcentraAI.LLMGames.Manager.Authentication
 
             try
             {
-                Dictionary<string, Item> data = await CloudSaveService.Instance.Data.Player
-                    .LoadAsync(new HashSet<string> {nameof(UserLLMConfigs)}).AsUniTask();
+                Dictionary<string, Item> data = await CloudSaveService.Instance.Data.Player.LoadAsync(new HashSet<string> {nameof(UserLLMConfigs)}).AsUniTask();
+              
                 if (data.TryGetValue(nameof(UserLLMConfigs), out Item keyValue))
                 {
-                    Dictionary<string, ILLMConfig> configs = JsonUtility.FromJson<Dictionary<string, ILLMConfig>>(keyValue.Value.GetAsString());
-                    UserLLMConfigs = configs ?? new Dictionary<string, ILLMConfig>();
-                    // Debug.Log("All configurations retrieved from the cloud.");
+                    string asString = keyValue.Value.GetAsString();
+                    Dictionary<string, LLMConfig> configs = JsonUtility.FromJson<Dictionary<string, LLMConfig>>(asString);
+
+
+                    UserLLMConfigs ??= new Dictionary<ILLMProvider, LLMConfig>();
+
+                    foreach (KeyValuePair<string, LLMConfig> pair in configs)
+                    {
+                        ILLMProvider llmProvider = LLMProvider.FromName(pair.Key);
+                        UserLLMConfigs.TryAdd(llmProvider, pair.Value);
+                    }
+
                     return true;
                 }
             }

@@ -14,9 +14,9 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   logFrequencyInSeconds: 10
   logToFile: 0
-  logStackTrace: 0
+  logStackTrace: 1
   loggingEnabled: 0
-  logWarnings: 0
+  logWarnings: 1
   logErrors: 1
   logException: 1
   LogFilePath: E:/LLMgames/Assets\Resources\LogFile.json

@@ -4,9 +4,9 @@ namespace OcentraAI.LLMGames.Events
 {
     public class AuthenticationStatusEvent : EventArgsBase
     {
-        public AuthResult Result { get; }
+        public IAuthResult Result { get; }
 
-        public AuthenticationStatusEvent(AuthResult result)
+        public AuthenticationStatusEvent(IAuthResult result)
         {
             Result = result;
         }

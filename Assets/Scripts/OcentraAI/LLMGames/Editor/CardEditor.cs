@@ -1,4 +1,5 @@
-﻿using OcentraAI.LLMGames.Manager.Utilities;
+﻿using Cysharp.Threading.Tasks;
+using OcentraAI.LLMGames.Manager.Utilities;
 using OcentraAI.LLMGames.Utilities;
 
 #if UNITY_EDITOR
@@ -40,7 +41,7 @@ namespace OcentraAI.LLMGames.Scriptable
 
             if (GUI.changed)
             {
-                EditorSaveManager.RequestSave(card);
+                EditorSaveManager.RequestSave(card).Forget();
             }
         }
     }

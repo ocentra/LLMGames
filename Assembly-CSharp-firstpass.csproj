@@ -62,11 +62,7 @@
     <Analyzer Include="C:\Program Files\Unity\Hub\Editor\6000.0.23f1\Editor\Data\Tools\Unity.SourceGenerators\Unity.UIToolkit.SourceGenerator.dll" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="Assets\Plugins\VolumetricLights\Demos\Minimal\Scripts\ObjectRotate.cs" />
-    <Compile Include="Assets\Plugins\VolumetricLights\Demos\Temple\Scripts\PlayerController.cs" />
-    <Compile Include="Assets\Plugins\VolumetricLights\Demos\Minimal\Scripts\CubeGen.cs" />
     <Compile Include="Assets\Plugins\VolumetricFog2\Demo\Scripts\FPS_Controller.cs" />
-    <Compile Include="Assets\Plugins\VolumetricLights\Demos\Minimal\Scripts\FenceGen.cs" />
     <Compile Include="Assets\Plugins\VolumetricFog2\Demo\Scripts\CapsuleController.cs" />
     <Compile Include="Assets\Plugins\VolumetricFog2\Demo\DemoFans\FanRotator.cs" />
     <Compile Include="Assets\Plugins\VolumetricFog2\Demo\Scripts\DemoSceneControls.cs" />
@@ -74,60 +70,41 @@
   </ItemGroup>
   <ItemGroup>
     <None Include="Assets\Plugins\VolumetricFog2\Resources\Shaders\FogOfWarBlur.shader" />
-    <None Include="Assets\Plugins\VolumetricLights\Resources\Shaders\Particles\DustParticlesForwardPass.hlsl" />
     <None Include="Assets\Plugins\Sirenix\Assemblies\Sirenix.Reflection.Editor.dll" />
-    <None Include="Assets\Plugins\VolumetricLights\Resources\Shaders\TransparentMultiply.shader" />
     <None Include="Assets\Plugins\VolumetricFog2\Resources\Shaders\Primitives.cginc" />
-    <None Include="Assets\Plugins\VolumetricLights\Resources\Shaders\DepthOnly.shader" />
     <None Include="Assets\Plugins\VolumetricFog2\Resources\Shaders\VolumetricFogDebug.shader" />
     <None Include="Assets\Plugins\Sirenix\Assemblies\NoEmitAndNoEditor\Sirenix.Serialization.dll" />
-    <None Include="Assets\Plugins\VolumetricLights\Resources\Shaders\Primitives.hlsl" />
-    <None Include="Assets\Plugins\VolumetricLights\Resources\Shaders\TransparentDepthWrite.shader" />
     <None Include="Assets\Plugins\VolumetricFog2\Resources\Shaders\Surface.cginc" />
-    <None Include="Assets\Plugins\VolumetricLights\Resources\Shaders\Empty.shader" />
     <None Include="Assets\Plugins\Sirenix\Assemblies\AOT\link.xml" />
-    <None Include="Assets\Plugins\VolumetricLights\Resources\Shaders\VolumetricLightURP.shader" />
-    <None Include="Assets\Plugins\VolumetricLights\Resources\Shaders\Particles\DustParticlesInput.hlsl" />
     <None Include="Assets\Plugins\Sirenix\Assemblies\Sirenix.Serialization.Config.xml" />
     <None Include="Assets\Plugins\Sirenix\Assemblies\Sirenix.Serialization.Config.dll" />
     <None Include="Assets\Plugins\Sirenix\Assemblies\Sirenix.OdinInspector.Editor.dll" />
     <None Include="Assets\Plugins\Sirenix\Assemblies\Sirenix.OdinInspector.Editor.xml" />
-    <None Include="Assets\Plugins\VolumetricLights\Demos\Church\Textures\Source.txt" />
     <None Include="Assets\Plugins\Sirenix\Odin Validator\Readme.txt" />
     <None Include="Assets\Plugins\VolumetricFog2\Resources\Shaders\DepthOnly.shader" />
-    <None Include="Assets\Plugins\VolumetricLights\Resources\Shaders\Blur.hlsl" />
-    <None Include="Assets\Plugins\VolumetricLights\Resources\Shaders\Lighting.hlsl" />
     <None Include="Assets\Plugins\Sirenix\Assemblies\NoEditor\Sirenix.Serialization.dll" />
     <None Include="Assets\Plugins\VolumetricFog2\Resources\Shaders\Blur.hlsl" />
     <None Include="Assets\Plugins\Roslyn\System.Reflection.Metadata.dll" />
     <None Include="Assets\Plugins\Sirenix\Assemblies\Sirenix.OdinInspector.Attributes.xml" />
     <None Include="Assets\Plugins\Sirenix\Assemblies\Sirenix.OdinInspector.Attributes.dll" />
     <None Include="Assets\Plugins\VolumetricFog2\Resources\Shaders\Raymarch2D.cginc" />
-    <None Include="Assets\Plugins\VolumetricLights\Resources\Shaders\CopyDepthIntoCubemap.shader" />
-    <None Include="Assets\Plugins\VolumetricLights\README.txt" />
-    <None Include="Assets\Plugins\VolumetricLights\Resources\Shaders\ShadowOcclusion.hlsl" />
     <None Include="Assets\Plugins\Sirenix\Assemblies\Sirenix.Utilities.xml" />
     <None Include="Assets\Plugins\Sirenix\Assemblies\Sirenix.Utilities.dll" />
     <None Include="Assets\Plugins\VolumetricFog2\Resources\Shaders\ShadowsURP.cginc" />
     <None Include="Assets\Plugins\Sirenix\Assemblies\NoEditor\Sirenix.Utilities.dll" />
     <None Include="Assets\Plugins\VolumetricFog2\Resources\Shaders\Noise2DGen.shader" />
     <None Include="Assets\Plugins\VolumetricFog2\Resources\Shaders\Blur.shader" />
-    <None Include="Assets\Plugins\VolumetricLights\Resources\Shaders\Options.hlsl" />
-    <None Include="Assets\Plugins\VolumetricLights\Resources\Shaders\CommonsURP.hlsl" />
     <None Include="Assets\Plugins\Sirenix\Readme.txt" />
     <None Include="Assets\Plugins\VolumetricFog2\Resources\Shaders\FogOfWar.cginc" />
-    <None Include="Assets\Plugins\VolumetricLights\Resources\Shaders\Invisible.shader" />
     <None Include="Assets\Plugins\VolumetricFog2\Resources\Shaders\FogDistance.cginc" />
     <None Include="Assets\Plugins\VolumetricFog2\README.txt" />
     <None Include="Assets\Plugins\Sirenix\Assemblies\link.xml" />
-    <None Include="Assets\Plugins\VolumetricLights\Resources\Shaders\Blur.shader" />
     <None Include="Assets\Plugins\Roslyn\System.Collections.Immutable.dll" />
     <None Include="Assets\Plugins\Sirenix\Assemblies\Sirenix.Utilities.Editor.xml" />
     <None Include="Assets\Plugins\Sirenix\Assemblies\Sirenix.Utilities.Editor.dll" />
     <None Include="Assets\Plugins\VolumetricFog2\Resources\Shaders\CommonsURP.hlsl" />
     <None Include="Assets\Plugins\VolumetricFog2\Resources\Shaders\PointLights.cginc" />
     <None Include="Assets\Plugins\Roslyn\Microsoft.CodeAnalysis.dll" />
-    <None Include="Assets\Plugins\VolumetricLights\Resources\Shaders\Particles\DustParticles.shader" />
     <None Include="Assets\Plugins\VolumetricFog2\Resources\Shaders\Empty.shader" />
     <None Include="Assets\Plugins\VolumetricFog2\Resources\Shaders\FogVoids.cginc" />
     <None Include="Assets\Plugins\VolumetricFog2\Resources\Shaders\VolumetricFog2DURP.shader" />
@@ -138,7 +115,6 @@
     <None Include="Assets\Plugins\VolumetricFog2\Resources\Shaders\Turbulence2D.shader" />
     <None Include="Assets\Plugins\Sirenix\Assemblies\Sirenix.Serialization.dll" />
     <None Include="Assets\Plugins\Sirenix\Assemblies\Sirenix.Serialization.xml" />
-    <None Include="Assets\Plugins\VolumetricLights\Resources\Shaders\Raymarch.hlsl" />
     <None Include="Assets\Plugins\Sirenix\Assemblies\Sirenix.OdinValidator.Editor.dll" />
     <None Include="Assets\Plugins\Sirenix\Assemblies\Sirenix.OdinValidator.Editor.xml" />
     <None Include="Assets\Plugins\Roslyn\Microsoft.CodeAnalysis.CSharp.dll" />
@@ -1809,10 +1785,6 @@
     <ProjectReference Include="Unity.RenderPipelines.Core.Editor.csproj">
       <Project>{410A6C6F-332A-55F8-CBEC-D2AE8E4B0BAE}</Project>
       <Name>Unity.RenderPipelines.Core.Editor</Name>
-    </ProjectReference>
-    <ProjectReference Include="LLMGames.DTO.csproj">
-      <Project>{0AAB72FC-B78D-EA4E-F4EE-8F319A36B7A5}</Project>
-      <Name>LLMGames.DTO</Name>
     </ProjectReference>
     <ProjectReference Include="Unity.Toolchain.Win-x86_64-Linux-x86_64.csproj">
       <Project>{55CEBA90-4A90-75E6-7CB3-B229F27701F5}</Project>

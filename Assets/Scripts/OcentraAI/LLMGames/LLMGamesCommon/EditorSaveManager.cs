@@ -1,3 +1,4 @@
+using Cysharp.Threading.Tasks;
 using System.Collections.Generic;
 #if UNITY_EDITOR
 using UnityEditor;
@@ -10,11 +11,10 @@ namespace OcentraAI.LLMGames.Manager.Utilities
     {
         private static bool isSavePending;
         private static readonly Queue<ScriptableObject> ObjectsToSave = new Queue<ScriptableObject>();
-
-        public static void RequestSave(ScriptableObject obj)
+        private static UniTaskCompletionSource<bool> completionSource;
+        public static async UniTask RequestSave(ScriptableObject obj, UniTaskCompletionSource<bool> uniTaskCompletionSource = null)
         {
 #if UNITY_EDITOR
-
 
             if (!ObjectsToSave.Contains(obj))
             {
@@ -24,28 +24,29 @@ namespace OcentraAI.LLMGames.Manager.Utilities
             if (!isSavePending)
             {
                 isSavePending = true;
-                EditorApplication.delayCall += SaveAllPendingChanges;
+                completionSource = uniTaskCompletionSource??new UniTaskCompletionSource<bool>();
+                UnityEditor.EditorApplication.delayCall += SaveAllPendingChanges;
+                await completionSource.Task;
             }
+
 #endif
         }
+
 
         private static void SaveAllPendingChanges()
         {
 #if UNITY_EDITOR
-
             isSavePending = false;
 
             while (ObjectsToSave.Count > 0)
             {
                 ScriptableObject obj = ObjectsToSave.Dequeue();
-                EditorUtility.SetDirty(obj);
+                UnityEditor.EditorUtility.SetDirty(obj);
             }
 
-            AssetDatabase.SaveAssets();
-            AssetDatabase.Refresh();
-
-            // Debug.Log("All pending changes saved and assets refreshed.");
-
+            UnityEditor.AssetDatabase.SaveAssets();
+            UnityEditor.AssetDatabase.Refresh();
+            completionSource.TrySetResult(true);
 #endif
         }
     }

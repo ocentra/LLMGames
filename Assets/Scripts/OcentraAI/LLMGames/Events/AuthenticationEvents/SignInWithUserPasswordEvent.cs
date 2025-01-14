@@ -7,13 +7,13 @@ namespace OcentraAI.LLMGames.Events
     {
         public string Username { get; }
         public string Password { get; }
-        public UniTaskCompletionSource<AuthResult> CompletionSource { get; }
+        public UniTaskCompletionSource<IAuthResult> CompletionSource { get; }
 
         public SignInWithUserPasswordEvent(string username, string password)
         {
             Username = username;
             Password = password;
-            CompletionSource = new UniTaskCompletionSource<AuthResult>();
+            CompletionSource = new UniTaskCompletionSource<IAuthResult>();
         }
     }
 }

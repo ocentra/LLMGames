@@ -39,6 +39,7 @@ namespace OcentraAI.LLMGames.Screens3D
         public bool StartEnabled;
 
         [ShowInInspector, ReadOnly] private bool isTransitioning;
+        [ShowInInspector, ReadOnly] protected Transform RootTransform { get; set; }
         [ShowInInspector, ReadOnly] public string ScreenId { get; private set; }
         private TaskCompletionSource<bool> InitTaskSource { get; set; } = new TaskCompletionSource<bool>();
         [ShowInInspector, Required] public IEventRegistrar EventRegistrar { get; set; } = new EventRegistrar();
@@ -141,7 +142,7 @@ namespace OcentraAI.LLMGames.Screens3D
                 {
                     isInitialized = false;
                     InitTaskSource.SetResult(isInitialized);
-                    GameLoggerScriptable.LogError($"MainPanel3D For {GetType().Name} Not Found", null);
+                    GameLoggerScriptable.LogError($"MainPanel3D For {GetType().Name} Not Found", this);
                     return;
                 }
 
@@ -151,7 +152,7 @@ namespace OcentraAI.LLMGames.Screens3D
             }
             catch (Exception e)
             {
-                GameLoggerScriptable.LogError($"Error during {GetType().Name} Init: {e}", null);
+                GameLoggerScriptable.LogError($"Error during {GetType().Name} Init: {e}", this);
                 isInitialized = false;
                 InitTaskSource.SetException(e);
 
@@ -185,7 +186,11 @@ namespace OcentraAI.LLMGames.Screens3D
             {
                 ShowScreen();
             }
-
+            RootTransform = gameObject.transform;
+            while (RootTransform.parent != null)
+            {
+                RootTransform = RootTransform.parent;
+            }
             return MainPanel3D != null;
         }
 
@@ -245,7 +250,7 @@ namespace OcentraAI.LLMGames.Screens3D
                 }
                 else
                 {
-                    GameLoggerScriptable.LogError("MainPanel3D is null. Cannot show screen.", null);
+                    GameLoggerScriptable.LogError("MainPanel3D is null. Cannot show screen.", this);
                 }
             }
             finally
@@ -274,7 +279,7 @@ namespace OcentraAI.LLMGames.Screens3D
                 }
                 else
                 {
-                    GameLoggerScriptable.LogError("MainPanel3D is null. Cannot hide screen.", null);
+                    GameLoggerScriptable.LogError("MainPanel3D is null. Cannot hide screen.", this);
                 }
             }
             finally
@@ -316,7 +321,7 @@ namespace OcentraAI.LLMGames.Screens3D
             }
             else
             {
-                GameLoggerScriptable.LogWarning("No previous screen to show.", null);
+                GameLoggerScriptable.LogWarning("No previous screen to show.", this);
             }
         }
         protected virtual bool VerifyCanShow()
@@ -397,7 +402,7 @@ namespace OcentraAI.LLMGames.Screens3D
     public abstract class UI3DScreen<T> : UI3DScreen where T : UI3DScreen<T>
     {
         private static volatile T instance;
-        private static readonly object instanceLock = new object();
+        private static readonly object InstanceLock = new object();
         private static bool applicationQuitting;
 
         public static T Instance
@@ -412,7 +417,7 @@ namespace OcentraAI.LLMGames.Screens3D
 
                 if (instance == null)
                 {
-                    lock (instanceLock)
+                    lock (InstanceLock)
                     {
                         if (instance == null)
                         {
@@ -446,7 +451,7 @@ namespace OcentraAI.LLMGames.Screens3D
                 {
                     if (Application.isPlaying)
                     {
-                        DontDestroyOnLoad(instance.gameObject);
+                        DontDestroyOnLoad(instance.RootTransform.gameObject);
                     }
 
 
@@ -492,7 +497,7 @@ namespace OcentraAI.LLMGames.Screens3D
 
         protected override void RegisterScreen()
         {
-            lock (instanceLock)
+            lock (InstanceLock)
             {
                 if (instance == null)
                 {

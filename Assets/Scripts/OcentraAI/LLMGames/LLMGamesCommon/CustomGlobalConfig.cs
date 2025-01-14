@@ -18,7 +18,7 @@ namespace OcentraAI.LLMGames.Utilities
         {
             // Centralized save logic
 #if UNITY_EDITOR
-            EditorSaveManager.RequestSave(this);
+            EditorSaveManager.RequestSave(this).Forget();
 #endif
         }
         

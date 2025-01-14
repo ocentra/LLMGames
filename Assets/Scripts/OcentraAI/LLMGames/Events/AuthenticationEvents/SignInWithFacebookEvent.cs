@@ -4,11 +4,11 @@ namespace OcentraAI.LLMGames.Events
 {
     public class SignInWithFacebookEvent : EventArgsBase
     {
-        public UniTaskCompletionSource<AuthResult> CompletionSource { get; }
+        public UniTaskCompletionSource<IAuthResult> CompletionSource { get; }
 
         public SignInWithFacebookEvent()
         {
-            CompletionSource = new UniTaskCompletionSource<AuthResult>();
+            CompletionSource = new UniTaskCompletionSource<IAuthResult>();
         }
     }
 }

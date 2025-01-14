@@ -5,11 +5,11 @@ namespace OcentraAI.LLMGames.Events
 {
     public class RequestUserCredentialsEvent : EventArgsBase
     {
-        public UniTaskCompletionSource<UserCredentials> CompletionSource { get; }
+        public UniTaskCompletionSource<IUserCredentials> CompletionSource { get; }
 
         public RequestUserCredentialsEvent()
         {
-            CompletionSource = new UniTaskCompletionSource<UserCredentials>();
+            CompletionSource = new UniTaskCompletionSource<IUserCredentials>();
         }
     }
 }

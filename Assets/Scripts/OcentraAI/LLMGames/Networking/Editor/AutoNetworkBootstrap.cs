@@ -29,7 +29,7 @@ using Object = UnityEngine.Object;
 
 namespace OcentraAI.LLMGames.Scriptable.ScriptableSingletons
 {
-    [CreateAssetMenu(fileName = nameof(AutoNetworkBootstrap), menuName = "LLMGames/AutoNetworkBootstrap")]
+    [CreateAssetMenu(fileName = nameof(AutoNetworkBootstrap), menuName = "OcentraAI/AutoNetworkBootstrap")]
     [GlobalConfig("Assets/Resources/")]
     public class AutoNetworkBootstrap : CustomGlobalConfig<AutoNetworkBootstrap>
     {
@@ -419,7 +419,7 @@ namespace OcentraAI.LLMGames.Scriptable.ScriptableSingletons
                                     if (await ClearAndSignIn())
                                     {
                                         ConfigManager = new ConfigManager();
-                                        await ConfigManager.FetchConfig();
+                                        await ConfigManager.FetchConfig(AuthenticationService.Instance.PlayerId);
 
                                         if (ClonesManager.IsClone())
                                         {

@@ -9,23 +9,42 @@ using Object = UnityEngine.Object;
 
 namespace OcentraAI.LLMGames.Manager
 {
-    public abstract class MonoBehaviourBase<T> : SerializedMonoBehaviour, IEventHandler, IApplicationQuitter,IMonoBehaviourBase where T : Component
+    public abstract class MonoBehaviourBase<T> : SerializedMonoBehaviour, IEventHandler, IApplicationQuitter,IManagerBase where T : Component
     {
-        [Header("File Logging Settings")]
-        [ShowInInspector] public bool ToEditor { get; set; } = true;
-        [ShowInInspector] public bool ToFile { get; set; } 
-        [ShowInInspector] public bool UseStackTrace { get; set; } 
 
-        [ShowInInspector, Required]
+        [ShowInInspector, FoldoutGroup("File Logging Settings", Order = 0)] 
+        public bool ToEditor { get; set; } = true;
+        [ShowInInspector, FoldoutGroup("File Logging Settings", Order = 0)] 
+        public bool ToFile { get; set; } 
+        [ShowInInspector, FoldoutGroup("File Logging Settings", Order = 0)] 
+        public bool UseStackTrace { get; set; }
+
+        [ShowInInspector, FoldoutGroup("File Logging Settings", Order = 0)] 
         public IEventRegistrar EventRegistrar { get; set; } = new EventRegistrar();
 
        public UniTaskCompletionSource InitializationSource { get; set; } = new UniTaskCompletionSource();
 
-        public virtual async UniTask InitializeAsync()
-        {
-            InitializationSource.TrySetResult();
-            await UniTask.Yield();
-        }
+
+       protected bool IsInitializing { get; set; } = false;
+
+       public virtual async UniTask InitializeAsync()
+       {
+           try
+           {
+               InitializationSource.TrySetResult();
+           }
+           catch (Exception ex)
+           {
+               InitializationSource.TrySetException(ex);
+               LogError($"Base initialization failed: {ex.Message}", this);
+           }
+           finally
+           {
+               IsInitializing = false;
+           }
+           await UniTask.Yield();
+       }
+
         
 
         public virtual async UniTask<bool> ApplicationWantsToQuit()

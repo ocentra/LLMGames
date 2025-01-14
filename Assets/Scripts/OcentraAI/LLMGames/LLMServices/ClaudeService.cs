@@ -1,17 +1,17 @@
 using Newtonsoft.Json;
+using Sirenix.Utilities;
+using UnityEngine;
 
 namespace OcentraAI.LLMGames.LLMServices
 {
-    public class ClaudeService : BaseLLMService
+    [CreateAssetMenu(fileName = nameof(ClaudeService), menuName = "LLMGames/ClaudeService")]
+    [GlobalConfig("Assets/Resources/")]
+    public class ClaudeService : BaseLLMService<ClaudeService>
     {
-        public ClaudeService(LLMConfig config)
-            : base(config)
-        {
-        }
-
+        public override ILLMProvider Provider { get; protected set; } = LLMProvider.Claude;
         protected override string ProcessResponse(string jsonResponse)
         {
-            var response = JsonConvert.DeserializeObject<ClaudeResponse>(jsonResponse);
+            ClaudeResponse response = JsonConvert.DeserializeObject<ClaudeResponse>(jsonResponse);
             return response.Responses[0];
         }
     }

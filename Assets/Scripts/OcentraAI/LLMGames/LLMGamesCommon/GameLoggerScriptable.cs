@@ -1,4 +1,5 @@
 using Cysharp.Threading.Tasks;
+using JetBrains.Annotations;
 using Newtonsoft.Json;
 using OcentraAI.LLMGames.Events;
 using Sirenix.OdinInspector;
@@ -138,7 +139,7 @@ namespace OcentraAI.LLMGames.Utilities
         }
 
 
-        public void Log(string message, Object context, bool toEditor = default, bool toFile = default, bool useStackTrace = true, [CallerMemberName] string method = "", [CallerLineNumber] int sourceLineNumber = 0)
+        public void Log(string message, [NotNull] Object context, bool toEditor = default, bool toFile = default, bool useStackTrace = true, [CallerMemberName] string method = "", [CallerLineNumber] int sourceLineNumber = 0)
         {
 
             string className = context.GetType().Name;
@@ -159,7 +160,7 @@ namespace OcentraAI.LLMGames.Utilities
             }
         }
 
-        public void LogWarning(string message, Object context, bool toEditor = default, bool toFile = default, bool useStackTrace = true, [CallerMemberName] string method = "", [CallerLineNumber] int sourceLineNumber = 0)
+        public void LogWarning(string message, [NotNull] Object context, bool toEditor = default, bool toFile = default, bool useStackTrace = true, [CallerMemberName] string method = "", [CallerLineNumber] int sourceLineNumber = 0)
         {
             string className = context.GetType().Name;
             string fullMessage = $"[Warning]{className}.{method}.{sourceLineNumber} : {message}";
@@ -180,7 +181,7 @@ namespace OcentraAI.LLMGames.Utilities
             }
         }
 
-        public void LogError(string message, Object context, bool toEditor = default, bool toFile = default, bool useStackTrace = true, [CallerMemberName] string method = "", [CallerLineNumber] int sourceLineNumber = 0)
+        public void LogError(string message, [NotNull] Object context, bool toEditor = default, bool toFile = default, bool useStackTrace = true, [CallerMemberName] string method = "", [CallerLineNumber] int sourceLineNumber = 0)
         {
             string className = context.GetType().Name;
             string fullMessage = $"[Error]{className}.{method}.{sourceLineNumber} : {message}";
@@ -199,7 +200,7 @@ namespace OcentraAI.LLMGames.Utilities
             }
         }
 
-        public void LogException(string message, Object context, bool toEditor = default, bool toFile = default, bool useStackTrace = true, [CallerMemberName] string method = "", [CallerLineNumber] int sourceLineNumber = 0)
+        public void LogException(string message, [NotNull] Object context, bool toEditor = default, bool toFile = default, bool useStackTrace = true, [CallerMemberName] string method = "", [CallerLineNumber] int sourceLineNumber = 0)
         {
             string className = context.GetType().Name;
             string fullMessage = $"[Exception]{className}.{method}.{sourceLineNumber} : {message}";

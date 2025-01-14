@@ -14,13 +14,23 @@ namespace OcentraAI.LLMGames.UI
     public class CardView : MonoBehaviour
     {
 
-        [SerializeField, InlineProperty, BoxGroup(nameof(MainCardState)), HideLabel] protected CardMaterialState MainCardState;
-        [SerializeField, InlineProperty, BoxGroup(nameof(HighlightCardState)), HideLabel] protected CardMaterialState HighlightCardState;
-        [SerializeField, InlineProperty, BoxGroup(nameof(BackCardState)), HideLabel] protected CardMaterialState BackCardState;
+        [SerializeField, InlineProperty, BoxGroup(nameof(MainCardState)), HideLabel]
+        protected CardMaterialState MainCardState;
 
-        [HideLabel, BoxGroup(nameof(MeshRenderer))] public MeshRenderer MainCard;
-        [HideLabel, BoxGroup(nameof(MeshRenderer))] public MeshRenderer BackCard;
-        [HideLabel, BoxGroup(nameof(MeshRenderer))] public MeshRenderer HighlightCard;
+        [SerializeField, InlineProperty, BoxGroup(nameof(HighlightCardState)), HideLabel]
+        protected CardMaterialState HighlightCardState;
+
+        [SerializeField, InlineProperty, BoxGroup(nameof(BackCardState)), HideLabel]
+        protected CardMaterialState BackCardState;
+
+        [HideLabel, BoxGroup(nameof(MeshRenderer))]
+        public MeshRenderer MainCard;
+
+        [HideLabel, BoxGroup(nameof(MeshRenderer))]
+        public MeshRenderer BackCard;
+
+        [HideLabel, BoxGroup(nameof(MeshRenderer))]
+        public MeshRenderer HighlightCard;
 
         [SerializeField] protected Material MainCardRuntimeMaterial;
         [SerializeField] protected Material HighlightCardRuntimeMaterial;
@@ -31,10 +41,11 @@ namespace OcentraAI.LLMGames.UI
         [SerializeField, ColorUsage(true, true), ReadOnly]
         public Color OriginalMainCardColor;
 
-        [Header("Card Settings")]
-        [SerializeField, ColorUsage(true, true)] protected Color HighlightColor = Color.white;
+        [Header("Card Settings")] [SerializeField, ColorUsage(true, true)]
+        protected Color HighlightColor = Color.white;
 
-        [SerializeField, ColorUsage(true, true)] protected Color MainCardColor = Color.white;
+        [SerializeField, ColorUsage(true, true)]
+        protected Color MainCardColor = Color.white;
 
         [ShowInInspector] public Card Card { get; private set; }
 
@@ -120,6 +131,7 @@ namespace OcentraAI.LLMGames.UI
                 {
                     MainCard.gameObject.SetActive(true);
                 }
+
                 if (BackCard != null)
                 {
                     BackCard.gameObject.SetActive(false);
@@ -142,6 +154,7 @@ namespace OcentraAI.LLMGames.UI
             {
                 MainCard.gameObject.SetActive(false);
             }
+
             if (BackCard != null)
             {
                 BackCard.gameObject.SetActive(true);

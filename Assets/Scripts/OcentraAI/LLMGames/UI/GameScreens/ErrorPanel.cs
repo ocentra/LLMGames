@@ -162,7 +162,7 @@ namespace OcentraAI.LLMGames.Screens
 
             }
 
-            GameLoggerScriptable.LogError(message, null);
+            GameLoggerScriptable.LogError(message, this);
         }
 
         private void ClearMessage()

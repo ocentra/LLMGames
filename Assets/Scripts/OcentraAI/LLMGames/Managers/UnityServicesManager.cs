@@ -1,6 +1,7 @@
 using Cysharp.Threading.Tasks;
 using OcentraAI.LLMGames.Authentication;
 using OcentraAI.LLMGames.Events;
+using OcentraAI.LLMGames.Manager.LLMServices;
 using Sirenix.OdinInspector;
 using System;
 using System.Collections.Generic;
@@ -13,75 +14,72 @@ using UnityEngine;
 
 namespace OcentraAI.LLMGames.Manager.Authentication
 {
-    public class UnityServicesManager : MonoBehaviourBase<UnityServicesManager>, IUnityServicesManager
+    [CreateAssetMenu(fileName = "UnityServicesManager", menuName = "OcentraAI/UnityServicesManager", order = 1)]
+    public class UnityServicesManager : ScriptableSingletonBase<UnityServicesManager>, IUnityServicesManager
     {
         public IAnalyticsService AnalyticsService => Unity.Services.Analytics.AnalyticsService.Instance;
         public ICloudSaveService CloudSaveService => Unity.Services.CloudSave.CloudSaveService.Instance;
         public IAuthenticationService AuthenticationService => Unity.Services.Authentication.AuthenticationService.Instance;
 
-        [ShowInInspector] public IConfigManager ConfigManager { get; private set; }
+        [ShowInInspector] public IConfigManager ConfigManager { get; private set; } = new ConfigManager();
 
 
         public override async UniTask InitializeAsync()
         {
             if (Application.isPlaying)
             {
-                try
+                if (!IsInitialized)
                 {
-                    InitializationOptions options = new InitializationOptions();
-                    options.SetOption("com.unity.services.core.environment-name", "production");
-                    await UnityServices.InitializeAsync(options).AsUniTask();
-                    AnalyticsService.StartDataCollection();
-                    ConfigManager = new ConfigManager();
-                    await ConfigManager.FetchConfig();
-                }
-                catch (Exception e)
-                {
-                    Debug.LogException(e);
+                    try
+                    {
+                        InitializationOptions options = new InitializationOptions();
+                        options.SetOption("com.unity.services.core.environment-name", "production");
+                        await UnityServices.InitializeAsync(options).AsUniTask();
+                        AnalyticsService.StartDataCollection();
+
+
+                    }
+                    catch (Exception ex)
+                    {
+                        GameLoggerScriptable.LogException($"Failed to initialize {nameof(UnityServicesManager)}: {ex.Message}", this);
+                        return;
+                    }
+
+                    await base.InitializeAsync();
                 }
             }
 
-
-            await base.InitializeAsync();
         }
-        
+
         public override void SubscribeToEvents()
         {
             base.SubscribeToEvents();
             EventRegistrar.Subscribe<AuthenticationSignOutEvent>(OnAuthenticationSignOutEvent);
             EventRegistrar.Subscribe<RequestPlayerDataFromCloudEvent>(OnRequestPlayerDataFromCloudEvent);
             EventRegistrar.Subscribe<SavePlayerDataToCloudEvent>(OnSavePlayerDataToCloudEvent);
-            EventRegistrar.Subscribe<WaitForInitializationEvent>(OnWaitForInitialization);
+            EventRegistrar.Subscribe<AuthenticationCompletedEvent>(OnAuthenticationCompletedEvent);
 
         }
 
-        private async UniTask OnWaitForInitialization(WaitForInitializationEvent eventData)
+        private async UniTask OnAuthenticationCompletedEvent(AuthenticationCompletedEvent arg)
         {
-            if (eventData.TargetType == GetType())
-            {
-                try
-                {
-                    await WaitForInitializationAsync();
-
-                    eventData.CompletionSource.TrySetResult(OperationResult<IMonoBehaviourBase>.Success(this));
-                }
-                catch (Exception ex)
-                {
-                    eventData.CompletionSource.TrySetResult(OperationResult<IMonoBehaviourBase>.Failure($"Initialization failed for {GetType().Name}: {ex.Message}"));
-                }
-            }
+            await WaitForInitializationAsync();
+            await ConfigManager.FetchConfig(arg.AuthPlayerData.PlayerID);
+            await AIModelManager.Instance.UpdateProvider(ConfigManager);
+            await UniTask.Yield();
         }
-
 
 
         private async UniTask OnSavePlayerDataToCloudEvent(SavePlayerDataToCloudEvent arg)
         {
+            await WaitForInitializationAsync();
             await SavePlayerDataToCloud(arg.AuthPlayerData);
             await UniTask.Yield();
         }
 
         private async UniTask OnRequestPlayerDataFromCloudEvent(RequestPlayerDataFromCloudEvent arg)
         {
+            await WaitForInitializationAsync();
             (bool success, IAuthPlayerData playerData) = await TryGetPlayerDataFromCloud(arg.PlayerId);
 
             arg.PlayerDataSource.TrySetResult((success, playerData));
@@ -90,6 +88,7 @@ namespace OcentraAI.LLMGames.Manager.Authentication
 
         public async UniTask SavePlayerDataToCloud(string key, IAuthPlayerData authPlayerData)
         {
+            await WaitForInitializationAsync();
             try
             {
                 string jsonData = JsonUtility.ToJson(authPlayerData);
@@ -104,6 +103,7 @@ namespace OcentraAI.LLMGames.Manager.Authentication
 
         public async UniTask SavePlayerDataToCloud(IAuthPlayerData authPlayerData)
         {
+            await WaitForInitializationAsync();
             try
             {
                 string jsonData = JsonUtility.ToJson(authPlayerData);
@@ -118,6 +118,7 @@ namespace OcentraAI.LLMGames.Manager.Authentication
 
         public async UniTask<(bool success, IAuthPlayerData playerData)> TryGetPlayerDataFromCloud(string key)
         {
+            await WaitForInitializationAsync();
             try
             {
                 Dictionary<string, Item> data = await CloudSaveService.Data.Player.LoadAsync(new HashSet<string> { AuthenticationService.PlayerId }).AsUniTask();
@@ -129,7 +130,7 @@ namespace OcentraAI.LLMGames.Manager.Authentication
             }
             catch (Exception ex)
             {
-                LogError($"Error loading player data: {ex.Message}", this);
+                GameLoggerScriptable.LogError($"Error loading player data: {ex.Message}", this);
                 return (false, null);
 
             }
@@ -140,6 +141,7 @@ namespace OcentraAI.LLMGames.Manager.Authentication
 
         public async UniTask<(bool, string)> TryGetPlayerName(string key)
         {
+            await WaitForInitializationAsync();
             try
             {
                 (bool success, IAuthPlayerData playerData) = await TryGetPlayerDataFromCloud(key);
@@ -162,6 +164,7 @@ namespace OcentraAI.LLMGames.Manager.Authentication
 
         public async UniTask<(bool, string)> TryGetPlayerEmail(string key)
         {
+            await WaitForInitializationAsync();
             try
             {
                 (bool success, IAuthPlayerData playerData) = await TryGetPlayerDataFromCloud(key);
@@ -185,6 +188,7 @@ namespace OcentraAI.LLMGames.Manager.Authentication
 
         private async UniTask OnAuthenticationSignOutEvent(AuthenticationSignOutEvent arg)
         {
+            await WaitForInitializationAsync();
             await SignOut(arg.AuthPlayerData);
             await UniTask.Yield();
         }
@@ -196,11 +200,11 @@ namespace OcentraAI.LLMGames.Manager.Authentication
             try
             {
                 await SavePlayerDataToCloud(authPlayerData);
-                Log("Player data saved successfully.", this);
+                GameLoggerScriptable.Log("Player data saved successfully.", this);
             }
             catch (Exception ex)
             {
-                LogError($"Error occurred while saving player data: {ex.Message}", this);
+                GameLoggerScriptable.LogError($"Error occurred while saving player data: {ex.Message}", this);
             }
 
             AuthenticationService.SignOut();

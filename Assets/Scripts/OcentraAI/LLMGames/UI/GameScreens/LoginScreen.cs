@@ -2,6 +2,7 @@ using Cysharp.Threading.Tasks;
 using OcentraAI.LLMGames.Authentication;
 using OcentraAI.LLMGames.Events;
 using OcentraAI.LLMGames.Extensions;
+using OcentraAI.LLMGames.Manager.Authentication;
 using OcentraAI.LLMGames.Screens3D;
 using OcentraAI.LLMGames.UI;
 using Sirenix.OdinInspector;
@@ -93,11 +94,12 @@ namespace OcentraAI.LLMGames.Screens
         public static Regex PasswordRegex => new Regex(@"^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[^\da-zA-Z]).{8,30}$");
 
         [SerializeField] private bool IsLogInTabActive { get; set; } = false;
-        
 
 
-        protected override void Init(bool startEnabled)
+
+        protected override async void Init(bool startEnabled)
         {
+            await AuthenticationManager.Instance.InitializeAsync();
 
             FieldValidator = transform.FindChildRecursively<TextMeshPro>(nameof(FieldValidator));
 
@@ -584,23 +586,34 @@ namespace OcentraAI.LLMGames.Screens
 
         private void OnAuthenticationStatus(AuthenticationStatusEvent e)
         {
-            switch (e.Result.ResultAuthStatus)
+            IAuthStatus authStatus = e.Result.ResultAuthStatus;
+
+            switch (authStatus.Name)
             {
-                case AuthStatus.Success:
+                case nameof(AuthStatus.Success):
                     GameLoggerScriptable.Log($"Authentication Status {e.Result.Message}", this);
                     break;
-                case AuthStatus.Authenticated:
+
+                case nameof(AuthStatus.Authenticated):
                     OnAuthenticationCompleted(e.Result.AuthPlayerData);
                     break;
-                case AuthStatus.Failure:
+
+                case nameof(AuthStatus.Failure):
                     ShowErrorMessage(e.Result.Message);
                     break;
-                case AuthStatus.Pending:
+
+                case nameof(AuthStatus.Pending):
                     GameLoggerScriptable.Log($"Authentication in progress: {e.Result.Message}", this);
-                    // todo show a loading indicator or update UI to show pending status
+                    // TODO: show a loading indicator or update UI to show pending status
+                    break;
+
+                default:
+                    GameLoggerScriptable.Log($"Unknown authentication status: {authStatus}", this);
                     break;
             }
         }
+
+
 
         private async void HandleRequestAdditionalUserInfo(RequestAdditionalUserInfoEvent e)
         {
@@ -641,7 +654,7 @@ namespace OcentraAI.LLMGames.Screens
             bool published = await EventBus.Instance.PublishAsync(signInWithUnityEvent);
             if (published)
             {
-                AuthResult result = await signInWithUnityEvent.CompletionSource.Task;
+                IAuthResult result = await signInWithUnityEvent.CompletionSource.Task;
                 HandleAuthResult(result);
             }
             else
@@ -656,7 +669,7 @@ namespace OcentraAI.LLMGames.Screens
             bool published = await EventBus.Instance.PublishAsync(signInWithGoogleEvent);
             if (published)
             {
-                AuthResult result = await signInWithGoogleEvent.CompletionSource.Task;
+                IAuthResult result = await signInWithGoogleEvent.CompletionSource.Task;
                 HandleAuthResult(result);
             }
             else
@@ -671,7 +684,7 @@ namespace OcentraAI.LLMGames.Screens
             bool published = await EventBus.Instance.PublishAsync(signInWithFacebookEvent);
             if (published)
             {
-                AuthResult result = await signInWithFacebookEvent.CompletionSource.Task;
+                IAuthResult result = await signInWithFacebookEvent.CompletionSource.Task;
                 HandleAuthResult(result);
             }
             else
@@ -682,11 +695,12 @@ namespace OcentraAI.LLMGames.Screens
 
         private async void OnSignInWithAsGuest()
         {
-            SignInAsGuestEvent signInAsGuestEvent = new SignInAsGuestEvent();
+            UniTaskCompletionSource<IAuthResult> uniTaskCompletionSource = new UniTaskCompletionSource<IAuthResult>();
+            SignInAsGuestEvent signInAsGuestEvent = new SignInAsGuestEvent(uniTaskCompletionSource);
             bool published = await EventBus.Instance.PublishAsync(signInAsGuestEvent);
             if (published)
             {
-                AuthResult result = await signInAsGuestEvent.CompletionSource.Task;
+                IAuthResult result = await signInAsGuestEvent.CompletionSource.Task;
                 HandleAuthResult(result);
             }
             else
@@ -700,7 +714,7 @@ namespace OcentraAI.LLMGames.Screens
             bool published = await EventBus.Instance.PublishAsync(signInWithSteamEvent);
             if (published)
             {
-                AuthResult result = await signInWithSteamEvent.CompletionSource.Task;
+                IAuthResult result = await signInWithSteamEvent.CompletionSource.Task;
                 HandleAuthResult(result);
             }
             else
@@ -721,7 +735,7 @@ namespace OcentraAI.LLMGames.Screens
             bool published = await EventBus.Instance.PublishAsync(createAccountEvent);
             if (published)
             {
-                AuthResult result = await createAccountEvent.CompletionSource.Task;
+                IAuthResult result = await createAccountEvent.CompletionSource.Task;
                 HandleAuthResult(result);
             }
             else
@@ -736,7 +750,7 @@ namespace OcentraAI.LLMGames.Screens
             bool published = await EventBus.Instance.PublishAsync(signInEvent);
             if (published)
             {
-                AuthResult result = await signInEvent.CompletionSource.Task;
+                IAuthResult result = await signInEvent.CompletionSource.Task;
                 HandleAuthResult(result);
             }
             else
@@ -745,11 +759,11 @@ namespace OcentraAI.LLMGames.Screens
             }
         }
 
-        private void HandleAuthResult(AuthResult result)
+        private void HandleAuthResult(IAuthResult result)
         {
             if (result.IsSuccess)
             {
-                GameLoggerScriptable.Log(result.Message, null);
+                GameLoggerScriptable.Log(result.Message, this);
             }
             else
             {
@@ -1058,7 +1072,7 @@ namespace OcentraAI.LLMGames.Screens
 
         public void OnAuthenticationCompleted(IAuthPlayerData authPlayer)
         {
-
+            EventBus.Instance.Publish(new AuthenticationCompletedEvent(authPlayer));
             EventBus.Instance.Publish(new CreateProfileEvent(authPlayer));
 
         }

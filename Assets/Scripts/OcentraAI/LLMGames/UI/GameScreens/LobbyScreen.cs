@@ -9,7 +9,7 @@ namespace OcentraAI.LLMGames.Screens
     [ExecuteAlways]
     public class LobbyScreen : UI3DScreen<LobbyScreen>
     {
-        [SerializeField] private  List<UI3DScreen> AllLobbyScreens { get; set; }= new List<UI3DScreen>();
+        [SerializeField] private List<UI3DScreen> AllLobbyScreens { get; set; } = new List<UI3DScreen>();
         [SerializeField] private int maxAttempts = 10;
         [SerializeField] private int delayMs = 100;
 
@@ -17,7 +17,7 @@ namespace OcentraAI.LLMGames.Screens
         public override void SubscribeToEvents()
         {
             base.SubscribeToEvents();
-           EventRegistrar.Subscribe<ShowScreenEvent>(OnShowScreen);
+            EventRegistrar.Subscribe<ShowScreenEvent>(OnShowScreen);
         }
 
 
@@ -48,7 +48,7 @@ namespace OcentraAI.LLMGames.Screens
             SetMainPanelForScreen<MatchmakerScreen>();
             base.Init(StartEnabled);
         }
-        
+
 
         private async void SetMainPanelForScreen<T>() where T : UI3DScreen<T>
         {
@@ -59,7 +59,7 @@ namespace OcentraAI.LLMGames.Screens
             {
                 attempts++;
                 screen = UI3DScreen<T>.Instance;
-               
+
                 if (screen == null)
                 {
                     Debug.LogWarning($"{typeof(T).Name} instance is null, retrying attempt {attempts}/{maxAttempts}...");
@@ -82,7 +82,7 @@ namespace OcentraAI.LLMGames.Screens
                 AllLobbyScreens.Add(screen);
             }
 
-            RegisteredScreens.TryAdd(typeof(T),screen);
+            RegisteredScreens.TryAdd(typeof(T), screen);
         }
     }
 }

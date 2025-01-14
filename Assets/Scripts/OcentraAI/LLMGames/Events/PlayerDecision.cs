@@ -8,7 +8,7 @@ using UnityEngine;
 namespace OcentraAI.LLMGames.Events
 {
     [Serializable]
-    public class PlayerDecision : INetworkSerializable
+    public class PlayerDecision : INetworkSerializable, IEquatable<PlayerDecision>
     {
         //default fallback
         public static readonly PlayerDecision None = new PlayerDecision(0, nameof(None));
@@ -70,7 +70,7 @@ namespace OcentraAI.LLMGames.Events
 
         public static PlayerDecision FromId(int id)
         {
-            foreach (var decision in GetAllDecisions())
+            foreach (PlayerDecision decision in GetAllDecisions())
             {
                 if (decision.DecisionId == id)
                 {
@@ -80,18 +80,18 @@ namespace OcentraAI.LLMGames.Events
             return None;
         }
 
+        public bool Equals(PlayerDecision other)
+        {
+            return other != null && decisionId == other.decisionId;
+        }
+
         public override bool Equals(object obj)
         {
-            if (obj is PlayerDecision other)
-            {
-                return decisionId == other.decisionId;
-            }
-            return false;
+            return Equals(obj as PlayerDecision);
         }
 
         public static bool operator ==(PlayerDecision left, PlayerDecision right)
         {
-            // Handle null cases
             if (ReferenceEquals(left, null))
             {
                 return ReferenceEquals(right, null);
@@ -108,10 +108,7 @@ namespace OcentraAI.LLMGames.Events
         {
             return DecisionId.GetHashCode();
         }
-
-
-
-
+        
 
         public static IEnumerable<PlayerDecision> GetAllDecisions()
         {

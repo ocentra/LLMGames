@@ -1,5 +1,8 @@
 using Cysharp.Threading.Tasks;
 using Newtonsoft.Json;
+using OcentraAI.LLMGames.Manager;
+using Sirenix.OdinInspector;
+using Sirenix.Utilities;
 using System;
 using System.Text;
 using System.Threading.Tasks;
@@ -8,42 +11,37 @@ using UnityEngine.Networking;
 
 namespace OcentraAI.LLMGames.LLMServices
 {
-    public abstract class BaseLLMService : ILLMService
+    public abstract class BaseLLMService<T> : ScriptableSingletonBase<T>, ILLMService where T : GlobalConfig<T>, new()
     {
-        protected BaseLLMService(LLMConfig config)
-        {
-            Endpoint = config.Endpoint;
-            ApiKey = config.ApiKey;
-            ApiUrl = config.ApiUrl;
-            Model = config.Model;
-            MaxTokens = config.MaxTokens;
-            Temperature = config.Temperature;
-            Stream = config.Stream;
-        }
+        public abstract ILLMProvider Provider { get; protected set; }
+        [ShowInInspector,ReadOnly] public ILLMConfig LLMConfig { get; set; } = new LLMConfig();
 
-        protected string Endpoint { get; set; }
-        protected string ApiKey { get; set; }
-        protected string ApiUrl { get; set; }
-        protected string Model { get; set; }
-        protected int MaxTokens { get; set; }
-        protected double Temperature { get; set; }
-        protected bool Stream { get; set; }
+        public async UniTask InitializeAsync(ILLMConfig config)
+        {
+            if (Equals(config.Provider, Provider))
+            {
+                LLMConfig = config;
+            }
+            
+            await base.InitializeAsync();
+            await UniTask.Yield();
+        }
 
         public async UniTask<string> GetResponseAsync(string systemMessage, string userPrompt)
         {
             try
             {
-                var requestContent = GenerateRequestContent(systemMessage, userPrompt);
-                var jsonData = JsonConvert.SerializeObject(requestContent);
-                var webRequest = new UnityWebRequest(Endpoint + ApiUrl, "POST")
+                object requestContent = GenerateRequestContent(systemMessage, userPrompt);
+                string jsonData = JsonConvert.SerializeObject(requestContent);
+                UnityWebRequest webRequest = new UnityWebRequest(LLMConfig.Endpoint + LLMConfig.ApiUrl, "POST")
                 {
                     uploadHandler = new UploadHandlerRaw(Encoding.UTF8.GetBytes(jsonData)),
                     downloadHandler = new DownloadHandlerBuffer()
                 };
                 webRequest.SetRequestHeader("Content-Type", "application/json");
-                webRequest.SetRequestHeader("Authorization", "Bearer " + ApiKey);
+                webRequest.SetRequestHeader("Authorization", "Bearer " + LLMConfig.ApiKey);
 
-                var operation = webRequest.SendWebRequest();
+                UnityWebRequestAsyncOperation operation = webRequest.SendWebRequest();
 
                 while (!operation.isDone)
                 {
@@ -77,9 +75,9 @@ namespace OcentraAI.LLMGames.LLMServices
                 {
                     new {role = "system", content = systemMessage}, new {role = "user", content = userPrompt}
                 },
-                temperature = Temperature,
-                max_tokens = MaxTokens,
-                stream = Stream
+                temperature = LLMConfig.Temperature,
+                max_tokens = LLMConfig.MaxTokens,
+                stream = LLMConfig.Stream
             };
         }
     }

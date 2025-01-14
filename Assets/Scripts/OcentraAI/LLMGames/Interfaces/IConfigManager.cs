@@ -4,9 +4,9 @@ namespace OcentraAI.LLMGames
 {
     public interface IConfigManager
     {
-        UniTask FetchConfig();
-        bool TryGetConfigForProvider(string provider, out ILLMConfig config);
-        void UpdateApiKey(string provider, string newApiKey);
+        UniTask FetchConfig(string playerId);
+        bool TryGetConfigForProvider(ILLMProvider provider, out ILLMConfig config);
+        void UpdateApiKey(ILLMProvider provider, string newApiKey);
 
         UniTask<(bool success, ILLMConfig config)> TryAddOrUpdateConfig(ILLMConfig newConfig);
 

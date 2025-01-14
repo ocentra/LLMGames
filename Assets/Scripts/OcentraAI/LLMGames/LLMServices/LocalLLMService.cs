@@ -1,17 +1,18 @@
 using Newtonsoft.Json;
+using Sirenix.Utilities;
+using UnityEngine;
 
 namespace OcentraAI.LLMGames.LLMServices
 {
-    public class LocalLLMService : BaseLLMService
-    {
-        public LocalLLMService(LLMConfig config)
-            : base(config)
-        {
-        }
 
+    [CreateAssetMenu(fileName = nameof(LocalLLMService), menuName = "LLMGames/LocalLLMService")]
+    [GlobalConfig("Assets/Resources/")]
+    public class LocalLLMService : BaseLLMService<LocalLLMService>
+    {
+        public override ILLMProvider Provider { get; protected set; } = LLMProvider.LocalLLM;
         protected override string ProcessResponse(string jsonResponse)
         {
-            var response = JsonConvert.DeserializeObject<LocalLLMResponse>(jsonResponse);
+            LocalLLMResponse response = JsonConvert.DeserializeObject<LocalLLMResponse>(jsonResponse);
             return response.Result.GeneratedText;
         }
     }

@@ -1,3 +1,4 @@
+using Cysharp.Threading.Tasks;
 using OcentraAI.LLMGames.GameModes.Rules;
 using OcentraAI.LLMGames.Manager.Utilities;
 using OcentraAI.LLMGames.ThreeCardBrag.Rules;
@@ -21,16 +22,34 @@ namespace OcentraAI.LLMGames.GameModes
         public virtual void SaveChanges()
         {
 #if UNITY_EDITOR
-            EditorSaveManager.RequestSave(this);
+            EditorSaveManager.RequestSave(this).Forget();
 #endif
         }
 
         #endregion
 
         #region Fields and Properties
+      
+        [SerializeField, ShowInInspector, ValueDropdown(nameof(GetAvailableGameModeType)), PropertyOrder(-1)]
+        [Tooltip("The GameModeType this button represents.")]
+        private int id = 0;
 
-        [OdinSerialize]
-        [HideInInspector]
+        public IEnumerable<ValueDropdownItem<int>> GetAvailableGameModeType()
+        {
+            List<ValueDropdownItem<int>> dropdownItems = new List<ValueDropdownItem<int>>();
+
+            foreach (GameModeType genre in GameModeType.GetAll())
+            {
+                dropdownItems.Add(new ValueDropdownItem<int>(genre.Name, genre.Id));
+            }
+
+            return dropdownItems;
+        }
+        [ShowInInspector, PropertyOrder(-1)]
+        public GameModeType GameModeType { get => GameModeType.FromId(id); set => id = value.Id; }
+
+
+        [OdinSerialize,HideInInspector]
         public Dictionary<BaseBonusRule, CustomRuleState> BaseBonusRulesTemplate { get; set; } =
             new Dictionary<BaseBonusRule, CustomRuleState>();
 

@@ -27,7 +27,7 @@ namespace OcentraAI.LLMGames.Screens
             InitReferences();
         }
 
-        protected void OnValidate()
+        protected override void OnValidate()
         {
 
             InitReferences();

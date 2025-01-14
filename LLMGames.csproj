@@ -62,6 +62,7 @@
     <Analyzer Include="C:\Program Files\Unity\Hub\Editor\6000.0.23f1\Editor\Data\Tools\Unity.SourceGenerators\Unity.UIToolkit.SourceGenerator.dll" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Assets\Scripts\OcentraAI\LLMGames\LLMServices\AIModelManager.cs" />
     <Compile Include="Assets\Scripts\OcentraAI\LLMGames\LLMServices\ClaudeResponse.cs" />
     <Compile Include="Assets\Scripts\OcentraAI\LLMGames\Managers\UnityServicesManager.cs" />
     <Compile Include="Assets\Scripts\OcentraAI\LLMGames\LLMServices\LocalLLMService.cs" />
@@ -77,10 +78,8 @@
     <Compile Include="Assets\Scripts\OcentraAI\LLMGames\LLMServices\OpenAIResponse.cs" />
     <Compile Include="Assets\Scripts\OcentraAI\LLMGames\LLMServices\BaseLLMService.cs" />
     <Compile Include="Assets\Scripts\OcentraAI\LLMGames\Managers\DevModeManager.cs" />
-    <Compile Include="Assets\Scripts\OcentraAI\LLMGames\LLMServices\LLMServiceFactory.cs" />
     <Compile Include="Assets\Scripts\OcentraAI\LLMGames\LLMServices\ClaudeService.cs" />
     <Compile Include="Assets\Scripts\OcentraAI\LLMGames\Editor\DevModeManagerEditor.cs" />
-    <Compile Include="Assets\Scripts\OcentraAI\LLMGames\LLMServices\LLMManager.cs" />
     <Compile Include="Assets\Scripts\OcentraAI\LLMGames\Editor\GameRulesContainerDrawer.cs" />
   </ItemGroup>
   <ItemGroup>
@@ -1316,10 +1315,6 @@
     <ProjectReference Include="LLMGames.Commons.csproj">
       <Project>{37F137BD-D95B-3BC2-E479-D144ABE710B2}</Project>
       <Name>LLMGames.Commons</Name>
-    </ProjectReference>
-    <ProjectReference Include="LLMGames.DTO.csproj">
-      <Project>{0AAB72FC-B78D-EA4E-F4EE-8F319A36B7A5}</Project>
-      <Name>LLMGames.DTO</Name>
     </ProjectReference>
     <ProjectReference Include="Unity.Collections.csproj">
       <Project>{C016C931-2C4F-32AC-8071-5ADBD82246BC}</Project>

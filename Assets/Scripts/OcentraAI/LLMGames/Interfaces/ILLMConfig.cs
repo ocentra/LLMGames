@@ -8,8 +8,10 @@ namespace OcentraAI.LLMGames
         public string Endpoint { get; set; }
         public int MaxTokens { get; set; }
         public string Model { get; set; }
-        public string ProviderName { get; set; }
+        public ILLMProvider Provider { get; set; }
         public bool Stream { get; set; }
         public double Temperature { get; set; }
+        public string ProviderName { get; set; }
+        bool TrySetProvider(string providerName);
     }
 }

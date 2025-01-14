@@ -1947,10 +1947,6 @@
       <Project>{410A6C6F-332A-55F8-CBEC-D2AE8E4B0BAE}</Project>
       <Name>Unity.RenderPipelines.Core.Editor</Name>
     </ProjectReference>
-    <ProjectReference Include="LLMGames.DTO.csproj">
-      <Project>{0AAB72FC-B78D-EA4E-F4EE-8F319A36B7A5}</Project>
-      <Name>LLMGames.DTO</Name>
-    </ProjectReference>
     <ProjectReference Include="Unity.Toolchain.Win-x86_64-Linux-x86_64.csproj">
       <Project>{55CEBA90-4A90-75E6-7CB3-B229F27701F5}</Project>
       <Name>Unity.Toolchain.Win-x86_64-Linux-x86_64</Name>

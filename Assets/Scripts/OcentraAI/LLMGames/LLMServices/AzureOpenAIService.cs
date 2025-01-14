@@ -1,17 +1,17 @@
 using Newtonsoft.Json;
+using Sirenix.Utilities;
+using UnityEngine;
 
 namespace OcentraAI.LLMGames.LLMServices
 {
-    public class AzureOpenAIService : BaseLLMService
+    [CreateAssetMenu(fileName = nameof(AzureOpenAIService), menuName = "LLMGames/AzureOpenAIService")]
+    [GlobalConfig("Assets/Resources/")]
+    public class AzureOpenAIService : BaseLLMService<AzureOpenAIService>
     {
-        public AzureOpenAIService(LLMConfig config)
-            : base(config)
-        {
-        }
-
+        public override ILLMProvider Provider { get; protected set; } = LLMProvider.AzureOpenAI;
         protected override string ProcessResponse(string jsonResponse)
         {
-            var response = JsonConvert.DeserializeObject<OpenAIResponse>(jsonResponse);
+            OpenAIResponse response = JsonConvert.DeserializeObject<OpenAIResponse>(jsonResponse);
             return response.Choices[0].Text;
         }
     }

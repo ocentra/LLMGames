@@ -1196,6 +1196,7 @@ MonoBehaviour:
     - Name: 
       Entry: 8
       Data: 
+  id: 4
 --- !u!114 &3000598200879771874
 MonoBehaviour:
   m_ObjectHideFlags: 0

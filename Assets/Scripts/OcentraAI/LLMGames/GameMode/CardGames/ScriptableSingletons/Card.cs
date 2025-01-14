@@ -1,4 +1,5 @@
-﻿using OcentraAI.LLMGames.Manager.Utilities;
+﻿using Cysharp.Threading.Tasks;
+using OcentraAI.LLMGames.Manager.Utilities;
 using OcentraAI.LLMGames.Utilities;
 using Sirenix.OdinInspector;
 using System;
@@ -72,7 +73,7 @@ namespace OcentraAI.LLMGames.Scriptable
         {
 #if UNITY_EDITOR
 
-            EditorSaveManager.RequestSave(this);
+            EditorSaveManager.RequestSave(this).Forget();
 
 #endif
         }

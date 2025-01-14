@@ -5,11 +5,11 @@ namespace OcentraAI.LLMGames.Events
 {
     public class SignInAsGuestEvent : EventArgsBase
     {
-        public UniTaskCompletionSource<AuthResult> CompletionSource { get; }
+        public UniTaskCompletionSource<IAuthResult> CompletionSource { get; }
 
-        public SignInAsGuestEvent()
+        public SignInAsGuestEvent(UniTaskCompletionSource<IAuthResult> completionSource)
         {
-            CompletionSource = new UniTaskCompletionSource<AuthResult>();
+            CompletionSource = completionSource;
         }
     }
 }

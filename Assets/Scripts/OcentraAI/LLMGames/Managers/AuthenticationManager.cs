@@ -14,8 +14,8 @@ using static System.String;
 
 namespace OcentraAI.LLMGames.Manager.Authentication
 {
-    [RequireComponent(typeof(UnityServicesManager))]
-    public class AuthenticationManager : MonoBehaviourBase<AuthenticationManager>
+    [CreateAssetMenu(fileName = "AuthenticationManager", menuName = "OcentraAI/AuthenticationManager", order = 1)]
+    public class AuthenticationManager : ScriptableSingletonBase<AuthenticationManager>
     {
 
 
@@ -26,59 +26,42 @@ namespace OcentraAI.LLMGames.Manager.Authentication
         public bool IsSigningIn { get; private set; }
         public bool IsLoggedIn { get; set; }
 
-        IUnityServicesManager UnityServicesManager { get; set; }
-
-        protected override async void Start()
-        {
-            if (UseAnonymousSignInFromScene)
-            {
-                try
-                {
-                    await SignInAnonymouslyAsync();
-                }
-                catch (Exception e)
-                {
-                    GameLoggerScriptable.Instance.LogError($"Anonymous sign-in failed: {e.Message}", this);
-                }
-            }
-        }
 
         public override async UniTask InitializeAsync()
         {
             if (Application.isPlaying)
             {
-                try
+                if (!IsInitialized)
                 {
-                    UniTaskCompletionSource<IOperationResult<IMonoBehaviourBase>> completionSource = new UniTaskCompletionSource<IOperationResult<IMonoBehaviourBase>>();
-                    await EventBus.Instance.PublishAsync(new WaitForInitializationEvent(completionSource, GetType(), typeof(IUnityServicesManager), 10));
-                    IOperationResult<IMonoBehaviourBase> operationResult = await completionSource.Task;
-                    if (operationResult.IsSuccess && operationResult.Value is IUnityServicesManager manager)
+                    try
                     {
-                        UnityServicesManager = manager;
+                        await UnityServicesManager.Instance.InitializeAsync();
+                        await UnityServicesManager.Instance.InitializationSource.Task;
                     }
-                    else
+                    catch (Exception ex)
                     {
-                        Debug.LogError("Failed to initialize UnityServicesManager. AuthenticationManager cannot proceed.");
+                        GameLoggerScriptable.LogException($"Failed to initialize {nameof(AuthenticationManager)}: {ex.Message}", this);
                         return;
                     }
 
-                }
-                catch (Exception ex)
-                {
-                    Debug.LogError($"Failed to initialize AuthenticationManager: {ex.Message}");
-                    return;
+                    await base.InitializeAsync();
                 }
             }
-            await base.InitializeAsync();
+
         }
 
 
-
-
-
-        public override async void SubscribeToEvents()
+        public override void SubscribeToEvents()
         {
-            await UniTask.WaitUntil(() => UnityServices.State == ServicesInitializationState.Initialized);
+
+            EventRegistrar.Subscribe<SignInWithUserPasswordEvent>(OnSignInWithUserPassword);
+            EventRegistrar.Subscribe<SignInCachedUserEvent>(OnSignInCachedUserEvent);
+            EventRegistrar.Subscribe<SignInWithUnityEvent>(OnSignInWithUnity);
+            EventRegistrar.Subscribe<SignInWithGoogleEvent>(OnSignInWithGoogle);
+            EventRegistrar.Subscribe<SignInWithFacebookEvent>(OnSignInWithFacebook);
+            EventRegistrar.Subscribe<SignInWithSteamEvent>(OnSignInWithSteam);
+            EventRegistrar.Subscribe<SignInAsGuestEvent>(OnSignInAsGuest);
+            EventRegistrar.Subscribe<CreateAccountEvent>(OnCreateAccount);
 
 
             PlayerAccountService.Instance.SignedIn += OnPlayerAccountServiceSignedIn;
@@ -91,18 +74,13 @@ namespace OcentraAI.LLMGames.Manager.Authentication
             AuthenticationService.Instance.SignedOut += OnAuthenticationServiceSignedOut;
             AuthenticationService.Instance.Expired += OnAuthenticationServiceExpired;
 
-            EventRegistrar.Subscribe<SignInWithUserPasswordEvent>(OnSignInWithUserPassword);
-            EventRegistrar.Subscribe<SignInCachedUserEvent>(OnSignInCachedUserEvent);
-            EventRegistrar.Subscribe<SignInWithUnityEvent>(OnSignInWithUnity);
-            EventRegistrar.Subscribe<SignInWithGoogleEvent>(OnSignInWithGoogle);
-            EventRegistrar.Subscribe<SignInWithFacebookEvent>(OnSignInWithFacebook);
-            EventRegistrar.Subscribe<SignInWithSteamEvent>(OnSignInWithSteam);
-            EventRegistrar.Subscribe<SignInAsGuestEvent>(OnSignInAsGuest);
-            EventRegistrar.Subscribe<CreateAccountEvent>(OnCreateAccount);
+
         }
 
-        public override void UnsubscribeFromEvents()
+        public override async void UnsubscribeFromEvents()
         {
+
+            await UniTask.WaitUntil(() => UnityServices.State == ServicesInitializationState.Initialized);
 
             PlayerAccountService.Instance.SignedIn -= OnPlayerAccountServiceSignedIn;
             PlayerAccountService.Instance.SignInFailed -= OnPlayerAccountServiceSignInFailed;
@@ -112,6 +90,8 @@ namespace OcentraAI.LLMGames.Manager.Authentication
             AuthenticationService.Instance.SignInFailed -= OnAuthenticationServiceSignInFailed;
             AuthenticationService.Instance.SignedOut -= OnAuthenticationServiceSignedOut;
             AuthenticationService.Instance.Expired -= OnAuthenticationServiceExpired;
+
+
 
             EventRegistrar.UnsubscribeAll();
         }
@@ -135,8 +115,8 @@ namespace OcentraAI.LLMGames.Manager.Authentication
         private async void OnAuthenticationServiceSignedIn()
         {
 
-            Log($"PlayerID: {AuthenticationService.Instance.PlayerId}", this);
-            Log($"Access Token: {AuthenticationService.Instance.AccessToken}", this);
+            GameLoggerScriptable.Log($"PlayerID: {AuthenticationService.Instance.PlayerId}", this);
+            GameLoggerScriptable.Log($"Access Token: {AuthenticationService.Instance.AccessToken}", this);
 
 
 
@@ -281,45 +261,52 @@ namespace OcentraAI.LLMGames.Manager.Authentication
             PublishAuthResult(AuthResult.Failure("Player session could not be refreshed and expired.")).Forget();
         }
 
-        private async void OnSignInWithUserPassword(SignInWithUserPasswordEvent e)
+        private async UniTask OnSignInWithUserPassword(SignInWithUserPasswordEvent e)
         {
+            await InitializationSource.Task;
             AuthResult result = await PerformAuthenticationAsync(AuthenticationService.Instance.SignInWithUsernamePasswordAsync, e.Username, e.Password);
             e.CompletionSource.TrySetResult(result);
         }
 
-        private async void OnCreateAccount(CreateAccountEvent e)
+        private async UniTask OnCreateAccount(CreateAccountEvent e)
         {
+            await InitializationSource.Task;
             AuthResult result = await PerformAuthenticationAsync(AuthenticationService.Instance.SignUpWithUsernamePasswordAsync, e.Username, e.Password);
             e.CompletionSource.TrySetResult(result);
         }
 
 
-        private async void OnSignInWithUnity(SignInWithUnityEvent e)
+        private async UniTask OnSignInWithUnity(SignInWithUnityEvent e)
         {
+            await InitializationSource.Task;
             AuthResult result = await SignInWithUnityAsync();
             e.CompletionSource.TrySetResult(result);
         }
 
-        private void OnSignInWithGoogle(SignInWithGoogleEvent e)
+        private async UniTask OnSignInWithGoogle(SignInWithGoogleEvent e)
         {
+            await InitializationSource.Task;
             AuthResult authResult = AuthResult.Failure("SignInWithGoogle Not Implemented Yet");
             e.CompletionSource.TrySetResult(authResult);
         }
 
-        private void OnSignInWithFacebook(SignInWithFacebookEvent e)
+        private async UniTask OnSignInWithFacebook(SignInWithFacebookEvent e)
         {
+            await InitializationSource.Task;
             AuthResult authResult = AuthResult.Failure("SignInWithFacebook Not Implemented Yet");
             e.CompletionSource.TrySetResult(authResult);
         }
 
-        private void OnSignInWithSteam(SignInWithSteamEvent e)
+        private async UniTask OnSignInWithSteam(SignInWithSteamEvent e)
         {
+            await InitializationSource.Task;
             AuthResult authResult = AuthResult.Failure("SignInWithSteam Not Implemented Yet");
             e.CompletionSource.TrySetResult(authResult);
         }
 
-        private async void OnSignInAsGuest(SignInAsGuestEvent e)
+        private async UniTask OnSignInAsGuest(SignInAsGuestEvent e)
         {
+            await InitializationSource.Task;
             await SignInAnonymouslyAsync();
             AuthResult authResult = AuthResult.Success("guest Sign In");
             e.CompletionSource.TrySetResult(authResult);
@@ -508,7 +495,7 @@ namespace OcentraAI.LLMGames.Manager.Authentication
             }
         }
 
-        private async void OnSignInCachedUserEvent(SignInCachedUserEvent e)
+        private async UniTask OnSignInCachedUserEvent(SignInCachedUserEvent e)
         {
             try
             {
@@ -519,7 +506,7 @@ namespace OcentraAI.LLMGames.Manager.Authentication
                     {
                         RequestUserCredentialsEvent userCredentialsEvent = new RequestUserCredentialsEvent();
                         await EventBus.Instance.PublishAsync(userCredentialsEvent);
-                        UserCredentials credentials = await userCredentialsEvent.CompletionSource.Task;
+                        IUserCredentials credentials = await userCredentialsEvent.CompletionSource.Task;
 
                         if (credentials.IsValid)
                         {

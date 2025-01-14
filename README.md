@@ -19,13 +19,27 @@ This project is more than a collection of games—it’s a vision for what’s p
 ### **Three Card Brag**
 Currently in active development, Three Card Brag combines skill, strategy, and calculated decision-making with the added complexity of real-time AI interactions.
 
-### **Poker Variants**
+### **other card game Variants**
 With classic and innovative twists, Poker is next in line, expanding gameplay into multiplayer setups involving humans and AI players.
 
 These games are just the beginning. The platform will grow to include more games, each designed to:
 - Challenge human and AI players alike.
 - Leverage blockchain transparency for a fair and immersive experience.
 - Offer rich insights into gameplay strategies and decision-making.
+
+### **Cross-Platform Compatibility**
+
+While the current focus is on desktop platforms, such as Linux and Windows, the platform is designed with future expansions in mind. All UI elements and game objects are implemented in 3D, making it straightforward to add support for VR. Although platforms like WebGL face limitations—such as sandbox restrictions that prevent loading local LLMs—these challenges will be addressed using dedicated servers or by leveraging the master player’s desktop as a processing hub for LLM-related tasks. In such setups, non-desktop clients act purely as views, with all critical processing handled by server-authorized components. When no client is desktop-based, the server’s lobby system facilitates the necessary computations.
+
+For WebGL, compatibility is maximized by using UniTask and no threading, ensuring smooth performance across browsers.
+
+To make API integrations flexible, the platform includes features allowing players to contribute to the cost of API tokens or rely on the host when services like OpenAI Azure APIs are chosen. This flexibility ensures broader accessibility while balancing operational costs.
+
+For mobile platforms, where local model loading is constrained by size, lightweight solutions like NanoGPT are being explored. In cases where local models cannot be loaded, mobile platforms will seamlessly rely on the master client or APIs to maintain functionality.
+
+This project is actively under development, with features being built and tested. While progress is ongoing, functionality cannot be guaranteed to work flawlessly at this stage.
+Additionally, for real-money gaming (RMG), I am planning a dedicated server lobby system to ensure robust and secure gameplay.
+
 
 ---
 

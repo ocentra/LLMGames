@@ -101,7 +101,9 @@ This is just the beginning. Join us as we push the boundaries of what’s possib
 ---
 
 ### **Contribute to the Project**
-We welcome contributions from developers, designers, and AI enthusiasts! Check out the repository and feel free to raise issues, suggest features, or submit pull requests.
+I welcome contributions from developers, designers, and AI enthusiasts! This repository is a mirror of my main Plastic SCM repository, which I use as the primary version control system. If you notice large changesets, it's due to the mirroring process.
+
+If you're interested in contributing, let me know, and I can help set up Plastic SCM and provide guidance on what’s needed. For now, this repository serves as a backup and showcase mirror.
 
 ---
 

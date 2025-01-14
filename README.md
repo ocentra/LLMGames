@@ -4,7 +4,7 @@ Welcome to the cutting-edge suite of games that combine the power of **AI**, **v
 
 ---
 
-## **Our Vision**
+## **Vision**
 This project is more than a collection of games—it’s a vision for what’s possible when AI, blockchain, and interactive gaming converge to create something both innovative and meaningful. By leveraging the Solana blockchain, we ensure **transparency** and **trust** for features like betting and game history while allowing players to:
 
 - Compete against AI models via APIs or local custom endpoints.

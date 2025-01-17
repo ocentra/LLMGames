@@ -1,6 +1,6 @@
 %YAML 1.1
 %TAG !u! tag:unity3d.com,2011:
---- !u!114 &-6858448041558993788
+--- !u!114 &-7499308032599118353
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -10,7 +10,7 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: e4a9fd580a557e84cb5c8e441f1e84df, type: 3}
-  m_Name: MindFul
+  m_Name: 
   m_EditorClassIdentifier: 
   serializationData:
     SerializedFormat: 2
@@ -23,18 +23,52 @@ MonoBehaviour:
     SerializationNodes:
     - Name: ID
       Entry: 2
-      Data: 56c0aba344ad4c2ab985686d13c9868b
+      Data: 6cb74395cd2046659491d5d2352a5059
   Info:
     Edit: 0
-    Value: '<size=16><color=#FFD700>MindFul & Emotional</color></size>
+    Value: '<size=16><color=#FFD700>VoiceControlled</color></size>
 
-      <size=14><color=#FFFFFF>Immerse
-      yourself in games that focus on mindfulness and emotional well-being. Play
-      alone or with LLMs that guide you through exercises to enhance self-awareness,
-      reduce stress, and build emotional resilience. Perfect for relaxation or developing
-      a balanced mindset. Game progress and sessions are securely recorded on the
-      Solana Blockchain for reflection and tracking.</color></size>'
---- !u!114 &-2356314223060404177
+      <size=14><color=#FFFFFF>Engage
+      in innovative voice-controlled games where you interact with LLMs or friends
+      through voice commands. Perfect for hands-free gaming, these experiences challenge
+      your quick thinking and verbal skills. Whether competing or collaborating,
+      AI ensures a seamless and dynamic experience. Results are logged on the Solana
+      Blockchain for review and sharing.</color></size>'
+--- !u!114 &-3832949529636580014
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: e4a9fd580a557e84cb5c8e441f1e84df, type: 3}
+  m_Name: Voice
+  m_EditorClassIdentifier: 
+  serializationData:
+    SerializedFormat: 2
+    SerializedBytes: 
+    ReferencedUnityObjects: []
+    SerializedBytesString: 
+    Prefab: {fileID: 0}
+    PrefabModificationsReferencedUnityObjects: []
+    PrefabModifications: []
+    SerializationNodes:
+    - Name: ID
+      Entry: 2
+      Data: 73a0251acb5748dcb5ed2eefa5352e53
+  Info:
+    Edit: 0
+    Value: '<size=16><color=#FFD700>VoiceControlled</color></size>
+
+      <size=14><color=#FFFFFF>Engage
+      in innovative voice-controlled games where you interact with LLMs or friends
+      through voice commands. Perfect for hands-free gaming, these experiences challenge
+      your quick thinking and verbal skills. Whether competing or collaborating,
+      AI ensures a seamless and dynamic experience. Results are logged on the Solana
+      Blockchain for review and sharing.</color></size>'
+--- !u!114 &-3821293917322756133
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -57,7 +91,7 @@ MonoBehaviour:
     SerializationNodes:
     - Name: ID
       Entry: 2
-      Data: 7d52d641560f404e933150c4f8efec13
+      Data: ee35fa92093c49fbbf70dbe9f98ee1df
   Info:
     Edit: 0
     Value: '<size=16><color=#FFD700>WordGames</color></size>
@@ -85,11 +119,13 @@ MonoBehaviour:
     SerializedFormat: 2
     SerializedBytes: 
     ReferencedUnityObjects:
-    - {fileID: 3844580016752577951}
-    - {fileID: -6858448041558993788}
-    - {fileID: -2356314223060404177}
-    - {fileID: 4378006162740269029}
-    - {fileID: 5813546976924793644}
+    - {fileID: -3821293917322756133}
+    - {fileID: 3817739951311725863}
+    - {fileID: -7499308032599118353}
+    - {fileID: 0}
+    - {fileID: 0}
+    - {fileID: 0}
+    - {fileID: 0}
     SerializedBytesString: 
     Prefab: {fileID: 0}
     PrefabModificationsReferencedUnityObjects: []
@@ -101,7 +137,7 @@ MonoBehaviour:
         LLMGames.Commons]], mscorlib
     - Name: 
       Entry: 12
-      Data: 5
+      Data: 7
     - Name: 
       Entry: 10
       Data: 0
@@ -118,12 +154,18 @@ MonoBehaviour:
       Entry: 10
       Data: 4
     - Name: 
+      Entry: 10
+      Data: 5
+    - Name: 
+      Entry: 10
+      Data: 6
+    - Name: 
       Entry: 13
       Data: 
     - Name: 
       Entry: 8
       Data: 
---- !u!114 &3844580016752577951
+--- !u!114 &2433022215260790622
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -133,7 +175,7 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: e4a9fd580a557e84cb5c8e441f1e84df, type: 3}
-  m_Name: Voice
+  m_Name: MindFul
   m_EditorClassIdentifier: 
   serializationData:
     SerializedFormat: 2
@@ -146,18 +188,18 @@ MonoBehaviour:
     SerializationNodes:
     - Name: ID
       Entry: 2
-      Data: f3f44e3c6ac7494dbbcfcb8d0eadd560
+      Data: 95b76a57cb9540b7b3eadb638f3f12dc
   Info:
     Edit: 0
-    Value: '<size=16><color=#FFD700>VoiceControlled</color></size>
+    Value: '<size=16><color=#FFD700>MindFul & Emotional</color></size>
 
-      <size=14><color=#FFFFFF>Engage
-      in innovative voice-controlled games where you interact with LLMs or friends
-      through voice commands. Perfect for hands-free gaming, these experiences challenge
-      your quick thinking and verbal skills. Whether competing or collaborating,
-      AI ensures a seamless and dynamic experience. Results are logged on the Solana
-      Blockchain for review and sharing.</color></size>'
---- !u!114 &4378006162740269029
+      <size=14><color=#FFFFFF>Immerse
+      yourself in games that focus on mindfulness and emotional well-being. Play
+      alone or with LLMs that guide you through exercises to enhance self-awareness,
+      reduce stress, and build emotional resilience. Perfect for relaxation or developing
+      a balanced mindset. Game progress and sessions are securely recorded on the
+      Solana Blockchain for reflection and tracking.</color></size>'
+--- !u!114 &3817739951311725863
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -180,46 +222,10 @@ MonoBehaviour:
     SerializationNodes:
     - Name: ID
       Entry: 2
-      Data: 8c270f806e3d4902aca5219fa67c676a
+      Data: 04018dd748f942448a7a5811c70a3b23
   Info:
     Edit: 0
     Value: '<size=16><color=#FFD700>CardGames</color></size>
-
-      <size=14><color=#FFFFFF>A
-      collection of exciting card games to play with LLM or your friends in a multiplayer
-      setup. Advance your skills in games like Three Card Brag, Poker, and more.
-      In non-RMG (non-real money games), you can play alone or with AI models and
-      friends, leveraging AI to analyze gameplay and performance after each match.
-      For RMG, AI provides post-game analysis to help you improve. All games are
-      trackable on the Solana Blockchain, with a link to review your matches available
-      after each game.</color></size>'
---- !u!114 &5813546976924793644
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 0}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: e4a9fd580a557e84cb5c8e441f1e84df, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  serializationData:
-    SerializedFormat: 2
-    SerializedBytes: 
-    ReferencedUnityObjects: []
-    SerializedBytesString: 
-    Prefab: {fileID: 0}
-    PrefabModificationsReferencedUnityObjects: []
-    PrefabModifications: []
-    SerializationNodes:
-    - Name: ID
-      Entry: 2
-      Data: e66c5fade049444fad456e42bf5766c1
-  Info:
-    Edit: 0
-    Value: '<size=16><color=#FFD700>Card Games</color></size>
 
       <size=14><color=#FFFFFF>A
       collection of exciting card games to play with LLM or your friends in a multiplayer

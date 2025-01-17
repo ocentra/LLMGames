@@ -1,0 +1,227 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!1001 &8300355353793467952
+PrefabInstance:
+  m_ObjectHideFlags: 0
+  serializedVersion: 2
+  m_Modification:
+    serializedVersion: 3
+    m_TransformParent: {fileID: 0}
+    m_Modifications:
+    - target: {fileID: -8679921383154817045, guid: 50dfbd8a35fb3b34aa804d88a4a48ace,
+        type: 3}
+      propertyPath: m_LocalScale.x
+      value: 0.21043067
+      objectReference: {fileID: 0}
+    - target: {fileID: -8679921383154817045, guid: 50dfbd8a35fb3b34aa804d88a4a48ace,
+        type: 3}
+      propertyPath: m_LocalScale.y
+      value: 0.21043059
+      objectReference: {fileID: 0}
+    - target: {fileID: -8679921383154817045, guid: 50dfbd8a35fb3b34aa804d88a4a48ace,
+        type: 3}
+      propertyPath: m_LocalScale.z
+      value: 0.21043059
+      objectReference: {fileID: 0}
+    - target: {fileID: -8679921383154817045, guid: 50dfbd8a35fb3b34aa804d88a4a48ace,
+        type: 3}
+      propertyPath: m_LocalPosition.x
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: -8679921383154817045, guid: 50dfbd8a35fb3b34aa804d88a4a48ace,
+        type: 3}
+      propertyPath: m_LocalPosition.y
+      value: 0.04999903
+      objectReference: {fileID: 0}
+    - target: {fileID: -8679921383154817045, guid: 50dfbd8a35fb3b34aa804d88a4a48ace,
+        type: 3}
+      propertyPath: m_LocalPosition.z
+      value: 0.13
+      objectReference: {fileID: 0}
+    - target: {fileID: -8679921383154817045, guid: 50dfbd8a35fb3b34aa804d88a4a48ace,
+        type: 3}
+      propertyPath: m_LocalRotation.w
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: -8679921383154817045, guid: 50dfbd8a35fb3b34aa804d88a4a48ace,
+        type: 3}
+      propertyPath: m_LocalRotation.x
+      value: -0
+      objectReference: {fileID: 0}
+    - target: {fileID: -8679921383154817045, guid: 50dfbd8a35fb3b34aa804d88a4a48ace,
+        type: 3}
+      propertyPath: m_LocalRotation.y
+      value: -0.7071068
+      objectReference: {fileID: 0}
+    - target: {fileID: -8679921383154817045, guid: 50dfbd8a35fb3b34aa804d88a4a48ace,
+        type: 3}
+      propertyPath: m_LocalRotation.z
+      value: 0.7071068
+      objectReference: {fileID: 0}
+    - target: {fileID: -8679921383154817045, guid: 50dfbd8a35fb3b34aa804d88a4a48ace,
+        type: 3}
+      propertyPath: m_LocalEulerAnglesHint.x
+      value: 90
+      objectReference: {fileID: 0}
+    - target: {fileID: -8679921383154817045, guid: 50dfbd8a35fb3b34aa804d88a4a48ace,
+        type: 3}
+      propertyPath: m_LocalEulerAnglesHint.y
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: -8679921383154817045, guid: 50dfbd8a35fb3b34aa804d88a4a48ace,
+        type: 3}
+      propertyPath: m_LocalEulerAnglesHint.z
+      value: 180
+      objectReference: {fileID: 0}
+    - target: {fileID: -8264567553731830430, guid: 50dfbd8a35fb3b34aa804d88a4a48ace,
+        type: 3}
+      propertyPath: 'm_Materials.Array.data[0]'
+      value: 
+      objectReference: {fileID: 2100000, guid: 506e6d5370de96047b93cc6d8128ebaf, type: 2}
+    - target: {fileID: -8264567553731830430, guid: 50dfbd8a35fb3b34aa804d88a4a48ace,
+        type: 3}
+      propertyPath: 'm_Materials.Array.data[1]'
+      value: 
+      objectReference: {fileID: 2100000, guid: ad9f7cc1fe7c4b041b834ef1213b7920, type: 2}
+    - target: {fileID: -7511558181221131132, guid: 50dfbd8a35fb3b34aa804d88a4a48ace,
+        type: 3}
+      propertyPath: 'm_Materials.Array.data[0]'
+      value: 
+      objectReference: {fileID: 2100000, guid: ad9f7cc1fe7c4b041b834ef1213b7920, type: 2}
+    - target: {fileID: -7511558181221131132, guid: 50dfbd8a35fb3b34aa804d88a4a48ace,
+        type: 3}
+      propertyPath: 'm_Materials.Array.data[1]'
+      value: 
+      objectReference: {fileID: 2100000, guid: 6e801425e2616f74893f39fb05c6b0aa, type: 2}
+    - target: {fileID: -4981571079608939044, guid: 50dfbd8a35fb3b34aa804d88a4a48ace,
+        type: 3}
+      propertyPath: 'm_Materials.Array.data[0]'
+      value: 
+      objectReference: {fileID: 2100000, guid: 506e6d5370de96047b93cc6d8128ebaf, type: 2}
+    - target: {fileID: -4981571079608939044, guid: 50dfbd8a35fb3b34aa804d88a4a48ace,
+        type: 3}
+      propertyPath: 'm_Materials.Array.data[1]'
+      value: 
+      objectReference: {fileID: 2100000, guid: ad9f7cc1fe7c4b041b834ef1213b7920, type: 2}
+    - target: {fileID: 919132149155446097, guid: 50dfbd8a35fb3b34aa804d88a4a48ace,
+        type: 3}
+      propertyPath: m_Name
+      value: LobbyHolderFrame
+      objectReference: {fileID: 0}
+    m_RemovedComponents: []
+    m_RemovedGameObjects: []
+    m_AddedGameObjects: []
+    m_AddedComponents:
+    - targetCorrespondingSourceObject: {fileID: 919132149155446097, guid: 50dfbd8a35fb3b34aa804d88a4a48ace,
+        type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 3482436364856883008}
+    - targetCorrespondingSourceObject: {fileID: 919132149155446097, guid: 50dfbd8a35fb3b34aa804d88a4a48ace,
+        type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 8220830125965402515}
+  m_SourcePrefab: {fileID: 100100000, guid: 50dfbd8a35fb3b34aa804d88a4a48ace, type: 3}
+--- !u!23 &7273696673685932724 stripped
+MeshRenderer:
+  m_CorrespondingSourceObject: {fileID: -7511558181221131132, guid: 50dfbd8a35fb3b34aa804d88a4a48ace,
+    type: 3}
+  m_PrefabInstance: {fileID: 8300355353793467952}
+  m_PrefabAsset: {fileID: 0}
+--- !u!1 &9219326823791471457 stripped
+GameObject:
+  m_CorrespondingSourceObject: {fileID: 919132149155446097, guid: 50dfbd8a35fb3b34aa804d88a4a48ace,
+    type: 3}
+  m_PrefabInstance: {fileID: 8300355353793467952}
+  m_PrefabAsset: {fileID: 0}
+--- !u!65 &3482436364856883008
+BoxCollider:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 9219326823791471457}
+  m_Material: {fileID: 0}
+  m_IncludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_ExcludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_LayerOverridePriority: 0
+  m_IsTrigger: 0
+  m_ProvidesContacts: 0
+  m_Enabled: 1
+  serializedVersion: 3
+  m_Size: {x: 20.87625, y: 0.5725104, z: 5.090892}
+  m_Center: {x: 0, y: 0.1705363, z: -15.478312}
+--- !u!114 &8220830125965402515
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 9219326823791471457}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 699f05fe63b6c3942a928f44387a065b, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  serializationData:
+    SerializedFormat: 2
+    SerializedBytes: 
+    ReferencedUnityObjects: []
+    SerializedBytesString: 
+    Prefab: {fileID: 0}
+    PrefabModificationsReferencedUnityObjects: []
+    PrefabModifications: []
+    SerializationNodes:
+    - Name: Interactable
+      Entry: 5
+      Data: true
+    - Name: BlendShapeInfos
+      Entry: 7
+      Data: 0|System.Collections.Generic.Dictionary`2[[System.Int32, mscorlib],[OcentraAI.LLMGames.UI.BlendShapeInfo,
+        LLMgames.UI]], mscorlib
+    - Name: comparer
+      Entry: 7
+      Data: 1|System.Collections.Generic.GenericEqualityComparer`1[[System.Int32,
+        mscorlib]], mscorlib
+    - Name: 
+      Entry: 8
+      Data: 
+    - Name: 
+      Entry: 12
+      Data: 0
+    - Name: 
+      Entry: 13
+      Data: 
+    - Name: 
+      Entry: 8
+      Data: 
+    - Name: LastPressedButton
+      Entry: 6
+      Data: 
+  ButtonName: Button
+  ButtonText: {fileID: 0}
+  ObjectRenderer: {fileID: 7273696673685932724}
+  SkinnedMeshRenderer: {fileID: 0}
+  Parent: {fileID: 0}
+  ButtonsOnThisGroup:
+  - {fileID: 8220830125965402515}
+  OriginalShapeValue: 0
+  MaterialInfos:
+  - MaterialName: Arrow
+    Material: {fileID: 2100000, guid: ad9f7cc1fe7c4b041b834ef1213b7920, type: 2}
+    MaterialIndex: 0
+    NormalColor: {r: 0.8962264, g: 0.8962264, b: 0.8962264, a: 1}
+    HighlightColor: {r: 4.2370944, g: 1.3929236, b: 0.06646422, a: 1}
+    PressedColor: {r: 0.89626956, g: 0.89626956, b: 0.89626956, a: 1}
+    DisabledColor: {r: 1, g: 0, b: 0, a: 1}
+  - MaterialName: Black
+    Material: {fileID: 2100000, guid: 6e801425e2616f74893f39fb05c6b0aa, type: 2}
+    MaterialIndex: 1
+    NormalColor: {r: 0.047169805, g: 0.047169805, b: 0.047169805, a: 1}
+    HighlightColor: {r: 0.0069999998, g: 0.00645098, b: 0.000109803914, a: 1}
+    PressedColor: {r: 0.046665095, g: 0.046665095, b: 0.046665095, a: 1}
+    DisabledColor: {r: 0.046665095, g: 0.046665095, b: 0.046665095, a: 1}
+  State: 0

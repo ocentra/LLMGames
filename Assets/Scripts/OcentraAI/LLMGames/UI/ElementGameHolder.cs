@@ -1,5 +1,6 @@
 using Cysharp.Threading.Tasks;
 using OcentraAI.LLMGames.Events;
+using OcentraAI.LLMGames.Extensions;
 using OcentraAI.LLMGames.GameModes;
 using OcentraAI.LLMGames.Manager;
 using Sirenix.OdinInspector;
@@ -10,7 +11,7 @@ using UnityEngine;
 namespace OcentraAI.LLMGames.UI
 {
     [ExecuteAlways]
-    public class ElementGameHolder<TData> : MonoBehaviourBase<ElementGameHolder<TData>> 
+    public class ElementGameHolder<T,TData> : MonoBehaviourBase<ElementGameHolder<T,TData>> 
     {
 
 
@@ -146,16 +147,9 @@ namespace OcentraAI.LLMGames.UI
             EnsureElementsInitialized();
 
             if (transform.childCount == 0) return;
-            if (LeftButton == null)
-            {
-                LeftButton = FindObjectsByType<Button3DSimple>(FindObjectsSortMode.None).FirstOrDefault(button => button.name == nameof(LeftButton));
-            }
+            LeftButton = transform.FindChildRecursively<Button3DSimple>(nameof(LeftButton));
+            RightButton = transform.FindChildRecursively<Button3DSimple>(nameof(RightButton));
 
-            if (RightButton == null)
-            {
-                RightButton = FindObjectsByType<Button3DSimple>(FindObjectsSortMode.None).FirstOrDefault(button => button.name == nameof(RightButton));
-
-            }
 
             MaxHeight = PanelHeight - Padding.Top - Padding.Bottom;
 
@@ -168,12 +162,26 @@ namespace OcentraAI.LLMGames.UI
                     Transform child = transform.GetChild(i);
                     int instanceID = child.gameObject.GetInstanceID();
                     BoxCollider boxCollider = child.GetComponent<BoxCollider>();
-                    GameModeUI gameModeUI = child.GetComponent<GameModeUI>();
+                    T modeUI = child.GetComponent<T>();
 
 
-                    if (gameModeUI != null)
+                    if (modeUI != null)
                     {
-                        if (gameModeUI.GameModeType.GameGenre is TData filterContextData)
+                        TData data = default;
+                        if (modeUI is GameModeUI gameModeUI)
+                        {
+                             data = (TData)(object)gameModeUI.GameModeType.GameGenre;
+                        }
+
+                        if (modeUI is LobbyHolderUI lobbyHolderUI)
+                        {
+                            data = (TData)(object)lobbyHolderUI.GameModeType.GameGenre;
+                        }
+
+
+                        TData filterContextData = data;
+
+                        if (filterContextData != null)
                         {
                             if (boxCollider != null)
                             {
@@ -192,7 +200,7 @@ namespace OcentraAI.LLMGames.UI
                         }
                         else
                         {
-                            Debug.LogWarning($"GameModeType {gameModeUI.GameModeType.GetType()} is not assignable to {typeof(TData)} for child: {child.name}");
+                            Debug.LogWarning($"GameModeType {data.GetType()} is not assignable to {typeof(TData)} for child: {child.name}");
                         }
                     }
 

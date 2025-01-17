@@ -35,7 +35,11 @@ namespace OcentraAI.LLMGames.Commons
                 if (obj is GameInfoPair pair)
                 {
                     pair.OnValueChanged += HandleGameInfoPairValueChanged;
-                    pair.name = pair.GameGenre.Name;
+                    if (pair.GameGenre != null)
+                    {
+                        pair.name = pair.GameGenre.Name;
+                    }
+
                     infos.Add(pair);
                 }
             }

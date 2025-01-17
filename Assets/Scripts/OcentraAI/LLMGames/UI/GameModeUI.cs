@@ -15,7 +15,7 @@ namespace OcentraAI.LLMGames.UI
         [Tooltip("The GameModeType this button represents.")]
         private int id = 0;
 
-      
+
 
         public IEnumerable<ValueDropdownItem<int>> GetAvailableGameModeType()
         {
@@ -28,16 +28,16 @@ namespace OcentraAI.LLMGames.UI
 
             return dropdownItems;
         }
-       
+
         [ShowInInspector, ReadOnly, PropertyOrder(-1)]
         public GameModeType GameModeType { get => GameModeType.FromId(id); set => id = value.Id; }
 
         [ShowInInspector, ReadOnly, PropertyOrder(-1)]
         public GameMode GameMode { get; set; }
 
-        [ShowInInspector, TextArea(5, 15),RichText, PropertyOrder(-1)]
-        protected string Info ;
-        
+        [ShowInInspector, TextArea(5, 15), RichText, PropertyOrder(-1)]
+        protected string Info;
+
 
         protected override void Init()
         {

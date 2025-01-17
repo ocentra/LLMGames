@@ -340,9 +340,6 @@ MonoBehaviour:
     - Name: Interactable
       Entry: 5
       Data: true
-    - Name: ButtonName
-      Entry: 1
-      Data: Three Card Brag
     - Name: BlendShapeInfos
       Entry: 7
       Data: 0|System.Collections.Generic.Dictionary`2[[System.Int32, mscorlib],[OcentraAI.LLMGames.UI.BlendShapeInfo,
@@ -366,6 +363,7 @@ MonoBehaviour:
     - Name: LastPressedButton
       Entry: 6
       Data: 
+  ButtonName: Three Card Brag
   ButtonText: {fileID: 2480988119925007280}
   ObjectRenderer: {fileID: 170708426513679455}
   SkinnedMeshRenderer: {fileID: 0}

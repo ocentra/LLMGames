@@ -1,8 +1,8 @@
 using Cysharp.Threading.Tasks;
 using OcentraAI.LLMGames.Events;
+using OcentraAI.LLMGames.Extensions;
 using OcentraAI.LLMGames.Manager;
 using Sirenix.OdinInspector;
-using Sirenix.Serialization;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -17,7 +17,7 @@ namespace OcentraAI.LLMGames.UI
     public class Button3DSimple : MonoBehaviourBase<Button3DSimple>, IButton3DSimple, IPointerEnterHandler, IPointerExitHandler, IPointerClickHandler, IEquatable<Button3DSimple>
     {
 
-        [OdinSerialize, FoldoutGroup("ButtonInfo", false)]
+        [SerializeField, FoldoutGroup("ButtonInfo", false)]
         protected string ButtonName = "Button";
 
 
@@ -184,6 +184,10 @@ namespace OcentraAI.LLMGames.UI
 
             MaterialInfos.RemoveAll(m => GetMaterialIndexByName(m.MaterialName) == -1);
 
+            if (ButtonText == null)
+            {
+                ButtonText = transform.FindChildRecursively<TextMeshPro>(nameof(ButtonText));
+            }
             if (ButtonText == null)
             {
                 ButtonText = GetComponentInChildren<TextMeshPro>();

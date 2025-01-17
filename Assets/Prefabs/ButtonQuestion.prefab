@@ -1,0 +1,185 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!1001 &728215927055405340
+PrefabInstance:
+  m_ObjectHideFlags: 0
+  serializedVersion: 2
+  m_Modification:
+    serializedVersion: 3
+    m_TransformParent: {fileID: 0}
+    m_Modifications:
+    - target: {fileID: -8679921383154817045, guid: 4f06c6d240325d247b6b81722ba7b70e,
+        type: 3}
+      propertyPath: m_LocalScale.x
+      value: 0.15147
+      objectReference: {fileID: 0}
+    - target: {fileID: -8679921383154817045, guid: 4f06c6d240325d247b6b81722ba7b70e,
+        type: 3}
+      propertyPath: m_LocalScale.y
+      value: 0.15147
+      objectReference: {fileID: 0}
+    - target: {fileID: -8679921383154817045, guid: 4f06c6d240325d247b6b81722ba7b70e,
+        type: 3}
+      propertyPath: m_LocalScale.z
+      value: 0.15147
+      objectReference: {fileID: 0}
+    - target: {fileID: -8679921383154817045, guid: 4f06c6d240325d247b6b81722ba7b70e,
+        type: 3}
+      propertyPath: m_LocalPosition.x
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: -8679921383154817045, guid: 4f06c6d240325d247b6b81722ba7b70e,
+        type: 3}
+      propertyPath: m_LocalPosition.y
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: -8679921383154817045, guid: 4f06c6d240325d247b6b81722ba7b70e,
+        type: 3}
+      propertyPath: m_LocalPosition.z
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: -8679921383154817045, guid: 4f06c6d240325d247b6b81722ba7b70e,
+        type: 3}
+      propertyPath: m_LocalRotation.w
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: -8679921383154817045, guid: 4f06c6d240325d247b6b81722ba7b70e,
+        type: 3}
+      propertyPath: m_LocalRotation.x
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: -8679921383154817045, guid: 4f06c6d240325d247b6b81722ba7b70e,
+        type: 3}
+      propertyPath: m_LocalRotation.y
+      value: -0.7071068
+      objectReference: {fileID: 0}
+    - target: {fileID: -8679921383154817045, guid: 4f06c6d240325d247b6b81722ba7b70e,
+        type: 3}
+      propertyPath: m_LocalRotation.z
+      value: 0.7071068
+      objectReference: {fileID: 0}
+    - target: {fileID: -8679921383154817045, guid: 4f06c6d240325d247b6b81722ba7b70e,
+        type: 3}
+      propertyPath: m_LocalEulerAnglesHint.x
+      value: 90
+      objectReference: {fileID: 0}
+    - target: {fileID: -8679921383154817045, guid: 4f06c6d240325d247b6b81722ba7b70e,
+        type: 3}
+      propertyPath: m_LocalEulerAnglesHint.y
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: -8679921383154817045, guid: 4f06c6d240325d247b6b81722ba7b70e,
+        type: 3}
+      propertyPath: m_LocalEulerAnglesHint.z
+      value: 180
+      objectReference: {fileID: 0}
+    - target: {fileID: 919132149155446097, guid: 4f06c6d240325d247b6b81722ba7b70e,
+        type: 3}
+      propertyPath: m_Name
+      value: ButtonQuestion
+      objectReference: {fileID: 0}
+    m_RemovedComponents: []
+    m_RemovedGameObjects: []
+    m_AddedGameObjects: []
+    m_AddedComponents:
+    - targetCorrespondingSourceObject: {fileID: 919132149155446097, guid: 4f06c6d240325d247b6b81722ba7b70e,
+        type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 1420405911659334306}
+  m_SourcePrefab: {fileID: 100100000, guid: 4f06c6d240325d247b6b81722ba7b70e, type: 3}
+--- !u!1 &493792144803654733 stripped
+GameObject:
+  m_CorrespondingSourceObject: {fileID: 919132149155446097, guid: 4f06c6d240325d247b6b81722ba7b70e,
+    type: 3}
+  m_PrefabInstance: {fileID: 728215927055405340}
+  m_PrefabAsset: {fileID: 0}
+--- !u!114 &1420405911659334306
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 493792144803654733}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 699f05fe63b6c3942a928f44387a065b, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  serializationData:
+    SerializedFormat: 2
+    SerializedBytes: 
+    ReferencedUnityObjects: []
+    SerializedBytesString: 
+    Prefab: {fileID: 0}
+    PrefabModificationsReferencedUnityObjects: []
+    PrefabModifications: []
+    SerializationNodes:
+    - Name: Interactable
+      Entry: 5
+      Data: true
+    - Name: BlendShapeInfos
+      Entry: 7
+      Data: 0|System.Collections.Generic.Dictionary`2[[System.Int32, mscorlib],[OcentraAI.LLMGames.UI.BlendShapeInfo,
+        LLMgames.UI]], mscorlib
+    - Name: comparer
+      Entry: 7
+      Data: 1|System.Collections.Generic.GenericEqualityComparer`1[[System.Int32,
+        mscorlib]], mscorlib
+    - Name: 
+      Entry: 8
+      Data: 
+    - Name: 
+      Entry: 12
+      Data: 0
+    - Name: 
+      Entry: 13
+      Data: 
+    - Name: 
+      Entry: 8
+      Data: 
+    - Name: LastPressedButton
+      Entry: 6
+      Data: 
+  ButtonName: Button
+  ButtonText: {fileID: 0}
+  ObjectRenderer: {fileID: 8598031717480466826}
+  SkinnedMeshRenderer: {fileID: 0}
+  Parent: {fileID: 0}
+  ButtonsOnThisGroup: []
+  OriginalShapeValue: 0
+  MaterialInfos:
+  - MaterialName: Highlight
+    Material: {fileID: 2100000, guid: 459c4a04aad10c04ebd78b0a9ff48a84, type: 2}
+    MaterialIndex: 0
+    NormalColor: {r: 0.8113208, g: 1.0028011, b: 4, a: 1}
+    HighlightColor: {r: 0.18798925, g: 11.984315, b: 1.5614275, a: 1}
+    PressedColor: {r: 2.1503935, g: 2.6390157, b: 2.6390157, a: 1}
+    DisabledColor: {r: 0, g: 0.9646866, b: 0.056128494, a: 1}
+  - MaterialName: Arrow
+    Material: {fileID: 2100000, guid: ad9f7cc1fe7c4b041b834ef1213b7920, type: 2}
+    MaterialIndex: 1
+    NormalColor: {r: 0, g: 0.0364639, b: 0.7169812, a: 1}
+    HighlightColor: {r: 0, g: 0.63259417, b: 12.2729845, a: 1}
+    PressedColor: {r: 0, g: 0.036889452, b: 0.7156938, a: 1}
+    DisabledColor: {r: 0, g: 0.036889452, b: 0.7156938, a: 1}
+  - MaterialName: Ring
+    Material: {fileID: 2100000, guid: b6fb8aaede9c99b4ab06aff7ad11878a, type: 2}
+    MaterialIndex: 2
+    NormalColor: {r: 1, g: 1, b: 1, a: 1}
+    HighlightColor: {r: 0.57537, g: 0.9811321, b: 0.5507298, a: 1}
+    PressedColor: {r: 1, g: 1, b: 1, a: 1}
+    DisabledColor: {r: 0.8962264, g: 0.7482645, b: 0.7482645, a: 1}
+  - MaterialName: Sphere
+    Material: {fileID: 2100000, guid: fb1d5f0ec78f1d64691ef59c78f1efcd, type: 2}
+    MaterialIndex: 3
+    NormalColor: {r: 0, g: 0.09036067, b: 0.156, a: 1}
+    HighlightColor: {r: 0, g: 0.22590168, b: 0.39, a: 1}
+    PressedColor: {r: 0, g: 0.41788515, b: 0.7156938, a: 1}
+    DisabledColor: {r: 0.509434, g: 0, b: 0, a: 1}
+  State: 2
+--- !u!23 &8598031717480466826 stripped
+MeshRenderer:
+  m_CorrespondingSourceObject: {fileID: 9027884151912290454, guid: 4f06c6d240325d247b6b81722ba7b70e,
+    type: 3}
+  m_PrefabInstance: {fileID: 728215927055405340}
+  m_PrefabAsset: {fileID: 0}

@@ -59,9 +59,6 @@ MonoBehaviour:
     - Name: Interactable
       Entry: 5
       Data: true
-    - Name: ButtonName
-      Entry: 1
-      Data: Button
     - Name: BlendShapeInfos
       Entry: 7
       Data: 0|System.Collections.Generic.Dictionary`2[[System.Int32, mscorlib],[OcentraAI.LLMGames.UI.BlendShapeInfo,
@@ -127,6 +124,7 @@ MonoBehaviour:
     - Name: LastPressedButton
       Entry: 6
       Data: 
+  ButtonName: Button
   ButtonText: {fileID: 8447871704266169659}
   ObjectRenderer: {fileID: 6969178537497364745}
   SkinnedMeshRenderer: {fileID: 6969178537497364745}
@@ -157,16 +155,14 @@ MonoBehaviour:
     DisabledColor: {r: 1, g: 0, b: 0, a: 1}
   State: 0
   id: 0
-  Info: '<size=16><color=#FFD700>Card Games</color></size>
+  Info: '<size=16><color=#FFD700>VoiceControlled</color></size>
 
-    <size=14><color=#FFFFFF>A
-    collection of exciting card games to play with LLM or your friends in a multiplayer
-    setup. Advance your skills in games like Three Card Brag, Poker, and more. In
-    non-RMG (non-real money games), you can play alone or with AI models and friends,
-    leveraging AI to analyze gameplay and performance after each match. For RMG,
-    AI provides post-game analysis to help you improve. All games are trackable on
-    the Solana Blockchain, with a link to review your matches available after each
-    game.</color></size>'
+    <size=14><color=#FFFFFF>Engage
+    in innovative voice-controlled games where you interact with LLMs or friends
+    through voice commands. Perfect for hands-free gaming, these experiences challenge
+    your quick thinking and verbal skills. Whether competing or collaborating, AI
+    ensures a seamless and dynamic experience. Results are logged on the Solana Blockchain
+    for review and sharing.</color></size>'
 --- !u!1 &6715427192802225668
 GameObject:
   m_ObjectHideFlags: 0

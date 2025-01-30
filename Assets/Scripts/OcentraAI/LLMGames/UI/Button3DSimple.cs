@@ -5,9 +5,9 @@ using OcentraAI.LLMGames.Manager;
 using Sirenix.OdinInspector;
 using System;
 using System.Collections.Generic;
-using System.Linq;
 using TMPro;
 using UnityEngine;
+using UnityEngine.Events;
 using UnityEngine.EventSystems;
 
 namespace OcentraAI.LLMGames.UI
@@ -38,9 +38,7 @@ namespace OcentraAI.LLMGames.UI
 
         [SerializeField, FoldoutGroup("ButtonInfo/Basic Info", false), ListDrawerSettings(HideAddButton = true, HideRemoveButton = true, DraggableItems = false)]
         protected List<Button3DSimple> ButtonsOnThisGroup = new List<Button3DSimple>();
-
-
-
+        
 
         [SerializeField, FoldoutGroup("ButtonInfo/BlendShape Info Configuration", false)]
         protected Dictionary<int, BlendShapeInfo> BlendShapeInfos = new Dictionary<int, BlendShapeInfo>();
@@ -52,23 +50,23 @@ namespace OcentraAI.LLMGames.UI
         [SerializeField, FoldoutGroup("ButtonInfo/Material Info Configuration", false)]
         protected List<MaterialInfo> MaterialInfos;
 
-        [SerializeField, FoldoutGroup("ButtonInfo/Material Info Configuration", false)]
+        [SerializeField, FoldoutGroup("ButtonInfo/Material Info Configuration", false), OnValueChanged(nameof(ApplyMaterialColors))]
         protected ButtonState State;
 
         [SerializeField, FoldoutGroup("ButtonInfo/Material Info Configuration", false)]
         protected IButton3DSimple LastPressedButton;
-
-
-
+        
         public const string BaseColor = "_BaseColor";
         public const string EmissionColor = "_EmissionColor";
 
         private readonly Guid guid = Guid.NewGuid();
 
+        [SerializeField, FoldoutGroup("ButtonInfo/Basic Info", false)]
+        public UnityEvent OnClick;
+
         protected override void OnValidate()
         {
             Init();
-            ApplyMaterialColors();
             CacheOriginalShapeValue();
         }
 
@@ -92,115 +90,181 @@ namespace OcentraAI.LLMGames.UI
         protected virtual void OnButton3DSimpleClick(Button3DSimpleClickEvent e)
         {
             if (State == ButtonState.Disabled) return;
-            if (!ButtonsOnThisGroup.Contains(e.Button3DSimple) || (Button3DSimple)e.Button3DSimple == this)
+
+            bool containsEventButton = false;
+            for (int i = 0; i < ButtonsOnThisGroup.Count; i++)
             {
-                return;
+                if (ButtonsOnThisGroup[i] == (Button3DSimple)e.Button3DSimple)
+                {
+                    containsEventButton = true;
+                    break;
+                }
             }
 
-            LastPressedButton = e.Button3DSimple;
+            if (!containsEventButton || (Button3DSimple)e.Button3DSimple == this) return;
 
+            LastPressedButton = e.Button3DSimple;
             State = ButtonState.Normal;
-            ApplyMaterialColors();
+            ApplyMaterialColors(); 
         }
 
         protected virtual void Init()
         {
-
-
             Parent = transform.parent;
-
             SetButtonsOnThisGroup();
 
             if (ObjectRenderer == null)
             {
-                ObjectRenderer = GetComponentInChildren<Renderer>();
-            }
-
-            if (ObjectRenderer == null)
-            {
-                Debug.LogWarning("No Renderer found on the object.");
-                return;
-            }
-
-
-
-            if (ObjectRenderer != null)
-            {
-
-                if (ObjectRenderer is SkinnedMeshRenderer smr)
+                ObjectRenderer = GetComponentInChildren<Renderer>(true);
+                if (ObjectRenderer == null)
                 {
-                    SkinnedMeshRenderer = smr;
-
-                    if (SkinnedMeshRenderer.sharedMesh != null)
-                    {
-                        int count = SkinnedMeshRenderer.sharedMesh.blendShapeCount;
-
-                        for (int i = 0; i < count; i++)
-                        {
-                            string blendShapeName = SkinnedMeshRenderer.sharedMesh.GetBlendShapeName(i);
-                            float blendShapeWeight = SkinnedMeshRenderer.GetBlendShapeWeight(i);
-
-                            BlendShapeInfo newInfo = new BlendShapeInfo(
-                                i,
-                                blendShapeName,
-                                blendShapeWeight,
-                                UpdateBlendShape
-                            );
-
-                            if (BlendShapeInfos.TryGetValue(i, out BlendShapeInfo info))
-                            {
-                                info.BlendShapeName = blendShapeName;
-                                info.OnValueChanged += UpdateBlendShape;
-                            }
-
-                            BlendShapeInfos.TryAdd(i, newInfo);
-                        }
-
-
-                    }
-                }
-
-
-
-                Material[] sharedMaterials = ObjectRenderer.sharedMaterials;
-                MaterialInfos ??= new List<MaterialInfo>();
-
-                for (int i = 0; i < sharedMaterials.Length; i++)
-                {
-                    Material mat = sharedMaterials[i];
-                    if (mat == null) continue;
-
-                    MaterialInfo existingInfo = MaterialInfos.Find(m => m.MaterialName == mat.name);
-                    if (existingInfo == null)
-                    {
-                        MaterialInfos.Add(new MaterialInfo(mat, i));
-                    }
-                    else if (existingInfo.PropertyBlock == null)
-                    {
-                        existingInfo.PropertyBlock = new MaterialPropertyBlock();
-                    }
+                    Debug.LogError($"No Renderer found on {name} or its children!", this);
+                    return;
                 }
             }
 
-            MaterialInfos.RemoveAll(m => GetMaterialIndexByName(m.MaterialName) == -1);
+            if (ObjectRenderer is SkinnedMeshRenderer smr)
+            {
+                SkinnedMeshRenderer = smr;
+                InitializeBlendShapes();
+            }
 
+            if (MaterialInfos == null)
+            {
+                MaterialInfos = new List<MaterialInfo>();
+            }
+
+            InitializeMaterials(ObjectRenderer, MaterialInfos);
+            CleanupMaterialInfos();
+            InitializeTextComponent();
+            ApplyMaterialColors();
+        }
+
+        private void InitializeBlendShapes()
+        {
+            if (SkinnedMeshRenderer == null || SkinnedMeshRenderer.sharedMesh == null) return;
+
+            if (BlendShapeInfos == null)
+            {
+                BlendShapeInfos = new Dictionary<int, BlendShapeInfo>();
+            }
+            int blendShapeCount = SkinnedMeshRenderer.sharedMesh.blendShapeCount;
+
+            for (int i = 0; i < blendShapeCount; i++)
+            {
+                string shapeName = SkinnedMeshRenderer.sharedMesh.GetBlendShapeName(i);
+                float shapeWeight = SkinnedMeshRenderer.GetBlendShapeWeight(i);
+
+                if (!BlendShapeInfos.TryGetValue(i, out BlendShapeInfo info))
+                {
+                    info = new BlendShapeInfo(i, shapeName, shapeWeight, UpdateBlendShape);
+                    BlendShapeInfos.Add(i, info);
+                }
+                else
+                {
+                    info.OnValueChanged -= UpdateBlendShape;
+                }
+
+                info.BlendShapeName = shapeName;
+                info.BlendShapeValue = shapeWeight;
+                info.OnValueChanged += UpdateBlendShape;
+            }
+        }
+
+        protected void InitializeMaterials(Renderer r, List<MaterialInfo> materialInfos)
+        {
+            if (r == null) return;
+
+            Material[] sharedMaterials = r.sharedMaterials;
+
+
+            for (int i = 0; i < sharedMaterials.Length; i++)
+            {
+                Material mat = sharedMaterials[i];
+                if (mat == null) continue;
+
+                MaterialInfo existingInfo = null;
+                foreach (MaterialInfo info in materialInfos)
+                {
+                    if (info.Material == mat)
+                    {
+                        existingInfo = info;
+                        break;
+                    }
+                }
+
+                if (existingInfo == null)
+                {
+                    MaterialInfo newInfo = new MaterialInfo(mat, i)
+                    {
+                        MaterialIndex = i,
+                        MaterialName = mat.name
+                    };
+                    materialInfos.Add(newInfo);
+                }
+                else
+                {
+                    existingInfo.MaterialIndex = i;
+                    existingInfo.MaterialName = mat.name;
+                }
+            }
+
+            foreach (MaterialInfo info in materialInfos)
+            {
+                if (info.PropertyBlock == null)
+                {
+                    info.PropertyBlock = new MaterialPropertyBlock();
+                }
+            }
+        }
+
+        private void CleanupMaterialInfos()
+        {
+            if (ObjectRenderer == null) return;
+
+            Material[] validMaterials = ObjectRenderer.sharedMaterials;
+            for (int i = MaterialInfos.Count - 1; i >= 0; i--)
+            {
+                MaterialInfo info = MaterialInfos[i];
+                if (info.Material == null || !MaterialExistsInArray(validMaterials, info.Material))
+                {
+                    MaterialInfos.RemoveAt(i);
+                }
+            }
+        }
+
+        private bool MaterialExistsInArray(Material[] materials, Material target)
+        {
+            for (int i = 0; i < materials.Length; i++)
+            {
+                if (materials[i] == target)
+                {
+                    return true;
+                }
+            }
+            return false;
+        }
+        private void InitializeTextComponent()
+        {
             if (ButtonText == null)
             {
                 ButtonText = transform.FindChildRecursively<TextMeshPro>(nameof(ButtonText));
+                if (ButtonText is null)
+                {
+                    ButtonText = GetComponentInChildren<TextMeshPro>();
+                }
             }
-            if (ButtonText == null)
-            {
-                ButtonText = GetComponentInChildren<TextMeshPro>();
-            }
-
-            SetButtonName(ButtonName);
         }
 
         protected virtual void SetButtonsOnThisGroup()
         {
-            if (Parent != null)
+            ButtonsOnThisGroup.Clear();
+            if (Parent == null) return;
+
+            Button3DSimple[] buttons = Parent.GetComponentsInChildren<Button3DSimple>();
+            for (int i = 0; i < buttons.Length; i++)
             {
-                ButtonsOnThisGroup = Parent.GetComponentsInChildren<Button3DSimple>().ToList();
+                ButtonsOnThisGroup.Add(buttons[i]);
             }
         }
 
@@ -241,19 +305,20 @@ namespace OcentraAI.LLMGames.UI
 
         private void SetSquareShape()
         {
-            if (SkinnedMeshRenderer != null && SkinnedMeshRenderer.sharedMesh != null && SkinnedMeshRenderer.sharedMesh.blendShapeCount > 0)
+            if (SkinnedMeshRenderer == null || SkinnedMeshRenderer.sharedMesh == null) return;
+
+            foreach (KeyValuePair<int, BlendShapeInfo> blendShapeInfo in BlendShapeInfos)
             {
-                foreach (KeyValuePair<int, BlendShapeInfo> blendShapeInfo in BlendShapeInfos)
+                if (blendShapeInfo.Value.BlendShapeName.Contains("Square"))
                 {
-                    if (blendShapeInfo.Value.BlendShapeName.Contains("Square"))
-                    {
-                        float targetValue = (Button3DSimple)LastPressedButton == this ? 100 : OriginalShapeValue;
-                        AnimateBlendShapeWeight(blendShapeInfo.Key, targetValue, 0.5f, SkinnedMeshRenderer).Forget();
-                        break;
-                    }
+                    bool isActive = LastPressedButton != null && LastPressedButton.Equals(this);
+                    float targetValue = isActive ? 100 : OriginalShapeValue;
+                    AnimateBlendShapeWeight(blendShapeInfo.Key, targetValue, 0.5f, SkinnedMeshRenderer).Forget();
+                    break;
                 }
             }
         }
+
 
         private async UniTask AnimateBlendShapeWeight(int blendShapeKey, float targetValue, float duration, SkinnedMeshRenderer skinnedMeshRenderer)
         {
@@ -290,22 +355,18 @@ namespace OcentraAI.LLMGames.UI
 
         public virtual void OnPointerClick(PointerEventData eventData)
         {
-            if (!ButtonsOnThisGroup.Contains(this))
-            {
-                return;
-            }
+            if (!ButtonsOnThisGroup.Contains(this)) return;
 
             LastPressedButton = this;
             State = ButtonState.Pressed;
             ApplyMaterialColors();
             EventBus.Instance.Publish(new Button3DSimpleClickEvent(this));
-
+            OnClick?.Invoke();
         }
 
         public virtual void OnPointerEnter(PointerEventData eventData)
         {
             if (State == ButtonState.Disabled) return;
-
             State = ButtonState.Highlighted;
             ApplyMaterialColors();
         }
@@ -313,9 +374,7 @@ namespace OcentraAI.LLMGames.UI
         public virtual void OnPointerExit(PointerEventData eventData)
         {
             if (State == ButtonState.Disabled) return;
-
             State = ButtonState.Normal;
-
             ApplyMaterialColors();
         }
 
@@ -323,8 +382,14 @@ namespace OcentraAI.LLMGames.UI
         {
             if (MaterialInfos == null || ObjectRenderer == null) return;
 
-            foreach (MaterialInfo info in MaterialInfos)
+            for (int index = 0; index < MaterialInfos.Count; index++)
             {
+                MaterialInfo info = MaterialInfos[index];
+                if (info.PropertyBlock == null)
+                {
+                    info.PropertyBlock = new MaterialPropertyBlock();
+                }
+
                 switch (State)
                 {
                     case ButtonState.Normal:
@@ -352,31 +417,15 @@ namespace OcentraAI.LLMGames.UI
             SetSquareShape();
         }
 
-        private int GetMaterialIndexByName(string materialName)
+
+        [Button]
+        public void SetButtonName()
         {
-            Material[] sharedMaterials = ObjectRenderer.sharedMaterials;
-            for (int i = 0; i < sharedMaterials.Length; i++)
+            if (ButtonText != null)
             {
-                if (sharedMaterials[i] != null && sharedMaterials[i].name == materialName)
-                {
-                    return i;
-                }
+                ButtonText.text = ButtonName;
             }
-            return -1;
-        }
-
-        public void SetButtonName(string newName = "")
-        {
-            if (newName != null)
-            {
-                ButtonName = newName;
-                if (ButtonText != null)
-                {
-                    ButtonText.text = ButtonName;
-                }
-            }
-
-
+            
         }
 
 
@@ -384,17 +433,10 @@ namespace OcentraAI.LLMGames.UI
         public virtual void SetInteractable(bool interactable, bool enableCollider = true)
         {
             Interactable = interactable;
-            State = ButtonState.Disabled;
+            State = interactable? ButtonState.Normal: ButtonState.Disabled;
+            ApplyMaterialColors();
         }
-
-        public enum ButtonState
-        {
-            Normal,
-            Highlighted,
-            Pressed,
-            Disabled
-        }
-
+        
         public override int GetHashCode()
         {
             return guid.GetHashCode();

@@ -154,6 +154,9 @@ MonoBehaviour:
     PressedColor: {r: 0.5, g: 0.5, b: 0.5, a: 1}
     DisabledColor: {r: 1, g: 0, b: 0, a: 1}
   State: 0
+  OnClick:
+    m_PersistentCalls:
+      m_Calls: []
   id: 0
   Info: '<size=16><color=#FFD700>VoiceControlled</color></size>
 

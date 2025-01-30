@@ -186,6 +186,7 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 2615577149774889406}
+  - component: {fileID: 3785605905933739804}
   m_Layer: 0
   m_Name: LobbyHolderPlayerUI
   m_TagString: Untagged
@@ -212,6 +213,39 @@ Transform:
   - {fileID: 6312449664830541429}
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &3785605905933739804
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2631150903210497551}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 2a7efc55a8144a045a5bd65d04f2d402, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  serializationData:
+    SerializedFormat: 2
+    SerializedBytes: 
+    ReferencedUnityObjects: []
+    SerializedBytesString: 
+    Prefab: {fileID: 0}
+    PrefabModificationsReferencedUnityObjects: []
+    PrefabModifications: []
+    SerializationNodes: []
+  ButtonQuestion: {fileID: 2633711191408871231}
+  Icon: {fileID: 8779711736615600178}
+  PlayerName: {fileID: 2355940749820855343}
+  MaterialInfos:
+  - MaterialName: IconPlain
+    Material: {fileID: 2100000, guid: 95c49e17b9b1f2d48b0a66e065d98fb2, type: 2}
+    MaterialIndex: 0
+    NormalColor: {r: 1, g: 1, b: 1, a: 1}
+    HighlightColor: {r: 1, g: 0.92156863, b: 0.015686275, a: 1}
+    PressedColor: {r: 0.5, g: 0.5, b: 0.5, a: 1}
+    DisabledColor: {r: 1, g: 0, b: 0, a: 1}
+  State: 0
 --- !u!1 &5301402456048522327
 GameObject:
   m_ObjectHideFlags: 0
@@ -223,7 +257,6 @@ GameObject:
   - component: {fileID: 713110453026037526}
   - component: {fileID: 7907041602334636290}
   - component: {fileID: 8779711736615600178}
-  - component: {fileID: 9026960543471634357}
   m_Layer: 0
   m_Name: Icon
   m_TagString: Untagged
@@ -299,28 +332,6 @@ MeshRenderer:
   m_SortingLayer: 0
   m_SortingOrder: 0
   m_AdditionalVertexStreams: {fileID: 0}
---- !u!64 &9026960543471634357
-MeshCollider:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 5301402456048522327}
-  m_Material: {fileID: 0}
-  m_IncludeLayers:
-    serializedVersion: 2
-    m_Bits: 0
-  m_ExcludeLayers:
-    serializedVersion: 2
-    m_Bits: 0
-  m_LayerOverridePriority: 0
-  m_IsTrigger: 0
-  m_ProvidesContacts: 0
-  m_Enabled: 1
-  serializedVersion: 5
-  m_Convex: 0
-  m_CookingOptions: 30
-  m_Mesh: {fileID: 10210, guid: 0000000000000000e000000000000000, type: 0}
 --- !u!1001 &1166556879562122483
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -480,11 +491,11 @@ PrefabInstance:
     - targetCorrespondingSourceObject: {fileID: 919132149155446097, guid: 4f06c6d240325d247b6b81722ba7b70e,
         type: 3}
       insertIndex: -1
-      addedObject: {fileID: 6796276289799778248}
+      addedObject: {fileID: 1725358583204659751}
     - targetCorrespondingSourceObject: {fileID: 919132149155446097, guid: 4f06c6d240325d247b6b81722ba7b70e,
         type: 3}
       insertIndex: -1
-      addedObject: {fileID: 1725358583204659751}
+      addedObject: {fileID: 2633711191408871231}
   m_SourcePrefab: {fileID: 100100000, guid: 4f06c6d240325d247b6b81722ba7b70e, type: 3}
 --- !u!23 &4230334340091489504 stripped
 MeshRenderer:
@@ -504,7 +515,28 @@ GameObject:
     type: 3}
   m_PrefabInstance: {fileID: 5187115869768414326}
   m_PrefabAsset: {fileID: 0}
---- !u!114 &6796276289799778248
+--- !u!65 &1725358583204659751
+BoxCollider:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 5421559582950115623}
+  m_Material: {fileID: 0}
+  m_IncludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_ExcludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_LayerOverridePriority: 0
+  m_IsTrigger: 0
+  m_ProvidesContacts: 0
+  m_Enabled: 1
+  serializedVersion: 3
+  m_Size: {x: 19.599113, y: 0.24549007, z: 2.922058}
+  m_Center: {x: 8.385898, y: 0.095482185, z: -0.06748635}
+--- !u!114 &2633711191408871231
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -513,7 +545,7 @@ MonoBehaviour:
   m_GameObject: {fileID: 5421559582950115623}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 699f05fe63b6c3942a928f44387a065b, type: 3}
+  m_Script: {fileID: 11500000, guid: 4b52d0d0b1f1f5744a0cfabff9c162c3, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
   serializationData:
@@ -557,7 +589,7 @@ MonoBehaviour:
   SkinnedMeshRenderer: {fileID: 0}
   Parent: {fileID: 2615577149774889406}
   ButtonsOnThisGroup:
-  - {fileID: 6796276289799778248}
+  - {fileID: 2633711191408871231}
   OriginalShapeValue: 0
   MaterialInfos:
   - MaterialName: Highlight
@@ -589,24 +621,7 @@ MonoBehaviour:
     PressedColor: {r: 0, g: 0.41788515, b: 0.7156938, a: 1}
     DisabledColor: {r: 0.509434, g: 0, b: 0, a: 1}
   State: 0
---- !u!65 &1725358583204659751
-BoxCollider:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 5421559582950115623}
-  m_Material: {fileID: 0}
-  m_IncludeLayers:
-    serializedVersion: 2
-    m_Bits: 0
-  m_ExcludeLayers:
-    serializedVersion: 2
-    m_Bits: 0
-  m_LayerOverridePriority: 0
-  m_IsTrigger: 0
-  m_ProvidesContacts: 0
-  m_Enabled: 1
-  serializedVersion: 3
-  m_Size: {x: 19.599113, y: 0.24549007, z: 2.922058}
-  m_Center: {x: 8.385898, y: 0.095482185, z: -0.06748635}
+  OnClick:
+    m_PersistentCalls:
+      m_Calls: []
+  ShowShowSubTab: 1

@@ -2,7 +2,6 @@ using OcentraAI.LLMGames.GameModes;
 using Sirenix.OdinInspector;
 using System;
 using System.Collections.Generic;
-using UnityEngine;
 
 namespace OcentraAI.LLMGames.UI
 {
@@ -11,6 +10,8 @@ namespace OcentraAI.LLMGames.UI
     {
         [ShowInInspector, ListDrawerSettings(HideAddButton = true, HideRemoveButton = true)]
         public List<T> ViewItems;
+        [ShowInInspector, ListDrawerSettings(HideAddButton = true, HideRemoveButton = true)]
+        public List<T> FilteredItems =  new List<T>();
 
         [ShowInInspector, DictionaryDrawerSettings]
         private readonly SortedDictionary<int, T> holders;
@@ -20,7 +21,7 @@ namespace OcentraAI.LLMGames.UI
 
         [ShowInInspector, ReadOnly]
         public int Count => holders.Count;
-
+        [ShowInInspector] public int FilterItemsCount;
         public ChildElementHolder()
         {
             ViewCapacity = 5;
@@ -64,75 +65,41 @@ namespace OcentraAI.LLMGames.UI
                 }
             }
 
-           
+
         }
 
 
         public void FilterView(TData targetData)
         {
-            for (int currentViewIndex = 0; currentViewIndex < ViewItems.Count;)
+            FilteredItems.Clear();
+
+            foreach (T holder in holders.Values)
             {
-                T holder = ViewItems[currentViewIndex];
-                if (!CheckGenreMatch(holder, targetData))
+                if (CheckMatch(holder, targetData))
                 {
-                    bool replaced = false;
-
-                    foreach (T potentialElement in holders.Values)
-                    {
-                        if (CheckGenreMatch(potentialElement, targetData) &&
-                            !ViewItems.Exists(item => item.InstanceId == potentialElement.InstanceId))
-                        {
-                            ViewItems[currentViewIndex] = potentialElement; 
-                            replaced = true;
-                            break;
-                        }
-                    }
-
-                    if (!replaced)
-                    {
-                        ViewItems.RemoveAt(currentViewIndex); 
-                        continue; 
-                    }
-                }
-
-                currentViewIndex++; 
-            }
-
-            while (ViewItems.Count < ViewCapacity)
-            {
-                bool added = false;
-
-                foreach (T holder in holders.Values)
-                {
-                    if (CheckGenreMatch(holder, targetData) &&
-                        !ViewItems.Exists(item => item.InstanceId == holder.InstanceId))
-                    {
-                        ViewItems.Add(holder);
-                        added = true;
-
-                        if (ViewItems.Count >= ViewCapacity)
-                        {
-                            break;
-                        }
-                    }
-                }
-
-                if (!added)
-                {
-                    break; 
+                    FilteredItems.Add(holder);
                 }
             }
+            FilterItemsCount = FilteredItems.Count;
 
-            if (ViewItems.Count > ViewCapacity)
+            ViewItems.Clear();
+
+            for (int i = 0; i < FilteredItems.Count && i < ViewCapacity; i++)
             {
-                Debug.LogWarning($"ViewItems exceeded ViewCapacity. CurrentCount: {ViewItems.Count}, Capacity: {ViewCapacity}");
+                ViewItems.Add(FilteredItems[i]);
             }
+            
+
         }
+        
 
-
-
-        public void ScrollRight(TData targetData = default)
+        public void ScrollRight(TData data)
         {
+            if (FilterItemsCount <= ViewCapacity)
+            {
+                return;
+            }
+
             if (holders.Count > ViewCapacity)
             {
                 T last = ViewItems[^1];
@@ -141,7 +108,7 @@ namespace OcentraAI.LLMGames.UI
                 int nextKey = -1;
                 foreach (int key in holders.Keys)
                 {
-                    if (key > currentKey && (targetData == null || CheckGenreMatch(holders[key], targetData)))
+                    if (key > currentKey && CheckMatch(holders[key], data))
                     {
                         nextKey = key;
                         break;
@@ -152,7 +119,7 @@ namespace OcentraAI.LLMGames.UI
                 {
                     foreach (int key in holders.Keys)
                     {
-                        if (targetData == null || CheckGenreMatch(holders[key], targetData))
+                        if (CheckMatch(holders[key], data))
                         {
                             nextKey = key;
                             break;
@@ -170,11 +137,16 @@ namespace OcentraAI.LLMGames.UI
                 }
             }
 
-           
+
         }
 
-        public void ScrollLeft(TData targetGameGenre = default)
+        public void ScrollLeft(TData data)
         {
+            if (FilterItemsCount <= ViewCapacity)
+            {
+                return;
+            }
+
             if (holders.Count > ViewCapacity)
             {
                 T first = ViewItems[0];
@@ -183,7 +155,7 @@ namespace OcentraAI.LLMGames.UI
                 int prevKey = -1;
                 foreach (int key in holders.Keys)
                 {
-                    if (key < currentKey && (targetGameGenre == null || CheckGenreMatch(holders[key], targetGameGenre)))
+                    if (key < currentKey && CheckMatch(holders[key], data))
                     {
                         prevKey = key;
                     }
@@ -197,7 +169,7 @@ namespace OcentraAI.LLMGames.UI
                 {
                     foreach (int key in holders.Keys)
                     {
-                        if (targetGameGenre == null || CheckGenreMatch(holders[key], targetGameGenre))
+                        if (CheckMatch(holders[key], data))
                         {
                             prevKey = key;
                         }
@@ -214,18 +186,18 @@ namespace OcentraAI.LLMGames.UI
                 }
             }
 
-           
+
         }
 
-        private bool CheckGenreMatch(T value, TData targetData)
+        private bool CheckMatch(T value, TData targetData)
         {
-            if (targetData is ILabeledItem {Id: 0})
+            if (targetData is ILabeledItem { Id: 0 })
             {
                 return true;
             }
             return targetData != null && value.FilterContextData?.Equals(targetData) == true;
         }
-        
+
 
 
         public void Clear()

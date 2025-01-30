@@ -1332,6 +1332,14 @@
       <Project>{D2BA1FD7-A3DF-BFF7-4212-DC8F28360D06}</Project>
       <Name>LLMGames.Events</Name>
     </ProjectReference>
+    <ProjectReference Include="Unity.XR.ARFoundation.csproj">
+      <Project>{FE9E9C82-C72D-FFCC-B941-AD9616E0A461}</Project>
+      <Name>Unity.XR.ARFoundation</Name>
+    </ProjectReference>
+    <ProjectReference Include="Unity.XR.ARSubsystems.csproj">
+      <Project>{958189B7-F269-AEA1-24C8-3A6BA368DB2E}</Project>
+      <Name>Unity.XR.ARSubsystems</Name>
+    </ProjectReference>
     <ProjectReference Include="UnityEditor.UI.csproj">
       <Project>{D91F857F-6876-E8DC-AE39-193904D1856F}</Project>
       <Name>UnityEditor.UI</Name>

@@ -66,11 +66,11 @@ namespace OcentraAI.LLMGames.UI
 
         }
 
-        protected override void OnButton3DSimpleClick(Button3DSimpleClickEvent e)
+        protected override async void OnButton3DSimpleClick(Button3DSimpleClickEvent e)
         {
             if (ReferenceEquals(e.Button3DSimple, this))
             {
-                EventBus.Instance.Publish(new ArcadeInfoEvent(Info));
+                await EventBus.Instance.PublishAsync(new ArcadeInfoEvent(Info));
             }
             base.OnButton3DSimpleClick(e);
         }

@@ -3,6 +3,8 @@ using OcentraAI.LLMGames.Events;
 using OcentraAI.LLMGames.Extensions;
 using OcentraAI.LLMGames.Manager;
 using Sirenix.OdinInspector;
+using System.Collections.Generic;
+using System.Threading.Tasks;
 using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
@@ -21,6 +23,8 @@ namespace OcentraAI.LLMGames.UI
 
 
         [ShowInInspector] protected TextMeshProUGUI InfoText { get; set; }
+        [ShowInInspector] protected RectTransform InfoTextPanel { get; set; }
+
         [ShowInInspector] protected GameObject InfoTab { get; set; }
         [ShowInInspector] protected GameObject FriendsTab { get; set; }
         [ShowInInspector] protected ScrollRect InfoScrollRect { get; set; }
@@ -31,9 +35,14 @@ namespace OcentraAI.LLMGames.UI
         [SerializeField, ShowInInspector, ReadOnly] protected Vector3 FriendsTabHiddenPosition { get; set; }
         [SerializeField, ShowInInspector, ReadOnly] protected Vector3 FriendsTabVisiblePosition { get; set; }
         [SerializeField, ShowInInspector, OnValueChanged(nameof(OnValueChanged))] protected bool FriendsTabVisible { get; set; }
+        [SerializeField, ShowInInspector, OnValueChanged(nameof(OnValueChanged))] protected bool LobbyInfoUIVisible { get; set; }
+        [SerializeField, ShowInInspector] protected List<Mask3DHandler> Mask3DHandlers { get; set; }
 
         [SerializeField, TextArea(5, 15), RichText, PropertyOrder(-1)]
         protected string Info;
+
+        [SerializeField, PropertyOrder(-1)]
+        protected LobbyInfoUI LobbyInfoUI;
 
 
         protected override void OnValidate()
@@ -45,96 +54,166 @@ namespace OcentraAI.LLMGames.UI
         protected override void Awake()
         {
             Init();
-            base.Start();
+            base.Awake();
         }
 
+        protected override void Start()
+        {
+            if (LobbyInfoUI != null)
+            {
+                LobbyInfoUI.gameObject.SetActive(false);
+            }
+            base.Start();
+        }
 
 
         public override void SubscribeToEvents()
         {
             EventRegistrar.Subscribe<ArcadeInfoEvent>(OnArcadeInfoEvent);
-            EventRegistrar.Subscribe<ShowFriendsEvent>(OnShowFriendsEvent);
+            EventRegistrar.Subscribe<LobbyInfoEvent>(OnLobbyInfoEvent);
+            EventRegistrar.Subscribe<LobbyPlayerUpdateEvent>(OnLobbyPlayerUpdateEvent);
+            EventRegistrar.Subscribe<ShowSubTabEvent>(OnShowFriendsEvent);
             EventRegistrar.Subscribe<ShowArcadeSideEvent>(OnShowArcadeSideEvent);
             base.SubscribeToEvents();
         }
 
+
         private async UniTask OnShowArcadeSideEvent(ShowArcadeSideEvent e)
         {
             Visible = e.Show;
-            await ShowHide();
+            await ShowHide(e.Show);
             await UniTask.Yield();
         }
 
-        private async UniTask OnShowFriendsEvent(ShowFriendsEvent e)
+        private async UniTask OnShowFriendsEvent(ShowSubTabEvent e)
         {
-            FriendsTabVisible = e.Show;
-            await ShowHideFriendsTab();
+
+            await ShowHideFriendsTab(e.Show);
             await UniTask.Yield();
         }
-        private async UniTask OnArcadeInfoEvent(ArcadeInfoEvent e)
+
+        private async UniTask OnLobbyPlayerUpdateEvent(LobbyPlayerUpdateEvent lobbyPlayerUpdateEvent)
         {
-            if (InfoText != null)
+           
+            LobbyInfoUIShow(true);
+
+            if (LobbyInfoUI != null)
             {
-                InfoText.text = e.Info;
+                if (lobbyPlayerUpdateEvent.Button3DSimple is LobbyHolderUI lobbyHolderUI)
+                {
+                    Debug.Log($"Player Update: {lobbyPlayerUpdateEvent.Type}");
+
+                    if (lobbyPlayerUpdateEvent.Type == LobbyPlayerUpdateEvent.UpdateType.Add)
+                    {
+                        Debug.Log("A player was added!");
+                    }
+                    else if (lobbyPlayerUpdateEvent.Type == LobbyPlayerUpdateEvent.UpdateType.Remove)
+                    {
+                        Debug.Log("A player was removed!");
+                    }
+                    
+                }
+
             }
 
             await UniTask.Yield();
         }
 
-        
-        private async UniTask ShowHide()
+        private async UniTask UpdateMask3DHandlers()
         {
+            if (Mask3DHandlers is { Count: > 0 })
+            {
+                foreach (Mask3DHandler mask3DHandler in Mask3DHandlers)
+                {
+                    await mask3DHandler.UpdateVisibilityAsync();
+                }
+            }
+        }
+
+        private async UniTask OnLobbyInfoEvent(LobbyInfoEvent lobbyInfoEvent)
+        {
+            LobbyInfoUIShow(true);
+
+            if (LobbyInfoUI != null)
+            {
+                if (lobbyInfoEvent.Button3DSimple is LobbyHolderUI lobbyHolderUI)
+                {
+                    LobbyInfoUI.SetGameMode(lobbyHolderUI);
+                    LobbyInfoUI.SetKeyValues(lobbyHolderUI.LobbyInfoEntries);
+                   
+                }
+            }
+
+            await UniTask.Yield();
+        }
+
+        private async UniTask OnArcadeInfoEvent(ArcadeInfoEvent infoEvent)
+        {
+           
+            if (InfoText != null)
+            {
+                InfoText.text = infoEvent.Info;
+            }
             
-            Vector3 initialPosition = transform.localPosition;
-            Vector3 targetPosition = Visible ? ShowPosition : OriginalPosition;
+            LobbyInfoUIShow(false);
+
+            await UniTask.Yield();
+        }
 
 
-            RemainingTime = AnimateDuration;
+        private async UniTask ShowHide(bool show)
+        {
+            Vector3 currentPosition = transform.localPosition;
+            Vector3 targetPosition = show ? ShowPosition : OriginalPosition;
+
+            if (currentPosition == targetPosition) return;
+
+            float remainingTime = AnimateDuration;
             float startTime = Time.realtimeSinceStartup;
 
-            while (RemainingTime > 0)
+            while (remainingTime > 0)
             {
                 float elapsedTime = Time.realtimeSinceStartup - startTime;
-                RemainingTime = (Mathf.Max(0, AnimateDuration - elapsedTime));
+                remainingTime = Mathf.Max(0, AnimateDuration - elapsedTime);
 
-                float t = Mathf.Clamp01(elapsedTime / AnimateDuration);
+                float t = Mathf.SmoothStep(0, 1, Mathf.Clamp01(elapsedTime / AnimateDuration));
 
-                t = Mathf.SmoothStep(0, 1, t);
-
-                transform.localPosition = Vector3.Lerp(initialPosition, targetPosition, t);
+                transform.localPosition = Vector3.Lerp(currentPosition, targetPosition, t);
 
 #if UNITY_EDITOR
-
                 if (!Application.isPlaying)
                 {
                     UnityEditor.SceneView.RepaintAll();
                 }
 #endif
 
-
-
                 await UniTask.Delay(1);
             }
 
-            transform.localPosition = targetPosition; 
-
+            transform.localPosition = targetPosition;
         }
 
-        private async UniTask ShowHideFriendsTab()
+
+        private async UniTask ShowHideFriendsTab(bool show)
         {
+            Vector3 initialFriendsTabPosition = FriendsTab.transform.localPosition;
+            Vector3 targetFriendsTabPosition = show ? FriendsTabVisiblePosition : FriendsTabHiddenPosition;
 
 
-          
-            Vector3 initialPosition = FriendsTab.transform.localPosition;
-            Vector3 targetPosition = FriendsTabVisible ? FriendsTabVisiblePosition : FriendsTabHiddenPosition;
+            if (initialFriendsTabPosition == targetFriendsTabPosition)
+            {
+                return;
+            }
+
+
 
             Vector3 initialInfoPosition = InfoScrollRectTransform.localPosition;
-            Vector3 targetInfoPosition = FriendsTabVisible
+            Vector3 targetInfoPosition = show
                 ? new Vector3(InfoScrollCollapsed.X, InfoScrollCollapsed.Y, InfoScrollCollapsed.Z)
                 : new Vector3(InfoScrollRectExpanded.X, InfoScrollRectExpanded.Y, InfoScrollRectExpanded.Z);
 
             Vector2 initialInfoSize = InfoScrollRectTransform.sizeDelta;
-            Vector2 targetInfoSize = FriendsTabVisible
+            Vector2 targetInfoSize = show
                 ? new Vector2(InfoScrollCollapsed.Width, InfoScrollCollapsed.Height)
                 : new Vector2(InfoScrollRectExpanded.Width, InfoScrollRectExpanded.Height);
 
@@ -146,12 +225,12 @@ namespace OcentraAI.LLMGames.UI
             {
                 float elapsedTime = Time.realtimeSinceStartup - startTime;
                 RemainingTime = (Mathf.Max(0, AnimateDuration - elapsedTime));
-               
+
                 float t = Mathf.Clamp01(elapsedTime / AnimateDuration);
 
                 t = Mathf.SmoothStep(0, 1, t);
 
-                FriendsTab.transform.localPosition = Vector3.Lerp(initialPosition, targetPosition, t);
+                FriendsTab.transform.localPosition = Vector3.Lerp(initialFriendsTabPosition, targetFriendsTabPosition, t);
 
                 if (InfoScrollRectTransform != null)
                 {
@@ -166,19 +245,22 @@ namespace OcentraAI.LLMGames.UI
                     UnityEditor.SceneView.RepaintAll();
                 }
 #endif
-
+                await UpdateMask3DHandlers();
                 await UniTask.Delay(1);
             }
 
-            FriendsTab.transform.localPosition = targetPosition;
+            FriendsTab.transform.localPosition = targetFriendsTabPosition;
 
             if (InfoScrollRectTransform != null)
             {
                 InfoScrollRectTransform.localPosition = targetInfoPosition;
                 InfoScrollRectTransform.sizeDelta = targetInfoSize;
             }
-
+            
+            FriendsTabVisible = FriendsTab.transform.localPosition == FriendsTabVisiblePosition;
            
+            await EventBus.Instance.PublishAsync(new InfoSubTabStateChangedEvent(FriendsTabVisible));
+
         }
 
 
@@ -187,6 +269,7 @@ namespace OcentraAI.LLMGames.UI
         public void Init()
         {
             InfoText = transform.FindChildRecursively<TextMeshProUGUI>(nameof(InfoText));
+            InfoTextPanel = transform.FindChildRecursively<RectTransform>(nameof(InfoTextPanel));
             FriendsTab = transform.RecursiveFindChildGameObject(nameof(FriendsTab));
             InfoTab = transform.RecursiveFindChildGameObject(nameof(InfoTab));
             if (InfoTab != null)
@@ -198,8 +281,10 @@ namespace OcentraAI.LLMGames.UI
                 }
             }
 
+            Mask3DHandlers = transform.FindAllChildrenOfType<Mask3DHandler>();
 
-           
+            LobbyInfoUI = transform.FindChildRecursively<LobbyInfoUI>(nameof(LobbyInfoUI));
+
         }
 
         [Button]
@@ -261,9 +346,31 @@ namespace OcentraAI.LLMGames.UI
 
         private void OnValueChanged()
         {
-            ShowHideFriendsTab().Forget();
-            ShowHide().Forget();
+            if (!Application.isPlaying)
+            {
+                ShowHideFriendsTab(FriendsTabVisible).Forget();
+                ShowHide(Visible).Forget();
+               
+                LobbyInfoUIShow(LobbyInfoUIVisible);
 
+            }
+        }
+
+        private void LobbyInfoUIShow(bool lobbyInfoUIVisible)
+        {
+            if (LobbyInfoUI != null)
+            {
+                LobbyInfoUI.gameObject.SetActive(lobbyInfoUIVisible);
+            }
+
+            if (InfoTextPanel != null)
+            {
+                InfoTextPanel.gameObject.SetActive(!lobbyInfoUIVisible);
+            }
+
+#if UNITY_EDITOR
+            UnityEditor.SceneView.RepaintAll();
+#endif
         }
     }
 }

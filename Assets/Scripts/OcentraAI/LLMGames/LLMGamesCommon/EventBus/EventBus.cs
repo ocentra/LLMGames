@@ -1,13 +1,12 @@
-using Cysharp.Threading.Tasks;
-using OcentraAI.LLMGames.Manager;
+﻿using Cysharp.Threading.Tasks;
 using OcentraAI.LLMGames.Utilities;
 using Sirenix.OdinInspector;
 using Sirenix.Utilities;
 using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
 using UnityEngine;
-using System.Collections.Concurrent;
 
 namespace OcentraAI.LLMGames.Events
 {
@@ -18,34 +17,26 @@ namespace OcentraAI.LLMGames.Events
         private GameLoggerScriptable GameLoggerScriptable => GameLoggerScriptable.Instance;
 
         [ShowInInspector, DictionaryDrawerSettings(DisplayMode = DictionaryDisplayOptions.ExpandedFoldout)]
-        private ConcurrentDictionary<Type, List<Delegate>> Subscribers { get; } = new ConcurrentDictionary<Type, List<Delegate>>();
+        private ConcurrentDictionary<Type, ConcurrentQueue<Delegate>> Subscribers { get; set; } = new ConcurrentDictionary<Type, ConcurrentQueue<Delegate>>();
 
         [ShowInInspector, DictionaryDrawerSettings(DisplayMode = DictionaryDisplayOptions.ExpandedFoldout)]
-        private ConcurrentDictionary<Type, List<Delegate>> AsyncSubscribers { get; } = new ConcurrentDictionary<Type, List<Delegate>>();
+        private ConcurrentDictionary<Type, ConcurrentQueue<Delegate>> AsyncSubscribers { get; set; } = new ConcurrentDictionary<Type, ConcurrentQueue<Delegate>>();
 
         [ShowInInspector, DictionaryDrawerSettings(DisplayMode = DictionaryDisplayOptions.ExpandedFoldout)]
-        private ConcurrentDictionary<Type, ConcurrentQueue<IEventArgs>> QueuedEvents { get; } = new ConcurrentDictionary<Type, ConcurrentQueue<IEventArgs>>();
+        private ConcurrentDictionary<Type, ConcurrentQueue<IEventArgs>> QueuedEvents { get; set; } = new ConcurrentDictionary<Type, ConcurrentQueue<IEventArgs>>();
 
         private readonly ConcurrentDictionary<Guid, bool> processedEvents = new();
 
-        private readonly object asyncSubscriberLock = new();
 
         public void Subscribe<T>(Action<T> subscriber, bool force = false) where T : IEventArgs
         {
             Type eventType = typeof(T);
 
-            lock (asyncSubscriberLock)
-            {
-                if (!Subscribers.TryGetValue(eventType, out List<Delegate> subscriberList))
-                {
-                    subscriberList = new List<Delegate>();
-                    Subscribers[eventType] = subscriberList;
-                }
+            ConcurrentQueue<Delegate> subscriberQueue = Subscribers.GetOrAdd(eventType, _ => new ConcurrentQueue<Delegate>());
 
-                if (force || !subscriberList.Any(s => s.Target == subscriber.Target && s.Method == subscriber.Method))
-                {
-                    subscriberList.Add(subscriber);
-                }
+            if (force || !subscriberQueue.Contains(subscriber))
+            {
+                subscriberQueue.Enqueue(subscriber);
             }
 
             ProcessQueuedEventsAsync<T>().Forget();
@@ -55,48 +46,59 @@ namespace OcentraAI.LLMGames.Events
         {
             Type eventType = typeof(T);
 
-            lock (asyncSubscriberLock)
-            {
-                if (!AsyncSubscribers.TryGetValue(eventType, out List<Delegate> subscriberList))
-                {
-                    subscriberList = new List<Delegate>();
-                    AsyncSubscribers[eventType] = subscriberList;
-                }
+            ConcurrentQueue<Delegate> subscriberQueue = AsyncSubscribers.GetOrAdd(eventType, _ => new ConcurrentQueue<Delegate>());
 
-                if (force || !subscriberList.Any(s => s.Target == subscriber.Target && s.Method == subscriber.Method))
-                {
-                    subscriberList.Add(subscriber);
-                }
+            if (force || !subscriberQueue.Contains(subscriber))
+            {
+                subscriberQueue.Enqueue(subscriber);
             }
 
             ProcessQueuedEventsAsync<T>().Forget();
         }
 
+
+
         public void Unsubscribe<T>(Action<T> subscriber) where T : IEventArgs
         {
             Type eventType = typeof(T);
 
-            lock (asyncSubscriberLock)
+            if (Subscribers.TryGetValue(eventType, out ConcurrentQueue<Delegate> subscriberQueue))
             {
-                if (Subscribers.TryGetValue(eventType, out List<Delegate> subscriberList))
+                ConcurrentQueue<Delegate> tempQueue = new ConcurrentQueue<Delegate>();
+
+                while (subscriberQueue.TryDequeue(out Delegate existingSubscriber))
                 {
-                    subscriberList.RemoveAll(s => s.Target == subscriber.Target && s.Method == subscriber.Method);
+                    if (!(existingSubscriber.Target == subscriber.Target && existingSubscriber.Method == subscriber.Method))
+                    {
+                        tempQueue.Enqueue(existingSubscriber); 
+                    }
                 }
+
+                Subscribers[eventType] = tempQueue; 
             }
         }
+
 
         public void UnsubscribeAsync<T>(Func<T, UniTask> subscriber) where T : IEventArgs
         {
             Type eventType = typeof(T);
 
-            lock (asyncSubscriberLock)
+            if (AsyncSubscribers.TryGetValue(eventType, out ConcurrentQueue<Delegate> subscriberQueue))
             {
-                if (AsyncSubscribers.TryGetValue(eventType, out List<Delegate> subscriberList))
+                ConcurrentQueue<Delegate> tempQueue = new ConcurrentQueue<Delegate>();
+
+                while (subscriberQueue.TryDequeue(out Delegate existingSubscriber))
                 {
-                    subscriberList.RemoveAll(s => s.Target == subscriber.Target && s.Method == subscriber.Method);
+                    if (!(existingSubscriber.Target == subscriber.Target && existingSubscriber.Method == subscriber.Method))
+                    {
+                        tempQueue.Enqueue(existingSubscriber); 
+                    }
                 }
+
+                AsyncSubscribers[eventType] = tempQueue; 
             }
         }
+
 
         public void Publish<T>(T eventArgs, bool force = false) where T : IEventArgs
         {
@@ -188,7 +190,7 @@ namespace OcentraAI.LLMGames.Events
             Type eventType = typeof(T);
             bool eventHandled = false;
 
-            if (Subscribers.TryGetValue(eventType, out List<Delegate> subscriberList) && subscriberList != null)
+            if (Subscribers.TryGetValue(eventType, out ConcurrentQueue<Delegate> subscriberList) && subscriberList != null)
             {
                 foreach (Delegate subscriber in subscriberList)
                 {
@@ -204,7 +206,7 @@ namespace OcentraAI.LLMGames.Events
                 eventHandled = true;
             }
 
-            if (AsyncSubscribers.TryGetValue(eventType, out List<Delegate> asyncSubscriberList) && asyncSubscriberList != null)
+            if (AsyncSubscribers.TryGetValue(eventType, out ConcurrentQueue<Delegate> asyncSubscriberList) && asyncSubscriberList != null)
             {
                 foreach (Delegate subscriber in asyncSubscriberList)
                 {
@@ -337,42 +339,25 @@ namespace OcentraAI.LLMGames.Events
 
         public void Clear()
         {
-            lock (asyncSubscriberLock)
+            if (!Subscribers.IsEmpty || !AsyncSubscribers.IsEmpty || !QueuedEvents.IsEmpty)
             {
-                if (!Subscribers.IsEmpty || !AsyncSubscribers.IsEmpty || !QueuedEvents.IsEmpty)
-                {
-                    GameLoggerScriptable.LogWarning("EventBus is being cleared. All current subscribers and queued events will be removed.", this);
-                }
-
-                foreach (List<Delegate> subscriberList in Subscribers.Values)
-                {
-                    subscriberList.Clear();
-                }
-                Subscribers.Clear();
-
-                foreach (List<Delegate> asyncSubscriberList in AsyncSubscribers.Values)
-                {
-                    asyncSubscriberList.Clear();
-                }
-                AsyncSubscribers.Clear();
-
-                foreach (ConcurrentQueue<IEventArgs> eventQueue in QueuedEvents.Values)
-                {
-                    eventQueue.Clear();
-                }
-                QueuedEvents.Clear();
-
-                GameLoggerScriptable.LogWarning("All event subscriptions and queues have been cleared.", this);
+                GameLoggerScriptable.LogWarning("EventBus is being cleared. All current subscribers and queued events will be removed.", this);
             }
+
+            Subscribers = new ConcurrentDictionary<Type, ConcurrentQueue<Delegate>>();
+            AsyncSubscribers = new ConcurrentDictionary<Type, ConcurrentQueue<Delegate>>();
+            QueuedEvents = new ConcurrentDictionary<Type, ConcurrentQueue<IEventArgs>>();
+
+            GameLoggerScriptable.LogWarning("All event subscriptions and queues have been cleared.", this);
         }
 
 
+
         #region EventBusManager
-       
+
         [SerializeField, FoldoutGroup("Event Info")] public List<string> AssemblyFiles = new List<string>();
         [SerializeField, FoldoutGroup("Event Info")] public List<ScriptInfo> AllScripts = new List<ScriptInfo>();
         [SerializeField, FoldoutGroup("Event Info")] public List<ScriptInfo> EventMonoScript = new List<ScriptInfo>();
-
         [SerializeField, FoldoutGroup("Event Info")] public UsageInfo UsageInfo = new UsageInfo();
 
 

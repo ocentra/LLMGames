@@ -5,13 +5,12 @@ using OcentraAI.LLMGames.GameModes;
 using OcentraAI.LLMGames.Manager;
 using Sirenix.OdinInspector;
 using System.Collections.Generic;
-using System.Linq;
 using UnityEngine;
 
 namespace OcentraAI.LLMGames.UI
 {
     [ExecuteAlways]
-    public class ElementGameHolder<T,TData> : MonoBehaviourBase<ElementGameHolder<T,TData>> 
+    public class ElementGameHolder<T, TData> : MonoBehaviourBase<ElementGameHolder<T, TData>>
     {
 
 
@@ -34,23 +33,38 @@ namespace OcentraAI.LLMGames.UI
         [SerializeField] protected Button3DSimple RightButton;
 
         [SerializeField, ShowInInspector, ValueDropdown(nameof(GetAvailableValue)), LabelText(nameof(FilterContext)), OnValueChanged(nameof(OnValueChanged)), PropertyOrder(-1)]
-        private int id = 0;
+        private int filterContextID = 0;
+
+        [ShowInInspector] protected int FilterItemsCount;
+        [ShowInInspector] protected bool ScrollInteractable;
 
 
         public IEnumerable<ValueDropdownItem<int>> GetAvailableValue()
         {
             List<ValueDropdownItem<int>> dropdownItems = new List<ValueDropdownItem<int>>();
-            if (FilterContext is GameGenre )
+
+            if (typeof(TData) == typeof(GameGenre))
             {
                 foreach (GameGenre genre in GameGenre.GetAll())
                 {
                     dropdownItems.Add(new ValueDropdownItem<int>(genre.Name, genre.Id));
                 }
             }
+            else if (typeof(TData) == typeof(LobbyType))
+            {
 
+                foreach (LobbyType lobby in LobbyType.GetAll())
+                {
+                    dropdownItems.Add(new ValueDropdownItem<int>(
+                        $"{lobby.Name} [{lobby.HostingMethod.Name}]",
+                        lobby.Id
+                    ));
+                }
+            }
 
             return dropdownItems;
         }
+
 
         [ShowInInspector, ReadOnly, PropertyOrder(-1)]
         public TData FilterContext
@@ -59,17 +73,23 @@ namespace OcentraAI.LLMGames.UI
             {
                 if (typeof(TData) == typeof(GameGenre))
                 {
-                    return (TData)(object)GameGenre.FromId(id);
+                    return (TData)(object)GameGenre.FromId(filterContextID);
                 }
-
+                else if (typeof(TData) == typeof(LobbyType))
+                {
+                    return (TData)(object)LobbyType.FromId(filterContextID);
+                }
                 return default;
             }
-
             set
             {
-                if (value is ILabeledItem labeledItem)
+                if (value is GameGenre genre)
                 {
-                    id = labeledItem.Id;
+                    filterContextID = genre.Id;
+                }
+                else if (value is LobbyType lobby)
+                {
+                    filterContextID = lobby.Id;
                 }
 
             }
@@ -87,6 +107,10 @@ namespace OcentraAI.LLMGames.UI
             {
                 FilterContext = (TData)(object)GameGenre.None;
             }
+            else if (typeof(TData) == typeof(LobbyType))
+            {
+                FilterContext = (TData)(object)LobbyType.None;
+            }
 
             Init();
             base.Start();
@@ -99,9 +123,13 @@ namespace OcentraAI.LLMGames.UI
             base.SubscribeToEvents();
         }
 
-        private async UniTask OnButton3DSimpleClick(Button3DSimpleClickEvent e)
+        protected virtual async UniTask OnButton3DSimpleClick(Button3DSimpleClickEvent e)
         {
             IButton3DSimple button3DSimple = e.Button3DSimple;
+            if (button3DSimple == null) return;
+
+
+
             if (LeftButton != null && ReferenceEquals(button3DSimple, LeftButton))
             {
                 Elements.ScrollLeft(FilterContext);
@@ -118,11 +146,11 @@ namespace OcentraAI.LLMGames.UI
             ArcadeGameGenre arcadeSelectedGame = button3DSimple as ArcadeGameGenre;
             if (arcadeSelectedGame != null)
             {
-                GameGenre filterContext = arcadeSelectedGame.GameGenre;
-                FilterContext = (TData)(object)filterContext;
+                if (typeof(TData) != typeof(GameGenre)) return;
+                FilterContext = (TData)(object)arcadeSelectedGame.GameGenre;
                 Elements.FilterView(FilterContext);
-
                 OnValueChanged();
+
             }
 
             await UniTask.Yield();
@@ -142,7 +170,7 @@ namespace OcentraAI.LLMGames.UI
             }
         }
 
-        public void Init()
+        public virtual void Init()
         {
             EnsureElementsInitialized();
 
@@ -170,12 +198,12 @@ namespace OcentraAI.LLMGames.UI
                         TData data = default;
                         if (modeUI is GameModeUI gameModeUI)
                         {
-                             data = (TData)(object)gameModeUI.GameModeType.GameGenre;
+                            data = (TData)(object)gameModeUI.GameModeType.GameGenre;
                         }
 
                         if (modeUI is LobbyHolderUI lobbyHolderUI)
                         {
-                            data = (TData)(object)lobbyHolderUI.GameModeType.GameGenre;
+                            data = (TData)(object)lobbyHolderUI.LobbyType;
                         }
 
 
@@ -200,7 +228,7 @@ namespace OcentraAI.LLMGames.UI
                         }
                         else
                         {
-                            Debug.LogWarning($"GameModeType {data.GetType()} is not assignable to {typeof(TData)} for child: {child.name}");
+                            Debug.LogWarning($"GameModeType {data?.GetType()} is not assignable to {typeof(TData)} for child: {child.name}");
                         }
                     }
 
@@ -212,7 +240,7 @@ namespace OcentraAI.LLMGames.UI
                 }
 
                 Elements.FilterView(FilterContext);
-
+                FilterItemsCount = Elements.FilterItemsCount;
             }
 
             OnValueChanged();
@@ -225,11 +253,18 @@ namespace OcentraAI.LLMGames.UI
         {
             EnsureElementsInitialized();
 
-            if (transform.childCount == 0) return;
+            if (transform.childCount == 0)
+            {
+                LeftButton.SetInteractable(false);
+                RightButton.SetInteractable(false);
+                return;
+            }
 
             MaxHeight = PanelHeight - Padding.Top - Padding.Bottom;
 
-            TotalWidth = Padding.Left + Padding.Right + (ItemSpacing * (Elements.ViewItems.Count - 1));
+
+
+            TotalWidth = Padding.Left + Padding.Right + (ItemSpacing * (FilterItemsCount - 1));
 
             foreach (ChildElement<TData> childElement in Elements.GetAll())
             {
@@ -255,6 +290,10 @@ namespace OcentraAI.LLMGames.UI
                 startX += holderItem.ElementSizeX + ItemSpacing;
                 holderItem.SetActive(true);
             }
+
+            ScrollInteractable = FilterItemsCount > ViewCapacity;
+            LeftButton.SetInteractable(ScrollInteractable);
+            RightButton.SetInteractable(ScrollInteractable);
         }
 
 

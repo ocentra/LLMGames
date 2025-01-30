@@ -387,4 +387,7 @@ MonoBehaviour:
     PressedColor: {r: 0.14126332, g: 0.042311423, b: 0.002124689, a: 1}
     DisabledColor: {r: 0.46207705, g: 0.010960094, b: 0.010960094, a: 1}
   State: 0
+  OnClick:
+    m_PersistentCalls:
+      m_Calls: []
   id: 0

@@ -206,8 +206,7 @@ MonoBehaviour:
   ObjectRenderer: {fileID: 7273696673685932724}
   SkinnedMeshRenderer: {fileID: 0}
   Parent: {fileID: 0}
-  ButtonsOnThisGroup:
-  - {fileID: 8220830125965402515}
+  ButtonsOnThisGroup: []
   OriginalShapeValue: 0
   MaterialInfos:
   - MaterialName: Arrow
@@ -225,3 +224,6 @@ MonoBehaviour:
     PressedColor: {r: 0.046665095, g: 0.046665095, b: 0.046665095, a: 1}
     DisabledColor: {r: 0.046665095, g: 0.046665095, b: 0.046665095, a: 1}
   State: 0
+  OnClick:
+    m_PersistentCalls:
+      m_Calls: []

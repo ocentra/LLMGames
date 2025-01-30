@@ -29,7 +29,10 @@
         "ParrelSync",
         "LLMGames.DTO",
         "LLMGames.Interface",
-        "LLMGames.Events"
+        "LLMGames.Events",
+        "Unity.XR.ARFoundation",
+        "Unity.XR.ARSubsystems",
+        "Unity.XR.Management"
     ],
     "includePlatforms": [],
     "excludePlatforms": [],

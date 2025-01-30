@@ -30,7 +30,9 @@
         "Unity.Collections",
         "LLMGames.GameMode",
         "LLMGames.Interface",
-        "LLMGames.Events"
+        "LLMGames.Events",
+        "Unity.XR.ARFoundation",
+        "Unity.XR.ARSubsystems"
     ],
     "includePlatforms": [],
     "excludePlatforms": [],

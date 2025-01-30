@@ -177,6 +177,9 @@ MonoBehaviour:
     PressedColor: {r: 0, g: 0.41788515, b: 0.7156938, a: 1}
     DisabledColor: {r: 0.509434, g: 0, b: 0, a: 1}
   State: 2
+  OnClick:
+    m_PersistentCalls:
+      m_Calls: []
 --- !u!23 &8598031717480466826 stripped
 MeshRenderer:
   m_CorrespondingSourceObject: {fileID: 9027884151912290454, guid: 4f06c6d240325d247b6b81722ba7b70e,

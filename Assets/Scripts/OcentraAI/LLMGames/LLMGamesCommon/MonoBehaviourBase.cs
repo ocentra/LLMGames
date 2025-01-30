@@ -49,6 +49,7 @@ namespace OcentraAI.LLMGames.Manager
 
         public virtual async UniTask<bool> ApplicationWantsToQuit()
         {
+            UnsubscribeFromEvents();
             bool fromResult = await UniTask.FromResult(true);
             return fromResult;
         }
@@ -64,7 +65,10 @@ namespace OcentraAI.LLMGames.Manager
             InitializeAsync().Forget();
         }
 
-        protected virtual void Start() { }
+        protected virtual void Start()
+        {
+           
+        }
 
         protected virtual void OnValidate()
         {
@@ -84,7 +88,10 @@ namespace OcentraAI.LLMGames.Manager
             UnsubscribeFromEvents();
         }
 
-        protected virtual void OnDestroy() { }
+        protected virtual void OnDestroy()
+        {
+            UnsubscribeFromEvents();
+        }
 
         public virtual void SubscribeToEvents() { }
         public virtual void UnsubscribeFromEvents()

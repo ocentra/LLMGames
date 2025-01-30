@@ -22,4 +22,6 @@ EditorBuildSettings:
       type: 2}
     com.unity.adaptiveperformance.simulator.provider_settings: {fileID: 11400000,
       guid: 846b4a4bcb4faf44a9dbec6ee16672c3, type: 2}
+    com.unity.xr.arfoundation.simulation_settings: {fileID: 11400000, guid: 7b264b61362dae2499d71b1ad01c56d2,
+      type: 2}
   m_UseUCBPForAssetBundles: 0
